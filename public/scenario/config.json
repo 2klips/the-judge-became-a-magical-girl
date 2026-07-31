@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "startNodeId": "prologue_review_room",
+  "initialAffinity": 50,
+  "totalTurnLimit": 55,
+  "finalConvergenceNodeId": "cut_normal",
+  "allowedFlags": ["promise"]
+}

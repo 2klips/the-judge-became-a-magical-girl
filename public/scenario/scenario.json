@@ -1,0 +1,148 @@
+[
+  {
+    "nodeId": "prologue_review_room",
+    "type": "cutscene",
+    "scene": { "bg": "bg_hall_day" },
+    "lines": [
+      {
+        "speaker": "narration",
+        "text": "반복되는 심사 끝, 꺼진 모니터 위로 작은 빛 하나가 내려앉았다."
+      },
+      {
+        "speaker": "juno",
+        "text": "사원증 확인! 한도윤, 맞지?",
+        "emotion": "surprised"
+      },
+      {
+        "speaker": "juno",
+        "text": "마침내 찾았다! 이제부터 너는 마법소녀가 되어 세상을 구해야 해!",
+        "emotion": "happy"
+      }
+    ],
+    "next": "ch1_juno_test"
+  },
+  {
+    "nodeId": "ch1_juno_test",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_day" },
+    "npc": { "id": "juno", "startEmotion": "happy" },
+    "objective": "플레이어가 주노와 대화하며 첫 관계 온도를 정하게 만든다",
+    "opening": "나는 주노! 네가 아직 새로운 즐거움을 포기하지 않은 것 같아서 왔어!",
+    "llmContext": "심사장 안의 늦은 밤. 주노는 방금 플레이어 앞에 나타났다. 아직 사건은 시작되지 않았고, 주노는 자신을 소개하며 첫 반응을 살핀다. 대사는 반말 두 문장 이내로 한다.",
+    "maxTurns": 7,
+    "intents": [
+      {
+        "id": "accept_magic",
+        "clickLabel": "조금 재밌겠다며 설명을 듣는다",
+        "examples": ["마법소녀라니, 조금 재밌겠는데.", "그래서 뭘 하면 돼?"],
+        "keywords": ["재밌", "설명", "뭘 하면", "해볼", "좋아"],
+        "affinityDelta": 3,
+        "setFlags": ["promise"],
+        "npcEmotion": "happy",
+        "offlineReply": "좋아! 역시 내 눈은 정확해!",
+        "next": null
+      },
+      {
+        "id": "ask_conditions",
+        "clickLabel": "근로조건과 정체부터 확인한다",
+        "examples": ["마법소녀가 직업이야?", "이거 수당은 나와?"],
+        "keywords": ["직업", "수당", "조건", "정체", "누구"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "세계 구하고 나서 근로조건을 협상하자!",
+        "next": null
+      },
+      {
+        "id": "refuse_magic",
+        "clickLabel": "다른 사람을 찾으라고 거절한다",
+        "examples": ["싫어, 다른 사람 찾아.", "바쁘니까 돌아가."],
+        "keywords": ["싫", "다른 사람", "바빠", "돌아가", "거절"],
+        "affinityDelta": -3,
+        "setFlags": [],
+        "npcEmotion": "upset",
+        "offlineReply": "잠깐만 듣고 거절해도 되잖아!",
+        "next": null
+      }
+    ],
+    "allowedFlags": ["promise"],
+    "fallbackReplies": [
+      "응? 잘 못 들었어. 한 번만 다시 말해 줘!",
+      "들리는 말 아무거나 해도 돼!"
+    ],
+    "exitOnMaxTurns": [
+      { "if": "affinity >= 70 && flags.promise", "next": "cut_good" },
+      { "if": "affinity >= 40", "next": "cut_normal" },
+      { "default": "cut_bad" }
+    ]
+  },
+  {
+    "nodeId": "cut_good",
+    "type": "cutscene",
+    "scene": { "bg": "bg_hall_dark" },
+    "lines": [
+      {
+        "speaker": "juno",
+        "text": "좋아, 그 대답 기억할게! 다음에는 진짜 목소리로 이야기하자!",
+        "emotion": "happy"
+      }
+    ],
+    "next": "ending_good"
+  },
+  {
+    "nodeId": "cut_normal",
+    "type": "cutscene",
+    "scene": { "bg": "bg_hall_dark" },
+    "lines": [
+      {
+        "speaker": "juno",
+        "text": "신중한 건 좋아. 다음에는 네 목소리로 더 물어봐!",
+        "emotion": "neutral"
+      }
+    ],
+    "next": "ending_normal"
+  },
+  {
+    "nodeId": "cut_bad",
+    "type": "cutscene",
+    "scene": { "bg": "bg_hall_dark" },
+    "lines": [
+      {
+        "speaker": "juno",
+        "text": "알겠어. 그래도 네가 다시 부르면 이번에는 기다릴게.",
+        "emotion": "upset"
+      }
+    ],
+    "next": "ending_bad"
+  },
+  {
+    "nodeId": "ending_good",
+    "type": "ending",
+    "scene": { "bg": "bg_hall_day" },
+    "endingId": "good",
+    "lines": [
+      { "speaker": "narration", "text": "GOOD — 한 번 더 플레이" },
+      { "speaker": "juno", "text": "우리 호흡, 생각보다 괜찮은데?", "emotion": "happy" }
+    ]
+  },
+  {
+    "nodeId": "ending_normal",
+    "type": "ending",
+    "scene": { "bg": "bg_hall_day" },
+    "endingId": "normal",
+    "lines": [
+      { "speaker": "narration", "text": "NORMAL — 한 번만 더" },
+      { "speaker": "juno", "text": "아직 판단 중이지? 그럼 다음 질문을 기다릴게.", "emotion": "neutral" }
+    ]
+  },
+  {
+    "nodeId": "ending_bad",
+    "type": "ending",
+    "scene": { "bg": "bg_hall_day" },
+    "endingId": "bad",
+    "lines": [
+      { "speaker": "narration", "text": "BAD — 회색 업무일지" },
+      { "speaker": "juno", "text": "오늘은 여기까지야. 그래도 끝까지 들어 줘서 고마워.", "emotion": "upset" }
+    ]
+  }
+]
