@@ -3,7 +3,9 @@ import {
   applyDialogueJudgement,
   createInitialGameState,
   parseStateSnapshot,
+  recordSttTurnFailure,
   serializeState,
+  type GameState,
 } from "../src/state";
 import { loadFixtureData } from "./fixtures";
 
@@ -64,5 +66,24 @@ describe("GameState 중앙 갱신", () => {
         nodeIds,
       ),
     ).toBeNull();
+  });
+
+  it("STT 실패 턴 5회째 음성에서 클릭 모드로 강등한다", () => {
+    const data = loadFixtureData();
+    let state: GameState = {
+      ...createInitialGameState(data.config),
+      inputMode: "voice",
+    };
+
+    for (let failedTurn = 0; failedTurn < 4; failedTurn += 1) {
+      state = recordSttTurnFailure(state).state;
+      expect(state.inputMode).toBe("voice");
+    }
+    const fifthFailure = recordSttTurnFailure(state);
+
+    expect(fifthFailure.forcedClickMode).toBe(true);
+    expect(fifthFailure.state.sttFailCount).toBe(5);
+    expect(fifthFailure.state.inputMode).toBe("click");
+    expect(recordSttTurnFailure(fifthFailure.state).state.sttFailCount).toBe(5);
   });
 });

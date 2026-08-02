@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>M2 STT A/B/C 비교 Lab</title>
+  </head>
+  <body>
+    <main class="lab-shell">
+      <header class="hero">
+        <p class="eyebrow">M2 · PUSH-TO-TALK ACCURACY LAB</p>
+        <h1>같은 목소리, 세 가지 전사</h1>
+        <p class="hero-copy">
+          버튼을 누른 동안 계속 녹음합니다. 버튼을 떼는 순간에만 종료하고, 같은 16 kHz mono WAV를 A·B·C에 전달합니다.
+        </p>
+        <div class="contract-row" aria-label="고정 테스트 계약">
+          <span>무음 자동 종료 없음</span>
+          <span>전사문 먼저 표시</span>
+          <span>동일 오디오 비교</span>
+        </div>
+      </header>
+
+      <section class="control-panel" aria-labelledby="recording-title">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">STEP 01</p>
+            <h2 id="recording-title">테스트 음성 준비</h2>
+          </div>
+          <p id="worker-status" class="worker-status" aria-live="polite">Worker 확인 중</p>
+        </div>
+
+        <div class="capture-grid">
+          <div class="ptt-zone">
+            <button id="ptt-button" class="ptt-button" type="button">
+              <span class="ptt-orbit" aria-hidden="true"></span>
+              <span class="ptt-main">누르고 말하기</span>
+              <span class="ptt-sub">떼면 녹음 종료</span>
+            </button>
+            <p id="capture-status" class="capture-status" aria-live="polite">대기 중</p>
+          </div>
+
+          <div class="audio-tools">
+            <label class="file-picker" for="audio-file">
+              <span>또는 기존 음성 파일 선택</span>
+              <strong>파일 불러오기</strong>
+            </label>
+            <input id="audio-file" type="file" accept="audio/*,.wav,.webm,.mp3,.m4a" />
+            <div class="audio-preview">
+              <audio id="audio-player" controls></audio>
+              <p id="audio-meta">아직 준비된 음성이 없습니다.</p>
+            </div>
+            <label class="reference-field" for="reference-text">
+              <span>정답 문장 <small>선택 · CER 계산용</small></span>
+              <textarea id="reference-text" rows="3" placeholder="실제로 말한 문장을 입력하세요."></textarea>
+            </label>
+          </div>
+        </div>
+
+        <button id="compare-button" class="compare-button" type="button" disabled>
+          A · B · C 모두 비교
+          <span>API A/B 호출 후 로컬 C 실행</span>
+        </button>
+      </section>
+
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">STEP 02</p>
+            <h2 id="results-title">전사 결과</h2>
+          </div>
+          <p class="result-note">낮은 CER이 더 정확함</p>
+        </div>
+
+        <div class="result-grid">
+          <article class="result-card" data-result-card="A">
+            <header>
+              <span class="provider-key">A</span>
+              <div><h3>OpenAI</h3><p>gpt-transcribe</p></div>
+              <span class="result-state" data-role="state">대기</span>
+            </header>
+            <p class="transcript" data-role="transcript">전사 전</p>
+            <dl class="metrics">
+              <div><dt>총 시간</dt><dd data-role="latency">—</dd></div>
+              <div><dt>CER</dt><dd data-role="cer">—</dd></div>
+              <div><dt>모델</dt><dd data-role="model">—</dd></div>
+            </dl>
+          </article>
+
+          <article class="result-card" data-result-card="B">
+            <header>
+              <span class="provider-key">B</span>
+              <div><h3>Gemini</h3><p>audio understanding</p></div>
+              <span class="result-state" data-role="state">대기</span>
+            </header>
+            <p class="transcript" data-role="transcript">전사 전</p>
+            <dl class="metrics">
+              <div><dt>총 시간</dt><dd data-role="latency">—</dd></div>
+              <div><dt>CER</dt><dd data-role="cer">—</dd></div>
+              <div><dt>모델</dt><dd data-role="model">—</dd></div>
+            </dl>
+          </article>
+
+          <article class="result-card" data-result-card="C">
+            <header>
+              <span class="provider-key">C</span>
+              <div><h3>로컬 Whisper</h3><p>브라우저 내부 실행 · API 비용 0</p></div>
+              <span class="result-state" data-role="state">대기</span>
+            </header>
+            <p class="local-progress" data-role="progress">첫 실행 시 모델을 내려받습니다.</p>
+            <p class="transcript" data-role="transcript">전사 전</p>
+            <dl class="metrics">
+              <div><dt>총 시간</dt><dd data-role="latency">—</dd></div>
+              <div><dt>CER</dt><dd data-role="cer">—</dd></div>
+              <div><dt>로드 / 추론</dt><dd data-role="detail">—</dd></div>
+              <div><dt>모델</dt><dd data-role="model">—</dd></div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <footer>
+        이 화면은 공급자 선택 전 비교 전용입니다. 게임 상태·FSM·M2 Web Speech 구현을 변경하지 않습니다.
+      </footer>
+    </main>
+    <script type="module" src="/src/stt-lab/main.ts"></script>
+  </body>
+</html>

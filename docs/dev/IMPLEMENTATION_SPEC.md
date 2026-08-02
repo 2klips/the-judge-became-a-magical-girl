@@ -37,8 +37,9 @@
 ### 입력·실패 계약
 
 - M1은 같은 화면을 클릭·고정 응답으로 실행한다.
-- M2는 PTT, `ko-KR`, interim transcript, 로컬 intent 판정을 연결한다.
-- M3는 Cloudflare Workers를 통한 LLM 자유대화를 연결한다.
+- M2는 Web Speech 기반 PTT, `ko-KR`, interim transcript, 로컬 intent 판정을 연결해 UI·폴백·상태 경계를 검증한다. Web Speech transcript는 M3 이후 최종 권위가 아니다.
+- M3는 버튼 release까지 녹음한 동일 WAV를 Cloudflare Workers의 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 어댑터 하나에 보내고, 검증된 최종 transcript를 화면에 먼저 표시한 뒤 LLM 자유대화를 호출한다.
+- `[확정, DEC-028]` MVP-1까지 GPT/Gemini STT를 개발·QA 설정으로 전환할 수 있어야 한다. 일반 플레이 한 턴에서 두 공급자를 동시에 호출하지 않는다. 로컬 Whisper는 게임 경로에 연결하지 않는다.
 - 마이크 거부·STT 실패·LLM 지연·오프라인에서도 클릭·로컬 고정 응답으로 대화를 계속하고 테스트 종료 지점까지 도달한다.
 
 ### MVP-1 비범위
@@ -107,9 +108,12 @@ interface BattleState {
 한 턴의 고정 순서:
 
 ```text
-입력 수집 → 정규화 → 로컬 intent 판정 → 미매칭이면 LLM 판정
+PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규화
+→ 로컬 intent 판정 → 미매칭이면 LLM 판정
 → 판정 검증/클램프 → 응답 연출 → 상태 적용 → 턴 증가 → 분기 평가
 ```
+
+STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSON에 공급자 ID를 저장하지 않는다. 비교 Lab만 같은 WAV의 A/B 동시 비교를 허용한다.
 
 분기 우선순위:
 
@@ -130,7 +134,7 @@ interface BattleState {
 - `minMatch` 이상: 표준 연출, momentum 50.
 - 최대 시도 미달: `failLines`로 자동 구제, 페널티 없이 momentum 50.
 - 클릭 모드·마이크 불능: “주문 외우기”로 표준 결과.
-- `[미결정, DEC-016]` 주문 뒤 변신 컷 2장의 JSON 참조 위치가 현 스키마에 없다. 승인 전 필드를 임의 추가하지 않는다.
+- `[확정, DEC-016]` 주문 결과 적용 뒤 엔진이 `transform.cast` → `transform.complete`와 `bgm_transform`을 고정 재생한다. 현 `cutscene` JSON 스키마를 유지하고, 에셋 누락·불량이면 CSS placeholder로 진행한다.
 
 ### Battle
 
@@ -171,6 +175,19 @@ interface SpeechPort {
   isSupported(): boolean;
   listen(onInterim: (text: string) => void): Promise<string>;
   cancel(): void;
+}
+
+type SttProviderId = "openai" | "gemini";
+
+interface PttRecordingPort {
+  start(): Promise<void>;
+  stop(): Promise<Blob>;
+  cancel(): void;
+}
+
+interface TranscriptionPort {
+  readonly provider: SttProviderId;
+  transcribe(audio: Blob, signal: AbortSignal): Promise<string>;
 }
 
 interface LlmPort {
@@ -225,7 +242,7 @@ LLM 로컬 모드는 런타임 어댑터 상태다. 제품 `GameState`에 새 �
 | `ui/*` | 렌더·사용자 이벤트 전달 | 상태 규칙 |
 | `audio/*` | BGM/SFX 재생 | 분기 규칙 |
 | `data/loader.ts` | fetch, zod, 참조 무결성 | 자동 JSON 수정 |
-| `worker/` | Origin 검증, Gemini 호출, 응답 제한 | 게임 상태·시나리오 소유 |
+| `worker/` | Origin 검증, GPT/Gemini STT 공급자 라우팅, Gemini LLM 호출, 요청·응답 제한 | 게임 상태·시나리오 소유 |
 
 ```text
 main(composition root)
@@ -240,6 +257,9 @@ main(composition root)
 ## 9. 자산 해석
 
 - 시나리오의 `scene.bg`, `scene.bgm`은 확장자 없는 논리 ID다.
+- 장면별 배경·표시 인물·표정·음악·컷 사용처는 [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)를 따른다. `ASSET_MANIFEST.md`는 파일명과 제작·QA 상태만 소유한다.
 - `[제안]` 에셋 매니페스트가 논리 ID를 실제 파일명과 연결한다.
 - `[제안]` 확장자·폴더 결합은 중앙 resolver 한 곳에서 수행한다.
+- `[확정, DEC-019]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 CSS placeholder 순으로 강등한다.
+- `[확정, DEC-031]` resolver는 실패한 논리 ID·기대 경로를 진단하되 외부 파일을 자동 이동·변환·rename하지 않는다.
 - `[제안]` 누락 에셋은 로더 진단에 포함하되 M1~M4 더미 placeholder 허용 여부는 마일스톤 계약을 따른다.

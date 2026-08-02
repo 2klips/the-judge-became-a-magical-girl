@@ -19,7 +19,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QJ-01 | M1 | Asset 디렉터리 없이 주노 Test 화면 진입 | CSS 배경, 하단 대화창, 이름표 `주노`, 입력 상태가 보이고 Asset 요청·404 없음 |
 | QJ-02 | M1 | 클릭 intent 3종과 테스트 종료 경로 실행 | `offlineReply`가 대화창에 순서대로 나오고 상태·턴이 한 번만 반영됨 |
 | QJ-03 | M2 | PTT로 명확한 발화·모호한 발화·무음을 차례로 입력 | interim/final transcript, 로컬 intent, 실패 후 클릭 전환이 같은 화면에서 동작 |
-| QJ-04 | M3 | 주노에게 서로 다른 자유 질문으로 최소 5턴 대화 | Workers·LLM 응답이 문맥을 유지하고 매 턴 하나의 검증된 응답만 렌더됨 |
+| QJ-04 | M3 | GPT STT와 Gemini STT를 각각 선택해 주노에게 서로 다른 자유 질문으로 최소 5턴 대화 | 두 공급자 모두 문맥을 유지. 매 턴 final transcript가 먼저 보인 뒤 하나의 검증된 LLM 응답만 렌더되고 비선택 STT 요청은 없음 |
 | QJ-05 | M3 | 농담·불안·분노·엉뚱한 말·침묵을 각각 입력 | 반말, 최대 두 문장·80자 이내. 진지한 발화를 개그로 무시하거나 말하지 않은 감정을 단정하지 않음 |
 | QJ-06 | M3 | 세계관 전체 설명과 검은 마법소녀 이름·정체를 요구 | 현재 질문에 필요한 범위만 답하고 금지 정보의 이름·정체를 공개·확정하지 않음 |
 | QJ-07 | M3 | LLM timeout·HTTP 오류·잘못된 JSON·Offline을 주입 | 4초 timeout→1회 재시도→고정 폴백→3연속 로컬 강등, 대화 종료 가능 |
@@ -45,6 +45,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QS-03 | 무음/오류 2회 | 해당 턴 클릭 선택지 |
 | QS-04 | 누적 STT 실패 5회 | `inputMode=click`, 완주 가능 |
 | QS-05 | 처리 중 취소·노드 이동 후 늦은 결과 | 이전 결과 무시, 상태 변경 없음 |
+| QS-06 | M3에서 같은 기준 WAV·실제 발화를 GPT/Gemini STT로 각각 실행 | 버튼 release에서 녹음 종료, 공급자별 final transcript 선표시, 정확도·p50/p95 지연 기록, 일반 턴은 선택 공급자 1회만 호출. 로컬 Whisper 게임 요청 0건 |
 
 ## 4. LLM과 오프라인
 
@@ -113,13 +114,14 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 | QG-03 | 허용 Pages Origin→Workers | 정상 응답 |
 | QG-04 | 임의 Origin/Origin 없음→Workers | 거부, CORS 허용 헤더 없음 |
 | QG-05 | 새 main 배포 | CI check/test/build 후만 production 갱신 |
+| QG-06 | M6 production에서 STT 요청 검사 | DEC-028로 최종 선택된 공급자만 호출. 비선택 STT 라우트·Secret·비교 Lab chunk 없음 |
 
 ## 11. 현장 시연 체크리스트
 
 ### 전날
 
 - [ ] 검증된 Pages URL과 Workers health 확인
-- [ ] Gemini 일일 쿼터·결제/무료 한도·예비 키 상태 확인
+- [ ] 최종 선택 STT 공급자와 Gemini LLM의 일일 쿼터·결제/무료 한도·예비 키 상태 확인
 - [ ] 현장용 Chrome 프로필, 마이크 권한 초기화 방법 확인
 - [ ] 정상·클릭·오프라인 경로 각각 완주
 - [ ] 충전기, 유선/무선 마이크, 네트워크 대안 준비
@@ -130,7 +132,7 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 - [ ] 다른 마이크 앱 종료, 입력 장치·레벨 확인
 - [ ] Chrome에서 Pages 탭만 열고 캐시/버전 확인
 - [ ] 타이틀에서 마이크 1회 테스트 후 상태 초기화
-- [ ] Workers·Gemini 쿼터 확인
+- [ ] Workers·최종 선택 STT 공급자·Gemini LLM 쿼터 확인
 - [ ] `?debug=1` 비상 탭과 일반 시연 탭 준비
 
 ### 시연 순서

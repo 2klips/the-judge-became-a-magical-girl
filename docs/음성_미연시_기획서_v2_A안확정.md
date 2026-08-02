@@ -203,10 +203,10 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 | UI 프레임워크 | **없음 (Vanilla DOM + CSS)** | VN은 레이어 전환·타이핑·페이드가 전부. 프레임워크는 Codex 컨텍스트만 낭비. 연출은 CSS keyframes(페이드/셰이크/플래시) + Canvas 2D 파티클 1파일 |
 | 상태 관리 | 단일 `GameState` 객체 + 장면 FSM | 상태기계: `TITLE → PROLOGUE → DIALOGUE ⇄ CUTSCENE → BATTLE → ENDING`. 이벤트 버스 없이 직렬 루프 |
 | 시나리오 데이터 | JSON (`public/scenario/`) + **zod 런타임 검증** | 작가가 쓴 JSON의 오타·참조 오류를 로드 시점에 전부 잡아 에러 메시지로 출력 — 비개발자 작가 협업의 안전망 |
-| STT | **Web Speech API** `SpeechRecognition` | `lang: 'ko-KR'`, `continuous: false`, `interimResults: true`(실시간 자막), PTT로 start/stop. Chromium 계열 전용 |
+| STT | **PTT 녹음 + Worker STT 공급자 어댑터** | 버튼 release까지 녹음한 동일 WAV를 OpenAI `gpt-transcribe` 또는 Gemini audio transcription에 전달. MVP-1까지 전환 가능하게 유지하고 한 턴에는 하나만 호출. Web Speech interim은 개발 보조이며 최종 transcript 권위가 아님. 로컬 Whisper는 DEC-028로 탈락 |
 | 주문/키워드 판정 | 자체 모듈 (외부 의존 없음) | 정규화(공백·문장부호 제거) → 키워드 부분 포함 검사. 스트레치: 자모 분해 유사도 |
 | LLM | **Gemini 2.5 Flash-Lite** | `responseMimeType: application/json` + `responseSchema`로 JSON 강제, `maxOutputTokens ≈ 256`, temperature 0.6, 클라이언트 타임아웃 4초 |
-| LLM 프록시 | **Cloudflare Workers** (wrangler 배포) | 키는 Workers 환경변수. Origin 화이트리스트(`*.github.io` 우리 도메인). 쿼터는 Google 콘솔에서 키 자체에 일일 상한 설정 (v1 §1 결론 유지) |
+| API 프록시 | **Cloudflare Workers** (wrangler 배포) | STT·LLM 키는 Workers Secret. 정확한 production Origin만 허용. GPT/Gemini STT는 MVP-1까지 전환 가능하게 두고 M6 전 하나를 선택. 대화 LLM의 Gemini 결정과 STT 공급자 선택은 별도 계약 |
 | TTS | `speechSynthesis` | 스트레치. OS별 한국어 음성 품질 확인 필요 |
 | 오디오 | `<audio loop>` BGM 크로스페이드 + **Web Audio 신스 SFX** | SFX는 오실레이터 기반 코드 생성(Codex) — 100% AI 제작 원칙 충족 + 파일 용량 0 |
 | 저장 | `localStorage` 스냅샷 | 분기 이동마다 자동 저장, 새로고침 복구 전용 |
@@ -248,6 +248,7 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 
 ### 8.3 LLM 호출 계약 (대화 판정)
 
+- PTT release → 선택된 STT 공급자 전사 → 플레이어 최종 transcript 화면 표시 → 그다음 LLM 요청. transcript가 보이기 전에 LLM 응답 요청·렌더 금지.
 - 요청: 페르소나 시트 + 노드 `objective`/`llmContext` + 상태 요약(호감도 구간·플래그) + 최근 2~3턴 + 플레이어 발화
 - 응답(responseSchema 강제): `{ reply, intent(노드 정의 목록 | "freeform"), affinityDelta(-3~3), emotion, flags(allowedFlags 내) }`
 - 실패 사다리: 4초 타임아웃 → 1회 재시도 → `fallbackReplies` + 중립 판정 → 3연속 실패 시 로컬 모드
@@ -258,7 +259,7 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 |---|---|---|
 | M1 | 노드 엔진 + JSON 로더 + **클릭 모드만으로 완주** | 더미 시나리오로 타이틀→엔딩 도달 |
 | M2 | STT(PTT·실시간 자막) + 로컬 키워드 판정 | 음성으로 M1 시나리오 완주 |
-| M3 | Workers 프록시 + LLM 판정 + 3단 폴백 | 네트워크 차단 상태에서도 완주 |
+| M3 | GPT/Gemini STT 전환형 Workers 프록시 + LLM 판정 + 3단 폴백 | 두 STT 공급자 각각 MVP-1 대화 통과, 네트워크 차단 상태에서도 완주 |
 | M4 | 변신 게이트 + 전투 러너 + momentum UI | 더미 전투 S/A/B 3등급 재현 |
 | M5 | 연출(표정·파티클·BGM) + 실제 에셋·시나리오 통합 | 본편 완주 |
 | M6 | 리허설·디버그 패널 마감·시연 영상 녹화 | 제출물 완성 |
@@ -269,7 +270,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 
 ## 9. API 키 / 프록시 (v1 결론 유지 — 요약)
 
-외부 프록시(Cloudflare Workers 무료 티어) 채택. 키는 환경변수, Origin 화이트리스트, Google 콘솔 키 일일 상한, 예비 키 1개 + 심사 직전 로테이션. 상세 근거는 v1 §1.
+외부 프록시(Cloudflare Workers 무료 티어) 채택. MVP-1까지 GPT/Gemini STT Secret을 함께 보유하되 한 턴에는 선택된 공급자만 호출한다. 최종 production STT 공급자는 M6 진입 전 선택하고 비선택 STT 라우트와 전용 Secret을 제거한다. 대화 LLM용 Gemini Secret은 STT 선택과 분리한다. Origin·요청 제한·쿼터·로테이션은 공급자별로 적용한다.
 
 ---
 
@@ -286,6 +287,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 | 리스크 | 대응 |
 |---|---|
 | 마이크 권한/소음/브라우저/네트워크/키·쿼터/LLM 이탈 | v1 §10 그대로 유지 (PTT, confidence 임계, Chromium 고지+기능 감지, 4초 타임아웃+3단 폴백, 프록시+상한+로테이션, responseSchema+화이트리스트) |
+| **STT 공급자 정확도·지연 차이** | 로컬 Whisper는 탈락. GPT/Gemini는 MVP-1까지 같은 PTT WAV와 테스트 문장으로 비교하고, 전사문 선표시·정확도·p50/p95 지연·API 비용을 근거로 M6 전에 하나 선택 |
 | **주문 낭독 인식 실패 (변신·전투)** | 주문 전문 화면 표시(읽기 발화는 인식률 높음), 키워드 순서 무관·부분 포함의 관대한 채점, 2회 미달 시 무페널티 자동 진행 |
 | **전투에서 momentum 정체 → 지루함** | 버티기(+3 고정)로 최저 진행 보장, 페이즈 턴 상한으로 강제 전환, 바닥 클램프 20 |
 | **자유 대응에서 LLM 판정이 이상함** | 델타 클램프(-5~+10), momentum은 등급 산정에만 쓰여 오차가 서사를 망치지 않음. 전투 프롬프트에 채점 기준 명시 |
@@ -293,4 +295,4 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 | Codex 산출물 회귀 | TypeScript + 마일스톤별 실행 확인, 시나리오는 코드가 아닌 데이터라 재생성 영향 없음 |
 | 총체적 실패 | 완주 영상 사전 녹화 제출 (심사 형태에 영상 포함) |
 
-**확인 필요:** Gemini 2.5 Flash-Lite 현재 단가·무료 한도 / iOS Safari `webkitSpeechRecognition` 실동작 / ko-KR 인식 정확도·주문 낭독 인식률 실기기 실측 / `SpeechRecognition` 턴마다 start/stop 반복 안정성 / Suno·미드저니·GPT Image 생성물의 해커톤 제출 규정상 허용 여부(대회 규정 + 각 툴 약관).
+**확인 필요:** Gemini 2.5 Flash-Lite LLM 현재 단가·무료 한도 / OpenAI `gpt-transcribe`·Gemini audio transcription 단가·쿼터·p50/p95 지연 / ko-KR 인식 정확도·주문 낭독 인식률 다중 화자 실측 / Suno·미드저니·GPT Image 생성물의 해커톤 제출 규정상 허용 여부(대회 규정 + 각 툴 약관).

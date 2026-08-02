@@ -16,7 +16,7 @@
 |---|---|
 | M1 | CSS 배경·하단 대화창·`주노` 이름표, 클릭·고정 응답으로 실행 |
 | M2 | 같은 화면에 PTT·실시간 자막·로컬 intent 판정 연결 |
-| M3 | Cloudflare Workers·LLM 연결, 주노 persona 기반 다중 턴 자유대화와 오프라인 폴백 완성 |
+| M3 | GPT/Gemini 전환형 STT·Cloudflare Workers·LLM 연결, 주노 persona 기반 다중 턴 자유대화와 오프라인 폴백 완성 |
 
 M1→M3 순서는 유지한다. M3의 MVP-1 검증이 끝나기 전 M4 변신·전투로 넘어가지 않는다. 실제 캐릭터·배경 Asset은 M5 전까지 요구하지 않는다.
 
@@ -26,6 +26,7 @@ MVP-1 완료 기준:
 - 마이크 발화와 interim/final transcript가 한 턴으로 처리된다.
 - 주노가 반말, 최대 두 문장·80자 이내, 스토리 금기 준수 응답을 생성한다.
 - LLM 정상·지연·오류·오프라인에서 테스트 대화를 계속할 수 있다.
+- GPT/Gemini STT를 각각 선택해 같은 MVP-1 대화 경로를 통과하며, 최종 transcript가 LLM 요청·응답보다 먼저 보인다.
 - 클라이언트 번들에 API 키가 없다.
 - [QA QJ-01~QJ-08](QA_AND_DEMO.md)이 통과한다.
 
@@ -114,6 +115,8 @@ M1 완료 조건과 자동·수동·Git/GitHub 검증 전부 통과. 주노 Test
 
 PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과 더미 시나리오를 음성 완주한다.
 
+`[확정, DEC-028]` 이 단계의 Web Speech transcript는 UI·로컬 판정 경계 검증용이다. 정확한 최종 transcript와 버튼 release 종료 녹음은 M3의 GPT/Gemini Worker STT로 교체·검증한다.
+
 ### 선행조건
 
 - M1 통과.
@@ -165,23 +168,26 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 
 ### 다음 단계 진입 조건
 
-음성 정상 경로와 클릭 강등 경로 모두 완주. 실기기 STT 결과 기록.
+음성 입력 UI·로컬 판정과 클릭 강등 경로 모두 완주. Web Speech 정확도 한계와 GPT/Gemini 비교 실측을 기록. M2 완료 판정은 별도 사용자 승인 후 확정하며, M3가 최종 STT 경로를 소유한다.
 
-## M3 — Workers 프록시와 LLM 판정
+## M3 — 전환형 원격 STT, Workers 프록시와 LLM 판정
 
 ### 목표
 
-주노 Test 화면에서 로컬 미매칭 발화를 LLM이 판정·응답하고, 네트워크 차단 상태에서도 대화와 시나리오를 완주한다. 이 단계 종료를 MVP-1 완료 게이트로 삼는다.
+주노 Test 화면에서 PTT release 녹음을 선택된 GPT/Gemini STT가 전사하고, 화면에 최종 transcript를 먼저 표시한 뒤 로컬 미매칭 발화를 LLM이 판정·응답한다. 네트워크 차단 상태에서도 대화와 시나리오를 완주한다. 이 단계 종료를 MVP-1 완료 게이트로 삼는다.
 
 ### 선행조건
 
 - M2 통과.
 - [보안·배포 계약](SECURITY_AND_DEPLOYMENT.md) 확인.
-- `[미결정]` Gemini 정확한 모델 ID·현재 쿼터·배포 Origin 확인.
+- OpenAI `gpt-transcribe`, Gemini audio transcription, 대화 LLM용 Gemini 모델 ID·현재 쿼터·배포 Origin 확인.
 
 ### 구현 범위
 
-- Cloudflare Workers 프록시, Secret 기반 Gemini 호출.
+- Cloudflare Workers 프록시, Secret 기반 OpenAI/Gemini STT와 Gemini LLM 호출.
+- PTT release에서만 녹음을 종료하고 16 kHz mono WAV로 정규화. VAD·무음 자동 종료 금지.
+- 공통 `TranscriptionPort` 뒤 GPT/Gemini 어댑터와 개발·QA 전환 설정. 일반 플레이 한 턴에는 하나만 호출.
+- 최종 transcript zod 검증·화면 선표시 완료 뒤에만 로컬/LLM 판정 시작.
 - 정확한 Origin 허용 목록, 요청 크기·메서드·콘텐츠형 검증.
 - 대화/전투 응답 zod 스키마. M3에서는 대화 경로만 UI에 연결.
 - 4초 타임아웃 → 1회 재시도 → 고정 폴백 → 3연속 실패 로컬 모드.
@@ -195,31 +201,33 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 
 - 전투 UI·변신, 실제 시나리오·에셋, TTS.
 - 클라이언트 API 키, 사용자 키 입력.
+- 로컬 Whisper 게임 통합, 일반 플레이의 GPT/Gemini 동시 호출, M3에서 production 단일 공급자 확정.
 
 ### 변경 예상 파일
 
-`worker/*`, `wrangler.toml` 또는 동등 설정, `src/judge/llm.ts`, `src/judge/schema.ts`, `src/engine/nodeRunner.ts`, 네트워크 mock, 테스트, `.gitignore`, `.env.example`.
+`worker/*`, `wrangler.toml` 또는 동등 설정, `src/input/recording.ts`, `src/input/transcription.ts`, `src/judge/llm.ts`, `src/judge/schema.ts`, `src/engine/nodeRunner.ts`, 네트워크 mock, 테스트, `.gitignore`, `.env.example`.
 
 ### 완료 조건
 
 - 자유 발화가 검증된 응답·상태 갱신으로 연결.
 - 허용 밖 flag/델타/emotion이 차단 또는 안전 변환.
-- Workers 장애·Gemini 오류·오프라인에서 고정 응답과 로컬 판정으로 완주.
+- Workers 장애·GPT/Gemini STT 오류·Gemini LLM 오류·오프라인에서 고정 응답과 로컬 판정으로 완주.
 - 브라우저 번들·Git 추적 파일에 키 없음.
-- 실제 Asset 없이 마이크→STT→Workers→LLM→주노 응답의 다중 턴 자유대화가 동작.
+- 실제 Asset 없이 마이크→GPT 또는 Gemini STT→transcript 선표시→LLM→주노 응답의 다중 턴 자유대화가 각 공급자에서 동작.
 - 플레이어가 말하지 않은 감정을 단정하거나 검은 마법소녀 정체를 공개하는 응답이 차단됨.
 - [QA QJ-01~QJ-08](QA_AND_DEMO.md) 전체 통과.
 
 ### 자동 검증
 
 - 공통 3명령 성공.
-- Workers 요청/Origin/스키마 테스트.
+- Workers 요청/Origin/오디오 제한/공급자 라우팅/스키마 테스트.
+- GPT/Gemini 각각 동일 WAV 전사, 한 턴 단일 호출, transcript 렌더 전 LLM 미호출 테스트.
 - 4초 timeout, 1회 재시도, 3연속 강등, 늦은 응답 무시 테스트.
 - 비밀 패턴 검사. 절차는 보안 문서 §8.
 
 ### 수동 플레이 검증
 
-- [QJ-01~QJ-08](QA_AND_DEMO.md), [QL-01~QL-05](QA_AND_DEMO.md).
+- [QJ-01~QJ-08](QA_AND_DEMO.md), [QS-06](QA_AND_DEMO.md), [QL-01~QL-05](QA_AND_DEMO.md).
 - DevTools Offline에서도 시작부터 ending까지 클릭/로컬 완주.
 
 ### 실패 시 롤백 또는 폴백
@@ -229,7 +237,7 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 
 ### 다음 단계 진입 조건
 
-정상 LLM과 완전 오프라인 양쪽 완주. 키·Origin·쿼터 확인 기록 완료. MVP-1 완료 기준 통과 후에만 M4 진입.
+GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 완주. 공급자별 키·Origin·쿼터·정확도·지연 기록 완료. 최종 공급자는 미결정 상태로 유지해도 되지만 MVP-1 완료 기준 통과 후에만 M4 진입.
 
 ## M4 — 변신 주문과 3페이즈 언령 배틀
 
@@ -302,11 +310,13 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 - 실제 `scenario.json`, `characters.json`, 플래그 사전.
 - 스타일 앵커 승인, 필수 에셋 생성·라이선스 확인.
 - [ASSET_MANIFEST.md](ASSET_MANIFEST.md) 필수 항목 파일명 확정.
+- [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)의 장면별 배경·인물·표정·음악 매핑 확정.
 
 ### 구현 범위
 
 - 대화 8~10, 컷씬 2, battle 1, GOOD/NORMAL/BAD 본편 통합.
 - NPC 표정 5종, 적 2상태, 플레이어/변신 컷, 필수 배경·BGM.
+- N1 주노 미노출, N3 복수 인물, N4→N5 표정 연속성, battle phase별 인물 상태를 장면 매핑대로 적용.
 - CSS 타이핑·페이드·셰이크·플래시, Canvas 2D 파티클 1모듈.
 - BGM 크로스페이드, Web Audio SFX 약 5종.
 - 기본 에셋 프리로드 + 나머지 지연 로드.
@@ -320,13 +330,14 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 
 ### 변경 예상 파일
 
-`public/scenario/*`, `public/assets/**/*`, `src/ui/*`, `src/audio/*`, `src/engine/*`, CSS, 에셋 로딩 테스트, `ASSET_MANIFEST.md`, `AI_PRODUCTION_LOG.md`.
+`public/scenario/*`, `public/assets/**/*`, `src/ui/*`, `src/audio/*`, `src/engine/*`, CSS, 에셋 로딩 테스트, `SCENE_ASSET_MAPPING.md`, `ASSET_MANIFEST.md`, `AI_PRODUCTION_LOG.md`.
 
 ### 완료 조건
 
 - 실제 본편이 음성·클릭·오프라인 각 경로로 완주.
 - GOOD/NORMAL/BAD 도달. 포함 시 HIDDEN도 도달.
 - JSON 참조와 파일명이 일치, 필수 에셋 누락 없음.
+- 모든 M5 node/phase의 화면 인물·표정·BGM이 장면별 에셋 매핑과 일치.
 - 총 에셋 30MB 이하, 목표 환경 첫 화면 3초 이내.
 - 표정 전환·배경 합성·BGM 루프/크로스페이드 QA 통과.
 
@@ -361,6 +372,7 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 ### 선행조건
 
 - M5 통과.
+- `[확정, DEC-028]` GPT/Gemini 중 production STT 공급자 사용자 선택 완료.
 - GitHub 저장소·Pages base/Origin, Workers 배포 계정과 키 정책 확정.
 - 현장 Chrome·마이크·네트워크 조건 확보.
 
@@ -370,6 +382,7 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 - 프로덕션에서 debug 접근 정책 확정·적용.
 - GitHub Actions 빌드→Pages 배포.
 - Workers production Origin·쿼터·예비 키 운영.
+- 선택된 STT 공급자 하나만 production 라우트에 활성화하고 비선택 STT 라우트·전용 Secret·비교 Lab 번들을 제거.
 - 전체 회귀, 현장 리허설, 제출 영상 녹화.
 - AI 제작 로그·에셋 라이선스·비밀 검사 마감.
 
@@ -386,6 +399,7 @@ PTT·실시간 자막·로컬 키워드 판정으로 M1의 주노 Test 화면과
 
 - Pages HTTPS URL에서 Chrome smoke test 통과.
 - production Workers는 허용 Origin만 응답.
+- production 일반 플레이에서 선택된 STT 공급자만 호출되고 비선택 공급자 요청은 0건.
 - 정상/마이크 거부/네트워크 오프라인 현장 절차 각 1회 성공.
 - 제출 영상에 타이틀→음성 인식→변신→전투→엔딩이 담김.
 - 비밀·미승인 에셋·깨진 링크 없음.

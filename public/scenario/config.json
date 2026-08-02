@@ -4,5 +4,11 @@
   "initialAffinity": 50,
   "totalTurnLimit": 55,
   "finalConvergenceNodeId": "cut_normal",
-  "allowedFlags": ["promise"]
+  "allowedFlags": [
+    "promise",
+    "perfect_transform",
+    "battle_S",
+    "battle_A",
+    "battle_B"
+  ]
 }

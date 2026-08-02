@@ -71,6 +71,155 @@
       "들리는 말 아무거나 해도 돼!"
     ],
     "exitOnMaxTurns": [
+      { "if": "affinity >= 70 && flags.promise", "next": "transform_trial" },
+      { "if": "affinity >= 40", "next": "transform_trial" },
+      { "default": "transform_trial" }
+    ]
+  },
+  {
+    "nodeId": "transform_trial",
+    "type": "cutscene",
+    "scene": { "bg": "bg_hall_dark" },
+    "lines": [
+      {
+        "speaker": "narration",
+        "text": "회색 안개가 심사장을 덮자 사원증이 작은 빛을 내기 시작했다."
+      },
+      {
+        "speaker": "juno",
+        "text": "화면의 주문을 읽어! 틀려도 내가 끝까지 같이 갈게!",
+        "emotion": "surprised"
+      }
+    ],
+    "incantationGate": {
+      "displayText": "반짝이는 별의 힘이여, 지금 여기에 — 변신!",
+      "requiredKeywords": ["별", "힘", "변신"],
+      "minMatch": 2,
+      "maxAttempts": 2,
+      "failLines": [
+        {
+          "speaker": "juno",
+          "text": "괜찮아, 내가 같이 외쳐 줄게. 하나, 둘 —!",
+          "emotion": "happy"
+        },
+        {
+          "speaker": "narration",
+          "text": "두 목소리가 겹치자 사원증의 빛이 변신을 완성했다."
+        }
+      ]
+    },
+    "next": "battle_trial"
+  },
+  {
+    "nodeId": "battle_trial",
+    "type": "battle",
+    "scene": { "bg": "bg_hall_dark" },
+    "enemy": { "id": "gray_wraith", "name": "회색 망령" },
+    "phases": [
+      {
+        "phaseId": "p1",
+        "enemyPrompt": "『포기해라. 아무도 네 목소리 따위 듣지 않아.』",
+        "llmContext": "무관심과 체념을 먹는 망령. 확신에 찬 긍정과 주노를 믿는 말에 흔들린다.",
+        "spell": {
+          "displayText": "물러나라, 잿빛 그림자여!",
+          "requiredKeywords": ["물러나", "잿빛", "그림자"],
+          "minMatch": 2
+        },
+        "guardLine": "빛의 장막이 망령의 속삭임을 밀어낸다.",
+        "clickResponses": [
+          { "text": "듣는 사람이 없어도, 나는 말할 거야.", "momentumDelta": 8 },
+          { "text": "아직 끝나지 않았어.", "momentumDelta": 3 }
+        ],
+        "maxTurns": 3,
+        "advanceAt": 60
+      },
+      {
+        "phaseId": "p2",
+        "enemyPrompt": "『기대하면 다시 실망할 뿐이다.』",
+        "llmContext": "망령은 실패의 기억으로 압박한다. 실망을 감수하고 직접 판단하겠다는 말에 흔들린다.",
+        "spell": {
+          "displayText": "빛나는 마음아, 두려움을 밝혀라!",
+          "requiredKeywords": ["마음", "두려움", "밝혀라"],
+          "minMatch": 2
+        },
+        "guardLine": "도윤은 숨을 고르고 회색 파동을 버텨 냈다.",
+        "clickResponses": [
+          { "text": "실망해도 직접 확인하고 판단할 거야.", "momentumDelta": 8 },
+          { "text": "한 번 더 해 볼 수는 있어.", "momentumDelta": 4 }
+        ],
+        "maxTurns": 3,
+        "advanceAt": 70
+      },
+      {
+        "phaseId": "p3",
+        "enemyPrompt": "『결국 모든 즐거움은 사라진다.』",
+        "llmContext": "망령의 핵이 드러났다. 즐거움의 가치와 다시 시작할 선택을 말하면 크게 흔들린다.",
+        "spell": {
+          "displayText": "즐거움의 빛이여, 다시 시작하라!",
+          "requiredKeywords": ["즐거움", "다시", "시작"],
+          "minMatch": 2
+        },
+        "guardLine": "주노의 빛이 마지막 회색 파동을 받아 냈다.",
+        "clickResponses": [
+          { "text": "사라져도 다시 즐거워질 수 있어.", "momentumDelta": 10 },
+          { "text": "이번에는 내가 선택할게.", "momentumDelta": 5 }
+        ],
+        "maxTurns": 3,
+        "advanceAt": 80
+      }
+    ],
+    "next": "post_battle_convergence"
+  },
+  {
+    "nodeId": "post_battle_convergence",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_dark" },
+    "npc": { "id": "juno", "startEmotion": "happy" },
+    "objective": "전투 뒤 플레이어의 선택을 기존 3엔딩으로 수렴시킨다",
+    "opening": "끝까지 해냈어! 이제 네가 내릴 마지막 판단만 남았어.",
+    "llmContext": "M4 더미 전투 직후. 새 본편 정보를 만들지 말고 플레이어의 선택을 짧게 확인한다.",
+    "maxTurns": 1,
+    "intents": [
+      {
+        "id": "continue_play",
+        "clickLabel": "새로운 즐거움을 한 번 더 확인한다",
+        "examples": ["한 번 더 해 볼게.", "직접 플레이하고 판단하자."],
+        "keywords": ["한 번 더", "플레이", "직접", "해볼"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "happy",
+        "offlineReply": "좋아, 그 판단이면 충분해!",
+        "next": null
+      },
+      {
+        "id": "reserve_judgement",
+        "clickLabel": "아직은 판단을 유보한다",
+        "examples": ["조금 더 생각할게.", "아직 판단 중이야."],
+        "keywords": ["생각", "판단", "아직", "유보"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "응, 네 속도로 정하면 돼.",
+        "next": null
+      },
+      {
+        "id": "close_review",
+        "clickLabel": "오늘 심사는 여기서 끝낸다",
+        "examples": ["오늘은 여기까지 할게.", "이제 끝내자."],
+        "keywords": ["여기까지", "끝", "그만", "종료"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "upset",
+        "offlineReply": "알겠어. 그래도 끝까지 함께해 줘서 고마워.",
+        "next": null
+      }
+    ],
+    "allowedFlags": [],
+    "fallbackReplies": [
+      "천천히 정해도 돼.",
+      "네 판단을 들려줘."
+    ],
+    "exitOnMaxTurns": [
       { "if": "affinity >= 70 && flags.promise", "next": "cut_good" },
       { "if": "affinity >= 40", "next": "cut_normal" },
       { "default": "cut_bad" }

@@ -32,7 +32,7 @@ function parseDocument<T>(label: string, schema: ZodType<T>, input: unknown): T 
 }
 
 function nodeTargets(node: ScenarioNode): string[] {
-  if (node.type === "cutscene") {
+  if (node.type === "cutscene" || node.type === "battle") {
     return [node.next];
   }
   if (node.type === "dialogue") {
@@ -123,6 +123,25 @@ function validateReferences(data: GameData): string[] {
       for (const line of node.lines) {
         if (line.speaker !== "narration" && !characterIds.has(line.speaker)) {
           issues.push(`${node.nodeId} 대사 화자가 characters.json에 없습니다: ${line.speaker}`);
+        }
+      }
+    }
+
+    if (node.type === "cutscene" && node.incantationGate) {
+      if (!globalFlags.has("perfect_transform")) {
+        issues.push(`${node.nodeId} 변신 게이트에 필요한 전역 플래그가 없습니다: perfect_transform`);
+      }
+      for (const line of node.incantationGate.failLines) {
+        if (line.speaker !== "narration" && !characterIds.has(line.speaker)) {
+          issues.push(`${node.nodeId} failLines 화자가 characters.json에 없습니다: ${line.speaker}`);
+        }
+      }
+    }
+
+    if (node.type === "battle") {
+      for (const gradeFlag of ["battle_S", "battle_A", "battle_B"]) {
+        if (!globalFlags.has(gradeFlag)) {
+          issues.push(`${node.nodeId} 전투 등급에 필요한 전역 플래그가 없습니다: ${gradeFlag}`);
         }
       }
     }
