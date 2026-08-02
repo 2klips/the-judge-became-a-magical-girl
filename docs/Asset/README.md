@@ -35,3 +35,24 @@
 ## 불완전 변신 파생 5종
 
 `broken_variants`에는 방어·공격·필살기 자세와 방어·필살기 마법 효과 버전이 들어 있다. 기존 제작분은 그대로 활용하고, 없던 공격 자세만 신규 생성했다.
+
+# 한도윤 매니페스트 호환 에셋 패키지
+
+첨부된 `ASSET_MANIFEST.md` 계약을 기준으로 기존 한도윤 23개 이미지를 재매핑한 납품 묶음이다.
+
+## 바로 통합할 파일
+
+- `public/assets/char_doyun_magical.png` → 논리 ID `doyun.magical`
+- `public/assets/char_doyun_normal.png` → 논리 ID `doyun.normal`
+
+`char_doyun_normal.png`은 기존 `normal_resolve` 대표 컷, `char_doyun_magical.png`은 기존 `magic_stand` 대표 컷을 사용했다.
+
+## 규격
+
+- 1200×2000 PNG
+- 투명 배경
+- 파일당 800KB 이하
+- 상태: `ready` — 실파일 존재 및 자동 규격 검사 통과
+- 라이선스·사람 시각 QA는 아직 완료되지 않았으므로 `approved`가 아니다.
+
+나머지 21장은 확장 논리 ID로 `docs/dev/ASSET_MANIFEST_DOYUN.md`에 기록했다. 기존 원본 묶음은 수정하거나 삭제하지 않았다.
