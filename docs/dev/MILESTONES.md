@@ -310,11 +310,13 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 - 실제 `scenario.json`, `characters.json`, 플래그 사전.
 - 스타일 앵커 승인, 필수 에셋 생성·라이선스 확인.
 - [ASSET_MANIFEST.md](ASSET_MANIFEST.md) 필수 항목 파일명 확정.
+- [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)의 장면별 배경·인물·표정·음악 매핑 확정.
 
 ### 구현 범위
 
 - 대화 8~10, 컷씬 2, battle 1, GOOD/NORMAL/BAD 본편 통합.
 - NPC 표정 5종, 적 2상태, 플레이어/변신 컷, 필수 배경·BGM.
+- N1 주노 미노출, N3 복수 인물, N4→N5 표정 연속성, battle phase별 인물 상태를 장면 매핑대로 적용.
 - CSS 타이핑·페이드·셰이크·플래시, Canvas 2D 파티클 1모듈.
 - BGM 크로스페이드, Web Audio SFX 약 5종.
 - 기본 에셋 프리로드 + 나머지 지연 로드.
@@ -328,13 +330,14 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 ### 변경 예상 파일
 
-`public/scenario/*`, `public/assets/**/*`, `src/ui/*`, `src/audio/*`, `src/engine/*`, CSS, 에셋 로딩 테스트, `ASSET_MANIFEST.md`, `AI_PRODUCTION_LOG.md`.
+`public/scenario/*`, `public/assets/**/*`, `src/ui/*`, `src/audio/*`, `src/engine/*`, CSS, 에셋 로딩 테스트, `SCENE_ASSET_MAPPING.md`, `ASSET_MANIFEST.md`, `AI_PRODUCTION_LOG.md`.
 
 ### 완료 조건
 
 - 실제 본편이 음성·클릭·오프라인 각 경로로 완주.
 - GOOD/NORMAL/BAD 도달. 포함 시 HIDDEN도 도달.
 - JSON 참조와 파일명이 일치, 필수 에셋 누락 없음.
+- 모든 M5 node/phase의 화면 인물·표정·BGM이 장면별 에셋 매핑과 일치.
 - 총 에셋 30MB 이하, 목표 환경 첫 화면 3초 이내.
 - 표정 전환·배경 합성·BGM 루프/크로스페이드 QA 통과.
 
