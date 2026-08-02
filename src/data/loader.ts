@@ -1,4 +1,9 @@
 import type { ZodType } from "zod";
+import {
+  knownBackgroundIds,
+  knownBgmIds,
+  knownImageIds,
+} from "../assets/catalog";
 import { getConditionFlagNames, parseCondition } from "../engine/branch";
 import {
   charactersSchema,
@@ -80,12 +85,35 @@ function validateReferences(data: GameData): string[] {
       requireNode(node.nodeId, target);
     }
 
+    if (!knownBackgroundIds.has(node.scene.bg)) {
+      issues.push(
+        `${node.nodeId}의 scene.bg가 에셋 계약에 없습니다: ${node.scene.bg}`,
+      );
+    }
+    if (node.scene.bgm && !knownBgmIds.has(node.scene.bgm)) {
+      issues.push(
+        `${node.nodeId}의 scene.bgm이 에셋 계약에 없습니다: ${node.scene.bgm}`,
+      );
+    }
+
     if (node.type === "dialogue") {
       if (!characterIds.has(node.npc.id)) {
         issues.push(`${node.nodeId}의 npc.id가 characters.json에 없습니다: ${node.npc.id}`);
       }
 
       const nodeFlags = new Set(node.allowedFlags);
+      const requiredEmotions = new Set([
+        node.npc.startEmotion,
+        ...node.intents.map((intent) => intent.npcEmotion),
+      ]);
+      for (const emotion of requiredEmotions) {
+        const logicalId = `${node.npc.id}.${emotion}`;
+        if (!knownImageIds.has(logicalId)) {
+          issues.push(
+            `${node.nodeId}의 캐릭터 에셋 계약이 없습니다: ${logicalId}`,
+          );
+        }
+      }
       for (const flag of node.allowedFlags) {
         if (!globalFlags.has(flag)) {
           issues.push(`${node.nodeId}의 allowedFlags가 전역 사전에 없습니다: ${flag}`);
@@ -136,12 +164,26 @@ function validateReferences(data: GameData): string[] {
           issues.push(`${node.nodeId} failLines 화자가 characters.json에 없습니다: ${line.speaker}`);
         }
       }
+      for (const logicalId of ["transform.cast", "transform.complete"]) {
+        if (!knownImageIds.has(logicalId)) {
+          issues.push(`${node.nodeId} 변신 에셋 계약이 없습니다: ${logicalId}`);
+        }
+      }
     }
 
     if (node.type === "battle") {
       for (const gradeFlag of ["battle_S", "battle_A", "battle_B"]) {
         if (!globalFlags.has(gradeFlag)) {
           issues.push(`${node.nodeId} 전투 등급에 필요한 전역 플래그가 없습니다: ${gradeFlag}`);
+        }
+      }
+      for (const logicalId of [
+        `${node.enemy.id}.normal`,
+        `${node.enemy.id}.weakened`,
+        "doyun.magical",
+      ]) {
+        if (!knownImageIds.has(logicalId)) {
+          issues.push(`${node.nodeId} 전투 에셋 계약이 없습니다: ${logicalId}`);
         }
       }
     }

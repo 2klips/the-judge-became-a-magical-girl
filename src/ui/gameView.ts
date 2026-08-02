@@ -4,8 +4,17 @@ import type {
   Character,
   CutsceneNode,
   DialogueNode,
+  Emotion,
   EndingNode,
 } from "../data/schema";
+import {
+  assetUrl,
+  isAssetPathUnavailable,
+  reportAssetLoadFailure,
+  resolveBackgroundAsset,
+  resolveCharacterAsset,
+  resolveImageAsset,
+} from "../assets/catalog";
 import type { BattleGrade, BattleState } from "../battle/state";
 import { ClickInputPort } from "../input/click";
 import type {
@@ -19,6 +28,7 @@ import { CaptionsView } from "./captions";
 import { MicIndicatorView } from "./micIndicator";
 import { applySceneEffect, type SceneEffect } from "./effects";
 import { createGauge } from "./gauge";
+import { mountParticleBurst } from "./particles";
 
 interface TitleOptions {
   hasSave: boolean;
@@ -43,8 +53,11 @@ export interface DialogueInputOptions {
 }
 
 interface LineViewOptions {
+  nodeId: string;
   sceneId: string;
   speaker: string;
+  speakerId?: string;
+  emotion?: Emotion;
   text: string;
   progress: string;
   continueLabel: string;
@@ -106,18 +119,18 @@ export class GameView {
   }
 
   renderLoading(): void {
-    const shell = this.createShell("bg_hall_day");
+    const shell = this.createShell("bg_title");
     shell.append(element("p", "loading", "게임 데이터를 검증하는 중…"));
     this.commit(shell);
   }
 
   renderTitle(options: TitleOptions): void {
-    const shell = this.createShell("bg_hall_day");
+    const shell = this.createShell("bg_title");
     shell.classList.add("title-screen");
 
     const titleBlock = element("section", "title-block");
     titleBlock.append(
-      element("p", "eyebrow", "VOICE VISUAL NOVEL · M4"),
+      element("p", "eyebrow", "VOICE VISUAL NOVEL · M5"),
       element("h1", "game-title", "심사역은 마법소녀가 되었다"),
       element(
         "p",
@@ -172,6 +185,33 @@ export class GameView {
   renderLine(options: LineViewOptions): void {
     const shell = this.createShell(options.sceneId);
     shell.append(this.topStatus(options.state, options.progress));
+
+    if (options.nodeId === "n5_transform") {
+      shell.append(
+        this.createAssetVisual(
+          "gray_wraith.normal",
+          "회색 망령",
+          "character-visual scene-enemy-visual",
+        ),
+        this.createCharacterVisual(
+          "juno",
+          options.speakerId === "juno"
+            ? (options.emotion ?? options.state.npcEmotion)
+            : options.state.npcEmotion,
+          "주노",
+          "character-visual cutscene-character has-companion",
+        ),
+      );
+    } else if (options.speakerId && options.speakerId !== "narration") {
+      shell.append(
+        this.createCharacterVisual(
+          options.speakerId,
+          options.emotion ?? "neutral",
+          options.speaker,
+          "character-visual cutscene-character",
+        ),
+      );
+    }
 
     const panel = this.dialoguePanel(options.speaker, options.text);
     const button = element("button", "primary-button compact", options.continueLabel);
@@ -256,6 +296,22 @@ export class GameView {
   }): void {
     const shell = this.createShell(options.sceneId);
     applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
+    const cutStage = element("section", "transform-cut-stage");
+    cutStage.setAttribute("aria-label", "변신 연출");
+    cutStage.append(
+      this.createAssetVisual(
+        "transform.cast",
+        "변신 주문",
+        "asset-visual transform-cut transform-cut-cast",
+      ),
+      this.createAssetVisual(
+        "transform.complete",
+        "변신 완료",
+        "asset-visual transform-cut transform-cut-complete",
+      ),
+    );
+    shell.append(cutStage);
+    mountParticleBurst(shell);
     const card = element("section", "transformation-result");
     const title =
       options.outcome === "perfect"
@@ -289,6 +345,26 @@ export class GameView {
       ),
     );
     const arena = element("section", "battle-arena");
+    const visualStage = element("section", "battle-visual-stage");
+    visualStage.setAttribute("aria-label", "전투 인물");
+    visualStage.append(
+      this.createAssetVisual(
+        `gray_wraith.${battleState.enemyState}`,
+        node.enemy.name,
+        "asset-visual battle-character enemy-visual",
+      ),
+      this.createAssetVisual(
+        "doyun.magical",
+        "마법소녀 도윤",
+        "asset-visual battle-character player-visual",
+      ),
+      this.createCharacterVisual(
+        "juno",
+        battleState.phaseIndex === 1 ? "happy" : "neutral",
+        "주노",
+        "asset-visual battle-character battle-juno-visual",
+      ),
+    );
     const enemy = element("div", "enemy-card");
     enemy.append(
       element("p", "eyebrow", node.enemy.name),
@@ -299,7 +375,11 @@ export class GameView {
         battleState.enemyState === "weakened" ? "흔들림" : "정상",
       ),
     );
-    arena.append(enemy, createGauge("MOMENTUM", battleState.momentum, 20, 100));
+    arena.append(
+      visualStage,
+      enemy,
+      createGauge("MOMENTUM", battleState.momentum, 20, 100),
+    );
     const command = element("section", "battle-command");
     command.append(
       element("p", "prompt-label", "페이즈 주문"),
@@ -393,6 +473,19 @@ export class GameView {
     );
     const card = element("section", "battle-result-card");
     card.append(
+      this.createAssetVisual(
+        `gray_wraith.${options.battleState.enemyState}`,
+        options.enemyName,
+        "asset-visual battle-reply-character",
+      ),
+      this.createCharacterVisual(
+        "juno",
+        options.battleState.phaseIndex === 1 ? "happy" : "neutral",
+        "주노",
+        "asset-visual battle-reply-juno",
+      ),
+    );
+    card.append(
       element("p", "player-line", `도윤 · ${options.actionLabel}`),
       createGauge("MOMENTUM", options.battleState.momentum, 20, 100),
       this.dialoguePanel(options.enemyName, options.reply),
@@ -419,6 +512,12 @@ export class GameView {
   ): void {
     const shell = this.createShell(node.scene.bg);
     shell.append(this.topStatus(state, `대화 ${state.nodeTurn + 1}/${node.maxTurns}`));
+    this.appendDialogueVisuals(
+      shell,
+      node.nodeId,
+      character,
+      node.npc.startEmotion,
+    );
 
     const panel = this.dialoguePanel(character.name, node.opening);
     const inputArea = element("section", "dialogue-input");
@@ -446,7 +545,10 @@ export class GameView {
   }
 
   renderDialogueReply(options: {
+    nodeId: string;
     sceneId: string;
+    characterId: string;
+    emotion: Emotion;
     speaker: string;
     selectedLabel: string;
     reply: string;
@@ -456,6 +558,12 @@ export class GameView {
   }): void {
     const shell = this.createShell(options.sceneId);
     shell.append(this.topStatus(options.state, `누적 ${options.state.totalTurn}턴`));
+    this.appendDialogueVisuals(
+      shell,
+      options.nodeId,
+      { id: options.characterId, name: options.speaker },
+      options.emotion,
+    );
     const panel = this.dialoguePanel(options.speaker, options.reply);
     panel.insertBefore(
       element("p", "player-line", `도윤 · ${options.selectedLabel}`),
@@ -484,7 +592,20 @@ export class GameView {
     onNewGame: () => void,
   ): void {
     const shell = this.createShell(node.scene.bg);
-    shell.classList.add("ending-screen");
+    shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
+    const characterLine = node.lines.find(
+      (line) => line.speaker !== "narration",
+    );
+    if (characterLine) {
+      shell.append(
+        this.createCharacterVisual(
+          characterLine.speaker,
+          characterLine.emotion ?? "neutral",
+          characterNames.get(characterLine.speaker) ?? characterLine.speaker,
+          "character-visual ending-character",
+        ),
+      );
+    }
     const card = element("section", "ending-card");
     card.append(
       element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
@@ -539,12 +660,143 @@ export class GameView {
   private createShell(sceneId: string): HTMLElement {
     const shell = element("main", "game-shell");
     shell.dataset.scene = sceneId;
+    this.appendBackground(shell, sceneId);
     shell.append(
       element("div", "ambient ambient-one"),
       element("div", "ambient ambient-two"),
       element("div", "scene-grid"),
     );
     return shell;
+  }
+
+  private appendBackground(shell: HTMLElement, sceneId: string): void {
+    const contract = resolveBackgroundAsset(sceneId);
+    if (!contract) {
+      shell.classList.add("scene-asset-placeholder");
+      return;
+    }
+
+    const usePath = (relativePath: string, isFallback: boolean): void => {
+      if (isAssetPathUnavailable(relativePath)) {
+        if (!isFallback && contract.fallbackPath) {
+          usePath(contract.fallbackPath, true);
+          return;
+        }
+        shell.classList.add("scene-asset-placeholder");
+        return;
+      }
+
+      const image = element("img", "scene-background");
+      image.alt = "";
+      image.setAttribute("aria-hidden", "true");
+      image.decoding = "async";
+      image.src = assetUrl(relativePath);
+      image.addEventListener(
+        "error",
+        () => {
+          image.remove();
+          reportAssetLoadFailure(contract.logicalId, relativePath);
+          if (!isFallback && contract.fallbackPath) {
+            usePath(contract.fallbackPath, true);
+          } else {
+            shell.classList.add("scene-asset-placeholder");
+          }
+        },
+        { once: true },
+      );
+      if (isFallback && contract.fallbackClass) {
+        shell.classList.add(contract.fallbackClass);
+      }
+      shell.prepend(image);
+    };
+
+    usePath(contract.primaryPath, false);
+  }
+
+  private createCharacterVisual(
+    characterId: string,
+    emotion: Emotion,
+    label: string,
+    className: string,
+  ): HTMLElement {
+    const logicalId =
+      characterId === "gray_wraith"
+        ? "gray_wraith.normal"
+        : `${characterId}.${emotion}`;
+    const path =
+      characterId === "gray_wraith"
+        ? resolveImageAsset(logicalId)
+        : resolveCharacterAsset(characterId, emotion);
+    return this.createAssetVisual(logicalId, label, className, path);
+  }
+
+  private appendDialogueVisuals(
+    shell: HTMLElement,
+    nodeId: string,
+    character: Pick<Character, "id" | "name">,
+    emotion: Emotion,
+  ): void {
+    if (nodeId === "n1_first_voice") {
+      shell.append(element("div", "first-voice-orb"));
+      return;
+    }
+
+    const hasWraith =
+      nodeId === "n3_wraith_choice" || nodeId.startsWith("n4_");
+    if (hasWraith) {
+      shell.append(
+        this.createAssetVisual(
+          "gray_wraith.normal",
+          "회색 망령",
+          "character-visual scene-enemy-visual",
+        ),
+      );
+    }
+    shell.append(
+      this.createCharacterVisual(
+        character.id,
+        emotion,
+        character.name,
+        hasWraith
+          ? "character-visual dialogue-character has-companion"
+          : "character-visual dialogue-character",
+      ),
+    );
+  }
+
+  private createAssetVisual(
+    logicalId: string,
+    label: string,
+    className: string,
+    resolvedPath = resolveImageAsset(logicalId),
+  ): HTMLElement {
+    const figure = element("figure", className);
+    const showPlaceholder = (): void => {
+      figure.replaceChildren(
+        element("div", "asset-placeholder-card", `${label} · 준비 중`),
+      );
+      figure.classList.add("is-placeholder");
+    };
+
+    if (!resolvedPath || isAssetPathUnavailable(resolvedPath)) {
+      showPlaceholder();
+      return figure;
+    }
+
+    const image = element("img", "asset-image");
+    image.alt = label;
+    image.decoding = "async";
+    image.src = assetUrl(resolvedPath);
+    image.addEventListener(
+      "error",
+      () => {
+        reportAssetLoadFailure(logicalId, resolvedPath);
+        showPlaceholder();
+      },
+      { once: true },
+    );
+    figure.append(image);
+    return figure;
   }
 
   private topStatus(state: GameState, progress: string): HTMLElement {
@@ -591,7 +843,7 @@ export class GameView {
     }
     const panel = element("details", "debug-panel") as HTMLDetailsElement;
     panel.open = true;
-    panel.append(element("summary", undefined, "M4 상태"));
+    panel.append(element("summary", undefined, "M5 상태"));
     const output = element("pre");
     output.textContent = JSON.stringify(
       {

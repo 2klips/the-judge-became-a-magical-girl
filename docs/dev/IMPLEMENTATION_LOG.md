@@ -281,3 +281,38 @@
 - 자동 계약과 클릭/debug 수동 경로를 통과했다. QT-02·QT-03의 부분 성공·2회 미달은 debug 경로로 재현했다.
 - `[PASS]` 사용자가 2026-08-02 실제 마이크 변신 주문·음성 전투 테스트 완료를 확인했다. 개인 발화 원문·선택 공급자·등급·지연 수치는 기록하지 않는다.
 - 최종 판정: **M4 PASS**. 변신 3결과와 전투 S/A/B 자동·수동 재현, M3 회귀 없음. M5 진입 가능.
+
+## M5 — 본편 JSON·로더·placeholder 연출 선통합
+
+- 실행일: 2026-08-02
+- 작업 모드: `MILESTONE_IMPLEMENTATION`
+- 상태: 외부 물리 에셋 전달 전 병렬 구현 범위 완료. M5 게이트는 물리 에셋·음성/오프라인 전체 3경로 사람 QA 전이므로 **미판정**
+
+### 구현 내용
+
+- 완성대본과 DEC-020·024에 맞춰 대화 8, 컷씬 2, battle 1, GOOD/NORMAL/BAD 3개의 총 14노드와 주노·회색 망령 캐릭터 JSON을 통합했다.
+- 중앙 asset catalog가 배경·표정·망령 상태·도윤·변신 2컷·BGM 논리 ID를 고정 경로로 해석한다. `bg_hall_dark`는 `bg_hall_dark.webp → bg_hall_day.webp 파생 → CSS placeholder` 순서다.
+- 파일 로드 실패는 게임을 막지 않고 `[ASSET_HANDOFF] 논리ID: 기대 경로`를 경로별 한 번 출력한다. 외부 루트 `asset/` 원본은 읽기·수정·rename·stage하지 않았다.
+- N1 주노 미노출, N3~N5 주노+망령, N4→N5 표정 연속성, battle 도윤+망령+주노와 momentum 기반 망령 상태를 presentation 계층에 적용했다.
+- 고정 변신 컷 2장, CSS fade/typing/shake/flash, Canvas 파티클, BGM crossfade·PTT duck, 변신 one-shot, Web Audio SFX 5종을 연결했다. 실파일이 없으면 같은 자리에 CSS placeholder가 나온다.
+- 첫 화면 핵심 배경·주노 표정을 preload하고 나머지는 장면 진입 시 지연 로드한다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 29 files, 102 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab Whisper chunk 크기 경고만 유지 |
+| 시나리오·에셋 계약 | PASS | 14노드, 2캐릭터, node/flag/bg/bgm/표정/전투/변신 논리 참조 검증 |
+| 결정적 3엔딩 | PASS | GOOD 76+promise, NORMAL 유보 직행, BAD 거절 직행 자동 테스트 |
+| headed Chromium 클릭 완주 | PASS | 타이틀→N0~N5→3페이즈→GOOD. 콘솔 error 0 |
+| placeholder 장면 매핑 | PASS | N1 주노 미노출, N3/N5 복수 인물, battle 도윤·망령·주노, 변신 2컷 확인 |
+| 누락 파일 진단 | PASS | 물리 파일별 `[ASSET_HANDOFF]` 1회, CSS 진행 유지 |
+| 물리 에셋 QA | 대기 | 외부 담당자 전달 후 규격·일관성·라이선스·용량·청감 검수 필요 |
+| M5 전체 수동 게이트 | 대기 | 음성·오프라인 전체 본편과 NORMAL/BAD 수동 경로 미실행 |
+
+### 현재 판정
+
+- 사용자 요청의 “에셋과 병렬로 JSON·로더·연출 코드를 먼저 구현하고 CSS placeholder로 테스트” 범위는 완료했다.
+- 물리 에셋이 없는 상태를 M5 최종 PASS로 간주하지 않는다. 외부 전달 파일은 자동 보정하지 않고 담당자 오류 반환→재전달→통합 QA 순서로 처리한다.

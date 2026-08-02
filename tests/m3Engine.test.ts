@@ -17,8 +17,7 @@ class MemoryStorage implements StoragePort {
   }
 }
 
-function createEngine(): GameEngine {
-  const data = loadFixtureData() as GameData;
+function createEngine(data: GameData = loadFixtureData() as GameData): GameEngine {
   return new GameEngine(
     data,
     new SaveRepository(
@@ -37,11 +36,15 @@ function reachDialogue(engine: GameEngine): void {
 
 describe("M3 GameEngine LLM 적용", () => {
   it("검증된 LLM 판정만 중앙 상태 함수로 반영하고 미허용 flag는 버린다", () => {
-    const engine = createEngine();
+    const data = structuredClone(loadFixtureData()) as GameData;
+    const dialogue = data.scenario.find((node) => node.nodeId === "n1_first_voice");
+    if (!dialogue || dialogue.type !== "dialogue") throw new Error("dialogue 없음");
+    dialogue.allowedFlags.push("promise");
+    const engine = createEngine(data);
     reachDialogue(engine);
 
     const result = engine.submitLlmJudgement("조건이 궁금해", {
-      intentId: "ask_conditions",
+      intentId: "want_rest",
       affinityDelta: 2,
       emotion: "happy",
       flags: ["promise", "invented_flag"],
@@ -50,13 +53,13 @@ describe("M3 GameEngine LLM 적용", () => {
 
     expect(result).toMatchObject({
       kind: "llm",
-      intentId: "ask_conditions",
+      intentId: "want_rest",
       reply: "좋아, 조건부터 하나씩 확인하자!",
       rejectedFlags: ["invented_flag"],
     });
     expect(engine.getState().affinity).toBe(52);
     expect([...engine.getState().flags]).toEqual(["promise"]);
-    expect(engine.getState().nodeTurn).toBe(1);
+    expect(engine.getState().nodeTurn).toBe(0);
   });
 
   it("LLM 3연속 실패를 로컬 모드 기준으로 기록하고 성공 시 초기화한다", () => {
@@ -82,11 +85,11 @@ describe("M3 GameEngine LLM 적용", () => {
     expect(result).toMatchObject({
       kind: "fallback",
       reply: "한 번 더 이야기해 줘!",
-      intentId: "ask_conditions",
+      intentId: "want_rest",
     });
     expect(engine.getState().affinity).toBe(50);
     expect(engine.getState().npcEmotion).toBe("neutral");
-    expect(engine.getState().nodeTurn).toBe(1);
+    expect(engine.getState().nodeTurn).toBe(0);
     expect(engine.getState().llmFailCount).toBe(1);
   });
 });

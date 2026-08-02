@@ -19,12 +19,6 @@ class MemoryStorage implements StoragePort {
 
 function m4Data(): GameData {
   const data = structuredClone(loadFixtureData()) as GameData;
-  data.config.allowedFlags.push(
-    "perfect_transform",
-    "battle_S",
-    "battle_A",
-    "battle_B",
-  );
   const prologue = data.scenario[0];
   if (!prologue || prologue.type !== "cutscene") throw new Error("prologue 없음");
   prologue.incantationGate = {
@@ -57,7 +51,7 @@ function m4Data(): GameData {
       maxTurns: 3,
       advanceAt: phase === 1 ? 60 : phase === 2 ? 70 : 80,
     })) as BattleNode["phases"],
-    next: "cut_normal",
+    next: "ending_normal",
   });
   return data;
 }
@@ -87,7 +81,7 @@ describe("M4 GameEngine 수직 흐름", () => {
     engine.startNewGame("voice");
 
     expect(engine.submitIncantation("웅얼", 1)).toMatchObject({ outcome: "retry" });
-    expect(engine.getState().currentNodeId).toBe("prologue_review_room");
+    expect(engine.getState().currentNodeId).toBe("n0_review");
     expect(engine.submitIncantation("웅얼", 2)).toMatchObject({ outcome: "rescued" });
     expect(engine.getState().playerForm).toBe("magical");
     expect(engine.getState().flags.has("perfect_transform")).toBe(false);
@@ -124,7 +118,7 @@ describe("M4 GameEngine 수직 흐름", () => {
 
     expect(result).toMatchObject({ completed: true, grade: "S", advanced: true });
     expect(engine.getState()).toMatchObject({
-      currentNodeId: "cut_normal",
+      currentNodeId: "ending_normal",
       battleGrade: "S",
       affinity: 60,
       totalTurn: 3,

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "startNodeId": "prologue_review_room",
+  "startNodeId": "n0_review",
   "initialAffinity": 50,
   "totalTurnLimit": 55,
-  "finalConvergenceNodeId": "cut_normal",
+  "finalConvergenceNodeId": "ch3_gray_answer",
   "allowedFlags": [
     "promise",
     "perfect_transform",

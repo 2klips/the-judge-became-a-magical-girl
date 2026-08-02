@@ -53,11 +53,11 @@
 | `mic.idle` | `[제안] ui_mic_idle.svg` | UI 아이콘 | SVG | N/A | 필수 | planned | Codex | N/A | mic indicator | 대기 |
 | `mic.listening` | `[제안] ui_mic_listening.svg` | UI 아이콘 | SVG + CSS 맥동 | N/A | 필수 | planned | Codex | N/A | mic indicator | 대기 |
 | `mic.processing` | `[제안] ui_mic_processing.svg` | UI 아이콘 | SVG | N/A | 필수 | planned | Codex | N/A | mic indicator | 대기 |
-| `sfx.confirm` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | planned | Codex | N/A | 선택 확정 | 대기 |
-| `sfx.cast` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | planned | Codex | N/A | 주문 성공 | 대기 |
-| `sfx.critical` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | planned | Codex | N/A | 완창/크리티컬 | 대기 |
-| `sfx.impact` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | planned | Codex | N/A | 전투 플래시 | 대기 |
-| `sfx.recognition_fail` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | planned | Codex | N/A | STT 실패 | 대기 |
+| `sfx.confirm` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 선택 확정 | 자동 트리거 PASS, 청감 대기 |
+| `sfx.cast` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 주문 성공 | 자동 트리거 PASS, 청감 대기 |
+| `sfx.critical` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 완창/크리티컬 | 자동 트리거 PASS, 청감 대기 |
+| `sfx.impact` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 전투 플래시 | 자동 트리거 PASS, 청감 대기 |
+| `sfx.recognition_fail` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | STT 실패 | 자동 트리거 PASS, 청감 대기 |
 
 대화창, 이름표, 버튼, 자막, 호감도·momentum 게이지는 CSS 컴포넌트다. 파일 에셋 매니페스트에 추가하지 않는다.
 

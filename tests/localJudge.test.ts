@@ -11,13 +11,13 @@ describe("M2 로컬 intent 판정", () => {
       throw new Error("fixture dialogue가 없습니다.");
     }
 
-    const result = matchLocalIntent("좋아! 설명 좀 해 줘.", dialogue.intents);
+    const result = matchLocalIntent("새로운 게임은 재미있겠다.", dialogue.intents);
 
     expect(result).toMatchObject({
       kind: "matched",
-      intentId: "accept_magic",
-      normalizedText: "좋아설명좀해줘",
-      score: 2,
+      intentId: "seek_new_fun",
+      normalizedText: "새로운게임은재미있겠다",
+      score: 3,
     });
   });
 
@@ -29,10 +29,10 @@ describe("M2 로컬 intent 판정", () => {
       throw new Error("fixture dialogue가 없습니다.");
     }
 
-    expect(matchLocalIntent("좋아, 직업이야?", dialogue.intents)).toMatchObject({
+    expect(matchLocalIntent("게임 끝나면 집에 갈래.", dialogue.intents)).toMatchObject({
       kind: "unmatched",
       reason: "tie",
-      candidateIds: ["accept_magic", "ask_conditions"],
+      candidateIds: ["seek_new_fun", "want_rest"],
     });
   });
 

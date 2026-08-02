@@ -41,7 +41,7 @@ describe("M4 시나리오 경계 검증", () => {
     ) as {
       phases: Array<{ spell: { minMatch: number } }>;
     };
-    battle.phases[0]!.spell.minMatch = 4;
+    battle.phases[0]!.spell.minMatch = 5;
 
     try {
       validateGameData(input);

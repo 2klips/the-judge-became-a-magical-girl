@@ -5,6 +5,9 @@ import {
   createWorkerBattleLlmPort,
 } from "./battle/llm";
 import type { BattleAction, BattleGrade } from "./battle/state";
+import { BgmController } from "./audio/bgm";
+import { SfxPlayer } from "./audio/sfx";
+import { preloadCoreAssets } from "./assets/catalog";
 import { GameDataError, loadGameData } from "./data/loader";
 import type { BattleNode, CutsceneNode } from "./data/schema";
 import { GameEngine, type TurnResult } from "./engine/nodeRunner";
@@ -33,6 +36,9 @@ const params = new URLSearchParams(window.location.search);
 const recordingSupported = BrowserPttRecordingPort.isSupported();
 const workerUrl = import.meta.env.VITE_WORKER_URL || "http://127.0.0.1:8787";
 const view = new GameView(root, recordingSupported);
+const bgm = new BgmController();
+const sfx = new SfxPlayer();
+preloadCoreAssets();
 view.renderLoading();
 
 async function bootstrap(): Promise<void> {
@@ -83,6 +89,29 @@ async function bootstrap(): Promise<void> {
       if (recentTurns.length > 6) recentTurns.splice(0, recentTurns.length - 6);
     };
 
+    const voiceCapture = (voice: RecordedVoiceTurnController) => ({
+      startCapture: async (): Promise<void> => {
+        bgm.setDucked(true);
+        try {
+          await voice.press();
+        } catch (error) {
+          bgm.setDucked(false);
+          throw error;
+        }
+      },
+      finishCapture: async () => {
+        try {
+          return await voice.release();
+        } finally {
+          bgm.setDucked(false);
+        }
+      },
+      cancel: (): void => {
+        voice.cancel();
+        bgm.setDucked(false);
+      },
+    });
+
     const showTransformationResult = (
       node: CutsceneNode & { incantationGate: NonNullable<CutsceneNode["incantationGate"]> },
       result: IncantationResult,
@@ -96,6 +125,8 @@ async function bootstrap(): Promise<void> {
           : result.outcome === "perfect"
             ? ["목소리가 마지막 단어까지 정확히 이어졌다. 빛이 강하게 응답한다."]
             : ["사원증의 빛이 주문에 응답해 변신을 완성했다."];
+      void bgm.play("bgm_transform", false);
+      sfx.play(result.outcome === "perfect" ? "critical" : "cast");
       view.renderTransformationResult({
         sceneId: node.scene.bg,
         outcome: result.outcome,
@@ -120,9 +151,7 @@ async function bootstrap(): Promise<void> {
         sttProvider,
         attempt: incantationAttempt,
         notice,
-        startCapture: () => voice.press(),
-        finishCapture: () => voice.release(),
-        cancel: () => voice.cancel(),
+        ...voiceCapture(voice),
         onTranscript: async (transcript) => {
           const result = engine.submitIncantation(transcript, incantationAttempt);
           if (result.outcome === "retry") {
@@ -176,6 +205,7 @@ async function bootstrap(): Promise<void> {
         const before = engine.getBattleState();
         const result = engine.submitBattleAction(action);
         const delta = result.battleState.momentum - before.momentum;
+        sfx.play(delta === 0 ? "confirm" : "impact");
         view.renderBattleReply({
           sceneId: node.scene.bg,
           enemyName: node.enemy.name,
@@ -199,6 +229,7 @@ async function bootstrap(): Promise<void> {
           const before = engine.getBattleState();
           const result = engine.submitBattleAction({ kind: "spell", transcript });
           const delta = result.battleState.momentum - before.momentum;
+          sfx.play(delta >= 25 ? "critical" : "impact");
           view.renderBattleReply({
             sceneId: node.scene.bg,
             enemyName: node.enemy.name,
@@ -247,9 +278,7 @@ async function bootstrap(): Promise<void> {
         speechSupported: recordingSupported,
         sttProvider,
         notice,
-        startCapture: () => voice.press(),
-        finishCapture: () => voice.release(),
-        cancel: () => voice.cancel(),
+        ...voiceCapture(voice),
         onTranscript: handleBattleTranscript,
         onClickSpell: () =>
           applyAction(
@@ -267,6 +296,7 @@ async function bootstrap(): Promise<void> {
         onGuard: () =>
           applyAction({ kind: "guard" }, "버티기", "『계속 버틴다고 달라질까.』", phase.guardLine),
         onTurnFailed: (message) => {
+          sfx.play("recognition_fail");
           engine.recordSttTurnFailure();
           engine.setInputMode("click");
           renderCurrent(`${message} 클릭 행동으로 계속해 줘.`);
@@ -315,10 +345,12 @@ async function bootstrap(): Promise<void> {
     renderCurrent = (inputNotice?: string, forceClickForTurn = false): void => {
       activeVoice?.cancel();
       activeVoice = null;
+      bgm.setDucked(false);
       activeLlm?.abort();
       activeLlm = null;
       const node = engine.getCurrentNode();
       const state = engine.getState();
+      if (node.scene.bgm) void bgm.play(node.scene.bgm);
       if (readyIncantationNodeId && readyIncantationNodeId !== node.nodeId) {
         readyIncantationNodeId = null;
         incantationAttempt = 1;
@@ -332,7 +364,10 @@ async function bootstrap(): Promise<void> {
           activeVoice = null;
           activeLlm = null;
           view.renderDialogueReply({
+            nodeId: node.nodeId,
             sceneId: node.scene.bg,
+            characterId: character.id,
+            emotion: engine.getState().npcEmotion,
             speaker: character.name,
             selectedLabel,
             reply: result.reply,
@@ -343,6 +378,7 @@ async function bootstrap(): Promise<void> {
         };
 
         const selectIntent = (intentId: string): void => {
+          sfx.play("confirm");
           const result = engine.chooseIntent(intentId);
           renderReply(result.clickLabel, result);
         };
@@ -410,11 +446,10 @@ async function bootstrap(): Promise<void> {
           sttProvider,
           notice: inputNotice,
           forceClickForTurn,
-          startCapture: () => voice.press(),
-          finishCapture: () => voice.release(),
-          cancel: () => voice.cancel(),
+          ...voiceCapture(voice),
           onTranscript: handleTranscript,
           onTurnFailed: (message) => {
+            sfx.play("recognition_fail");
             const failure = engine.recordSttTurnFailure();
             if (failure.forcedClickMode) {
               engine.setInputMode("click");
@@ -529,8 +564,11 @@ function renderCutscene(
     }
     const nextIndex = lineIndex + 1;
     gameView.renderLine({
+      nodeId: node.nodeId,
       sceneId: node.scene.bg,
       speaker: characterName(line.speaker),
+      speakerId: line.speaker,
+      emotion: line.emotion,
       text: line.text,
       progress: `${nextIndex}/${node.lines.length}`,
       continueLabel: nextIndex === node.lines.length ? "다음 장면" : "계속",

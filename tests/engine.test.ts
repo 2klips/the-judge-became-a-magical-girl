@@ -35,114 +35,136 @@ function createEngine(data: GameData = loadFixtureData()): GameEngine {
 function reachDialogue(engine: GameEngine): void {
   engine.startNewGame();
   engine.advanceLinearNode();
-  expect(engine.getCurrentNode().type).toBe("dialogue");
+  expect(engine.getState().currentNodeId).toBe("n1_first_voice");
 }
 
-function completePath(intentId: string): GameEngine {
+const paths = {
+  good: [
+    "seek_new_fun",
+    "curious_magic",
+    "ask_why_chosen",
+    "protect_others",
+    "match_rhythm",
+  ],
+  normal: [
+    "want_rest",
+    "realistic_objection",
+    "ask_identity",
+    "seek_method",
+    "follow_steps",
+  ],
+  bad: [
+    "want_rest",
+    "reject_juno",
+    "stay_cold",
+    "withdraw_or_agree",
+    "keep_distance",
+  ],
+} as const;
+
+function completePath(kind: keyof typeof paths): GameEngine {
   const engine = createEngine();
   reachDialogue(engine);
-  for (let turn = 0; turn < 7; turn += 1) {
-    engine.chooseIntent(intentId);
-  }
-  expect(engine.getCurrentNode().type).toBe("cutscene");
+  paths[kind].forEach((intentId) => engine.chooseIntent(intentId));
+  expect(engine.getState().currentNodeId).toBe("n5_transform");
   engine.chooseIncantationFallback();
+  expect(engine.getState().currentNodeId).toBe("battle_wraith");
   while (engine.getCurrentNode().type === "battle") {
     engine.submitBattleAction({ kind: "click-spell" });
   }
-  expect(engine.getCurrentNode().type).toBe("dialogue");
-  engine.chooseIntent("reserve_judgement");
-  expect(engine.getCurrentNode().type).toBe("cutscene");
-  engine.advanceLinearNode();
+  expect(engine.getState().currentNodeId).toBe("ch3_gray_answer");
+  engine.chooseIntent(
+    kind === "good"
+      ? "allow_one_more_play"
+      : kind === "normal"
+        ? "reserve_final_judgement"
+        : "reject_final_hope",
+  );
   return engine;
 }
 
-describe("M1 node runner", () => {
+describe("M5 node runner", () => {
   it("한 클릭을 상태와 턴에 한 번만 반영한다", () => {
     const engine = createEngine();
     reachDialogue(engine);
-    engine.chooseIntent("accept_magic");
+    engine.chooseIntent("seek_new_fun");
 
-    expect(engine.getState().affinity).toBe(53);
-    expect(engine.getState().nodeTurn).toBe(1);
+    expect(engine.getState().affinity).toBe(52);
+    expect(engine.getState().nodeTurn).toBe(0);
     expect(engine.getState().totalTurn).toBe(1);
+    expect(engine.getState().currentNodeId).toBe("n2_juno_intro");
+  });
+
+  it("긍정 경로와 promise로 GOOD 엔딩에 도달한다", () => {
+    const engine = completePath("good");
+    const node = engine.getCurrentNode();
+    expect(node.type === "ending" ? node.endingId : null).toBe("good");
+    expect(engine.getState().affinity).toBe(76);
     expect(engine.getState().flags.has("promise")).toBe(true);
   });
 
-  it("긍정 7회로 GOOD 엔딩에 도달한다", () => {
-    const engine = completePath("accept_magic");
-    const node = engine.getCurrentNode();
-    expect(node.type === "ending" ? node.endingId : null).toBe("good");
-    expect(engine.getState().affinity).toBe(81);
-  });
-
-  it("중립 7회로 NORMAL 엔딩에 도달한다", () => {
-    const engine = completePath("ask_conditions");
+  it("유보 응답은 NORMAL 엔딩으로 직접 이동한다", () => {
+    const engine = completePath("normal");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("normal");
-    expect(engine.getState().affinity).toBe(60);
+    expect(engine.getState().affinity).toBe(63);
   });
 
-  it("부정 7회로 BAD 엔딩에 도달한다", () => {
-    const engine = completePath("refuse_magic");
+  it("거절 응답은 BAD 엔딩으로 직접 이동한다", () => {
+    const engine = completePath("bad");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("bad");
-    expect(engine.getState().affinity).toBe(39);
+    expect(engine.getState().affinity).toBe(46);
   });
 
   it("intent next를 maxTurns 분기보다 우선한다", () => {
     const data = structuredClone(loadFixtureData()) as GameData;
-    const dialogue = data.scenario.find((node) => node.type === "dialogue");
+    const dialogue = data.scenario.find((node) => node.nodeId === "n1_first_voice");
     if (!dialogue || dialogue.type !== "dialogue") {
       throw new Error("fixture dialogue가 없습니다.");
     }
     dialogue.maxTurns = 1;
     const intent = dialogue.intents[0];
-    if (!intent) {
-      throw new Error("fixture intent가 없습니다.");
-    }
-    intent.next = "cut_bad";
+    if (!intent) throw new Error("fixture intent가 없습니다.");
+    intent.next = "ending_bad";
 
     const engine = createEngine(data);
     reachDialogue(engine);
     engine.chooseIntent(intent.id);
-    expect(engine.getState().currentNodeId).toBe("cut_bad");
+    expect(engine.getState().currentNodeId).toBe("ending_bad");
   });
 
   it("새 게임은 기존 플래그와 진행 상태를 제거한다", () => {
-    const engine = createEngine();
-    reachDialogue(engine);
-    engine.chooseIntent("accept_magic");
+    const engine = completePath("good");
     expect(engine.getState().flags.has("promise")).toBe(true);
 
     engine.startNewGame();
     expect([...engine.getState().flags]).toEqual([]);
     expect(engine.getState().totalTurn).toBe(0);
-    expect(engine.getState().currentNodeId).toBe("prologue_review_room");
+    expect(engine.getState().currentNodeId).toBe("n0_review");
   });
 
   it("음성 transcript를 로컬 intent로 판정해 한 턴만 반영한다", () => {
     const engine = createEngine();
     reachDialogue(engine);
 
-    const result = engine.submitTranscript("수당은 나와?");
+    const result = engine.submitTranscript("집에 가고 싶어.");
 
     expect(result).toMatchObject({
       kind: "matched",
-      transcript: "수당은 나와?",
-      intentId: "ask_conditions",
-      reply: "세계 구하고 나서 근로조건을 협상하자!",
+      transcript: "집에 가고 싶어.",
+      intentId: "want_rest",
+      reply: "이 정도로 지친 사람에게는 긴급한 설렘이 필요해!",
     });
     expect(engine.getState().affinity).toBe(50);
-    expect(engine.getState().nodeTurn).toBe(1);
     expect(engine.getState().totalTurn).toBe(1);
   });
 
-  it("지원 환경에서 음성으로 시작하고 명시적으로 클릭과 음성을 전환한다", () => {
+  it("지원 환경에서 음성과 클릭 입력을 명시적으로 전환한다", () => {
     const engine = createEngine();
 
     engine.startNewGame("voice");
     expect(engine.getState().inputMode).toBe("voice");
-
     engine.setInputMode("click");
     expect(engine.getState().inputMode).toBe("click");
     engine.setInputMode("voice");

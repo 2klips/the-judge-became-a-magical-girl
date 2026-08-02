@@ -133,17 +133,16 @@ GOOD/NORMAL의 아침·부분 회복은 새 배경을 필수화하지 않는다.
 - 물리 에셋 로드 실패는 `physical → 지정 파생 → CSS placeholder` 순서로 강등한다. 진행을 막지 않는다.
 - 컷 가능 자산이 없다는 이유로 GOOD/NORMAL/BAD 완주를 막지 않는다.
 
-## 6. 현재 구현 대비 반영 대기 항목
+## 6. 현재 구현 상태
 
-다음은 문서 작성 시점의 실제 M5 코드·JSON과 이 명세를 대조한 결과다. 에셋 파일 도착만으로 해결되지 않으며 presentation·audio 통합에서 확인해야 한다.
-
-- `n1_first_voice`는 일반 dialogue 렌더 때문에 현재 주노 스프라이트가 미리 보일 수 있다. N2 등장 전 숨김 필요.
-- N3~N5는 현재 기본 렌더가 한 명 중심이다. 주노와 회색 망령 동시 배치 필요.
-- 고정 대사 renderer가 `gray_wraith`의 기본 감정 `neutral`을 그대로 경로에 붙이면 계약에 없는 `gray_wraith.neutral`을 요청한다. 망령은 감정 스프라이트가 아니라 `gray_wraith.normal/weakened` 상태 매핑을 사용한다.
-- battle 화면은 도윤과 망령을 표시하지만 주노 보조 위치는 아직 장면별 계약 반영이 필요하다.
-- `bgm_transform`은 현재 scene BGM처럼 진입 시 재생될 수 있다. 주문 판정 뒤 one-shot 재생, loop 금지 확인 필요.
-- `bgm_crisis`, `bgm_ending`은 컷 가능이므로 현재 JSON의 `bgm_battle`, `bgm_daily` 폴백이 정상이다. 승인 파일을 채택할 때만 scene cue를 교체한다.
-- `ending.black_magical_girl` 컷은 현재 renderer·catalog에 연결되지 않았다. 미제작 상태에서는 기존 narration+CSS 폴백을 유지한다.
+- `[구현]` `n1_first_voice`는 주노 스프라이트를 숨기고 CSS 빛만 표시한다.
+- `[구현]` N3~N5는 주노와 `gray_wraith.normal`을 동시에 배치한다. 고정 대사의 망령도 `gray_wraith.neutral`이 아니라 상태 에셋으로 해석한다.
+- `[구현]` battle은 도윤·현재 망령 상태·주노 보조 인물을 같은 stage에 배치한다.
+- `[구현]` N4의 마지막 주노 표정은 `GameState.npcEmotion`으로 N5 도입까지 이어지고, N5의 명시 표정 대사에서만 전환한다.
+- `[구현]` `bgm_transform`은 주문 결과 뒤 one-shot으로 재생한다. N5 도입은 `bgm_battle` crisis 폴백을 유지하고, PTT 청취 중 현재 BGM을 duck한다.
+- `[구현]` 물리 파일은 기본 핵심분만 preload하고 나머지는 장면 진입 시 지연 로드한다. 실패는 `physical → 지정 파생 → CSS placeholder`로 강등하며 `[ASSET_HANDOFF]`를 경로별 한 번 기록한다.
+- `[대기]` `bgm_crisis`, `bgm_ending`, `ending.black_magical_girl`은 컷 가능이다. 승인 파일을 채택하기 전에는 현재 필수곡·narration·CSS 폴백을 사용한다.
+- `[대기]` 모든 필수 물리 에셋의 시각·청각·라이선스 QA는 외부 담당자 전달 후 진행한다.
 
 ## 7. 현재 M5에서 제작하지 않을 항목
 

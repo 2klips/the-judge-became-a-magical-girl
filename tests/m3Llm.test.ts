@@ -85,12 +85,13 @@ describe("M3 LLM 판정", () => {
 
   it("4초 제한 단위 호출을 한 번 재시도한 뒤 성공한다", async () => {
     const context = { node: dialogueNode(), transcript: "처음 듣는 자유 발화", recentTurns: [] };
+    const intentId = context.node.intents[1]!.id;
     const inner = {
       judgeDialogue: vi
         .fn()
         .mockRejectedValueOnce(new Error("temporary"))
         .mockResolvedValueOnce({
-          intentId: "ask_conditions",
+          intentId,
           affinityDelta: 0,
           emotion: "neutral",
           flags: [],
@@ -100,7 +101,7 @@ describe("M3 LLM 판정", () => {
     const port = createRetryingLlmPort(inner, { timeoutMs: 4_000, retries: 1 });
 
     await expect(port.judgeDialogue(context, new AbortController().signal)).resolves.toMatchObject({
-      intentId: "ask_conditions",
+      intentId,
     });
     expect(inner.judgeDialogue).toHaveBeenCalledTimes(2);
   });
@@ -135,9 +136,11 @@ describe("M3 LLM 판정", () => {
   });
 
   it("Worker JSON 경계를 검증한다", async () => {
+    const context = { node: dialogueNode(), transcript: "수당은?", recentTurns: [] };
+    const intentId = context.node.intents[1]!.id;
     const fetcher = vi.fn(async (_request: Request) =>
       Response.json({
-        intentId: "ask_conditions",
+        intentId,
         affinityDelta: 0,
         emotion: "neutral",
         flags: [],
@@ -148,8 +151,6 @@ describe("M3 LLM 판정", () => {
       workerUrl: "http://127.0.0.1:8787",
       fetcher,
     });
-    const context = { node: dialogueNode(), transcript: "수당은?", recentTurns: [] };
-
     await expect(port.judgeDialogue(context, new AbortController().signal)).resolves.toMatchObject({
       reply: "조건부터 확인하자!",
     });

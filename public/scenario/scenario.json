@@ -1,297 +1,525 @@
 [
   {
-    "nodeId": "prologue_review_room",
+    "nodeId": "n0_review",
     "type": "cutscene",
-    "scene": { "bg": "bg_hall_day" },
+    "scene": { "bg": "bg_hall_day", "bgm": "bgm_daily" },
     "lines": [
-      {
-        "speaker": "narration",
-        "text": "반복되는 심사 끝, 꺼진 모니터 위로 작은 빛 하나가 내려앉았다."
-      },
-      {
-        "speaker": "juno",
-        "text": "사원증 확인! 한도윤, 맞지?",
-        "emotion": "surprised"
-      },
-      {
-        "speaker": "juno",
-        "text": "마침내 찾았다! 이제부터 너는 마법소녀가 되어 세상을 구해야 해!",
-        "emotion": "happy"
-      }
+      { "speaker": "narration", "text": "늦은 밤, 마지막까지 남은 도윤의 모니터에 평가표가 이어진다." },
+      { "speaker": "narration", "text": "완성도는 양호하나 차별성이 부족함." },
+      { "speaker": "narration", "text": "기존 작품과 유사한 경험을 제공함." },
+      { "speaker": "narration", "text": "도윤은 같은 문장을 붙여 넣으려다 멈춘다." },
+      { "speaker": "narration", "text": "지금 가장 원하는 것을 직접 말해 주세요." }
     ],
-    "next": "ch1_juno_test"
+    "next": "n1_first_voice"
   },
   {
-    "nodeId": "ch1_juno_test",
+    "nodeId": "n1_first_voice",
     "type": "dialogue",
     "scene": { "bg": "bg_hall_day" },
-    "npc": { "id": "juno", "startEmotion": "happy" },
-    "objective": "플레이어가 주노와 대화하며 첫 관계 온도를 정하게 만든다",
-    "opening": "나는 주노! 네가 아직 새로운 즐거움을 포기하지 않은 것 같아서 왔어!",
-    "llmContext": "심사장 안의 늦은 밤. 주노는 방금 플레이어 앞에 나타났다. 아직 사건은 시작되지 않았고, 주노는 자신을 소개하며 첫 반응을 살핀다. 대사는 반말 두 문장 이내로 한다.",
-    "maxTurns": 7,
+    "npc": { "id": "juno", "startEmotion": "surprised" },
+    "objective": "플레이어가 지금 원하는 것을 말해 첫 음성 행동을 익히게 만든다",
+    "opening": "지금 가장 원하는 것을 말해 줘. 네 목소리를 확인할게!",
+    "llmContext": "늦은 밤 사무실의 모니터 안에서 아직 모습을 드러내지 않은 주노가 말한다. 플레이어의 첫 답을 짧게 받아치고 곧바로 모습을 드러낸다. 반말 두 문장 이내로 말한다.",
+    "maxTurns": 1,
     "intents": [
       {
-        "id": "accept_magic",
-        "clickLabel": "조금 재밌겠다며 설명을 듣는다",
-        "examples": ["마법소녀라니, 조금 재밌겠는데.", "그래서 뭘 하면 돼?"],
-        "keywords": ["재밌", "설명", "뭘 하면", "해볼", "좋아"],
-        "affinityDelta": 3,
-        "setFlags": ["promise"],
+        "id": "seek_new_fun",
+        "clickLabel": "새롭고 재미있는 게임을 원한다고 말한다",
+        "examples": ["진짜 재미있는 게임을 보고 싶어.", "뭔가 신박한 일이 있었으면 좋겠다."],
+        "keywords": ["재미", "게임", "신박", "새로운", "설레"],
+        "affinityDelta": 2,
+        "setFlags": [],
         "npcEmotion": "happy",
-        "offlineReply": "좋아! 역시 내 눈은 정확해!",
-        "next": null
+        "offlineReply": "찾았다! 아직 새로운 즐거움을 기다리는 사람!",
+        "next": "n2_juno_intro"
       },
       {
-        "id": "ask_conditions",
-        "clickLabel": "근로조건과 정체부터 확인한다",
-        "examples": ["마법소녀가 직업이야?", "이거 수당은 나와?"],
-        "keywords": ["직업", "수당", "조건", "정체", "누구"],
+        "id": "want_rest",
+        "clickLabel": "퇴근하거나 쉬고 싶다고 말한다",
+        "examples": ["집에 가고 싶어.", "오늘 일 좀 끝났으면 좋겠다."],
+        "keywords": ["집", "퇴근", "쉬", "자고", "끝났"],
         "affinityDelta": 0,
         "setFlags": [],
         "npcEmotion": "neutral",
-        "offlineReply": "세계 구하고 나서 근로조건을 협상하자!",
-        "next": null
+        "offlineReply": "이 정도로 지친 사람에게는 긴급한 설렘이 필요해!",
+        "next": "n2_juno_intro"
       },
       {
-        "id": "refuse_magic",
-        "clickLabel": "다른 사람을 찾으라고 거절한다",
+        "id": "question_signal",
+        "clickLabel": "누가 말하는지 의심한다",
+        "examples": ["누구세요?", "이게 뭐야?"],
+        "keywords": ["누구", "뭐야", "어디", "목소리", "이게"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "surprised",
+        "offlineReply": "목소리 확인 완료! 자세한 내용은 만나서 설명할게!",
+        "next": "n2_juno_intro"
+      }
+    ],
+    "allowedFlags": [],
+    "fallbackReplies": ["잘 못 들었어. 지금 원하는 걸 짧게 말해 줘!", "어떤 말이든 괜찮아. 네 목소리를 들려줘!"],
+    "exitOnMaxTurns": [{ "default": "n2_juno_intro" }]
+  },
+  {
+    "nodeId": "n2_juno_intro",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_day" },
+    "npc": { "id": "juno", "startEmotion": "happy" },
+    "objective": "플레이어가 주노의 마법소녀 제안을 처음 받아들이거나 반박하게 만든다",
+    "opening": "사원증 확인! 한도윤, 이제부터 너는 마법소녀가 되어 세상을 구해야 해!",
+    "llmContext": "주노가 모니터에서 튀어나와 키보드 위에 섰다. 자신 있게 도윤을 선택했지만 거절당할까 조금 조급하다. 현재 질문에 필요한 정보만 반말 두 문장 이내로 답한다.",
+    "maxTurns": 1,
+    "intents": [
+      {
+        "id": "curious_magic",
+        "clickLabel": "조금 재미있겠다며 방법을 묻는다",
+        "examples": ["마법소녀? 조금 재밌겠는데.", "그래서 뭘 하면 돼?"],
+        "keywords": ["재밌", "마법소녀", "뭘 하면", "방법", "해볼"],
+        "affinityDelta": 3,
+        "setFlags": [],
+        "npcEmotion": "happy",
+        "offlineReply": "나는 주노! 역시 내 눈은 정확해!",
+        "next": "n2_juno_followup"
+      },
+      {
+        "id": "realistic_objection",
+        "clickLabel": "성별이나 근로조건을 현실적으로 따진다",
+        "examples": ["나는 남자인데?", "이거 수당은 나와?"],
+        "keywords": ["남자", "성별", "직업", "수당", "조건"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "마법소녀는 성별이 아니라 직업이야!",
+        "next": "n2_juno_followup"
+      },
+      {
+        "id": "reject_juno",
+        "clickLabel": "싫다며 다른 사람을 찾으라고 한다",
         "examples": ["싫어, 다른 사람 찾아.", "바쁘니까 돌아가."],
-        "keywords": ["싫", "다른 사람", "바빠", "돌아가", "거절"],
+        "keywords": ["싫", "다른 사람", "바빠", "돌아가", "꺼져"],
         "affinityDelta": -3,
         "setFlags": [],
         "npcEmotion": "upset",
         "offlineReply": "잠깐만 듣고 거절해도 되잖아!",
-        "next": null
+        "next": "n2_juno_followup"
       }
     ],
-    "allowedFlags": ["promise"],
-    "fallbackReplies": [
-      "응? 잘 못 들었어. 한 번만 다시 말해 줘!",
-      "들리는 말 아무거나 해도 돼!"
-    ],
-    "exitOnMaxTurns": [
-      { "if": "affinity >= 70 && flags.promise", "next": "transform_trial" },
-      { "if": "affinity >= 40", "next": "transform_trial" },
-      { "default": "transform_trial" }
-    ]
+    "allowedFlags": [],
+    "fallbackReplies": ["응? 들리는 말 아무거나 해도 돼!", "놀란 건 알겠어. 한 번만 더 말해 줘!"],
+    "exitOnMaxTurns": [{ "default": "n2_juno_followup" }]
   },
   {
-    "nodeId": "transform_trial",
-    "type": "cutscene",
-    "scene": { "bg": "bg_hall_dark" },
-    "lines": [
+    "nodeId": "n2_juno_followup",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_day" },
+    "npc": { "id": "juno", "startEmotion": "neutral" },
+    "objective": "플레이어가 주노의 정체와 자신이 선택된 이유를 한 번 더 확인하게 만든다",
+    "opening": "궁금한 건 지금 하나만 물어봐. 설명은 움직이면서 할게!",
+    "llmContext": "주노는 아직 사건이 시작되기 전 필요한 설명만 하려 한다. 자신은 설렘을 마법으로 바꾸는 안내자이며 도윤이 즐거움을 포기하지 않아 선택했다고 말할 수 있다. 반말 두 문장 이내로 답한다.",
+    "maxTurns": 1,
+    "intents": [
       {
-        "speaker": "narration",
-        "text": "회색 안개가 심사장을 덮자 사원증이 작은 빛을 내기 시작했다."
+        "id": "ask_identity",
+        "clickLabel": "주노의 정체를 묻는다",
+        "examples": ["너 대체 뭐야?", "어디서 나온 거야?"],
+        "keywords": ["정체", "뭐야", "어디서", "누구", "주노"],
+        "affinityDelta": 2,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "나는 설렘을 마법으로 바꿔 주는 안내자야!",
+        "next": "n3_wraith_choice"
       },
       {
-        "speaker": "juno",
-        "text": "화면의 주문을 읽어! 틀려도 내가 끝까지 같이 갈게!",
-        "emotion": "surprised"
+        "id": "ask_why_chosen",
+        "clickLabel": "왜 자신을 골랐는지 묻는다",
+        "examples": ["왜 나를 골랐는데?", "내가 왜 필요한 거야?"],
+        "keywords": ["왜 나", "골랐", "선택", "필요", "이유"],
+        "affinityDelta": 2,
+        "setFlags": [],
+        "npcEmotion": "shy",
+        "offlineReply": "넌 아직 새로운 즐거움을 포기하지 않았으니까!",
+        "next": "n3_wraith_choice"
+      },
+      {
+        "id": "stay_cold",
+        "clickLabel": "설명보다 빨리 끝내라고 재촉한다",
+        "examples": ["빨리 끝내자.", "관심 없으니까 본론만 말해."],
+        "keywords": ["빨리", "끝내", "관심 없", "본론", "재촉"],
+        "affinityDelta": -2,
+        "setFlags": [],
+        "npcEmotion": "upset",
+        "offlineReply": "알았어. 그래도 지금부터는 내 말을 잘 들어!",
+        "next": "n3_wraith_choice"
       }
     ],
+    "allowedFlags": [],
+    "fallbackReplies": ["질문 하나만 더 해 줘!", "잘 안 들렸어. 짧게 다시 말해 줘!"],
+    "exitOnMaxTurns": [{ "default": "n3_wraith_choice" }]
+  },
+  {
+    "nodeId": "n3_wraith_choice",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_battle" },
+    "npc": { "id": "juno", "startEmotion": "upset" },
+    "objective": "플레이어가 망령 앞에서 무엇을 먼저 걱정하는지 말해 관계 분위기를 정하게 만든다",
+    "opening": "사람들이 버린 기대가 뭉친 회색 망령이야. 도윤, 어떻게 할 거야?",
+    "llmContext": "회색 망령이 평가 기록을 이용해 사무실을 덮었다. 주노는 작은 방어막으로 도윤을 지키며 답을 기다린다. 플레이어의 우선순위에 반응하고 즉시 관계 분위기로 수렴한다.",
+    "maxTurns": 1,
+    "intents": [
+      {
+        "id": "protect_others",
+        "clickLabel": "직원과 게임부터 지키겠다고 한다",
+        "examples": ["다른 직원들은 괜찮아?", "게임들이 사라지게 둘 수 없어."],
+        "keywords": ["직원", "사람", "게임", "지키", "괜찮"],
+        "affinityDelta": 3,
+        "setFlags": [],
+        "npcEmotion": "happy",
+        "offlineReply": "이런 상황에서도 먼저 다른 사람을 보는구나!",
+        "next": "n4_team"
+      },
+      {
+        "id": "seek_method",
+        "clickLabel": "이길 방법부터 알려 달라고 한다",
+        "examples": ["이길 방법부터 말해.", "변신하면 정확히 뭘 할 수 있어?"],
+        "keywords": ["방법", "이길", "변신", "뭘 할", "없애"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "겁나도 확인부터 하는 타입이네. 좋아, 충분해!",
+        "next": "n4_cooperate"
+      },
+      {
+        "id": "withdraw_or_agree",
+        "clickLabel": "도망치거나 망령의 말에 동조한다",
+        "examples": ["내 일이 아니야.", "솔직히 다 비슷한 것도 맞잖아."],
+        "keywords": ["내 일 아니", "도망", "못 해", "비슷", "맞잖"],
+        "affinityDelta": -3,
+        "setFlags": [],
+        "npcEmotion": "upset",
+        "offlineReply": "다른 사람을 찾을 시간이 없어. 나도 더는 실패하고 싶지 않아.",
+        "next": "n4_awkward"
+      }
+    ],
+    "allowedFlags": [],
+    "fallbackReplies": ["더 이야기할 시간 없어. 네가 할 일을 말해 줘!", "도윤, 어떻게 할지 한 번만 더 말해 줘!"],
+    "exitOnMaxTurns": [{ "default": "n4_cooperate" }]
+  },
+  {
+    "nodeId": "n4_team",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_dark" },
+    "npc": { "id": "juno", "startEmotion": "happy" },
+    "objective": "좋은 호흡을 확인하고 플레이어가 변신을 행동으로 받아들이게 만든다",
+    "opening": "좋아! 이 정도 호흡이면 한 번에 성공하겠어!",
+    "llmContext": "도윤과 주노가 빠르게 뜻을 맞췄다. 주노는 신이 났지만 긴 설명 없이 변신으로 이끌어야 한다. 농담을 받아쳐도 한 문장 안에 본론으로 돌아온다.",
+    "maxTurns": 1,
+    "intents": [
+      {
+        "id": "match_rhythm",
+        "clickLabel": "같이 해 보자며 호흡을 맞춘다",
+        "examples": ["좋아, 같이 해 보자.", "한 번에 끝내자."],
+        "keywords": ["같이", "해 보자", "한 번에", "좋아", "끝내"],
+        "affinityDelta": 3,
+        "setFlags": [],
+        "npcEmotion": "happy",
+        "offlineReply": "역시 내 선택은 틀리지 않았어!",
+        "next": "n5_transform"
+      },
+      {
+        "id": "tease_juno",
+        "clickLabel": "아직 같이 해 본 적 없다고 농담한다",
+        "examples": ["아직 같이 해 본 적도 없잖아.", "벌써 호흡을 어떻게 알아?"],
+        "keywords": ["해 본 적", "벌써", "호흡", "어떻게 알아", "처음"],
+        "affinityDelta": 2,
+        "setFlags": [],
+        "npcEmotion": "happy",
+        "offlineReply": "느낌이 그렇다니까!",
+        "next": "n5_transform"
+      },
+      {
+        "id": "focus_action",
+        "clickLabel": "일단 변신부터 하자고 한다",
+        "examples": ["일단 변신부터 하자.", "망령부터 막아."],
+        "keywords": ["일단", "변신부터", "망령", "막아", "서둘러"],
+        "affinityDelta": 1,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "좋아, 주변에는 아무도 없어. 마음껏 외쳐!",
+        "next": "n5_transform"
+      }
+    ],
+    "allowedFlags": [],
+    "fallbackReplies": ["좋아, 말보다 행동으로 보여 줘!", "못 들었지만 표정은 알겠어. 변신하자!"],
+    "exitOnMaxTurns": [{ "default": "n5_transform" }]
+  },
+  {
+    "nodeId": "n4_cooperate",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_dark" },
+    "npc": { "id": "juno", "startEmotion": "neutral" },
+    "objective": "플레이어가 주노를 완전히 믿지 않아도 필요한 협력에는 동의하게 만든다",
+    "opening": "나를 안 믿어도 괜찮아. 지금은 내가 알려 주는 것만 따라 해!",
+    "llmContext": "도윤은 상황과 방법을 먼저 확인했다. 주노는 실용적인 태도를 존중하며 끝난 뒤 설명하겠다고 약속하고 변신으로 이끈다. 반말 두 문장 이내로 답한다.",
+    "maxTurns": 1,
+    "intents": [
+      {
+        "id": "follow_steps",
+        "clickLabel": "지금은 알려 주는 대로 하겠다고 한다",
+        "examples": ["알겠어, 일단 따라 할게.", "방법부터 알려 줘."],
+        "keywords": ["알겠", "따라", "방법", "알려", "일단"],
+        "affinityDelta": 1,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "좋아, 그 정도면 충분해!",
+        "next": "n5_transform"
+      },
+      {
+        "id": "demand_answers",
+        "clickLabel": "끝난 뒤 전부 설명하라고 한다",
+        "examples": ["끝나면 전부 설명해.", "나중에 제대로 말해 줘."],
+        "keywords": ["끝나면", "설명", "나중", "제대로", "전부"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "끝나고 전부 설명해 줄게!",
+        "next": "n5_transform"
+      },
+      {
+        "id": "complain_then_help",
+        "clickLabel": "불평하면서도 돕겠다고 한다",
+        "examples": ["마음에 안 들지만 해 볼게.", "불평은 나중에 하지."],
+        "keywords": ["마음에 안", "해 볼게", "불평", "나중", "도와"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "shy",
+        "offlineReply": "불평은 변신한 다음에 해!",
+        "next": "n5_transform"
+      }
+    ],
+    "allowedFlags": [],
+    "fallbackReplies": ["완전히 믿지 않아도 돼. 움직여 주면 충분해!", "잘 안 들렸어. 그래도 지금은 변신부터 하자!"],
+    "exitOnMaxTurns": [{ "default": "n5_transform" }]
+  },
+  {
+    "nodeId": "n4_awkward",
+    "type": "dialogue",
+    "scene": { "bg": "bg_hall_dark" },
+    "npc": { "id": "juno", "startEmotion": "upset" },
+    "objective": "서먹해진 플레이어에게 관계를 회복하거나 최소한 협력할 마지막 기회를 준다",
+    "opening": "근데 나, 너 말고는 찾을 시간이 없어.",
+    "llmContext": "주노의 빛이 약해졌다. 플레이어가 사과하거나 협력하면 놀라면서 받아들이고, 거리를 유지해도 억지로 감정을 요구하지 않는다. 진심을 말할수록 조용한 반말을 쓴다.",
+    "maxTurns": 1,
+    "intents": [
+      {
+        "id": "repair_relation",
+        "clickLabel": "사과하고 주노를 혼자 두지 않겠다고 한다",
+        "examples": ["아까는 미안해. 일단 해 볼게.", "너 혼자 두지는 않을게."],
+        "keywords": ["미안", "해 볼게", "혼자 두지", "같이", "도와"],
+        "affinityDelta": 3,
+        "setFlags": [],
+        "npcEmotion": "shy",
+        "offlineReply": "알았어. 이번에는 내가 먼저 믿을게.",
+        "next": "n5_transform"
+      },
+      {
+        "id": "limited_cooperation",
+        "clickLabel": "지금만 협력하겠다고 한다",
+        "examples": ["일단 지금만 도울게.", "끝날 때까지만 같이 가."],
+        "keywords": ["지금만", "도울", "끝날 때", "같이 가", "일단"],
+        "affinityDelta": 0,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "괜찮아. 지금은 움직여 주는 것만으로 충분해.",
+        "next": "n5_transform"
+      },
+      {
+        "id": "keep_distance",
+        "clickLabel": "주노를 믿지 않는다고 선을 긋는다",
+        "examples": ["널 믿는 건 아니야.", "끝나면 바로 돌아갈 거야."],
+        "keywords": ["안 믿", "끝나면", "돌아갈", "거리", "바로"],
+        "affinityDelta": -3,
+        "setFlags": [],
+        "npcEmotion": "neutral",
+        "offlineReply": "알겠어. 내가 먼저 할 테니까 따라오기만 해.",
+        "next": "n5_transform"
+      }
+    ],
+    "allowedFlags": [],
+    "fallbackReplies": ["대답하기 싫어도 괜찮아. 지금은 움직이자.", "잘 안 들렸어. 내가 먼저 외칠게."],
+    "exitOnMaxTurns": [{ "default": "n5_transform" }]
+  },
+  {
+    "nodeId": "n5_transform",
+    "type": "cutscene",
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_battle" },
+    "lines": [
+      { "speaker": "narration", "text": "도윤의 사원증이 빛을 내며 공중으로 떠오른다." },
+      { "speaker": "gray_wraith", "text": "창피하잖아……. 아무도 진심으로 듣지 않을 텐데……." },
+      { "speaker": "juno", "text": "내가 먼저 외칠게. 화면의 두 문장을 끝까지 따라와!", "emotion": "surprised" }
+    ],
     "incantationGate": {
-      "displayText": "반짝이는 별의 힘이여, 지금 여기에 — 변신!",
-      "requiredKeywords": ["별", "힘", "변신"],
+      "displayText": "몽글몽글 설렘아, 잠든 마음을 깨워 줘!\n해피 플레이! 매지컬 체인지!",
+      "requiredKeywords": ["설렘", "잠든 마음", "해피 플레이", "매지컬 체인지"],
       "minMatch": 2,
       "maxAttempts": 2,
       "failLines": [
-        {
-          "speaker": "juno",
-          "text": "괜찮아, 내가 같이 외쳐 줄게. 하나, 둘 —!",
-          "emotion": "happy"
-        },
-        {
-          "speaker": "narration",
-          "text": "두 목소리가 겹치자 사원증의 빛이 변신을 완성했다."
-        }
+        { "speaker": "juno", "text": "괜찮아, 내가 먼저 외칠게. 이번에는 같이 하자.", "emotion": "shy" },
+        { "speaker": "narration", "text": "두 목소리가 겹치자 사원증이 불완전한 빛으로 응답했다." }
       ]
     },
-    "next": "battle_trial"
+    "next": "battle_wraith"
   },
   {
-    "nodeId": "battle_trial",
+    "nodeId": "battle_wraith",
     "type": "battle",
-    "scene": { "bg": "bg_hall_dark" },
+    "scene": { "bg": "bg_hall_void", "bgm": "bgm_battle" },
     "enemy": { "id": "gray_wraith", "name": "회색 망령" },
     "phases": [
       {
-        "phaseId": "p1",
-        "enemyPrompt": "『포기해라. 아무도 네 목소리 따위 듣지 않아.』",
-        "llmContext": "무관심과 체념을 먹는 망령. 확신에 찬 긍정과 주노를 믿는 말에 흔들린다.",
+        "phaseId": "p1_defend",
+        "enemyPrompt": "기대가 남아 있으면…… 또 실망할 거야…….",
+        "llmContext": "망령이 직원과 게임 화면을 회색 안개로 삼키려 한다. 타인을 지키겠다는 의지와 함께 싸우겠다는 말에 흔들린다. 도윤의 기억을 읽는다고 말하지 않는다.",
         "spell": {
-          "displayText": "물러나라, 잿빛 그림자여!",
-          "requiredKeywords": ["물러나", "잿빛", "그림자"],
+          "displayText": "몽글몽글 구름아, 모두를 포근하게 감싸 줘! 해피 버블 프로텍션!",
+          "requiredKeywords": ["구름", "포근", "감싸", "프로텍션"],
           "minMatch": 2
         },
-        "guardLine": "빛의 장막이 망령의 속삭임을 밀어낸다.",
+        "guardLine": "빛의 장막이 직원들과 게임 화면을 감싼다.",
         "clickResponses": [
-          { "text": "듣는 사람이 없어도, 나는 말할 거야.", "momentumDelta": 8 },
-          { "text": "아직 끝나지 않았어.", "momentumDelta": 3 }
+          { "text": "다른 사람과 게임부터 지킬 거야.", "momentumDelta": 8 },
+          { "text": "일단 네 공격부터 막겠어.", "momentumDelta": 4 }
         ],
-        "maxTurns": 3,
+        "maxTurns": 2,
         "advanceAt": 60
       },
       {
-        "phaseId": "p2",
-        "enemyPrompt": "『기대하면 다시 실망할 뿐이다.』",
-        "llmContext": "망령은 실패의 기억으로 압박한다. 실망을 감수하고 직접 판단하겠다는 말에 흔들린다.",
+        "phaseId": "p2_attack",
+        "enemyPrompt": "나를 지우면…… 실망도 다시 돌아와…….",
+        "llmContext": "망령의 몸 안에 갇힌 게임 캐릭터들이 보인다. 실망을 감수하고 직접 확인하겠다는 말, 비슷함과 무가치를 구분하는 말에 크게 흔들린다.",
         "spell": {
-          "displayText": "빛나는 마음아, 두려움을 밝혀라!",
-          "requiredKeywords": ["마음", "두려움", "밝혀라"],
+          "displayText": "반짝반짝 별빛아, 회색 마음을 밝혀 줘! 해피 스타 브레이크!",
+          "requiredKeywords": ["별빛", "회색 마음", "밝혀", "브레이크"],
           "minMatch": 2
         },
-        "guardLine": "도윤은 숨을 고르고 회색 파동을 버텨 냈다.",
+        "guardLine": "도윤은 숨을 고르고 회색 파동을 정면으로 견딘다.",
         "clickResponses": [
-          { "text": "실망해도 직접 확인하고 판단할 거야.", "momentumDelta": 8 },
-          { "text": "한 번 더 해 볼 수는 있어.", "momentumDelta": 4 }
+          { "text": "실망해도 직접 플레이하고 판단할 거야.", "momentumDelta": 10 },
+          { "text": "비슷해도 전부 의미 없는 건 아니야.", "momentumDelta": 7 }
         ],
-        "maxTurns": 3,
+        "maxTurns": 2,
         "advanceAt": 70
       },
       {
-        "phaseId": "p3",
-        "enemyPrompt": "『결국 모든 즐거움은 사라진다.』",
-        "llmContext": "망령의 핵이 드러났다. 즐거움의 가치와 다시 시작할 선택을 말하면 크게 흔들린다.",
+        "phaseId": "p3_answer",
+        "enemyPrompt": "네 게임도 버렸잖아……. 또 기대할 수 있어……?",
+        "llmContext": "망령은 회사 계정의 7년 전 프로젝트 기록과 현재 출품작의 소개 문구를 겹쳐 보인다. 약점은 부족함과 무가치를 구분하고 다시 직접 판단하겠다는 도윤 자신의 답이다. 주노는 답을 재촉하지 않는다.",
         "spell": {
-          "displayText": "즐거움의 빛이여, 다시 시작하라!",
-          "requiredKeywords": ["즐거움", "다시", "시작"],
+          "displayText": "주노 스타라이트—— 러블리 플레이 빔!",
+          "requiredKeywords": ["주노", "스타라이트", "러블리", "플레이 빔"],
           "minMatch": 2
         },
-        "guardLine": "주노의 빛이 마지막 회색 파동을 받아 냈다.",
+        "guardLine": "주노가 앞을 막는다. 아직 끝난 것은 아니다.",
         "clickResponses": [
-          { "text": "사라져도 다시 즐거워질 수 있어.", "momentumDelta": 10 },
-          { "text": "이번에는 내가 선택할게.", "momentumDelta": 5 }
+          { "text": "부족해도 즐겁게 하고 싶었던 마음까지 틀린 건 아니야.", "momentumDelta": 10 },
+          { "text": "모르겠어도 한 번 더 직접 플레이해 볼게.", "momentumDelta": 6 }
         ],
         "maxTurns": 3,
         "advanceAt": 80
       }
     ],
-    "next": "post_battle_convergence"
+    "next": "ch3_gray_answer"
   },
   {
-    "nodeId": "post_battle_convergence",
+    "nodeId": "ch3_gray_answer",
     "type": "dialogue",
-    "scene": { "bg": "bg_hall_dark" },
-    "npc": { "id": "juno", "startEmotion": "happy" },
-    "objective": "전투 뒤 플레이어의 선택을 기존 3엔딩으로 수렴시킨다",
-    "opening": "끝까지 해냈어! 이제 네가 내릴 마지막 판단만 남았어.",
-    "llmContext": "M4 더미 전투 직후. 새 본편 정보를 만들지 말고 플레이어의 선택을 짧게 확인한다.",
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_daily" },
+    "npc": { "id": "juno", "startEmotion": "neutral" },
+    "objective": "플레이어가 남은 회색 빛의 가능성에 최종 답을 내려 GOOD/NORMAL/BAD로 수렴하게 만든다",
+    "opening": "작은 회색 빛이 묻고 있어. 자기도 다시 즐거워질 수 있겠냐고.",
+    "llmContext": "전투는 끝났고 패배는 없다. 작은 회색 빛이 게임 화면 앞에 남았다. 주노는 플레이어의 답을 대신 완성하지 않고 기다린다. 긍정, 유보, 냉소 중 실제 의미에 반응한다.",
     "maxTurns": 1,
     "intents": [
       {
-        "id": "continue_play",
-        "clickLabel": "새로운 즐거움을 한 번 더 확인한다",
-        "examples": ["한 번 더 해 볼게.", "직접 플레이하고 판단하자."],
-        "keywords": ["한 번 더", "플레이", "직접", "해볼"],
-        "affinityDelta": 0,
-        "setFlags": [],
+        "id": "allow_one_more_play",
+        "clickLabel": "직접 한 번 더 플레이해 보라고 한다",
+        "examples": ["직접 플레이해 봐. 재미없으면 그때 말해.", "한 번 더 해 보고 판단하자."],
+        "keywords": ["직접", "플레이", "한 번 더", "판단", "가능"],
+        "affinityDelta": 3,
+        "setFlags": ["promise"],
         "npcEmotion": "happy",
-        "offlineReply": "좋아, 그 판단이면 충분해!",
+        "offlineReply": "좋아. 네가 내린 그 판단을 기억할게!",
         "next": null
       },
       {
-        "id": "reserve_judgement",
-        "clickLabel": "아직은 판단을 유보한다",
-        "examples": ["조금 더 생각할게.", "아직 판단 중이야."],
-        "keywords": ["생각", "판단", "아직", "유보"],
+        "id": "reserve_final_judgement",
+        "clickLabel": "아직 모르지만 가능성은 남겨 둔다",
+        "examples": ["아직 모르겠어. 그래도 한 번 더 볼게.", "답은 못 하겠지만 포기하지는 않을게."],
+        "keywords": ["아직 모르", "한 번 더 볼", "답은 못", "포기하지", "유보"],
         "affinityDelta": 0,
         "setFlags": [],
         "npcEmotion": "neutral",
-        "offlineReply": "응, 네 속도로 정하면 돼.",
-        "next": null
+        "offlineReply": "그 정도면 충분해. 오늘은 여기까지 하자.",
+        "next": "ending_normal"
       },
       {
-        "id": "close_review",
-        "clickLabel": "오늘 심사는 여기서 끝낸다",
-        "examples": ["오늘은 여기까지 할게.", "이제 끝내자."],
-        "keywords": ["여기까지", "끝", "그만", "종료"],
-        "affinityDelta": 0,
+        "id": "reject_final_hope",
+        "clickLabel": "기대해도 의미없다며 거절한다",
+        "examples": ["어차피 다 잊힐 거야.", "더 기대하고 싶지 않아."],
+        "keywords": ["다 잊", "의미없", "기대하지", "거절", "포기"],
+        "affinityDelta": -3,
         "setFlags": [],
         "npcEmotion": "upset",
-        "offlineReply": "알겠어. 그래도 끝까지 함께해 줘서 고마워.",
-        "next": null
+        "offlineReply": "알겠어. 다음에는 네 말을 더 오래 들을게.",
+        "next": "ending_bad"
       }
     ],
-    "allowedFlags": [],
-    "fallbackReplies": [
-      "천천히 정해도 돼.",
-      "네 판단을 들려줘."
-    ],
+    "allowedFlags": ["promise"],
+    "fallbackReplies": ["천천히 말해도 돼. 나는 기다릴게.", "네가 직접 내린 답을 들려줘."],
     "exitOnMaxTurns": [
-      { "if": "affinity >= 70 && flags.promise", "next": "cut_good" },
-      { "if": "affinity >= 40", "next": "cut_normal" },
-      { "default": "cut_bad" }
+      { "if": "affinity >= 70 && flags.promise", "next": "ending_good" },
+      { "if": "affinity >= 40", "next": "ending_normal" },
+      { "default": "ending_bad" }
     ]
-  },
-  {
-    "nodeId": "cut_good",
-    "type": "cutscene",
-    "scene": { "bg": "bg_hall_dark" },
-    "lines": [
-      {
-        "speaker": "juno",
-        "text": "좋아, 그 대답 기억할게! 다음에는 진짜 목소리로 이야기하자!",
-        "emotion": "happy"
-      }
-    ],
-    "next": "ending_good"
-  },
-  {
-    "nodeId": "cut_normal",
-    "type": "cutscene",
-    "scene": { "bg": "bg_hall_dark" },
-    "lines": [
-      {
-        "speaker": "juno",
-        "text": "신중한 건 좋아. 다음에는 네 목소리로 더 물어봐!",
-        "emotion": "neutral"
-      }
-    ],
-    "next": "ending_normal"
-  },
-  {
-    "nodeId": "cut_bad",
-    "type": "cutscene",
-    "scene": { "bg": "bg_hall_dark" },
-    "lines": [
-      {
-        "speaker": "juno",
-        "text": "알겠어. 그래도 네가 다시 부르면 이번에는 기다릴게.",
-        "emotion": "upset"
-      }
-    ],
-    "next": "ending_bad"
   },
   {
     "nodeId": "ending_good",
     "type": "ending",
-    "scene": { "bg": "bg_hall_day" },
+    "scene": { "bg": "bg_hall_day", "bgm": "bgm_daily" },
     "endingId": "good",
     "lines": [
       { "speaker": "narration", "text": "GOOD — 한 번 더 플레이" },
-      { "speaker": "juno", "text": "우리 호흡, 생각보다 괜찮은데?", "emotion": "happy" }
+      { "speaker": "narration", "text": "도윤은 기존 평가를 지우고 작품을 다시 실행한다." },
+      { "speaker": "narration", "text": "완성도는 부족하지만 전달하려는 즐거움이 분명함." },
+      { "speaker": "narration", "text": "조금 더 플레이해 보고 싶음." },
+      { "speaker": "juno", "text": "이제 좀 들리네. 네가 재미있다고 생각하는 소리.", "emotion": "happy" },
+      { "speaker": "narration", "text": "복도 끝에서 검은 지팡이가 회색 잔향을 빨아들인다." },
+      { "speaker": "narration", "text": "《심사역은 마법소녀가 되었다》 TO BE CONTINUED" }
     ]
   },
   {
     "nodeId": "ending_normal",
     "type": "ending",
-    "scene": { "bg": "bg_hall_day" },
+    "scene": { "bg": "bg_hall_day", "bgm": "bgm_daily" },
     "endingId": "normal",
     "lines": [
       { "speaker": "narration", "text": "NORMAL — 한 번만 더" },
-      { "speaker": "juno", "text": "아직 판단 중이지? 그럼 다음 질문을 기다릴게.", "emotion": "neutral" }
+      { "speaker": "narration", "text": "망령은 사라졌지만 사무실 일부에는 회색이 남았다." },
+      { "speaker": "narration", "text": "도윤은 평가를 저장하지 않고 게임을 다시 실행한다." },
+      { "speaker": "juno", "text": "포기한 거 아니야. 기다리는 거야.", "emotion": "neutral" },
+      { "speaker": "narration", "text": "모니터 한구석에 UNKNOWN USER CONNECTED가 잠깐 나타난다." }
     ]
   },
   {
     "nodeId": "ending_bad",
     "type": "ending",
-    "scene": { "bg": "bg_hall_day" },
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_daily" },
     "endingId": "bad",
     "lines": [
       { "speaker": "narration", "text": "BAD — 회색 업무일지" },
-      { "speaker": "juno", "text": "오늘은 여기까지야. 그래도 끝까지 들어 줘서 고마워.", "emotion": "upset" }
+      { "speaker": "narration", "text": "망령의 형체는 사라졌지만 사무실의 색은 돌아오지 않는다." },
+      { "speaker": "narration", "text": "기존 작품과 유사함. 추가 검토 필요 없음." },
+      { "speaker": "juno", "text": "이번에도 너무 빨리 답을 정해 버렸나 봐.", "emotion": "upset" },
+      { "speaker": "juno", "text": "다음에는 네 말을 더 오래 들을게.", "emotion": "upset" }
     ]
   }
 ]
