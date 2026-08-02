@@ -7,10 +7,18 @@ import type {
 import { transitionScene, type SceneState } from "../fsm";
 import type { SaveRepository } from "../storage/saveRepository";
 import {
+  matchLocalIntent,
+  type LocalIntentMiss,
+} from "../judge/local";
+import {
   applyDialogueJudgement,
   createInitialGameState,
   moveStateToNode,
+  recordSttTurnFailure,
+  setGameInputMode,
   type GameState,
+  type InputMode,
+  type SttFailureResult,
 } from "../state";
 import { selectExit } from "./branch";
 
@@ -20,6 +28,18 @@ export interface TurnResult {
   advanced: boolean;
   rejectedFlags: string[];
 }
+
+export type TranscriptTurnResult =
+  | (TurnResult & {
+      kind: "matched";
+      transcript: string;
+      intentId: string;
+      normalizedText: string;
+      score: number;
+    })
+  | (LocalIntentMiss & {
+      transcript: string;
+    });
 
 function nodeScene(node: ScenarioNode, startNodeId: string): SceneState {
   if (node.nodeId === startNodeId && node.type === "cutscene") {
@@ -66,12 +86,28 @@ export class GameEngine {
     return node;
   }
 
-  startNewGame(): GameState {
+  startNewGame(inputMode: InputMode = "click"): GameState {
     this.saves.clear();
-    this.state = createInitialGameState(this.data.config);
+    this.state = setGameInputMode(
+      createInitialGameState(this.data.config),
+      inputMode,
+    );
     this.sceneState = transitionScene("TITLE", "PROLOGUE");
     this.saves.save(this.state);
     return this.state;
+  }
+
+  setInputMode(inputMode: InputMode): GameState {
+    this.state = setGameInputMode(this.getState(), inputMode);
+    this.saves.save(this.state);
+    return this.state;
+  }
+
+  recordSttTurnFailure(): SttFailureResult {
+    const result = recordSttTurnFailure(this.getState());
+    this.state = result.state;
+    this.saves.save(this.state);
+    return result;
   }
 
   resume(state: GameState): GameState {
@@ -121,6 +157,25 @@ export class GameEngine {
       clickLabel: intent.clickLabel,
       advanced: target !== null,
       rejectedFlags: applied.rejectedFlags,
+    };
+  }
+
+  submitTranscript(transcript: string): TranscriptTurnResult {
+    const node = this.getCurrentNode();
+    if (node.type !== "dialogue") {
+      throw new Error("대화 노드에서만 transcript를 판정할 수 있습니다.");
+    }
+    const match = matchLocalIntent(transcript, node.intents);
+    if (match.kind === "unmatched") {
+      return { ...match, transcript };
+    }
+    return {
+      kind: "matched",
+      transcript,
+      intentId: match.intentId,
+      normalizedText: match.normalizedText,
+      score: match.score,
+      ...this.chooseIntent(match.intentId),
     };
   }
 

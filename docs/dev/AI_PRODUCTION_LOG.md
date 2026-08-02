@@ -17,6 +17,7 @@
 | 2026-07-28 | M1~M6 개발 문서 체계 초안 | Codex | 기획서 v2, 별첨1, 별첨2, 현재 파일 구조, 사용자 문서 요구사항 | 행동 규칙·구현 계약·마일스톤·QA·보안·에셋·프롬프트 문서 | 사용자 최종 검수 대기. 자동 링크·비밀 패턴·계약 대조는 별도 검증 | 보류 | 작업 토큰 수 | `AGENTS.md`, `docs/dev/`, `prompts/` |
 | 2026-07-28 | M1 GitHub 초기 게시 계약·복붙 프롬프트 | Codex | M1 계약, 보안·배포, QA, 사용자 Git 저장소 생성·push 요구 | M1에 Git 초기화·private 원격 생성·검증 후 push 게이트 추가, 완전한 M1 프롬프트 작성 | 기존 Git 부재 확인. 관련 문서 계약·경로·비밀 제외·force push 금지 대조 | 사용 | 미측정 | `AGENTS.md`, `docs/dev/`, `prompts/M1_IMPLEMENTATION_PROMPT.md` |
 | 2026-07-31 | M1 클릭 완주 엔진·주노 Test 화면 | Codex | 기획서 v2, 별첨1, 완성대본 v2 N2·주노 지침, M1 계약, 사용자 GitHub 지시 | Vite/TS/Vanilla 앱, zod 데이터 경계, 상태·FSM·분기·저장, CSS 화면, 23 tests | 사용자 UI 최종 검수 대기. 자동 check/test/build와 Chrome 150의 GOOD/NORMAL/BAD·복구·404 검증 완료 | 사용 | 미측정 | `src/`, `public/scenario/`, `tests/`, `docs/dev/IMPLEMENTATION_LOG.md`, 초기 commit `feat: bootstrap playable M1` |
+| 2026-08-02 | M2 STT A/B/C 비교 Lab | Codex | 사용자 PTT 조기 종료·정확도 피드백, M2 계약, OpenAI/Gemini/Hugging Face 공식 문서 | 동일 WAV 기반 OpenAI·Gemini·로컬 Whisper 비교 UI, 로컬 Worker, CER·지연 측정, 10개 Lab 테스트 | 사용자 실제 발화 검수 완료. 로컬 Whisper 정확도 미달로 폐기, GPT/Gemini 정확도 유사·응답 약 1,116ms/3,220ms로 MVP 후보 유지 | 부분 사용: A/B 유지, C 폐기 | 미측정 | `stt-lab.html`, `src/stt-lab/`, `worker/sttLab.ts`, `tests/sttLab*.test.ts`, DEC-027·DEC-028 |
 
 ## 기록 규칙
 

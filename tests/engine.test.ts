@@ -112,4 +112,33 @@ describe("M1 node runner", () => {
     expect(engine.getState().totalTurn).toBe(0);
     expect(engine.getState().currentNodeId).toBe("prologue_review_room");
   });
+
+  it("음성 transcript를 로컬 intent로 판정해 한 턴만 반영한다", () => {
+    const engine = createEngine();
+    reachDialogue(engine);
+
+    const result = engine.submitTranscript("수당은 나와?");
+
+    expect(result).toMatchObject({
+      kind: "matched",
+      transcript: "수당은 나와?",
+      intentId: "ask_conditions",
+      reply: "세계 구하고 나서 근로조건을 협상하자!",
+    });
+    expect(engine.getState().affinity).toBe(50);
+    expect(engine.getState().nodeTurn).toBe(1);
+    expect(engine.getState().totalTurn).toBe(1);
+  });
+
+  it("지원 환경에서 음성으로 시작하고 명시적으로 클릭과 음성을 전환한다", () => {
+    const engine = createEngine();
+
+    engine.startNewGame("voice");
+    expect(engine.getState().inputMode).toBe("voice");
+
+    engine.setInputMode("click");
+    expect(engine.getState().inputMode).toBe("click");
+    engine.setInputMode("voice");
+    expect(engine.getState().inputMode).toBe("voice");
+  });
 });

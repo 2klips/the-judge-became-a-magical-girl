@@ -37,8 +37,9 @@
 ### 입력·실패 계약
 
 - M1은 같은 화면을 클릭·고정 응답으로 실행한다.
-- M2는 PTT, `ko-KR`, interim transcript, 로컬 intent 판정을 연결한다.
-- M3는 Cloudflare Workers를 통한 LLM 자유대화를 연결한다.
+- M2는 Web Speech 기반 PTT, `ko-KR`, interim transcript, 로컬 intent 판정을 연결해 UI·폴백·상태 경계를 검증한다. Web Speech transcript는 M3 이후 최종 권위가 아니다.
+- M3는 버튼 release까지 녹음한 동일 WAV를 Cloudflare Workers의 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 어댑터 하나에 보내고, 검증된 최종 transcript를 화면에 먼저 표시한 뒤 LLM 자유대화를 호출한다.
+- `[확정, DEC-028]` MVP-1까지 GPT/Gemini STT를 개발·QA 설정으로 전환할 수 있어야 한다. 일반 플레이 한 턴에서 두 공급자를 동시에 호출하지 않는다. 로컬 Whisper는 게임 경로에 연결하지 않는다.
 - 마이크 거부·STT 실패·LLM 지연·오프라인에서도 클릭·로컬 고정 응답으로 대화를 계속하고 테스트 종료 지점까지 도달한다.
 
 ### MVP-1 비범위
@@ -107,9 +108,12 @@ interface BattleState {
 한 턴의 고정 순서:
 
 ```text
-입력 수집 → 정규화 → 로컬 intent 판정 → 미매칭이면 LLM 판정
+PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규화
+→ 로컬 intent 판정 → 미매칭이면 LLM 판정
 → 판정 검증/클램프 → 응답 연출 → 상태 적용 → 턴 증가 → 분기 평가
 ```
+
+STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSON에 공급자 ID를 저장하지 않는다. 비교 Lab만 같은 WAV의 A/B 동시 비교를 허용한다.
 
 분기 우선순위:
 
@@ -173,6 +177,19 @@ interface SpeechPort {
   cancel(): void;
 }
 
+type SttProviderId = "openai" | "gemini";
+
+interface PttRecordingPort {
+  start(): Promise<void>;
+  stop(): Promise<Blob>;
+  cancel(): void;
+}
+
+interface TranscriptionPort {
+  readonly provider: SttProviderId;
+  transcribe(audio: Blob, signal: AbortSignal): Promise<string>;
+}
+
 interface LlmPort {
   judgeDialogue(input: unknown, signal: AbortSignal): Promise<DialogueJudgement>;
   judgeBattle(input: unknown, signal: AbortSignal): Promise<BattleJudgement>;
@@ -225,7 +242,7 @@ LLM 로컬 모드는 런타임 어댑터 상태다. 제품 `GameState`에 새 �
 | `ui/*` | 렌더·사용자 이벤트 전달 | 상태 규칙 |
 | `audio/*` | BGM/SFX 재생 | 분기 규칙 |
 | `data/loader.ts` | fetch, zod, 참조 무결성 | 자동 JSON 수정 |
-| `worker/` | Origin 검증, Gemini 호출, 응답 제한 | 게임 상태·시나리오 소유 |
+| `worker/` | Origin 검증, GPT/Gemini STT 공급자 라우팅, Gemini LLM 호출, 요청·응답 제한 | 게임 상태·시나리오 소유 |
 
 ```text
 main(composition root)

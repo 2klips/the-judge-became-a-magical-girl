@@ -35,6 +35,11 @@ export interface ApplyDialogueResult {
   rejectedFlags: string[];
 }
 
+export interface SttFailureResult {
+  state: GameState;
+  forcedClickMode: boolean;
+}
+
 const snapshotSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -106,6 +111,26 @@ export function moveStateToNode(current: GameState, nodeId: string): GameState {
     nodeTurn: 0,
     history: [...current.history, nodeId],
   };
+}
+
+export function recordSttTurnFailure(current: GameState): SttFailureResult {
+  const sttFailCount = Math.min(current.sttFailCount + 1, 5);
+  const forcedClickMode = sttFailCount >= 5;
+  return {
+    state: {
+      ...current,
+      sttFailCount,
+      inputMode: forcedClickMode ? "click" : current.inputMode,
+    },
+    forcedClickMode,
+  };
+}
+
+export function setGameInputMode(
+  current: GameState,
+  inputMode: InputMode,
+): GameState {
+  return { ...current, inputMode };
 }
 
 export function serializeState(state: GameState): GameStateSnapshot {

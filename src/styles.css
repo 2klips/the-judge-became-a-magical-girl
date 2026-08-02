@@ -167,6 +167,160 @@ button {
   letter-spacing: 0.05em;
 }
 
+.dialogue-input {
+  margin-top: 22px;
+}
+
+.input-notice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 210, 166, 0.24);
+  border-radius: 12px;
+  color: #ffddb9;
+  background: rgba(255, 166, 96, 0.08);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.captions {
+  min-height: 82px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.captions[data-state="interim"] {
+  border-color: rgba(255, 223, 135, 0.4);
+}
+
+.captions[data-state="final"] {
+  border-color: rgba(155, 255, 216, 0.36);
+}
+
+.caption-label,
+.caption-text {
+  margin: 0;
+}
+
+.caption-label {
+  color: rgba(255, 255, 255, 0.46);
+  font-family: "Courier New", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.caption-text {
+  margin-top: 8px;
+  color: #f9f4d7;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.voice-controls,
+.input-utilities,
+.mic-indicator,
+.debug-transcript {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.voice-controls {
+  margin-top: 12px;
+}
+
+.mic-indicator {
+  min-width: 110px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.78rem;
+}
+
+.mic-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ffda7d;
+  box-shadow: 0 0 12px rgba(255, 218, 125, 0.7);
+}
+
+.mic-indicator[data-state="listening"] .mic-indicator-dot {
+  background: #ff7aab;
+  box-shadow: 0 0 18px rgba(255, 122, 171, 0.9);
+  animation: mic-pulse 900ms ease-in-out infinite alternate;
+}
+
+.mic-indicator[data-state="processing"] .mic-indicator-dot {
+  background: #a6e9ff;
+  box-shadow: 0 0 14px rgba(166, 233, 255, 0.8);
+}
+
+.mic-indicator[data-state="error"] .mic-indicator-dot {
+  background: #ff9c83;
+}
+
+@keyframes mic-pulse {
+  to {
+    transform: scale(1.55);
+  }
+}
+
+.ptt-button {
+  flex: 1;
+  min-height: 52px;
+  border: 1px solid rgba(255, 215, 134, 0.32);
+  border-radius: 16px;
+  color: #17101f;
+  background: linear-gradient(120deg, #ffe496, #ffb8df);
+  box-shadow: 0 12px 28px rgba(255, 184, 223, 0.13);
+  cursor: pointer;
+  font-weight: 900;
+  touch-action: none;
+  user-select: none;
+}
+
+.ptt-button[aria-pressed="true"] {
+  transform: translateY(2px) scale(0.99);
+  background: linear-gradient(120deg, #ffc56e, #ff8fc7);
+}
+
+.input-utilities {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.compact-input {
+  min-height: 38px;
+  padding: 8px 13px;
+  font-size: 0.78rem;
+}
+
+.debug-transcript {
+  margin-left: auto;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.debug-transcript label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #cfc7ff;
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+}
+
+.debug-transcript input {
+  width: min(260px, 32vw);
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(4, 4, 10, 0.52);
+}
+
 .choice-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -352,6 +506,11 @@ button {
   white-space: pre-wrap;
 }
 
+.ending-screen .debug-panel {
+  top: 20px;
+  max-height: min(220px, 25vh);
+}
+
 .hidden {
   display: none;
 }
@@ -393,6 +552,31 @@ button {
 
   .debug-panel {
     top: 130px;
+  }
+
+  .voice-controls,
+  .input-utilities,
+  .debug-transcript {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mic-indicator {
+    min-width: 0;
+  }
+
+  .debug-transcript {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 10px;
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 0;
+  }
+
+  .debug-transcript label,
+  .debug-transcript input {
+    width: 100%;
   }
 }
 

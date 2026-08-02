@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:stt-lab": "node scripts/dev-stt-lab.mjs",
+    "dev:stt-lab:ui": "vite --host 127.0.0.1 --port 5173",
+    "dev:stt-lab:worker": "wrangler dev --config wrangler.stt-lab.toml --env-file .env.local --local --ip 127.0.0.1 --port 8787 --log-level warn",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -12,12 +15,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
     "typescript": "^7.0.2",
     "vite": "^8.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.118.0"
+  },
+  "overrides": {
+    "adm-zip": "0.6.0",
+    "sharp": "0.35.3"
   }
 }
