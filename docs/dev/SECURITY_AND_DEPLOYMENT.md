@@ -43,7 +43,7 @@ Cloudflare Worker
 ## 4. 요청·응답 제한
 
 - LLM 경로는 `POST application/json`, STT 경로는 `POST multipart/form-data`의 제한된 `audio/wav`만 허용한다.
-- 요청 본문 최대 크기, 최근 대화 턴 수, 문자열 길이를 제한한다.
+- M3 Worker는 WAV 오디오를 14MB, JSON 요청을 32KB로 제한하고 최근 대화는 최대 3턴(메시지 6개)만 받는다. Gemini inline audio의 base64 팽창을 포함해 공급자 20MB 경계 아래로 유지한다.
 - 모델·temperature·출력 토큰·response schema는 Worker가 소유한다. 클라이언트가 임의 override하지 못한다.
 - LLM 클라이언트 타임아웃은 4초·재시도 1회. STT 타임아웃은 Gemini 약 3,220ms 사용자 실측을 잘라내지 않도록 M3 p95 측정 뒤 별도 확정한다. Worker에도 더 긴 상한을 둔다.
 - 오류는 일반화된 코드로 반환한다. 공급자 응답·키·내부 스택을 브라우저에 노출하지 않는다.
@@ -52,7 +52,7 @@ Cloudflare Worker
 ## 5. STT 공급자·Gemini LLM 쿼터와 키 운영
 
 - OpenAI와 Google 콘솔에서 평가용 STT 키의 사용 상한을 각각 설정한다.
-- GPT/Gemini STT와 Gemini LLM의 모델 ID, 무료 한도, 가격, rate limit은 M3 시작 직전 공식 문서와 콘솔에서 확인한다.
+- GPT/Gemini STT와 Gemini LLM의 모델 ID, 무료 한도, 가격, rate limit은 M3 시작 직전 공식 문서와 콘솔에서 확인한다. 2026-08-02 확인 결과 대화 LLM은 DEC-018에 따라 `gemini-3.1-flash-lite`, `thinkingLevel: minimal`을 사용한다.
 - MVP-1 측정은 공급자·오디오 길이·성공 여부·지연만 기록하고 키나 개인 발화 원문은 기록하지 않는다.
 - M6 진입 전 사용자가 production STT 공급자 하나를 선택한다. 비선택 STT 라우트와 전용 Secret은 제거·폐기한다.
 - 시연 전날·직전에 선택 STT와 Gemini LLM 사용량·차단 상태를 확인한다.

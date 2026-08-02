@@ -40,6 +40,11 @@ export interface SttFailureResult {
   forcedClickMode: boolean;
 }
 
+export interface LlmFailureResult {
+  state: GameState;
+  forcedLocalMode: boolean;
+}
+
 const snapshotSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -131,6 +136,18 @@ export function setGameInputMode(
   inputMode: InputMode,
 ): GameState {
   return { ...current, inputMode };
+}
+
+export function recordLlmFailure(current: GameState): LlmFailureResult {
+  const llmFailCount = Math.min(current.llmFailCount + 1, 3);
+  return {
+    state: { ...current, llmFailCount },
+    forcedLocalMode: llmFailCount >= 3,
+  };
+}
+
+export function resetLlmFailures(current: GameState): GameState {
+  return current.llmFailCount === 0 ? current : { ...current, llmFailCount: 0 };
 }
 
 export function serializeState(state: GameState): GameStateSnapshot {

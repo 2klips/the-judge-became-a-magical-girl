@@ -25,7 +25,8 @@ describe("STT Lab Worker", () => {
     expect(upstreamRequest?.headers.get("authorization")).toBe("Bearer test-openai-key");
     const upstreamForm = await upstreamRequest?.formData();
     expect(upstreamForm?.get("model")).toBe("gpt-transcribe");
-    expect(upstreamForm?.get("language")).toBe("ko");
+    expect(upstreamForm?.get("languages[]")).toBe("ko");
+    expect(upstreamForm?.get("language")).toBeNull();
     expect(upstreamForm?.get("file")).toBeInstanceOf(File);
   });
 
@@ -78,7 +79,12 @@ function transcriptionRequest(path: string): Request {
 
 function env(overrides: Partial<SttLabEnv>): SttLabEnv {
   return {
-    ALLOWED_ORIGINS: LOCAL_ORIGIN,
+    ALLOWED_ORIGINS: "http://127.0.0.1:5173,http://localhost:5173",
+    OPENAI_API_KEY: "test-openai-key",
+    GEMINI_API_KEY: "test-gemini-key",
+    OPENAI_TRANSCRIBE_MODEL: "gpt-transcribe",
+    GEMINI_TRANSCRIBE_MODEL: "gemini-2.5-flash",
+    GEMINI_LLM_MODEL: "gemini-3.1-flash-lite",
     ...overrides,
   };
 }

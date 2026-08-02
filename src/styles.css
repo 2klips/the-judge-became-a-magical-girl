@@ -222,10 +222,26 @@ button {
 .voice-controls,
 .input-utilities,
 .mic-indicator,
+.provider-control,
 .debug-transcript {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+.provider-control {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.72rem;
+}
+
+.provider-select {
+  min-height: 38px;
+  padding: 7px 26px 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: #fff8df;
+  background: #2b213e;
+  font: inherit;
 }
 
 .voice-controls {

@@ -48,7 +48,7 @@
 | DEC-014 | proposed | 스냅샷 버전·battle 중간 저장 | `[제안]` `schemaVersion: 1`; 노드 이동만 저장하므로 battle 중간 복구는 페이즈 시작으로 정규화 | M1/M4 전 | 복구 UX 요구 확정 |
 | DEC-015 | superseded | GitHub 소유자·저장소 이름·공개범위·Pages base·production URL | M1 소유자·이름·공개범위·base는 DEC-025로 대체. production Pages URL·활성화 조건만 M6 전 미결정 | M6 | Pages 배포 준비 |
 | DEC-016 | proposed | 주문 성공 뒤 변신 컷 2장 참조 위치 | `[미결정]` 별첨1 cutscene 스키마에 후속 연출/asset 필드 없음. 엔진 고정 연출, 별도 cutscene 노드, 스키마 확장 중 선택 필요 | M4 전 | 스키마 소유자 결정 |
-| DEC-018 | proposed | Gemini 정확한 모델 ID·단가·무료 한도 | `[미결정]` 구현 시 공식 문서와 콘솔에서 확인. 기획서의 “Gemini 2.5 Flash-Lite”를 검증 전 문자열로 고정하지 않음 | M3 전 | API 계정/현재 제공 모델 확인 |
+| DEC-018 | accepted | 대화 LLM은 `gemini-3.1-flash-lite`, `thinkingLevel: minimal`을 사용 | 2026-08-02 실제 API에서 기획서의 `gemini-2.5-flash-lite`가 신규 사용자에게 404/종료 안내를 반환. 현재 공식 모델 목록·모델 카드·가격표에서 `gemini-3.1-flash-lite`의 structured output, 무료 tier, 유료 입력 $0.25/1M·출력 $1.50/1M 토큰을 확인 | M3 Worker 모델·비용·지연 | 모델 종료·가격/무료 한도 변경 또는 사용자 모델 재선택 |
 | DEC-019 | proposed | `bg_hall_dark` 실파일 여부 | `[미결정]` 필수 목록에는 별도 파일, 제작 요령은 CSS 파생 우선. 논리 ID를 실파일 또는 파생 scene recipe로 해석할지 결정 | M5 전 | 스타일 샘플 비교 |
 | DEC-020 | proposed | 실제 플래그 사전과 본편 JSON | `[미결정]` 완성대본 v2는 존재하지만 런타임 `scenario.json`·`characters.json`과 관계·엔딩 플래그 사전은 없음 | M5 전 | 작가 JSON·플래그 사전 도착 |
 | DEC-021 | proposed | production debug 패널 접근 | `[제안]` production 빌드에는 상태 변경 기능 비활성, 별도 demo build 또는 빌드 플래그로만 허용 | M6 전 | 현장 운영 방식 확정 |

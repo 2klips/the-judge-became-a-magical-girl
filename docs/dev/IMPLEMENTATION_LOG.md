@@ -196,3 +196,45 @@
 - 승인 근거: 사용자의 실제 발화 A/B/C 비교 결과와 `지금까지의 작업을 GIT 에 커밋, 푸쉬 후, m3 진행` 지시.
 - 판정: **PASS**. M3 진입 가능.
 - 이 PASS는 Web Speech를 최종 STT로 채택한다는 뜻이 아니다. M3에서 버튼 release 녹음과 GPT/Gemini 전환형 final transcript 경로로 교체한다.
+
+## M3 — 전환형 원격 STT, Workers 프록시와 LLM 판정
+
+- 실행일: 2026-08-02
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + TDD
+- 상태: 구현·자동 검증·Worker 실호출·브라우저 폴백 완주와 사용자 실제 마이크 GPT/Gemini 각각 5회 검증 완료. M3 게이트 **PASS**
+
+### 구현 내용
+
+- 게임 음성 경로를 Web Speech에서 `MediaRecorder` 기반 PTT로 교체. 녹음은 누름에서 시작하고 release에서만 종료하며 VAD·무음 자동 종료를 사용하지 않는다.
+- 녹음을 16 kHz mono PCM WAV로 정규화하고 선택된 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 한 곳에만 전송한다.
+- 최종 transcript를 zod 검증 후 화면에 먼저 렌더하고 다음 paint가 끝난 뒤 로컬 intent 또는 LLM 판정을 시작한다.
+- `LlmPort`에 4초 timeout·1회 재시도, 최근 3턴 문맥, 정상/지연/HTTP 오류/잘못된 JSON/오프라인 주입을 추가했다.
+- Worker는 정확한 Origin, 메서드, 콘텐츠형, 오디오 14MB, JSON 32KB를 검증한다. OpenAI/Gemini STT와 Gemini `gemini-3.1-flash-lite` structured output을 Secret 경계 안에서 호출한다.
+- 검증된 판정만 중앙 엔진 함수가 affinity·emotion·flag에 반영한다. 미허용 intent/flag, 범위 밖 delta, 80자·2문장 초과, 감정 단정, 검은 마법소녀 정체 공개는 거부한다.
+- LLM 실패는 작가 제공 `fallbackReplies`와 중립 판정으로 턴을 진행한다. 3연속 실패 뒤 LLM 요청을 중단하며 클릭·로컬 경로로 ending까지 진행한다.
+- STT Lab은 M3 공통 녹음·Worker 구현을 재사용한다. 기존 별도 `wrangler.stt-lab.toml`은 `wrangler.jsonc`로 통합했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 20 files, 66 tests |
+| `npm run build` | PASS | 게임·STT Lab production build 생성 |
+| GPT STT 실호출 | PASS | 사용자 실제 마이크 5회. p50 1,224ms, p95 1,393ms. 선택된 OpenAI route만 턴당 1회 호출, transcript 오류 보고 없음 |
+| Gemini STT 실호출 | PASS | 사용자 실제 마이크 5회. p50 3,143ms, p95 3,440ms. 전용 실행에서 GPT 요청 0, transcript 오류 보고 없음 |
+| Gemini LLM 실호출 | PASS | Gemini STT 전용 실행의 자유 발화 5회 모두 LLM 연결. p50 963ms, p95 1,257ms. 농담·불안·분노·엉뚱한 말·금지 정보 요구도 별도 실호출 정책 통과 |
+| transcript 선표시 | PASS | 판정 전 render/paint 순서를 자동 테스트로 고정 |
+| 공급자 전환 | PASS | GPT↔Gemini 변경 시 URL 설정만 바뀌고 `GameState` 유지, 일반 턴 단일 route |
+| LLM 장애 | PASS | 3회 실패 후 `LLM 실패 3/3`, 이후 `/judge/dialogue` 요청 없이 7턴과 NORMAL ending 완주 |
+| 콘솔 | PASS | 정상 경로 error/warning 0. 오류 주입 경로는 의도된 경고만 발생 |
+| 비밀정보 | PASS | 키는 `.env.local`에만 존재하고 Git·브라우저 번들에 포함되지 않음 |
+
+### M3 게이트 판정
+
+- `[확정, DEC-028]` MVP 동안 GPT/Gemini STT를 모두 유지하고 일반 플레이는 선택 공급자 하나만 호출한다. 기본 선택 GPT는 사용자 1회 실측 속도에 따른 QA 기본값이며 production 최종 선택이 아니다.
+- `[확정, DEC-018]` 기존 기획 모델이 실제 API에서 신규 사용자 비가용이어서 대화 LLM을 현재 사용 가능한 `gemini-3.1-flash-lite`, `thinkingLevel: minimal`로 변경했다.
+- `[PASS]` QJ-04·QS-06의 사용자 실제 마이크 GPT 5회/Gemini 5회와 공급자별 p50/p95를 기록했다. 사용자는 transcript 선표시·정확도 문제를 추가 보고하지 않았다.
+- GPT 혼합 실행은 무음·클릭 폴백을 포함해 7턴 NORMAL ending, Gemini 전용 실행은 음성 5턴 뒤 클릭 2턴으로 NORMAL ending에 도달했다. 두 실행 모두 정상 경로 콘솔 error/warning 0.
+- 초기 자동 회귀는 당시 in-app Browser 연결 부재로 Playwright CLI를 사용했고, 최종 게이트는 실제 Chrome 확장·사용자 마이크·로컬 Worker trace로 검증했다.
+- 최종 판정: **M3 PASS**. MVP-1 완료, M4 진입 가능.

@@ -7,8 +7,8 @@ function paragraph(className: string, text: string): HTMLParagraphElement {
 
 export class CaptionsView {
   readonly element = document.createElement("section");
-  private readonly label = paragraph("caption-label", "실시간 transcript");
-  private readonly text = paragraph("caption-text", "말을 시작하면 여기에 표시돼.");
+  private readonly label = paragraph("caption-label", "최종 transcript");
+  private readonly text = paragraph("caption-text", "버튼을 놓으면 전사문이 먼저 표시돼.");
 
   constructor() {
     this.element.className = "captions";

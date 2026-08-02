@@ -4,7 +4,12 @@ import type {
   EndingNode,
 } from "../data/schema";
 import { ClickInputPort } from "../input/click";
-import type { VoiceCaptureResult } from "../input/voice";
+import type {
+  RecordedVoiceResult,
+  SttProviderId,
+} from "../input/transcription";
+import { sttProviderLabel } from "../input/transcription";
+import { afterTranscriptVisible } from "../engine/dialogueTurn";
 import type { GameState, InputMode } from "../state";
 import { CaptionsView } from "./captions";
 import { MicIndicatorView } from "./micIndicator";
@@ -18,15 +23,17 @@ interface TitleOptions {
 
 export interface DialogueInputOptions {
   speechSupported: boolean;
+  sttProvider: SttProviderId;
   notice?: string;
   forceClickForTurn?: boolean;
-  capture(onInterim: (text: string) => void): Promise<VoiceCaptureResult>;
-  stop(): void;
+  startCapture(): Promise<void>;
+  finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
-  onTranscript(transcript: string): boolean;
-  onTurnFailed(): void;
+  onTranscript(transcript: string): Promise<boolean>;
+  onTurnFailed(message: string): void;
   onUnavailable(message: string): void;
   onModeChange(inputMode: InputMode): void;
+  onProviderChange(provider: SttProviderId): void;
 }
 
 interface LineViewOptions {
@@ -76,7 +83,7 @@ export class GameView {
 
     const titleBlock = element("section", "title-block");
     titleBlock.append(
-      element("p", "eyebrow", "VOICE VISUAL NOVEL · M2"),
+      element("p", "eyebrow", "VOICE VISUAL NOVEL · M3"),
       element("h1", "game-title", "심사역은 마법소녀가 되었다"),
       element(
         "p",
@@ -312,7 +319,9 @@ export class GameView {
       element(
         "span",
         "muted",
-        state ? `STT 실패 턴 ${state.sttFailCount}/5` : "STT 우선 · 클릭 폴백",
+        state
+          ? `STT 실패 ${state.sttFailCount}/5 · LLM 실패 ${state.llmFailCount}/3`
+          : "STT 우선 · 클릭 폴백",
       ),
     );
     return status;
@@ -324,7 +333,7 @@ export class GameView {
     }
     const panel = element("details", "debug-panel") as HTMLDetailsElement;
     panel.open = true;
-    panel.append(element("summary", undefined, "M2 상태"));
+    panel.append(element("summary", undefined, "M3 상태"));
     const output = element("pre");
     output.textContent = JSON.stringify(
       {
@@ -374,17 +383,10 @@ export class GameView {
       });
       utilities.append(voiceButton);
     }
-    this.appendDebugTranscript(utilities, (transcript) => {
-      const matched = options.onTranscript(transcript);
+    this.appendDebugTranscript(utilities, async (transcript) => {
+      const matched = await options.onTranscript(transcript);
       if (!matched && this.root.contains(container)) {
-        this.renderClickInput(
-          container,
-          node,
-          onSelect,
-          options,
-          "로컬 intent를 확정하지 못했어. 클릭으로 골라 줘.",
-          allowVoiceSwitch,
-        );
+        this.renderClickInput(container, node, onSelect, options, "판정을 확정하지 못했어. 클릭으로 골라 줘.", allowVoiceSwitch);
       }
     });
     container.append(utilities);
@@ -420,7 +422,21 @@ export class GameView {
       options.cancel();
       options.onModeChange("click");
     });
-    controls.append(indicator.element, ptt, clickButton);
+    const provider = element("label", "provider-control");
+    provider.append(element("span", undefined, "STT"));
+    const providerSelect = element("select", "provider-select");
+    for (const id of ["openai", "gemini"] as const) {
+      const option = element("option", undefined, sttProviderLabel(id));
+      option.value = id;
+      option.selected = id === options.sttProvider;
+      providerSelect.append(option);
+    }
+    providerSelect.addEventListener("change", () => {
+      options.cancel();
+      options.onProviderChange(providerSelect.value === "gemini" ? "gemini" : "openai");
+    });
+    provider.append(providerSelect);
+    controls.append(indicator.element, ptt, provider, clickButton);
     container.append(captions.element, controls);
 
     let capturing = false;
@@ -434,7 +450,7 @@ export class GameView {
         false,
       );
     };
-    const beginCapture = (): void => {
+    const beginCapture = async (): Promise<void> => {
       if (capturing) {
         return;
       }
@@ -442,103 +458,102 @@ export class GameView {
       ptt.setAttribute("aria-pressed", "true");
       ptt.textContent = "듣는 중… 놓아서 전송";
       indicator.setState("listening");
-      captions.showInterim("");
-
-      void options.capture((transcript) => captions.showInterim(transcript)).then(
-        (result) => {
-          capturing = false;
-          if (!this.root.contains(container)) {
-            return;
-          }
-          ptt.setAttribute("aria-pressed", "false");
-          ptt.textContent = "누르고 말하기";
-          this.handleVoiceResult(
-            result,
-            captions,
-            indicator,
-            options,
-            showClickFallback,
-          );
-        },
-      );
+      captions.showMessage("녹음 중 · 버튼을 떼면 종료");
+      try {
+        await options.startCapture();
+      } catch (error) {
+        capturing = false;
+        ptt.setAttribute("aria-pressed", "false");
+        ptt.textContent = "누르고 말하기";
+        indicator.setState("error", "microphone");
+        options.onUnavailable(microphoneErrorMessage(error));
+      }
     };
-    const stopCapture = (): void => {
+    const stopCapture = async (): Promise<void> => {
       if (!capturing) {
         return;
       }
+      capturing = false;
       indicator.setState("processing");
-      options.stop();
+      captions.showMessage(`${sttProviderLabel(options.sttProvider)} 전사 중…`);
+      const result = await options.finishCapture();
+      if (!this.root.contains(container)) return;
+      ptt.setAttribute("aria-pressed", "false");
+      ptt.textContent = "누르고 말하기";
+      await this.handleVoiceResult(result, captions, indicator, options, showClickFallback);
     };
 
     ptt.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       ptt.setPointerCapture(event.pointerId);
-      beginCapture();
+      void beginCapture();
     });
-    ptt.addEventListener("pointerup", stopCapture);
-    ptt.addEventListener("pointercancel", stopCapture);
+    ptt.addEventListener("pointerup", () => void stopCapture());
+    ptt.addEventListener("pointercancel", () => void stopCapture());
     ptt.addEventListener("keydown", (event) => {
       if ((event.key === " " || event.key === "Enter") && !event.repeat) {
         event.preventDefault();
-        beginCapture();
+        void beginCapture();
       }
     });
     ptt.addEventListener("keyup", (event) => {
       if (event.key === " " || event.key === "Enter") {
         event.preventDefault();
-        stopCapture();
+        void stopCapture();
       }
     });
 
     const utilities = element("div", "input-utilities");
-    this.appendDebugTranscript(utilities, (transcript) => {
+    this.appendDebugTranscript(utilities, async (transcript) => {
       options.cancel();
-      captions.showFinal(transcript);
       indicator.setState("processing", "debug transcript");
-      if (!options.onTranscript(transcript) && this.root.contains(container)) {
-        showClickFallback("로컬 intent를 확정하지 못했어. 클릭으로 골라 줘.");
+      const handled = await afterTranscriptVisible(
+        transcript,
+        async (visibleTranscript) => {
+          captions.showFinal(visibleTranscript);
+          await nextPaint();
+        },
+        () => options.onTranscript(transcript),
+      );
+      if (!handled && this.root.contains(container)) {
+        showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
       }
     });
     container.append(utilities);
   }
 
-  private handleVoiceResult(
-    result: VoiceCaptureResult,
+  private async handleVoiceResult(
+    result: RecordedVoiceResult,
     captions: CaptionsView,
     indicator: MicIndicatorView,
     options: DialogueInputOptions,
     showClickFallback: (message: string) => void,
-  ): void {
+  ): Promise<void> {
     if (result.kind === "transcript") {
-      captions.showFinal(result.transcript);
-      indicator.setState("processing", "로컬 intent 판정");
-      if (!options.onTranscript(result.transcript)) {
-        showClickFallback("로컬 intent를 확정하지 못했어. 클릭으로 골라 줘.");
+      indicator.setState("processing", "전사 확인");
+      const handled = await afterTranscriptVisible(
+        result.transcript,
+        async (transcript) => {
+          captions.showFinal(transcript);
+          await nextPaint();
+        },
+        () => options.onTranscript(result.transcript),
+      );
+      if (!handled && this.root.contains(captions.element)) {
+        showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
       }
       return;
     }
-    if (result.kind === "retry") {
-      captions.showMessage("잘 못 들었어. 한 번만 다시 말해 줘.");
-      indicator.setState("error", result.error.code);
-      return;
-    }
-    if (result.kind === "fallback") {
-      options.onTurnFailed();
-      return;
-    }
-    if (result.kind === "unavailable") {
-      options.onUnavailable(
-        result.error.code === "not-allowed" ||
-          result.error.code === "service-not-allowed"
-          ? "마이크 권한이 거부됐어. 클릭 모드로 계속할게."
-          : "음성 인식을 사용할 수 없어. 클릭 모드로 계속할게.",
-      );
+    if (result.kind === "error") {
+      captions.showMessage(result.error.message);
+      indicator.setState("error", "STT");
+      options.onTurnFailed(result.error.message);
     }
   }
 
   private appendDebugTranscript(
     container: HTMLElement,
-    onSubmit: (transcript: string) => void,
+    onSubmit: (transcript: string) => void | Promise<void>,
   ): void {
     if (!this.debugEnabled) {
       return;
@@ -557,9 +572,20 @@ export class GameView {
       event.preventDefault();
       const transcript = input.value.trim();
       if (transcript) {
-        onSubmit(transcript);
+        void onSubmit(transcript);
       }
     });
     container.append(form);
   }
+}
+
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+function microphoneErrorMessage(error: unknown): string {
+  if (error instanceof DOMException && error.name === "NotAllowedError") {
+    return "마이크 권한이 거부됐어. 클릭 모드로 계속할게.";
+  }
+  return "마이크 녹음을 시작할 수 없어. 클릭 모드로 계속할게.";
 }

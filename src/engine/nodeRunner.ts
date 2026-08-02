@@ -11,13 +11,20 @@ import {
   type LocalIntentMiss,
 } from "../judge/local";
 import {
+  parseDialogueJudgementForNode,
+  type DialogueJudgementResult,
+} from "../judge/schema";
+import {
   applyDialogueJudgement,
   createInitialGameState,
   moveStateToNode,
+  recordLlmFailure,
   recordSttTurnFailure,
+  resetLlmFailures,
   setGameInputMode,
   type GameState,
   type InputMode,
+  type LlmFailureResult,
   type SttFailureResult,
 } from "../state";
 import { selectExit } from "./branch";
@@ -40,6 +47,18 @@ export type TranscriptTurnResult =
   | (LocalIntentMiss & {
       transcript: string;
     });
+
+export type LlmTurnResult = TurnResult & {
+  kind: "llm";
+  transcript: string;
+  intentId: string;
+};
+
+export type FallbackTurnResult = TurnResult & {
+  kind: "fallback";
+  transcript: string;
+  intentId: string;
+};
 
 function nodeScene(node: ScenarioNode, startNodeId: string): SceneState {
   if (node.nodeId === startNodeId && node.type === "cutscene") {
@@ -110,6 +129,19 @@ export class GameEngine {
     return result;
   }
 
+  recordLlmFailure(): LlmFailureResult {
+    const result = recordLlmFailure(this.getState());
+    this.state = result.state;
+    this.saves.save(this.state);
+    return result;
+  }
+
+  recordLlmSuccess(): GameState {
+    this.state = resetLlmFailures(this.getState());
+    this.saves.save(this.state);
+    return this.state;
+  }
+
   resume(state: GameState): GameState {
     const node = this.nodes.get(state.currentNodeId);
     if (!node) {
@@ -133,31 +165,13 @@ export class GameEngine {
       throw new Error(`정의되지 않은 의도입니다: ${intentId}`);
     }
 
-    const allowedFlags = new Set(node.allowedFlags);
-    const applied = applyDialogueJudgement(
-      this.getState(),
-      {
-        affinityDelta: intent.affinityDelta,
-        emotion: intent.npcEmotion,
-        flags: intent.setFlags,
-      },
-      allowedFlags,
-    );
-    this.state = applied.state;
-
-    const target = this.resolveDialogueTarget(node, intent);
-    if (target) {
-      this.moveTo(target);
-    } else {
-      this.saves.save(this.state);
-    }
-
-    return {
+    return this.applyJudgement(node, intent, {
+      intentId: intent.id,
+      affinityDelta: intent.affinityDelta,
+      emotion: intent.npcEmotion,
+      flags: intent.setFlags,
       reply: intent.offlineReply,
-      clickLabel: intent.clickLabel,
-      advanced: target !== null,
-      rejectedFlags: applied.rejectedFlags,
-    };
+    });
   }
 
   submitTranscript(transcript: string): TranscriptTurnResult {
@@ -176,6 +190,47 @@ export class GameEngine {
       normalizedText: match.normalizedText,
       score: match.score,
       ...this.chooseIntent(match.intentId),
+    };
+  }
+
+  submitLlmJudgement(transcript: string, input: unknown): LlmTurnResult {
+    const node = this.getCurrentNode();
+    if (node.type !== "dialogue") {
+      throw new Error("대화 노드에서만 LLM 판정을 적용할 수 있습니다.");
+    }
+    const judgement = parseDialogueJudgementForNode(input, node, transcript);
+    const intent = node.intents.find((candidate) => candidate.id === judgement.intentId);
+    if (!intent) throw new Error(`정의되지 않은 의도입니다: ${judgement.intentId}`);
+    const result = this.applyJudgement(node, intent, judgement, true);
+    return {
+      kind: "llm",
+      transcript,
+      intentId: judgement.intentId,
+      ...result,
+    };
+  }
+
+  submitFallbackJudgement(transcript: string, reply: string): FallbackTurnResult {
+    const node = this.getCurrentNode();
+    if (node.type !== "dialogue") {
+      throw new Error("대화 노드에서만 폴백 판정을 적용할 수 있습니다.");
+    }
+    const intent = [...node.intents].sort(
+      (left, right) => Math.abs(left.affinityDelta) - Math.abs(right.affinityDelta),
+    )[0];
+    if (!intent) throw new Error("폴백에 사용할 intent가 없습니다.");
+    const result = this.applyJudgement(node, intent, {
+      intentId: intent.id,
+      affinityDelta: 0,
+      emotion: "neutral",
+      flags: [],
+      reply,
+    });
+    return {
+      kind: "fallback",
+      transcript,
+      intentId: intent.id,
+      ...result,
     };
   }
 
@@ -200,6 +255,33 @@ export class GameEngine {
       return selectExit(node.exitOnMaxTurns, state);
     }
     return null;
+  }
+
+  private applyJudgement(
+    node: DialogueNode,
+    intent: Intent,
+    judgement: DialogueJudgementResult,
+    resetLlmFailure = false,
+  ): TurnResult {
+    const applied = applyDialogueJudgement(
+      resetLlmFailure ? resetLlmFailures(this.getState()) : this.getState(),
+      {
+        affinityDelta: judgement.affinityDelta,
+        emotion: judgement.emotion,
+        flags: judgement.flags,
+      },
+      new Set(node.allowedFlags),
+    );
+    this.state = applied.state;
+    const target = this.resolveDialogueTarget(node, intent);
+    if (target) this.moveTo(target);
+    else this.saves.save(this.state);
+    return {
+      reply: judgement.reply,
+      clickLabel: intent.clickLabel,
+      advanced: target !== null,
+      rejectedFlags: applied.rejectedFlags,
+    };
   }
 
   private moveTo(nodeId: string): void {
