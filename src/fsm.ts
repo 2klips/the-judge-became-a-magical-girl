@@ -3,13 +3,15 @@ export type SceneState =
   | "PROLOGUE"
   | "DIALOGUE"
   | "CUTSCENE"
+  | "BATTLE"
   | "ENDING";
 
 const allowedTransitions: Record<SceneState, ReadonlySet<SceneState>> = {
-  TITLE: new Set(["PROLOGUE", "DIALOGUE", "CUTSCENE", "ENDING"]),
-  PROLOGUE: new Set(["DIALOGUE", "CUTSCENE", "ENDING"]),
-  DIALOGUE: new Set(["DIALOGUE", "CUTSCENE", "ENDING"]),
-  CUTSCENE: new Set(["DIALOGUE", "CUTSCENE", "ENDING"]),
+  TITLE: new Set(["PROLOGUE", "DIALOGUE", "CUTSCENE", "BATTLE", "ENDING"]),
+  PROLOGUE: new Set(["DIALOGUE", "CUTSCENE", "BATTLE", "ENDING"]),
+  DIALOGUE: new Set(["DIALOGUE", "CUTSCENE", "BATTLE", "ENDING"]),
+  CUTSCENE: new Set(["DIALOGUE", "CUTSCENE", "BATTLE", "ENDING"]),
+  BATTLE: new Set(["DIALOGUE", "CUTSCENE", "ENDING"]),
   ENDING: new Set(),
 };
 

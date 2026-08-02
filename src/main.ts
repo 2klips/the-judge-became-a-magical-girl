@@ -1,6 +1,12 @@
 import "./styles.css";
+import {
+  createDebugBattleLlmPort,
+  createRetryingBattleLlmPort,
+  createWorkerBattleLlmPort,
+} from "./battle/llm";
+import type { BattleAction, BattleGrade } from "./battle/state";
 import { GameDataError, loadGameData } from "./data/loader";
-import type { Character, CutsceneNode } from "./data/schema";
+import type { BattleNode, CutsceneNode } from "./data/schema";
 import { GameEngine, type TurnResult } from "./engine/nodeRunner";
 import { BrowserPttRecordingPort } from "./input/recording";
 import {
@@ -16,6 +22,7 @@ import {
   resolveLlmDebugMode,
   type RecentDialogueTurn,
 } from "./judge/llm";
+import type { IncantationResult } from "./judge/incantation";
 import { SaveRepository } from "./storage/saveRepository";
 import { GameView } from "./ui/gameView";
 
@@ -50,10 +57,20 @@ async function bootstrap(): Promise<void> {
       ),
       { timeoutMs: 4_000, retries: 1 },
     );
+    const battleLlm = createRetryingBattleLlmPort(
+      createDebugBattleLlmPort(
+        createWorkerBattleLlmPort({ workerUrl }),
+        resolveLlmDebugMode(params),
+      ),
+      { timeoutMs: 4_000, retries: 1 },
+    );
 
     let activeVoice: RecordedVoiceTurnController | null = null;
     let activeLlm: AbortController | null = null;
     let sttProvider = resolveSttProvider(params);
+    let readyIncantationNodeId: string | null = null;
+    let incantationAttempt = 1;
+    let renderCurrent: (inputNotice?: string, forceClickForTurn?: boolean) => void;
 
     const characterName = (speaker: string): string =>
       speaker === "narration" ? "나레이션" : characters.get(speaker)?.name ?? speaker;
@@ -66,13 +83,246 @@ async function bootstrap(): Promise<void> {
       if (recentTurns.length > 6) recentTurns.splice(0, recentTurns.length - 6);
     };
 
-    const renderCurrent = (inputNotice?: string, forceClickForTurn = false): void => {
+    const showTransformationResult = (
+      node: CutsceneNode & { incantationGate: NonNullable<CutsceneNode["incantationGate"]> },
+      result: IncantationResult,
+    ): void => {
+      if (result.outcome === "retry") return;
+      readyIncantationNodeId = null;
+      incantationAttempt = 1;
+      const lines =
+        result.outcome === "rescued"
+          ? node.incantationGate.failLines.map(({ text }) => text)
+          : result.outcome === "perfect"
+            ? ["목소리가 마지막 단어까지 정확히 이어졌다. 빛이 강하게 응답한다."]
+            : ["사원증의 빛이 주문에 응답해 변신을 완성했다."];
+      view.renderTransformationResult({
+        sceneId: node.scene.bg,
+        outcome: result.outcome,
+        state: engine.getState(),
+        lines,
+        onContinue: () => renderCurrent(),
+      });
+    };
+
+    const renderIncantationNode = (
+      node: CutsceneNode & { incantationGate: NonNullable<CutsceneNode["incantationGate"]> },
+      notice?: string,
+    ): void => {
+      const state = engine.getState();
+      const voice = new RecordedVoiceTurnController(
+        new BrowserPttRecordingPort(),
+        createWorkerTranscriptionPort({ provider: sttProvider, workerUrl }),
+      );
+      if (state.inputMode === "voice") activeVoice = voice;
+      view.renderIncantation(node, state, {
+        speechSupported: recordingSupported,
+        sttProvider,
+        attempt: incantationAttempt,
+        notice,
+        startCapture: () => voice.press(),
+        finishCapture: () => voice.release(),
+        cancel: () => voice.cancel(),
+        onTranscript: async (transcript) => {
+          const result = engine.submitIncantation(transcript, incantationAttempt);
+          if (result.outcome === "retry") {
+            incantationAttempt += 1;
+            renderCurrent(
+              `키워드 ${result.matchCount}/${node.incantationGate.requiredKeywords.length}. 한 번 더 읽어 줘.`,
+            );
+            return;
+          }
+          showTransformationResult(node, result);
+        },
+        onFallback: () => showTransformationResult(node, engine.chooseIncantationFallback()),
+        onTurnFailed: (message) => {
+          engine.recordSttTurnFailure();
+          engine.setInputMode("click");
+          renderCurrent(`${message} 주문 외우기 버튼으로 계속해 줘.`);
+        },
+        onUnavailable: (message) => {
+          engine.setInputMode("click");
+          renderCurrent(message);
+        },
+        onModeChange: (inputMode) => {
+          engine.setInputMode(inputMode);
+          renderCurrent();
+        },
+        onProviderChange: (provider) => {
+          sttProvider = provider;
+          updateProviderQuery(provider);
+          renderCurrent(`${providerName(provider)} STT로 전환했어.`);
+        },
+      });
+    };
+
+    const renderBattleNode = (node: BattleNode, notice?: string): void => {
+      const state = engine.getState();
+      const battleState = engine.getBattleState();
+      const phase = node.phases[battleState.phaseIndex];
+      if (!phase) throw new Error("현재 battle phase를 찾을 수 없습니다.");
+      const voice = new RecordedVoiceTurnController(
+        new BrowserPttRecordingPort(),
+        createWorkerTranscriptionPort({ provider: sttProvider, workerUrl }),
+      );
+      if (state.inputMode === "voice") activeVoice = voice;
+
+      const applyAction = (
+        action: BattleAction,
+        actionLabel: string,
+        reply: string,
+        narration?: string,
+      ): void => {
+        const before = engine.getBattleState();
+        const result = engine.submitBattleAction(action);
+        const delta = result.battleState.momentum - before.momentum;
+        view.renderBattleReply({
+          sceneId: node.scene.bg,
+          enemyName: node.enemy.name,
+          actionLabel,
+          reply,
+          narration,
+          battleState: result.battleState,
+          state: engine.getState(),
+          completed: result.completed,
+          grade: result.grade,
+          effect: delta > 0 ? "flash" : delta < 0 ? "shake" : "none",
+          onContinue: () => renderCurrent(),
+        });
+      };
+
+      const handleBattleTranscript = async (
+        action: "spell" | "freeform",
+        transcript: string,
+      ): Promise<void> => {
+        if (action === "spell") {
+          const before = engine.getBattleState();
+          const result = engine.submitBattleAction({ kind: "spell", transcript });
+          const delta = result.battleState.momentum - before.momentum;
+          view.renderBattleReply({
+            sceneId: node.scene.bg,
+            enemyName: node.enemy.name,
+            actionLabel: transcript,
+            reply: delta >= 25 ? "『그 주문은… 완전했어.』" : delta >= 15 ? "『빛이 내 안개를 가른다…!』" : "『흐린 목소리로는 닿지 않는다.』",
+            narration: `주문 결과 momentum ${delta >= 0 ? "+" : ""}${delta}`,
+            battleState: result.battleState,
+            state: engine.getState(),
+            completed: result.completed,
+            grade: result.grade,
+            effect: delta > 0 ? "flash" : "none",
+            onContinue: () => renderCurrent(),
+          });
+          return;
+        }
+
+        const request = new AbortController();
+        activeLlm = request;
+        try {
+          const judgement = await battleLlm.judgeBattle({ phase, transcript }, request.signal);
+          if (request.signal.aborted) return;
+          applyAction(
+            { kind: "freeform", momentumDelta: judgement.momentumDelta },
+            transcript,
+            judgement.reply,
+            judgement.narration,
+          );
+        } catch (error) {
+          if (request.signal.aborted) return;
+          console.warn(
+            "Battle LLM 폴백 전환",
+            error instanceof Error ? error.message : String(error),
+          );
+          applyAction(
+            { kind: "freeform", momentumDelta: 0 },
+            transcript,
+            "『말은 들었다. 하지만 아직 흔들리지는 않는다.』",
+            "네트워크 판정 실패: 안전한 0점 폴백",
+          );
+        } finally {
+          if (activeLlm === request) activeLlm = null;
+        }
+      };
+
+      view.renderBattle(node, phase, battleState, state, {
+        speechSupported: recordingSupported,
+        sttProvider,
+        notice,
+        startCapture: () => voice.press(),
+        finishCapture: () => voice.release(),
+        cancel: () => voice.cancel(),
+        onTranscript: handleBattleTranscript,
+        onClickSpell: () =>
+          applyAction(
+            { kind: "click-spell" },
+            phase.spell.displayText,
+            "『빛이 내 안개를 가른다…!』",
+            "클릭 주문 성공 +15",
+          ),
+        onClickResponse: (text, momentumDelta) =>
+          applyAction(
+            { kind: "freeform", momentumDelta },
+            text,
+            momentumDelta >= 8 ? "『그 확신은… 어디서 나오는 거지?』" : "『아직 버티는 건가.』",
+          ),
+        onGuard: () =>
+          applyAction({ kind: "guard" }, "버티기", "『계속 버틴다고 달라질까.』", phase.guardLine),
+        onTurnFailed: (message) => {
+          engine.recordSttTurnFailure();
+          engine.setInputMode("click");
+          renderCurrent(`${message} 클릭 행동으로 계속해 줘.`);
+        },
+        onUnavailable: (message) => {
+          engine.setInputMode("click");
+          renderCurrent(message);
+        },
+        onModeChange: (inputMode) => {
+          engine.setInputMode(inputMode);
+          renderCurrent();
+        },
+        onProviderChange: (provider) => {
+          sttProvider = provider;
+          updateProviderQuery(provider);
+          renderCurrent(`${providerName(provider)} STT로 전환했어.`);
+        },
+        onDebugMomentum: (momentum) => {
+          engine.setBattleMomentumForDebug(momentum);
+          renderCurrent(`debug momentum을 ${Math.min(100, Math.max(20, Math.trunc(momentum)))}로 설정했어.`);
+        },
+        onDebugGrade: (grade: BattleGrade) => {
+          const targetMomentum = grade === "S" ? 80 : grade === "A" ? 55 : 20;
+          const finalBattleState = {
+            ...engine.setBattleMomentumForDebug(targetMomentum),
+            complete: true as const,
+            grade,
+          };
+          engine.completeBattleForDebug(grade);
+          view.renderBattleReply({
+            sceneId: node.scene.bg,
+            enemyName: node.enemy.name,
+            actionLabel: `DEBUG ${grade}`,
+            reply: `『${grade} 등급 결과를 재현했다.』`,
+            battleState: finalBattleState,
+            state: engine.getState(),
+            completed: true,
+            grade,
+            effect: "flash",
+            onContinue: () => renderCurrent(),
+          });
+        },
+      });
+    };
+
+    renderCurrent = (inputNotice?: string, forceClickForTurn = false): void => {
       activeVoice?.cancel();
       activeVoice = null;
       activeLlm?.abort();
       activeLlm = null;
       const node = engine.getCurrentNode();
       const state = engine.getState();
+      if (readyIncantationNodeId && readyIncantationNodeId !== node.nodeId) {
+        readyIncantationNodeId = null;
+        incantationAttempt = 1;
+      }
 
       if (node.type === "dialogue") {
         const character = characters.get(node.npc.id);
@@ -197,7 +447,29 @@ async function bootstrap(): Promise<void> {
       }
 
       if (node.type === "cutscene") {
-        renderCutscene(node, characters, characterName, engine, view, renderCurrent);
+        if (node.incantationGate && readyIncantationNodeId === node.nodeId) {
+          renderIncantationNode(
+            node as CutsceneNode & {
+              incantationGate: NonNullable<CutsceneNode["incantationGate"]>;
+            },
+            inputNotice,
+          );
+          return;
+        }
+        renderCutscene(node, characterName, engine, view, () => {
+          if (node.incantationGate) {
+            readyIncantationNodeId = node.nodeId;
+            incantationAttempt = 1;
+          } else {
+            engine.advanceLinearNode();
+          }
+          renderCurrent();
+        });
+        return;
+      }
+
+      if (node.type === "battle") {
+        renderBattleNode(node, inputNotice);
         return;
       }
 
@@ -243,18 +515,16 @@ async function bootstrap(): Promise<void> {
 
 function renderCutscene(
   node: CutsceneNode,
-  characters: ReadonlyMap<string, Character>,
   characterName: (speaker: string) => string,
   engine: GameEngine,
   gameView: GameView,
-  renderCurrent: () => void,
+  onComplete: () => void,
 ): void {
   let lineIndex = 0;
   const renderLine = (): void => {
     const line = node.lines[lineIndex];
     if (!line) {
-      engine.advanceLinearNode();
-      renderCurrent();
+      onComplete();
       return;
     }
     const nextIndex = lineIndex + 1;
@@ -271,7 +541,6 @@ function renderCutscene(
       },
     });
   };
-  void characters;
   renderLine();
 }
 

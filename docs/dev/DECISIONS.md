@@ -37,6 +37,7 @@
 | DEC-025 | 2026-07-31 | accepted | M1 GitHub owner는 `2klips`, private 저장소명은 `the-judge-became-a-magical-girl`, Vite base는 `/the-judge-became-a-magical-girl/`로 고정 | 사용자가 작품 제목을 적절한 영어로 번역한 저장소 생성을 지시했고 인증 계정을 명시 | M1 원격 생성·정적 경로·후속 Pages 설정의 기준 변경 | `NHN_hackathon` 기본명 superseded | `vite.config.ts`, M1 계약, 보안·배포, QA QV-04 | 사용자가 저장소명·소유자·공개범위를 다시 지정 |
 | DEC-027 | 2026-08-02 | accepted | 공급자 선택 전, 격리된 `stt-lab.html`에서 동일한 PTT 녹음을 16 kHz mono PCM WAV로 고정해 A OpenAI `gpt-transcribe`, B Gemini `gemini-2.5-flash`, C 브라우저 로컬 `onnx-community/whisper-small`에 전달하고 전사문·지연·CER를 비교한다 | 사용자가 Web Speech 실제 발화에서 낮은 정확도와 발화 중 조기 종료를 확인했고 A/B/C 모두를 한 화면에서 먼저 시험하도록 승인 | `@huggingface/transformers`, 로컬 전용 Wrangler Worker, multipart STT 경계, 비교 UI·테스트 추가. 게임 `GameState`·FSM·M2 Web Speech 경로와 production 공급자 결정은 변경하지 않음 | 현 Web Speech만 조정, 한 공급자를 바로 채택하는 방식 rejected | `stt-lab.html`, `src/stt-lab/`, `worker/sttLab.ts`, `wrangler.stt-lab.toml`, `tests/sttLab*.test.ts` | 여러 사람·소음 조건 실측 후 사용자가 production STT 공급자를 선택하거나 Lab을 제거할 때 |
 | DEC-028 | 2026-08-02 | accepted | 로컬 Whisper는 STT 후보에서 탈락시킨다. OpenAI `gpt-transcribe`와 Gemini audio transcription은 MVP-1 완료까지 교체 가능한 두 STT 공급자로 유지하고, 한 플레이 턴에는 선택된 공급자 하나만 호출한다. 최종 production 공급자는 M6 진입 전에 사용자가 선택하며 비선택 STT 경로와 전용 Secret은 비활성·제거한다 | 사용자 실제 발화 비교에서 로컬 Whisper 정확도가 기준 미달. GPT와 Gemini 정확도는 비슷했고 응답시간은 GPT 약 1,116ms, Gemini 약 3,220ms로 GPT가 빨랐으나 한 차례 실측만으로 최종 비용·안정성까지 확정하기 부족하다고 판단 | M3에 동일 인터페이스의 GPT/Gemini STT 어댑터·개발/QA 전환 설정·전사문 선표시를 포함. 로컬 Whisper는 게임 경로에 연결하지 않음. M6에 최종 단일 공급자 게이트 추가 | 로컬 Whisper 유지, 매 턴 A/B 동시 호출, 지금 즉시 단일 API 확정 rejected | 메인 §8~§11, `IMPLEMENTATION_SPEC.md` §1.1·§4~§8, `MILESTONES.md` M3·M6, `QA_AND_DEMO.md` QS/QL/QG, `SECURITY_AND_DEPLOYMENT.md` | MVP-1 다중 화자·소음·장문 비교에서 정확도·지연·비용 결과가 크게 달라지거나 사용자가 최종 공급자를 선택할 때 |
+| DEC-029 | 2026-08-02 | accepted | M4는 별첨1의 기존 `incantationGate`와 `battle` 계약으로 더미 변신 1게이트·3페이즈만 구현한다. 변신 컷은 CSS placeholder로 한정하고 새 asset/후속 컷 필드는 만들지 않는다. 실제 완성대본 N5~N8 매핑은 DEC-024로 미결정 유지한다. `BattleState`는 노드 안의 일시 상태이며 새로고침 복구는 battle 페이즈 1 시작으로 정규화한다 | 사용자가 M3 커밋·푸시 후 M4 진행을 지시했고 M4 계약은 더미 콘텐츠와 CSS 연출을 허용한다. 미승인 본편 매핑과 asset 스키마를 고정하지 않으면서 엔진·게이트를 검증하기 위함 | `public/scenario/scenario.json`, cutscene/battle zod 스키마, `src/judge/incantation.ts`, `src/battle/*`, FSM·저장 복구·M4 UI | 완성대본의 주문 2개/N6~N8을 지금 고정하거나 cutscene asset 필드를 임의 추가하는 방식 rejected | `MILESTONES.md` M4, 메인 §4~§5, 별첨1 §4.2~§4.3, `IMPLEMENTATION_LOG.md` M4 | M5 본편 매핑·실제 변신 컷 스키마 승인 또는 battle 중간 저장 요구 변경 |
 
 ## 제안·열린 결정
 
@@ -45,14 +46,14 @@
 | DEC-010 | proposed | 패키지 관리자 | `[제안]` npm. 문서의 검증 명령과 GitHub Actions 단순화 | M1 전 | 팀 표준 존재 |
 | DEC-011 | proposed | 테스트 러너 | `[제안]` Vitest. Vite/TS 설정 공유, 브라우저 포트 mock 용이 | M1 전 | 다른 테스트 표준 선택 |
 | DEC-013 | proposed | `config.json` 전역 턴 프리셋과 `totalTurn` 점프 대상 | `[제안]` `turnPreset: "short"|"long"`이 노드 기본값을 override하고 `finalConvergenceNodeId`를 명시 | M1 전 | config 스키마 승인 |
-| DEC-014 | proposed | 스냅샷 버전·battle 중간 저장 | `[제안]` `schemaVersion: 1`; 노드 이동만 저장하므로 battle 중간 복구는 페이즈 시작으로 정규화 | M1/M4 전 | 복구 UX 요구 확정 |
+| DEC-014 | superseded | 스냅샷 버전·battle 중간 저장 | `schemaVersion: 1`은 M1에 구현됐고 battle 복구 정책은 DEC-029로 대체 | M4 | battle 중간 저장 요구 확정 |
 | DEC-015 | superseded | GitHub 소유자·저장소 이름·공개범위·Pages base·production URL | M1 소유자·이름·공개범위·base는 DEC-025로 대체. production Pages URL·활성화 조건만 M6 전 미결정 | M6 | Pages 배포 준비 |
-| DEC-016 | proposed | 주문 성공 뒤 변신 컷 2장 참조 위치 | `[미결정]` 별첨1 cutscene 스키마에 후속 연출/asset 필드 없음. 엔진 고정 연출, 별도 cutscene 노드, 스키마 확장 중 선택 필요 | M4 전 | 스키마 소유자 결정 |
+| DEC-016 | proposed | 주문 성공 뒤 변신 컷 2장 참조 위치 | `[미결정]` 별첨1 cutscene 스키마에 후속 연출/asset 필드 없음. M4는 DEC-029에 따라 CSS placeholder만 사용. M5 실제 에셋 전 엔진 고정 연출, 별도 cutscene 노드, 스키마 확장 중 선택 필요 | M5 전 | 스키마 소유자 결정 |
 | DEC-018 | accepted | 대화 LLM은 `gemini-3.1-flash-lite`, `thinkingLevel: minimal`을 사용 | 2026-08-02 실제 API에서 기획서의 `gemini-2.5-flash-lite`가 신규 사용자에게 404/종료 안내를 반환. 현재 공식 모델 목록·모델 카드·가격표에서 `gemini-3.1-flash-lite`의 structured output, 무료 tier, 유료 입력 $0.25/1M·출력 $1.50/1M 토큰을 확인 | M3 Worker 모델·비용·지연 | 모델 종료·가격/무료 한도 변경 또는 사용자 모델 재선택 |
 | DEC-019 | proposed | `bg_hall_dark` 실파일 여부 | `[미결정]` 필수 목록에는 별도 파일, 제작 요령은 CSS 파생 우선. 논리 ID를 실파일 또는 파생 scene recipe로 해석할지 결정 | M5 전 | 스타일 샘플 비교 |
 | DEC-020 | proposed | 실제 플래그 사전과 본편 JSON | `[미결정]` 완성대본 v2는 존재하지만 런타임 `scenario.json`·`characters.json`과 관계·엔딩 플래그 사전은 없음 | M5 전 | 작가 JSON·플래그 사전 도착 |
 | DEC-021 | proposed | production debug 패널 접근 | `[제안]` production 빌드에는 상태 변경 기능 비활성, 별도 demo build 또는 빌드 플래그로만 허용 | M6 전 | 현장 운영 방식 확정 |
-| DEC-024 | proposed | 완성대본 v2의 런타임 계약 매핑 | `[미결정]` 5분 대본과 기존 플레이타임, N5 주문 2개와 단일 `incantationGate`, N6~N8과 3페이즈 전투, N4 관계 선택과 플래그를 구현 전 매핑해야 함 | M4 전(플레이타임·주문·전투), M5 전(관계·엔딩) | 작가·기획자 매핑 승인 |
+| DEC-024 | proposed | 완성대본 v2의 런타임 계약 매핑 | `[미결정]` M4는 DEC-029의 더미 1게이트·3페이즈로 실제 매핑을 고정하지 않음. 5분 대본과 기존 플레이타임, N5 주문 2개와 단일 `incantationGate`, N6~N8과 3페이즈 전투, N4 관계 선택과 플래그를 본편 통합 전 매핑해야 함 | M5 전 | 작가·기획자 매핑 승인 |
 | DEC-026 | proposed | M1 더미 데이터의 개발자 관리 스키마 | `[가정]` M1에 한해 `config.json`은 `schemaVersion/startNodeId/initialAffinity/totalTurnLimit/finalConvergenceNodeId/allowedFlags`, `characters.json`은 별첨1 §6의 페르소나 항목을 영문 필드로 사용. 작가 본편 JSON 계약으로 승격하지 않음 | M2/M3 전 | 실제 작가 JSON·전역 턴 프리셋·LLM persona 주입 계약 확정 |
 
 ## 확인된 모순·해석 주의
@@ -61,7 +62,7 @@
 |---|---|---|
 | 엔딩 4종 목표 vs MVP 3종 | 메인 §6은 4종, §10은 GOOD/NORMAL/BAD 필수이며 HIDDEN 컷 1순위 | 모순 아님. 목표 범위 4, 최소 제출 범위 3으로 추적 |
 | “주문 3종(변신 1 + 전투 페이즈별)” 계산 | 별첨1 §8. 전투는 3페이즈마다 다른 주문이므로 총 4전문 | `[미결정]` 문구 오기 가능성. 구현은 메인 §5.2의 페이즈별 다른 문구를 우선해 변신 1 + 전투 3으로 가정 |
-| 변신 컷 2장과 JSON 참조 | 메인 §4.1·별첨2 §2는 2장 요구, 별첨1 `incantationGate`에는 asset/성공 후 lines 필드 없음 | DEC-016에서 해결 전 스키마 확장 금지 |
+| 변신 컷 2장과 JSON 참조 | 메인 §4.1·별첨2 §2는 2장 요구, 별첨1 `incantationGate`에는 asset/성공 후 lines 필드 없음 | M4는 DEC-029 CSS placeholder. DEC-016 해결 전 실제 asset 스키마 확장 금지 |
 | `bg_hall_dark` 생성 방식 | 별첨2 §3.1 필수 파일 목록, 같은 절은 가능하면 CSS 필터 우선 | DEC-019. 논리 ID 계약은 유지 |
 | `config.json` 한 값 전환 vs 노드별 `maxTurns` | 메인 §1은 한 값으로 짧음/김 전환, 별첨1은 각 노드 `maxTurns` 필수 | DEC-013에서 override 우선순위 확정 필요 |
 | 목표 플레이타임과 완성대본 분량 | 메인 기획은 10~30분·예상 11~27분, 완성대본 v2는 약 5분 시연 구조 | DEC-024. MVP-1 범위에는 영향 없음. 전체 시나리오 구현 전 모드별 분량 매핑 필요 |

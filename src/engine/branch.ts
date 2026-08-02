@@ -12,7 +12,7 @@ type ConditionTerm =
   | { kind: "flag"; name: string };
 
 const affinityPattern = /^(affinity)\s*(>=|<=|==|!=|>|<)\s*(\d{1,3})$/;
-const flagPattern = /^flags\.([a-z][a-z0-9_]*)$/;
+const flagPattern = /^flags\.([a-z][A-Za-z0-9_]*)$/;
 
 export function parseCondition(condition: string): ConditionTerm[] {
   const rawTerms = condition.split("&&").map((term) => term.trim());

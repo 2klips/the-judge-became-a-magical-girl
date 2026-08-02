@@ -596,6 +596,218 @@ button {
   }
 }
 
+.incantation-screen,
+.battle-screen {
+  overflow-y: auto;
+}
+
+.incantation-card,
+.transformation-result,
+.battle-arena,
+.battle-result-card {
+  position: relative;
+  z-index: 2;
+  width: min(760px, calc(100% - 32px));
+  margin: auto;
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  background: rgba(12, 15, 35, 0.9);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px);
+}
+
+.incantation-copy,
+.battle-spell {
+  margin: 18px 0;
+  color: #fff5b8;
+  font-size: clamp(1.55rem, 4vw, 2.65rem);
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  text-shadow: 0 0 28px rgba(255, 221, 92, 0.35);
+}
+
+.incantation-guide {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.incantation-input {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.battle-arena {
+  display: grid;
+  gap: 18px;
+  margin-block: 78px 92px;
+}
+
+.enemy-card,
+.battle-command {
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.enemy-prompt {
+  margin: 10px 0;
+  font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+  line-height: 1.6;
+}
+
+.enemy-state {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #d8d9e7;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.enemy-weakened .enemy-card {
+  border-color: rgba(255, 224, 102, 0.55);
+  box-shadow: 0 0 38px rgba(255, 224, 102, 0.13);
+}
+
+.enemy-weakened .enemy-state {
+  color: #171327;
+  background: #ffe066;
+}
+
+.gauge {
+  display: grid;
+  gap: 8px;
+}
+
+.gauge-heading {
+  display: flex;
+  justify-content: space-between;
+  color: #f7f2ff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.gauge-track {
+  height: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7a5cff, #ff5fb7 55%, #ffe066);
+  box-shadow: 0 0 18px rgba(255, 95, 183, 0.6);
+  transition: width 260ms ease;
+}
+
+.battle-actions {
+  display: grid;
+  grid-template-columns: auto minmax(150px, 1fr) minmax(150px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.battle-actions .provider-control {
+  grid-column: 2 / -1;
+  justify-self: end;
+}
+
+.battle-choice-list {
+  margin-top: 12px;
+}
+
+.battle-debug {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+.battle-debug input,
+.battle-debug select {
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.battle-result-card {
+  display: grid;
+  gap: 18px;
+}
+
+.battle-result-card .dialogue-panel {
+  position: static;
+  width: 100%;
+  transform: none;
+}
+
+.effect-flash::after,
+.effect-transform::after {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: #fff;
+  animation: scene-flash 520ms ease-out both;
+}
+
+.effect-transform::after {
+  background: radial-gradient(circle, #fff 0, #ffe066 28%, #ff5fb7 62%, transparent 75%);
+  animation-duration: 900ms;
+}
+
+.effect-shake {
+  animation: scene-shake 360ms ease-in-out;
+}
+
+@keyframes scene-flash {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+
+@keyframes scene-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(7px); }
+  75% { transform: translateX(-4px); }
+}
+
+@media (max-width: 760px) {
+  .battle-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-actions .provider-control {
+    grid-column: auto;
+    justify-self: stretch;
+  }
+
+  .incantation-card,
+  .transformation-result,
+  .battle-arena,
+  .battle-result-card {
+    width: min(100% - 20px, 760px);
+    padding: 20px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

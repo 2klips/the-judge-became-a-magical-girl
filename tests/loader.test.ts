@@ -3,9 +3,9 @@ import { GameDataError, validateGameData } from "../src/data/loader";
 import { loadFixtureData, rawFixture } from "./fixtures";
 
 describe("시나리오 zod·참조 검증", () => {
-  it("저장소의 실제 M1 JSON을 검증한다", () => {
+  it("저장소의 실제 M4 JSON을 검증한다", () => {
     const data = loadFixtureData();
-    expect(data.scenario).toHaveLength(8);
+    expect(data.scenario).toHaveLength(11);
     expect(data.characters[0]?.id).toBe("juno");
   });
 

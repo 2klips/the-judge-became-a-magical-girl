@@ -10,7 +10,7 @@ export const emotions = [
 
 export const emotionSchema = z.enum(emotions);
 const idSchema = z.string().regex(/^[a-z][a-z0-9_]*$/);
-const flagSchema = z.string().regex(/^[a-z][a-z0-9_]*$/);
+const flagSchema = z.string().regex(/^[a-z][A-Za-z0-9_]*$/);
 const dialogueLineSchema = z.string().min(1).max(80);
 
 const sceneSchema = z
@@ -27,6 +27,40 @@ export const lineSchema = z
     emotion: emotionSchema.optional(),
   })
   .strict();
+
+function validateKeywordThreshold(
+  value: { requiredKeywords: string[]; minMatch: number },
+  context: z.RefinementCtx,
+): void {
+  if (value.minMatch > value.requiredKeywords.length) {
+    context.addIssue({
+      code: "custom",
+      path: ["minMatch"],
+      message: "minMatch는 requiredKeywords 수보다 클 수 없습니다.",
+    });
+  }
+  const normalized = value.requiredKeywords.map((keyword) =>
+    keyword.normalize("NFC").replace(/[\p{P}\p{S}\s]+/gu, ""),
+  );
+  if (new Set(normalized).size !== normalized.length) {
+    context.addIssue({
+      code: "custom",
+      path: ["requiredKeywords"],
+      message: "정규화 후 중복되는 주문 키워드가 있습니다.",
+    });
+  }
+}
+
+export const incantationGateSchema = z
+  .object({
+    displayText: z.string().min(1).max(200),
+    requiredKeywords: z.array(z.string().min(1).max(30)).min(3).max(4),
+    minMatch: z.number().int().min(1).max(4),
+    maxAttempts: z.number().int().min(1).max(2),
+    failLines: z.array(lineSchema).min(1),
+  })
+  .strict()
+  .superRefine(validateKeywordThreshold);
 
 export const intentSchema = z
   .object({
@@ -97,9 +131,64 @@ export const cutsceneNodeSchema = z
     type: z.literal("cutscene"),
     scene: sceneSchema,
     lines: z.array(lineSchema).min(1),
+    incantationGate: incantationGateSchema.optional(),
     next: idSchema,
   })
   .strict();
+
+export const battleSpellSchema = z
+  .object({
+    displayText: z.string().min(1).max(200),
+    requiredKeywords: z.array(z.string().min(1).max(30)).min(3).max(4),
+    minMatch: z.number().int().min(1).max(4),
+  })
+  .strict()
+  .superRefine(validateKeywordThreshold);
+
+export const battlePhaseSchema = z
+  .object({
+    phaseId: idSchema,
+    enemyPrompt: dialogueLineSchema,
+    llmContext: z.string().min(1).max(500),
+    spell: battleSpellSchema,
+    guardLine: dialogueLineSchema,
+    clickResponses: z
+      .array(
+        z
+          .object({
+            text: dialogueLineSchema,
+            momentumDelta: z.number().int().min(-5).max(10),
+          })
+          .strict(),
+      )
+      .length(2),
+    maxTurns: z.number().int().min(2).max(3),
+    advanceAt: z.number().int().min(20).max(100),
+  })
+  .strict();
+
+export const battleNodeSchema = z
+  .object({
+    nodeId: idSchema,
+    type: z.literal("battle"),
+    scene: sceneSchema,
+    enemy: z
+      .object({ id: idSchema, name: z.string().min(1).max(30) })
+      .strict(),
+    phases: z.array(battlePhaseSchema).length(3),
+    next: idSchema,
+  })
+  .strict()
+  .superRefine((node, context) => {
+    const phaseIds = node.phases.map(({ phaseId }) => phaseId);
+    if (new Set(phaseIds).size !== phaseIds.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["phases"],
+        message: "phaseId는 battle 안에서 중복될 수 없습니다.",
+      });
+    }
+  });
 
 export const endingNodeSchema = z
   .object({
@@ -114,6 +203,7 @@ export const endingNodeSchema = z
 export const nodeSchema = z.discriminatedUnion("type", [
   dialogueNodeSchema,
   cutsceneNodeSchema,
+  battleNodeSchema,
   endingNodeSchema,
 ]);
 
@@ -150,6 +240,10 @@ export type Intent = z.infer<typeof intentSchema>;
 export type ExitRule = z.infer<typeof exitRuleSchema>;
 export type DialogueNode = z.infer<typeof dialogueNodeSchema>;
 export type CutsceneNode = z.infer<typeof cutsceneNodeSchema>;
+export type IncantationGate = z.infer<typeof incantationGateSchema>;
+export type BattleSpell = z.infer<typeof battleSpellSchema>;
+export type BattlePhase = z.infer<typeof battlePhaseSchema>;
+export type BattleNode = z.infer<typeof battleNodeSchema>;
 export type EndingNode = z.infer<typeof endingNodeSchema>;
 export type ScenarioNode = z.infer<typeof nodeSchema>;
 export type Character = z.infer<typeof characterSchema>;

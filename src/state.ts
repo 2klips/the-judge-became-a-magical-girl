@@ -50,7 +50,7 @@ const snapshotSchema = z
     schemaVersion: z.literal(1),
     affinity: z.number().int().min(0).max(100),
     npcEmotion: emotionSchema,
-    flags: z.array(z.string().regex(/^[a-z][a-z0-9_]*$/)),
+    flags: z.array(z.string().regex(/^[a-z][A-Za-z0-9_]*$/)),
     playerForm: z.enum(["normal", "magical"]),
     battleGrade: z.enum(["S", "A", "B"]).nullable(),
     nodeTurn: z.number().int().min(0),
@@ -148,6 +148,43 @@ export function recordLlmFailure(current: GameState): LlmFailureResult {
 
 export function resetLlmFailures(current: GameState): GameState {
   return current.llmFailCount === 0 ? current : { ...current, llmFailCount: 0 };
+}
+
+export function applyTransformationOutcome(
+  current: GameState,
+  outcome: "perfect" | "standard" | "rescued",
+): GameState {
+  const flags = new Set(current.flags);
+  if (outcome === "perfect") flags.add("perfect_transform");
+  else flags.delete("perfect_transform");
+  return {
+    ...current,
+    playerForm: "magical",
+    flags,
+  };
+}
+
+export function applyBattleCompletion(
+  current: GameState,
+  grade: Exclude<BattleGrade, null>,
+  battleTurns: number,
+): GameState {
+  if (current.battleGrade !== null) {
+    throw new Error("이미 전투 등급이 적용된 상태입니다.");
+  }
+  const flags = new Set(current.flags);
+  for (const battleFlag of ["battle_S", "battle_A", "battle_B"]) {
+    flags.delete(battleFlag);
+  }
+  flags.add(`battle_${grade}`);
+  const affinityBonus = grade === "S" ? 10 : grade === "A" ? 5 : 0;
+  return {
+    ...current,
+    affinity: clamp(current.affinity + affinityBonus, 0, 100),
+    battleGrade: grade,
+    flags,
+    totalTurn: current.totalTurn + Math.max(0, Math.trunc(battleTurns)),
+  };
 }
 
 export function serializeState(state: GameState): GameStateSnapshot {

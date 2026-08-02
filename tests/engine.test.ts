@@ -45,6 +45,13 @@ function completePath(intentId: string): GameEngine {
     engine.chooseIntent(intentId);
   }
   expect(engine.getCurrentNode().type).toBe("cutscene");
+  engine.chooseIncantationFallback();
+  while (engine.getCurrentNode().type === "battle") {
+    engine.submitBattleAction({ kind: "click-spell" });
+  }
+  expect(engine.getCurrentNode().type).toBe("dialogue");
+  engine.chooseIntent("reserve_judgement");
+  expect(engine.getCurrentNode().type).toBe("cutscene");
   engine.advanceLinearNode();
   return engine;
 }
@@ -65,21 +72,21 @@ describe("M1 node runner", () => {
     const engine = completePath("accept_magic");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("good");
-    expect(engine.getState().affinity).toBe(71);
+    expect(engine.getState().affinity).toBe(81);
   });
 
   it("중립 7회로 NORMAL 엔딩에 도달한다", () => {
     const engine = completePath("ask_conditions");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("normal");
-    expect(engine.getState().affinity).toBe(50);
+    expect(engine.getState().affinity).toBe(60);
   });
 
   it("부정 7회로 BAD 엔딩에 도달한다", () => {
     const engine = completePath("refuse_magic");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("bad");
-    expect(engine.getState().affinity).toBe(29);
+    expect(engine.getState().affinity).toBe(39);
   });
 
   it("intent next를 maxTurns 분기보다 우선한다", () => {

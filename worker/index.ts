@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { assertReplyPolicy, DialogueJudgementSchema } from "../src/judge/schema";
+import {
+  assertReplyPolicy,
+  BattleJudgementSchema,
+  DialogueJudgementSchema,
+} from "../src/judge/schema";
 
 const DEFAULT_OPENAI_MODEL = "gpt-transcribe";
 const DEFAULT_GEMINI_TRANSCRIBE_MODEL = "gemini-2.5-flash";
@@ -48,7 +52,7 @@ const DialogueRequestSchema = z
       )
       .min(1)
       .max(12),
-    allowedFlags: z.array(z.string().regex(/^[a-z][a-z0-9_]*$/)).max(16),
+    allowedFlags: z.array(z.string().regex(/^[a-z][A-Za-z0-9_]*$/)).max(16),
     recentTurns: z
       .array(
         z
@@ -59,6 +63,13 @@ const DialogueRequestSchema = z
           .strict(),
       )
       .max(6),
+  })
+  .strict();
+const BattleRequestSchema = z
+  .object({
+    transcript: z.string().trim().min(1).max(1_000),
+    enemyPrompt: z.string().min(1).max(1_000),
+    llmContext: z.string().min(1).max(2_000),
   })
   .strict();
 
@@ -102,6 +113,8 @@ export function createWorker(upstreamFetch: UpstreamFetch = fetch) {
           result = await transcribeWithGemini(await readAudio(request), env, upstreamFetch);
         } else if (pathname === "/judge/dialogue") {
           result = await judgeDialogue(await readDialogueRequest(request), env, upstreamFetch);
+        } else if (pathname === "/judge/battle") {
+          result = await judgeBattle(await readBattleRequest(request), env, upstreamFetch);
         } else {
           throw new WorkerError(404, "지원하지 않는 경로입니다.");
         }
@@ -150,6 +163,18 @@ async function readAudio(request: Request): Promise<File> {
 }
 
 async function readDialogueRequest(request: Request): Promise<z.infer<typeof DialogueRequestSchema>> {
+  return readJsonRequest(request, DialogueRequestSchema, "대화");
+}
+
+async function readBattleRequest(request: Request): Promise<z.infer<typeof BattleRequestSchema>> {
+  return readJsonRequest(request, BattleRequestSchema, "전투");
+}
+
+async function readJsonRequest<T>(
+  request: Request,
+  schema: z.ZodType<T>,
+  label: string,
+): Promise<T> {
   requireContentType(request, "application/json");
   rejectOversizedContentLength(request, MAX_JSON_BYTES);
   const text = await request.text();
@@ -157,10 +182,10 @@ async function readDialogueRequest(request: Request): Promise<z.infer<typeof Dia
     throw new WorkerError(413, "JSON 요청이 32KB 제한을 초과했습니다.");
   }
   try {
-    return DialogueRequestSchema.parse(JSON.parse(text));
+    return schema.parse(JSON.parse(text));
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof z.ZodError) {
-      throw new WorkerError(400, "대화 요청 형식이 올바르지 않습니다.");
+      throw new WorkerError(400, `${label} 요청 형식이 올바르지 않습니다.`);
     }
     throw error;
   }
@@ -323,6 +348,78 @@ async function judgeDialogue(
     assertReplyPolicy(parsed.reply, input.transcript);
   } catch {
     throw new WorkerError(502, "주노 응답이 안전 규칙을 위반했습니다.");
+  }
+  return parsed;
+}
+
+async function judgeBattle(
+  input: z.infer<typeof BattleRequestSchema>,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+): Promise<z.infer<typeof BattleJudgementSchema>> {
+  const model = env.GEMINI_LLM_MODEL || DEFAULT_GEMINI_LLM_MODEL;
+  const response = await callGemini(
+    model,
+    env.GEMINI_API_KEY,
+    {
+      systemInstruction: {
+        parts: [
+          {
+            text: [
+              "너는 언령 배틀의 적과 나레이션을 판정한다.",
+              "플레이어 발화가 현재 적의 약점을 얼마나 정확히 찌르는지 평가하라.",
+              "momentumDelta는 반드시 -5에서 +10 사이 정수다.",
+              "reply와 narration은 각각 80자 이내로 작성하라.",
+              "플레이어가 말하지 않은 감정을 단정하지 마라.",
+              "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
+            ].join("\n"),
+          },
+        ],
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: JSON.stringify({
+                enemyPrompt: input.enemyPrompt,
+                context: input.llmContext,
+                player: input.transcript,
+              }),
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 256,
+        thinkingConfig: { thinkingLevel: "minimal" },
+        responseMimeType: "application/json",
+        responseJsonSchema: {
+          type: "object",
+          properties: {
+            reply: { type: "string", maxLength: 80 },
+            intent: {
+              type: "string",
+              enum: ["persuade", "taunt", "encourage", "other"],
+            },
+            momentumDelta: { type: "integer", minimum: -5, maximum: 10 },
+            narration: { type: "string", maxLength: 80 },
+          },
+          required: ["reply", "intent", "momentumDelta"],
+          additionalProperties: false,
+        },
+      },
+    },
+    upstreamFetch,
+    "Gemini battle LLM",
+  );
+  const parsed = BattleJudgementSchema.parse(extractGeminiJson(response));
+  try {
+    assertReplyPolicy(parsed.reply, input.transcript);
+    if (parsed.narration) assertReplyPolicy(parsed.narration, input.transcript);
+  } catch {
+    throw new WorkerError(502, "전투 응답이 안전 규칙을 위반했습니다.");
   }
   return parsed;
 }

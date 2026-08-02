@@ -6,7 +6,7 @@ export const DialogueJudgementSchema = z
     intentId: z.string().min(1),
     affinityDelta: z.number().int().min(-3).max(3),
     emotion: emotionSchema,
-    flags: z.array(z.string().regex(/^[a-z][a-z0-9_]*$/)).max(8),
+    flags: z.array(z.string().regex(/^[a-z][A-Za-z0-9_]*$/)).max(8),
     reply: z
       .string()
       .min(1)
@@ -16,6 +16,34 @@ export const DialogueJudgementSchema = z
   .strict();
 
 export type DialogueJudgementResult = z.infer<typeof DialogueJudgementSchema>;
+
+export const BattleJudgementSchema = z
+  .object({
+    reply: z
+      .string()
+      .min(1)
+      .refine((value) => Array.from(value).length <= 80, "응답은 80자 이하여야 합니다."),
+    intent: z.enum(["persuade", "taunt", "encourage", "other"]),
+    momentumDelta: z.number().int().min(-5).max(10),
+    narration: z
+      .string()
+      .min(1)
+      .refine((value) => Array.from(value).length <= 80, "상황 묘사는 80자 이하여야 합니다.")
+      .optional(),
+  })
+  .strict();
+
+export type BattleJudgementResult = z.infer<typeof BattleJudgementSchema>;
+
+export function parseBattleJudgement(
+  input: unknown,
+  transcript: string,
+): BattleJudgementResult {
+  const parsed = BattleJudgementSchema.parse(input);
+  assertReplyPolicy(parsed.reply, transcript);
+  if (parsed.narration) assertReplyPolicy(parsed.narration, transcript);
+  return parsed;
+}
 
 const emotionClaims = [
   {

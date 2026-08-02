@@ -1,9 +1,18 @@
 import type {
+  BattleNode,
   DialogueNode,
   GameData,
   Intent,
   ScenarioNode,
 } from "../data/schema";
+import {
+  applyBattleAction,
+  createBattleState,
+  overrideBattleMomentum,
+  type BattleAction,
+  type BattleGrade,
+  type BattleState,
+} from "../battle/state";
 import { transitionScene, type SceneState } from "../fsm";
 import type { SaveRepository } from "../storage/saveRepository";
 import {
@@ -15,7 +24,14 @@ import {
   type DialogueJudgementResult,
 } from "../judge/schema";
 import {
+  evaluateIncantationAttempt,
+  resolveClickIncantation,
+  type IncantationResult,
+} from "../judge/incantation";
+import {
+  applyBattleCompletion,
   applyDialogueJudgement,
+  applyTransformationOutcome,
   createInitialGameState,
   moveStateToNode,
   recordLlmFailure,
@@ -60,6 +76,13 @@ export type FallbackTurnResult = TurnResult & {
   intentId: string;
 };
 
+export interface BattleTurnResult {
+  battleState: BattleState;
+  completed: boolean;
+  grade: BattleGrade | null;
+  advanced: boolean;
+}
+
 function nodeScene(node: ScenarioNode, startNodeId: string): SceneState {
   if (node.nodeId === startNodeId && node.type === "cutscene") {
     return "PROLOGUE";
@@ -70,6 +93,9 @@ function nodeScene(node: ScenarioNode, startNodeId: string): SceneState {
   if (node.type === "cutscene") {
     return "CUTSCENE";
   }
+  if (node.type === "battle") {
+    return "BATTLE";
+  }
   return "ENDING";
 }
 
@@ -77,6 +103,7 @@ export class GameEngine {
   private readonly nodes: Map<string, ScenarioNode>;
   private state: GameState | null = null;
   private sceneState: SceneState = "TITLE";
+  private battleState: BattleState | null = null;
 
   constructor(
     private readonly data: GameData,
@@ -107,6 +134,7 @@ export class GameEngine {
 
   startNewGame(inputMode: InputMode = "click"): GameState {
     this.saves.clear();
+    this.battleState = null;
     this.state = setGameInputMode(
       createInitialGameState(this.data.config),
       inputMode,
@@ -148,6 +176,7 @@ export class GameEngine {
       throw new Error(`저장된 노드가 존재하지 않습니다: ${state.currentNodeId}`);
     }
     this.state = state;
+    this.battleState = null;
     this.sceneState = transitionScene(
       "TITLE",
       nodeScene(node, this.data.config.startNodeId),
@@ -239,6 +268,78 @@ export class GameEngine {
     if (node.type !== "cutscene") {
       throw new Error("컷씬 노드에서만 다음 장면으로 이동할 수 있습니다.");
     }
+    if (node.incantationGate) {
+      throw new Error("주문 게이트가 있는 컷씬은 주문 판정 없이 이동할 수 없습니다.");
+    }
+    this.moveTo(node.next);
+    return this.getState();
+  }
+
+  submitIncantation(transcript: string, attempt: number): IncantationResult {
+    const node = this.getCurrentNode();
+    if (node.type !== "cutscene" || !node.incantationGate) {
+      throw new Error("주문 게이트가 있는 컷씬에서만 주문을 판정할 수 있습니다.");
+    }
+    const result = evaluateIncantationAttempt(transcript, node.incantationGate, attempt);
+    if (result.outcome === "retry") return result;
+    this.state = applyTransformationOutcome(this.getState(), result.outcome);
+    this.moveTo(node.next);
+    return result;
+  }
+
+  chooseIncantationFallback(): IncantationResult {
+    const node = this.getCurrentNode();
+    if (node.type !== "cutscene" || !node.incantationGate) {
+      throw new Error("주문 게이트가 있는 컷씬에서만 클릭 주문을 선택할 수 있습니다.");
+    }
+    const result = resolveClickIncantation();
+    this.state = applyTransformationOutcome(this.getState(), "standard");
+    this.moveTo(node.next);
+    return result;
+  }
+
+  getBattleState(): BattleState {
+    const node = this.requireBattleNode();
+    return { ...this.ensureBattleState(node) };
+  }
+
+  submitBattleAction(action: BattleAction): BattleTurnResult {
+    const node = this.requireBattleNode();
+    const battleState = applyBattleAction(node, this.ensureBattleState(node), action);
+    this.battleState = battleState;
+    if (!battleState.complete) {
+      return {
+        battleState: { ...battleState },
+        completed: false,
+        grade: null,
+        advanced: false,
+      };
+    }
+    if (!battleState.grade) throw new Error("종료된 전투에 등급이 없습니다.");
+    this.state = applyBattleCompletion(
+      this.getState(),
+      battleState.grade,
+      battleState.totalTurns,
+    );
+    this.moveTo(node.next);
+    return {
+      battleState: { ...battleState },
+      completed: true,
+      grade: battleState.grade,
+      advanced: true,
+    };
+  }
+
+  setBattleMomentumForDebug(momentum: number): BattleState {
+    const node = this.requireBattleNode();
+    this.battleState = overrideBattleMomentum(this.ensureBattleState(node), momentum);
+    return { ...this.battleState };
+  }
+
+  completeBattleForDebug(grade: BattleGrade): GameState {
+    const node = this.requireBattleNode();
+    const battleState = this.ensureBattleState(node);
+    this.state = applyBattleCompletion(this.getState(), grade, battleState.totalTurns);
     this.moveTo(node.next);
     return this.getState();
   }
@@ -294,6 +395,27 @@ export class GameEngine {
       nodeScene(target, this.data.config.startNodeId),
     );
     this.state = moveStateToNode(this.getState(), nodeId);
+    this.battleState = null;
     this.saves.save(this.state);
+  }
+
+  private requireBattleNode(): BattleNode {
+    const node = this.getCurrentNode();
+    if (node.type !== "battle") {
+      throw new Error("battle 노드에서만 전투 행동을 처리할 수 있습니다.");
+    }
+    return node;
+  }
+
+  private ensureBattleState(node: BattleNode): BattleState {
+    if (!this.battleState) {
+      this.battleState = createBattleState(
+        this.getState().flags.has("perfect_transform") ? 60 : 50,
+      );
+    }
+    if (!node.phases[this.battleState.phaseIndex]) {
+      throw new Error("현재 전투 페이즈 데이터가 없습니다.");
+    }
+    return this.battleState;
   }
 }

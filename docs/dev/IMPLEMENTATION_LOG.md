@@ -238,3 +238,46 @@
 - GPT 혼합 실행은 무음·클릭 폴백을 포함해 7턴 NORMAL ending, Gemini 전용 실행은 음성 5턴 뒤 클릭 2턴으로 NORMAL ending에 도달했다. 두 실행 모두 정상 경로 콘솔 error/warning 0.
 - 초기 자동 회귀는 당시 in-app Browser 연결 부재로 Playwright CLI를 사용했고, 최종 게이트는 실제 Chrome 확장·사용자 마이크·로컬 Worker trace로 검증했다.
 - 최종 판정: **M3 PASS**. MVP-1 완료, M4 진입 가능.
+
+## M4 — 변신 주문과 3페이즈 언령 배틀
+
+- 실행일: 2026-08-02
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + TDD
+- 상태: 구현·자동 검증·브라우저 클릭/debug 검증·battle LLM 실호출·사용자 실제 마이크 검증 완료. M4 게이트 **PASS**
+
+### 구현 내용
+
+- NFC·공백·문장부호 정규화와 순서 무관 부분 문자열 키워드 채점. 전 키워드 완창은 `perfect_transform`과 초기 momentum 60, `minMatch` 성공·2회 미달 자동 구제·클릭 주문은 momentum 50으로 진행한다.
+- 별첨1 계약의 `incantationGate`, 정확히 3개 `battle.phases`, 페이즈별 주문·클릭 응답·턴 상한·임계를 zod로 검증한다. 전역 등급 플래그 계약에 맞춰 flag 식별자에서 `battle_S/A/B`의 영문 대문자를 허용한다.
+- battle 순수 엔진은 spell `+25/+15/0`, freeform `-5..+10`, guard `+3`, momentum `20..100`, 적 상태 경계 65, 페이즈 즉시/턴 상한 전환, 최대 9턴, S/A/B 경계 80/55를 처리한다.
+- 중앙 `GameState` 함수만 변신 폼·`perfect_transform`·등급·단일 `battle_*` 플래그·호감도 `+10/+5/0`을 적용한다. 종료 효과 중복 적용은 오류로 차단한다.
+- Worker `/judge/battle`에 Gemini structured output, 4초 timeout·1회 재시도, 안전한 0점 폴백을 연결했다. 메서드·Origin·JSON 크기·응답 스키마·금기 검증은 M3 경계를 재사용한다.
+- UI에 주문 전문, PTT release 녹음, transcript 선표시, 클릭 표준 변신, momentum 게이지, spell/freeform/guard, 적 2상태, CSS flash/shake/transform placeholder를 추가했다.
+- `?debug=1`에서 주문 transcript, momentum `20..100`, S/A/B 등급을 재현할 수 있다.
+- `[확정, DEC-029]` M4는 더미 1게이트·3페이즈만 연결했다. 완성대본 v2 N5 주문 2개와 N6~N8 본편 매핑, 실제 변신 컷 asset 필드는 M5 결정으로 남겼다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 27 files, 95 tests |
+| `npm run build` | PASS | 게임·STT Lab production build 생성. 기존 탈락 후보 Whisper Lab chunk 경고 유지 |
+| 주문 자동 검증 | PASS | NFC, 공백·문장부호 제거, 순서 무관, 완창/성공/1회 retry/2회 rescue/클릭 표준 |
+| battle 자동 검증 | PASS | spell/freeform/guard, 20 하한, 65 적 상태, 동시 전환 1회, 9턴 종료, `79/80`, `54/55`, 중복 종료 차단 |
+| Worker battle | PASS | 요청·응답 경계 7개 회귀 테스트와 로컬 Worker→Gemini 실호출 1회 성공 |
+| QT-01 debug 완창 | PASS | `변신, 별의 힘!` 주입 → 완전 변신, `perfect_transform`, 초기 momentum 60 |
+| QT-03 자동 구제 | PASS | 0/3 미달 1회 retry 후 2회째 `failLines` 2줄 표시, momentum 50 |
+| QT-04 클릭 폴백 | PASS | 주문 외우기 → 표준 변신, `perfect_transform` 없음, momentum 50 |
+| QB-01 S | PASS | 클릭 주문 3회로 3페이즈, momentum 95, affinity +10, `battle_S`만 설정 |
+| QB-02 A | PASS | debug 55 → affinity +5, `battle_A`만 설정 |
+| QB-03 B | PASS | debug 20 → affinity +0, `battle_B`만 설정 |
+| 클릭 수렴 | PASS | 타이틀부터 변신·3페이즈·수렴 대화·GOOD ending 완주 |
+| 사용자 실제 마이크 | PASS | 사용자가 요청된 변신 주문·음성 전투 테스트 완료를 확인. 별도 실패 보고 없음 |
+| 콘솔 | PASS | 정상·debug 경로 error/warning 0 |
+
+### M4 게이트 판정
+
+- 자동 계약과 클릭/debug 수동 경로를 통과했다. QT-02·QT-03의 부분 성공·2회 미달은 debug 경로로 재현했다.
+- `[PASS]` 사용자가 2026-08-02 실제 마이크 변신 주문·음성 전투 테스트 완료를 확인했다. 개인 발화 원문·선택 공급자·등급·지연 수치는 기록하지 않는다.
+- 최종 판정: **M4 PASS**. 변신 3결과와 전투 S/A/B 자동·수동 재현, M3 회귀 없음. M5 진입 가능.
