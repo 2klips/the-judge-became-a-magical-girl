@@ -29,6 +29,8 @@ import {
   type RecentDialogueTurn,
 } from "./judge/llm";
 import type { IncantationResult } from "./judge/incantation";
+import { installQaPreviewBanner } from "./qaPreview";
+import { resolveWorkerUrl } from "./runtimeConfig";
 import { SaveRepository } from "./storage/saveRepository";
 import { GameView } from "./ui/gameView";
 
@@ -37,7 +39,16 @@ if (!root) throw new Error("#app 루트 요소가 없습니다.");
 
 const params = new URLSearchParams(window.location.search);
 const recordingSupported = BrowserPttRecordingPort.isSupported();
-const workerUrl = import.meta.env.VITE_WORKER_URL || "http://127.0.0.1:8787";
+const isQaPreview = import.meta.env.MODE === "qa";
+const workerUrl = resolveWorkerUrl({
+  explicitUrl: import.meta.env.VITE_WORKER_URL,
+  isQaPreview,
+  origin: window.location.origin,
+  baseUrl: import.meta.env.BASE_URL,
+});
+if (isQaPreview) {
+  installQaPreviewBanner({ commit: import.meta.env.VITE_QA_COMMIT });
+}
 const view = new GameView(root, recordingSupported);
 const bgm = new BgmController();
 const sfx = new SfxPlayer();

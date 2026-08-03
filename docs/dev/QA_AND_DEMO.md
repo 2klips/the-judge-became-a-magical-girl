@@ -306,3 +306,39 @@ npm run build
 - 자동 3명령, black/silent fallback, 22개 프리셋, 9회 완주 중 하나라도 실패하면 M5 기능 게이트 FAIL.
 - 기능 게이트 PASS 뒤에도 외부 필수 에셋·라이선스가 남으면 `M5 기능 PASS / 에셋·제출 게이트 대기`로 보고한다.
 - 실에셋 재검수·성능·라이선스까지 통과한 뒤에만 `M5 최종 PASS`와 M6 제출 준비 가능으로 보고한다.
+
+## 16. M5 임시 QA Pages 작업자 가이드
+
+대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. 상단에 `QA PREVIEW · 클릭·오프라인 전용 · 음성 Worker 비활성` 배너가 없으면 잘못된 배포이므로 테스트를 중단한다.
+
+### 16.1 기본 확인
+
+- [ ] 배너의 commit 7자가 전달받은 QA commit과 같다.
+- [ ] 타이틀, JS, CSS, scenario JSON, 첫 배경이 404 없이 표시된다.
+- [ ] `새 게임 → 클릭 모드`로 시작해 대사·선택지·변신 구제·전투·엔딩까지 진행된다.
+- [ ] 새로고침 뒤 저장 이어하기가 동작한다.
+- [ ] 390×844와 데스크톱에서 가로 스크롤·가려진 핵심 버튼이 없다.
+- [ ] DevTools Console에 Vite 오류 overlay, 처리되지 않은 예외, asset MIME 오류가 없다.
+
+### 16.2 장면별 에셋 확인
+
+`?debug=1`로 장면 선택기를 열거나 `?debug=1&scene=<장면ID>`로 직접 확인한다. 기준은 [장면별 에셋 매핑 명세](SCENE_ASSET_MAPPING.md)다.
+
+- [ ] 22개 프리셋의 배경·인물·표정·컷·BGM 표기가 명세와 같다.
+- [ ] 이미 전달된 배경 16장과 도윤 임시 실파일은 깨지지 않는다.
+- [ ] 미전달 주노·망령·변신 컷은 검은 placeholder이며 대사·버튼·게이지는 보인다.
+- [ ] 미전달 BGM은 무음이고 진행을 막지 않는다.
+- [ ] TITLE baked NHN/HACKATHON 문구·로고는 임시 승인본으로 표시된다. 최종 승인·라이선스 완료로 기록하지 않는다.
+
+### 16.3 의도된 제한과 실패 보고
+
+- 음성 Worker·STT·LLM 실호출은 비활성이다. 마이크·음성 품질 테스트에 이 URL을 사용하지 않는다.
+- 음성 모드를 눌렀을 때 API 성공을 기대하지 않는다. 클릭 전환·로컬 폴백으로 계속되는지만 확인한다.
+- `stt-lab.html`은 배포 대상이 아니며 404가 정상이다.
+- `noindex,nofollow`는 검색 노출 방지 요청일 뿐 접근 통제가 아니다. URL과 화면은 공개로 취급한다.
+- 결함 보고에는 commit, URL query, viewport, 재현 단계, 기대/실제 결과, Console/Network 오류, 스크린샷을 포함한다.
+
+### 16.4 임시 QA 판정
+
+- `npm run check`, `npm test`, `npm run build:qa`, Pages workflow, 배포 후 데스크톱·모바일 smoke가 모두 PASS해야 링크를 배포 가능으로 표시한다.
+- 임시 QA PASS는 M5 최종 PASS 또는 M6 production PASS가 아니다.

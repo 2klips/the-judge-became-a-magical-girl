@@ -7,6 +7,37 @@
   text-rendering: optimizeLegibility;
 }
 
+html[data-qa-preview="true"] {
+  --qa-preview-banner-height: 36px;
+}
+
+html[data-qa-preview="true"] body {
+  padding-top: var(--qa-preview-banner-height);
+}
+
+html[data-qa-preview="true"] .game-shell {
+  min-height: calc(100dvh - var(--qa-preview-banner-height));
+}
+
+.qa-preview-banner {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  height: var(--qa-preview-banner-height);
+  padding: 6px 12px;
+  color: #1d1300;
+  background: #ffd76a;
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -1141,6 +1172,10 @@ button {
 }
 
 @media (max-width: 760px) {
+  html[data-qa-preview="true"] {
+    --qa-preview-banner-height: 48px;
+  }
+
   .battle-actions {
     grid-template-columns: 1fr;
   }
