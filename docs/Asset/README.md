@@ -51,6 +51,21 @@
 | `char_doyun_magic_ashamed.png` | `char_doyun_magical_ashamed.png` |
 | `char_doyun_magic_pose.png` | `char_doyun_magical_pose.png` |
 
+### 외부 원본 6장 파일명 매핑
+
+`asset/doyoon-hero-sprites.zip`과 같은 이름의 압축 해제 폴더는 외부 제작자가 전달한 원본 보관본이다. `doyoon` 표기는 프로젝트 계약의 `doyun`과 다르므로 원본은 rename하지 않고 아래 파생 관계만 기록한다.
+
+| 외부 원본명 | 정규화·규격 보정본 |
+|---|---|
+| `01_doyoon_office_tired.png` | `docs/Asset/assets/char_doyun_normal_tired.png` |
+| `02_doyoon_office_startled.png` | `docs/Asset/assets/char_doyun_normal_startled.png` |
+| `03_doyoon_magical_complete.png` | `docs/Asset/assets/char_doyun_magical.png` |
+| `04_doyoon_magical_incomplete.png` | `docs/Asset/assets/char_doyun_broken.png` |
+| `05_doyoon_battle_guard.png` | `docs/Asset/assets/char_doyun_magical_defend.png` |
+| `06_doyoon_final_spell.png` | `docs/Asset/assets/char_doyun_magical_finish.png` |
+
+원본은 977×1609~1610 PNG이며 4장은 800KB 상한을 넘는다. runtime 후보가 아니라 생성 원본 추적용이다. ZIP 6개 entry와 압축 해제본 6장은 SHA-256이 각각 일치한다.
+
 # 한도윤 매니페스트 호환 에셋 패키지
 
 프로젝트 `docs/dev/ASSET_MANIFEST.md` 계약을 기준으로 기존 한도윤 23개 이미지를 재매핑한 납품 묶음이다. 납품 원본은 `docs/Asset/assets/`에 보존한다.

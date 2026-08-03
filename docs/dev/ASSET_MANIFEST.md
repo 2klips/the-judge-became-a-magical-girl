@@ -78,6 +78,8 @@
 
 ### 2026-08-03 도윤 납품 추적
 
+- 외부 생성 원본 보관본: `asset/doyoon-hero-sprites.zip`, SHA-256 `0C881C8C0D14B9849B71EB456993CDA25F79E4358E1363306223D13C31CC4BC9`, 5,701,127B. 압축 해제본 6장 총 5,733,090B와 entry별 SHA-256 일치, 경로 이탈 entry 0.
+- 원본 자동 검사: 6장 모두 투명 PNG, 977×1609~1610. 4장이 800KB 상한을 넘고 계약 캔버스 1200×2000이 아니므로 runtime 상태를 변경하지 않는다. `doyoon_*` 원본명→`char_doyun_*` 규격 보정본 매핑은 `docs/Asset/README.md`가 보존한다.
 - 원본: `docs/Asset/assets/`, commit `4adb4db`, PNG 23장, 총 5,538,435B.
 - 자동 검사: 23장 모두 1200×2000 8-bit indexed PNG + `tRNS` 투명도, 실제 투명 픽셀 존재, 개별 최대 343,450B, 손상·SHA-256 완전 중복 없음.
 - 이름 정규화: 기존 목록의 `magic_*` 6개는 실제 `magical_*`, `normal_resolve`는 `normal`, `broken_stand`는 `broken`으로 기록했다. 전체 원본명 매핑은 `docs/Asset/README.md`가 보존한다.
