@@ -453,7 +453,7 @@
 
 - 실행일: 2026-08-03
 - 작업 모드: `DEMO_QA` + `ASSET_VALIDATION` + `MILESTONE_IMPLEMENTATION`
-- 상태: 클릭·오프라인 6경로와 fake microphone 실음성 NORMAL 완주. 초기 preload 결함 수정. 사람 발화 GOOD/BAD·실에셋 게이트 대기
+- 상태: 클릭·오프라인 6경로와 fake microphone 음성 코드 경로 NORMAL 완주. 초기 preload 결함 수정. 실제 사람 음성 GOOD/NORMAL/BAD·실에셋 게이트 대기
 
 ### 처리 내용
 
@@ -471,7 +471,8 @@
 | 프리셋 저장 격리 | PASS | local/session sentinel이 22회 직접 진입 전후 동일 |
 | 클릭 ending 매트릭스 | PASS | GOOD 76/S/promise, NORMAL 73/S, BAD 46/S |
 | Offline+로컬 폴백 매트릭스 | PASS | 3/3. 첫 PTT `Failed to fetch`, 현재 턴 click 전환, GOOD/NORMAL/BAD 완주 |
-| 실음성 코드 경로 | PARTIAL PASS | fake microphone, debug 주입 0, STT/LLM 200, 실패 0, NORMAL 56/B 완주. 사람 발화 GOOD/BAD 미실행 |
+| fake microphone 음성 코드 경로 | PASS | debug 주입 0, STT/LLM 200, 실패 0, NORMAL 56/B 완주 |
+| 실제 사람 음성 매트릭스 | 대기 | GOOD/NORMAL/BAD 3회 미실행. fake microphone 결과로 대체하지 않음 |
 | 변신·battle 음성 구제 | PASS | 변신 0/4 재시도→2차 rescued, battle 7턴 B 등급으로 종료 |
 | 반응형 | PASS | 390×844 title·battle preview 가로 overflow 0, 조작 UI 표시 |
 | 초기 로드 | PASS | local dev title 표시 52ms, 선행 배경 요청 `bg_title` 1개, 첫 화면 console error/warning 0 |
@@ -483,6 +484,6 @@
 
 ### 현재 판정
 
-- 자동·fake-device 기능 위험은 처리했다. M5 기능 경로는 외부 에셋 없이 클릭·오프라인·실음성 Worker 경로로 완주 가능하다.
-- M5 최종 PASS 전 사람 발화 GOOD/NORMAL/BAD 3회 중 GOOD/BAD 2회, 실에셋 시각·청각·라이선스 검수가 남는다. fake microphone 결과를 사람 발화로 대체하지 않는다.
+- 자동·fake-device 기능 위험은 처리했다. M5 기능 경로는 외부 에셋 없이 클릭·오프라인·음성 Worker 코드 경로로 완주 가능하다.
+- M5 최종 PASS 전 실제 사람 발화 GOOD/NORMAL/BAD 3회와 실에셋 시각·청각·라이선스 검수가 남는다. fake microphone 결과를 사람 발화로 대체하지 않는다.
 - M6 범위인 production debug 상태 변경 기능 제거, 실제 GitHub Pages 배포·제출 검수는 시작하지 않았다.
