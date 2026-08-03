@@ -355,7 +355,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 ### 실패 시 롤백 또는 폴백
 
-- 누락·불량 에셋은 승인 placeholder로 대체하고 manifest에 상태 기록.
+- `[확정, DEC-040]` 누락·불량 외부 이미지·컷은 검은 presentation, BGM은 무음으로 대체하고 manifest의 `missing` 상태와 재요청 기록을 유지한다.
 - 선택 BGM/컷/HIDDEN부터 제거. 필수 완주 경로는 유지.
 - 실제 시나리오 오류 시 마지막 검증 통과 버전으로 복귀.
 

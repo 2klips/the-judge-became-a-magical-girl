@@ -68,8 +68,13 @@ button {
   mask-image: none;
 }
 
-.scene-asset-placeholder .scene-grid {
-  opacity: 0.26;
+.scene-asset-placeholder {
+  background: #000;
+}
+
+.scene-asset-placeholder .scene-grid,
+.scene-asset-placeholder .ambient {
+  display: none;
 }
 
 .scene-grid {
@@ -207,22 +212,14 @@ button {
   pointer-events: none;
 }
 
-.asset-placeholder-card {
+.asset-black-placeholder {
   display: grid;
   width: 100%;
   height: 100%;
   min-height: 140px;
   place-items: center;
-  border: 1px dashed rgba(255, 232, 166, 0.38);
   border-radius: 24px;
-  color: rgba(255, 244, 210, 0.72);
-  background:
-    radial-gradient(circle at 50% 35%, rgba(255, 219, 116, 0.18), transparent 34%),
-    linear-gradient(145deg, rgba(38, 29, 63, 0.74), rgba(13, 17, 34, 0.72));
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-align: center;
+  background: #000;
 }
 
 .dialogue-character.is-placeholder,
@@ -230,7 +227,10 @@ button {
 .ending-character.is-placeholder {
   width: min(28vw, 360px);
   height: min(42vh, 460px);
-  opacity: 0.66;
+}
+
+.is-black-placeholder {
+  opacity: 1;
 }
 
 .first-voice-orb {
@@ -619,6 +619,128 @@ button {
   color: #cfc7ff;
   font-family: "Courier New", monospace;
   font-size: 0.82rem;
+}
+
+.ending-progress {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.48);
+  font-family: "Courier New", monospace;
+  font-size: 0.78rem;
+}
+
+.dev-scene-nav {
+  position: fixed;
+  z-index: 40;
+  top: 12px;
+  left: 50%;
+  width: min(520px, calc(100vw - 24px));
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 224, 135, 0.42);
+  border-radius: 12px;
+  color: #ffe7a3;
+  background: rgba(4, 4, 10, 0.94);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42);
+  transform: translateX(-50%);
+}
+
+.dev-scene-nav label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  font-family: "Courier New", monospace;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.dev-scene-nav select {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  background: #151321;
+}
+
+.dev-scene-preview {
+  align-items: flex-end;
+}
+
+.dev-preview-card {
+  position: relative;
+  z-index: 5;
+  width: min(520px, 100%);
+  margin: auto 0 0;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  background: rgba(8, 8, 17, 0.9);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.44);
+  backdrop-filter: blur(18px);
+}
+
+.dev-preview-title {
+  margin: 0 0 14px;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+}
+
+.dev-preview-meta {
+  margin: 6px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Courier New", monospace;
+  font-size: 0.78rem;
+}
+
+.dev-preview-card .secondary-button {
+  margin-top: 14px;
+}
+
+.dev-preview-stage {
+  position: absolute;
+  z-index: 1;
+  inset: 78px 4% 7% 34%;
+  display: flex;
+  gap: clamp(8px, 2vw, 22px);
+  align-items: flex-end;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.dev-preview-visual {
+  position: relative;
+  width: min(24vw, 310px);
+  height: min(62vh, 680px);
+}
+
+.dev-role-juno {
+  width: min(19vw, 250px);
+}
+
+.dev-role-enemy {
+  width: min(25vw, 340px);
+}
+
+.dev-role-player {
+  width: min(22vw, 300px);
+}
+
+.dev-layout-transform .dev-preview-stage {
+  inset: 80px 4% 8% 28%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dev-role-cut,
+.dev-role-ending-cut {
+  width: 100%;
+  height: min(66vh, 700px);
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.dev-role-cut .asset-image,
+.dev-role-ending-cut .asset-image {
+  object-fit: cover;
 }
 
 .debug-panel {

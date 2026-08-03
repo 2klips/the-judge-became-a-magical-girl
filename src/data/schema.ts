@@ -190,6 +190,14 @@ export const battleNodeSchema = z
     }
   });
 
+const gradeVariantsSchema = z
+  .object({
+    S: z.array(lineSchema).min(1).optional(),
+    A: z.array(lineSchema).min(1).optional(),
+    B: z.array(lineSchema).min(1).optional(),
+  })
+  .strict();
+
 export const endingNodeSchema = z
   .object({
     nodeId: idSchema,
@@ -197,6 +205,7 @@ export const endingNodeSchema = z
     scene: sceneSchema,
     endingId: z.enum(["good", "normal", "bad", "hidden"]),
     lines: z.array(lineSchema).min(1),
+    gradeVariants: gradeVariantsSchema.optional(),
   })
   .strict();
 

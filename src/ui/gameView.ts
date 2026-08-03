@@ -15,7 +15,12 @@ import {
   resolveCharacterAsset,
   resolveImageAsset,
 } from "../assets/catalog";
+import { resolvePresentationBackground } from "../assets/presentationBackground";
 import type { BattleGrade, BattleState } from "../battle/state";
+import {
+  M5_SCENE_PREVIEWS,
+  type DevScenePreview,
+} from "../dev/scenePreview";
 import { ClickInputPort } from "../input/click";
 import type {
   RecordedVoiceResult,
@@ -29,6 +34,106 @@ import { MicIndicatorView } from "./micIndicator";
 import { applySceneEffect, type SceneEffect } from "./effects";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
+
+export const VOICE_TITLE_SUBTITLE =
+  "마이크를 누른 채 말하고 놓아, 정체불명의 목소리와 호흡을 맞춰 보자.";
+
+export interface DialogueIdentity {
+  speaker: string;
+  brand: string;
+}
+
+export interface MissingAssetPresentation {
+  readonly className: "asset-black-placeholder";
+  readonly ariaLabel: string;
+  readonly preservesInteractiveUi: true;
+}
+
+export function resolveMissingAssetPresentation(
+  label: string,
+): MissingAssetPresentation {
+  return {
+    className: "asset-black-placeholder",
+    ariaLabel: `${label} 에셋 준비 중`,
+    preservesInteractiveUi: true,
+  };
+}
+
+export function resolveSceneBrand(nodeId: string): string {
+  return nodeId === "n0_review" || nodeId === "n1_first_voice"
+    ? "VOICE // LINK"
+    : "JUNO // LINK";
+}
+
+export function resolveDialogueIdentity(
+  nodeId: string,
+  characterName: string,
+): DialogueIdentity {
+  return nodeId === "n1_first_voice"
+    ? { speaker: "정체불명의 목소리", brand: resolveSceneBrand(nodeId) }
+    : { speaker: characterName, brand: resolveSceneBrand(nodeId) };
+}
+
+export function resolveEndingLines(
+  node: EndingNode,
+  battleGrade: GameState["battleGrade"],
+): EndingNode["lines"] {
+  if (!battleGrade) return node.lines;
+  const variant = node.gradeVariants?.[battleGrade];
+  return variant ? [...node.lines, ...variant] : node.lines;
+}
+
+export interface EndingPage {
+  readonly line: EndingNode["lines"][number];
+  readonly lineIndex: number;
+  readonly total: number;
+  readonly sceneId: string;
+  readonly isLast: boolean;
+}
+
+export function resolveEndingPages(
+  node: EndingNode,
+  battleGrade: GameState["battleGrade"],
+): readonly EndingPage[] {
+  const lines = resolveEndingLines(node, battleGrade);
+  return lines.map((line, lineIndex) => ({
+    line,
+    lineIndex,
+    total: lines.length,
+    sceneId: resolvePresentationBackground({
+      kind: "ending",
+      endingId: node.endingId,
+      baseBackground: node.scene.bg,
+      lineIndex,
+    }),
+    isLast: lineIndex === lines.length - 1,
+  }));
+}
+
+export interface EndingVisual {
+  readonly characterId: "juno";
+  readonly emotion: Emotion;
+}
+
+export function resolveEndingVisual(
+  endingId: string,
+  lineIndex: number,
+): EndingVisual | null {
+  if (endingId === "good") {
+    if (lineIndex >= 6) return null;
+    return {
+      characterId: "juno",
+      emotion: lineIndex === 5 ? "surprised" : "happy",
+    };
+  }
+  if (endingId === "normal") {
+    return { characterId: "juno", emotion: "neutral" };
+  }
+  if (endingId === "bad") {
+    return { characterId: "juno", emotion: "upset" };
+  }
+  return null;
+}
 
 interface TitleOptions {
   hasSave: boolean;
@@ -55,6 +160,7 @@ export interface DialogueInputOptions {
 interface LineViewOptions {
   nodeId: string;
   sceneId: string;
+  lineIndex: number;
   speaker: string;
   speakerId?: string;
   emotion?: Emotion;
@@ -124,6 +230,65 @@ export class GameView {
     this.commit(shell);
   }
 
+  renderDevScenePreview(
+    preview: DevScenePreview,
+    onPlayBgm?: () => void,
+  ): void {
+    const shell = this.createShell(preview.backgroundId);
+    shell.classList.add("dev-scene-preview", `dev-layout-${preview.layout}`);
+    shell.dataset.previewId = preview.id;
+
+    if (preview.showVoiceOrb) {
+      shell.append(element("div", "first-voice-orb"));
+    }
+    if (preview.visuals.length > 0) {
+      const stage = element("section", "dev-preview-stage");
+      stage.setAttribute("aria-label", "장면 에셋 프리뷰");
+      for (const visual of preview.visuals) {
+        const figure = this.createAssetVisual(
+          visual.logicalId,
+          visual.label,
+          `asset-visual dev-preview-visual dev-role-${visual.role}`,
+        );
+        figure.dataset.logicalId = visual.logicalId;
+        stage.append(figure);
+      }
+      shell.append(stage);
+    }
+
+    const card = element("section", "dev-preview-card");
+    card.append(
+      element("p", "eyebrow", "M5 SCENE PREVIEW · SAVE/FSM ISOLATED"),
+      element("h1", "dev-preview-title", preview.label),
+      element("p", "dev-preview-meta", `scene=${preview.id}`),
+      element("p", "dev-preview-meta", `node=${preview.nodeId} · beat=${preview.beat}`),
+      element("p", "dev-preview-meta", `background=${preview.backgroundId}`),
+      element("p", "dev-preview-meta", `bgm=${preview.bgmId ?? "none"}`),
+    );
+    if (preview.bgmId && onPlayBgm) {
+      const play = element("button", "secondary-button compact", "BGM 테스트");
+      play.type = "button";
+      play.addEventListener("click", onPlayBgm);
+      card.append(play);
+    }
+    shell.append(card);
+    this.commit(shell);
+  }
+
+  renderDevSceneError(requestedId: string): void {
+    const shell = this.createShell("bg_title");
+    shell.classList.add("dev-scene-preview");
+    const card = element("section", "dev-preview-card");
+    card.append(
+      element("p", "eyebrow", "M5 SCENE PREVIEW"),
+      element("h1", "dev-preview-title", "장면 ID를 찾을 수 없습니다"),
+      element("p", "dev-preview-meta", `scene=${requestedId}`),
+      element("p", "dev-preview-meta", "상단 장면 선택기에서 유효한 장면을 선택하세요."),
+    );
+    shell.append(card);
+    this.commit(shell);
+  }
+
   renderTitle(options: TitleOptions): void {
     const shell = this.createShell("bg_title");
     shell.classList.add("title-screen");
@@ -136,7 +301,7 @@ export class GameView {
         "p",
         "title-subtitle",
         this.speechSupported
-          ? "마이크를 누른 채 말하고 놓아, 주노와 목소리로 호흡을 맞춰 보자."
+          ? VOICE_TITLE_SUBTITLE
           : "음성 인식을 지원하지 않는 환경이야. 클릭으로 끝까지 진행할 수 있어.",
       ),
     );
@@ -183,8 +348,21 @@ export class GameView {
   }
 
   renderLine(options: LineViewOptions): void {
-    const shell = this.createShell(options.sceneId);
-    shell.append(this.topStatus(options.state, options.progress));
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: options.nodeId,
+        baseBackground: options.sceneId,
+        lineIndex: options.lineIndex,
+      }),
+    );
+    shell.append(
+      this.topStatus(
+        options.state,
+        options.progress,
+        resolveSceneBrand(options.nodeId),
+      ),
+    );
 
     if (options.nodeId === "n5_transform") {
       shell.append(
@@ -232,7 +410,14 @@ export class GameView {
     options: IncantationInputOptions,
   ): void {
     const gate = node.incantationGate;
-    const shell = this.createShell(node.scene.bg);
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: node.nodeId,
+        baseBackground: node.scene.bg,
+        stage: "incantation",
+      }),
+    );
     shell.classList.add("incantation-screen");
     shell.append(this.topStatus(state, `변신 주문 ${options.attempt}/${gate.maxAttempts}`));
     const card = element("section", "incantation-card");
@@ -336,7 +521,14 @@ export class GameView {
     state: GameState,
     options: BattleInputOptions,
   ): void {
-    const shell = this.createShell(node.scene.bg);
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "battle",
+        phaseId: phase.phaseId,
+        beat: "prompt",
+        baseBackground: node.scene.bg,
+      }),
+    );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
     shell.append(
       this.topStatus(
@@ -510,8 +702,21 @@ export class GameView {
     onSelect: (intentId: string) => void,
     inputOptions: DialogueInputOptions,
   ): void {
-    const shell = this.createShell(node.scene.bg);
-    shell.append(this.topStatus(state, `대화 ${state.nodeTurn + 1}/${node.maxTurns}`));
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: node.nodeId,
+        baseBackground: node.scene.bg,
+      }),
+    );
+    const identity = resolveDialogueIdentity(node.nodeId, character.name);
+    shell.append(
+      this.topStatus(
+        state,
+        `대화 ${state.nodeTurn + 1}/${node.maxTurns}`,
+        identity.brand,
+      ),
+    );
     this.appendDialogueVisuals(
       shell,
       node.nodeId,
@@ -519,7 +724,7 @@ export class GameView {
       node.npc.startEmotion,
     );
 
-    const panel = this.dialoguePanel(character.name, node.opening);
+    const panel = this.dialoguePanel(identity.speaker, node.opening);
     const inputArea = element("section", "dialogue-input");
     inputArea.dataset.inputMode = state.inputMode;
     panel.append(inputArea);
@@ -556,15 +761,28 @@ export class GameView {
     advanced: boolean;
     onContinue: () => void;
   }): void {
-    const shell = this.createShell(options.sceneId);
-    shell.append(this.topStatus(options.state, `누적 ${options.state.totalTurn}턴`));
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: options.nodeId,
+        baseBackground: options.sceneId,
+      }),
+    );
+    const identity = resolveDialogueIdentity(options.nodeId, options.speaker);
+    shell.append(
+      this.topStatus(
+        options.state,
+        `누적 ${options.state.totalTurn}턴`,
+        identity.brand,
+      ),
+    );
     this.appendDialogueVisuals(
       shell,
       options.nodeId,
-      { id: options.characterId, name: options.speaker },
+      { id: options.characterId, name: identity.speaker },
       options.emotion,
     );
-    const panel = this.dialoguePanel(options.speaker, options.reply);
+    const panel = this.dialoguePanel(identity.speaker, options.reply);
     panel.insertBefore(
       element("p", "player-line", `도윤 · ${options.selectedLabel}`),
       panel.firstChild,
@@ -591,48 +809,71 @@ export class GameView {
     state: GameState,
     onNewGame: () => void,
   ): void {
-    const shell = this.createShell(node.scene.bg);
-    shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
-    const characterLine = node.lines.find(
-      (line) => line.speaker !== "narration",
-    );
-    if (characterLine) {
-      shell.append(
-        this.createCharacterVisual(
-          characterLine.speaker,
-          characterLine.emotion ?? "neutral",
-          characterNames.get(characterLine.speaker) ?? characterLine.speaker,
-          "character-visual ending-character",
-        ),
+    const pages = resolveEndingPages(node, state.battleGrade);
+    let pageIndex = 0;
+
+    const renderPage = (): void => {
+      const page = pages[pageIndex];
+      if (!page) return;
+      const shell = this.createShell(page.sceneId);
+      shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
+      const visual = resolveEndingVisual(node.endingId, page.lineIndex);
+      if (visual) {
+        shell.append(
+          this.createCharacterVisual(
+            visual.characterId,
+            visual.emotion,
+            characterNames.get(visual.characterId) ?? visual.characterId,
+            "character-visual ending-character",
+          ),
+        );
+      }
+
+      const card = element("section", "ending-card");
+      card.append(
+        element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
+        element("h2", "ending-title", pages[0]?.line.text ?? "엔딩"),
+        element("p", "ending-progress", `${page.lineIndex + 1}/${page.total}`),
       );
-    }
-    const card = element("section", "ending-card");
-    card.append(
-      element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
-      element("h2", "ending-title", node.lines[0]?.text ?? "엔딩"),
-    );
+      if (page.lineIndex > 0) {
+        const speaker =
+          page.line.speaker === "narration"
+            ? ""
+            : `${characterNames.get(page.line.speaker) ?? page.line.speaker} · `;
+        card.append(element("p", "ending-line", `${speaker}${page.line.text}`));
+      }
 
-    for (const line of node.lines.slice(1)) {
-      const speaker =
-        line.speaker === "narration"
-          ? ""
-          : `${characterNames.get(line.speaker) ?? line.speaker} · `;
-      card.append(element("p", "ending-line", `${speaker}${line.text}`));
-    }
+      const button = element(
+        "button",
+        "primary-button",
+        page.isLast ? "처음부터" : "계속",
+      );
+      button.type = "button";
+      if (page.isLast) {
+        card.append(
+          element(
+            "p",
+            "ending-summary",
+            `호감도 ${state.affinity} · 플래그 ${[...state.flags].join(", ") || "없음"}`,
+          ),
+        );
+        button.addEventListener("click", onNewGame, { once: true });
+      } else {
+        button.addEventListener(
+          "click",
+          () => {
+            pageIndex += 1;
+            renderPage();
+          },
+          { once: true },
+        );
+      }
+      card.append(button);
+      shell.append(card, this.debugPanel(state));
+      this.commit(shell);
+    };
 
-    card.append(
-      element(
-        "p",
-        "ending-summary",
-        `호감도 ${state.affinity} · 플래그 ${[...state.flags].join(", ") || "없음"}`,
-      ),
-    );
-    const restart = element("button", "primary-button", "처음부터");
-    restart.type = "button";
-    restart.addEventListener("click", onNewGame, { once: true });
-    card.append(restart);
-    shell.append(card, this.debugPanel(state));
-    this.commit(shell);
+    renderPage();
   }
 
   renderError(error: unknown): void {
@@ -772,10 +1013,12 @@ export class GameView {
   ): HTMLElement {
     const figure = element("figure", className);
     const showPlaceholder = (): void => {
-      figure.replaceChildren(
-        element("div", "asset-placeholder-card", `${label} · 준비 중`),
-      );
-      figure.classList.add("is-placeholder");
+      const presentation = resolveMissingAssetPresentation(label);
+      const placeholder = element("div", presentation.className);
+      placeholder.setAttribute("role", "img");
+      placeholder.setAttribute("aria-label", presentation.ariaLabel);
+      figure.replaceChildren(placeholder);
+      figure.classList.add("is-placeholder", "is-black-placeholder");
     };
 
     if (!resolvedPath || isAssetPathUnavailable(resolvedPath)) {
@@ -799,10 +1042,14 @@ export class GameView {
     return figure;
   }
 
-  private topStatus(state: GameState, progress: string): HTMLElement {
+  private topStatus(
+    state: GameState,
+    progress: string,
+    brand = "JUNO // LINK",
+  ): HTMLElement {
     const status = element("header", "top-status");
     status.append(
-      element("span", "brand-mark", "JUNO // LINK"),
+      element("span", "brand-mark", brand),
       element("span", "status-chip", `호감도 ${state.affinity}`),
       element("span", "status-chip", progress),
     );
@@ -858,7 +1105,37 @@ export class GameView {
   }
 
   private commit(shell: HTMLElement): void {
+    if (this.debugEnabled) {
+      shell.append(this.devSceneNavigator());
+    }
     this.root.replaceChildren(shell);
+  }
+
+  private devSceneNavigator(): HTMLElement {
+    const nav = element("aside", "dev-scene-nav");
+    nav.setAttribute("aria-label", "M5 장면 선택기");
+    const label = element("label", undefined, "DEV 장면");
+    const select = element("select");
+    select.name = "devScene";
+    const game = element("option", undefined, "실제 플레이");
+    game.value = "";
+    select.append(game);
+    for (const preview of M5_SCENE_PREVIEWS) {
+      const option = element("option", undefined, preview.label);
+      option.value = preview.id;
+      select.append(option);
+    }
+    select.value = new URLSearchParams(window.location.search).get("scene") ?? "";
+    select.addEventListener("change", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("debug", "1");
+      if (select.value) url.searchParams.set("scene", select.value);
+      else url.searchParams.delete("scene");
+      window.location.assign(url);
+    });
+    label.append(select);
+    nav.append(label);
+    return nav;
   }
 
   private renderClickInput(

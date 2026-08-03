@@ -8,6 +8,7 @@
 - 콘솔 오류, 화면 녹화 또는 스크린샷, 예상/실제 결과를 남긴다.
 - 자동 테스트는 `npm run check`, `npm test`, `npm run build`.
 - `?debug=1`은 transcript, LLM 결과/오류, state, node, momentum을 결정적으로 주입할 수 있어야 한다.
+- `[확정, DEC-038]` `?debug=1`은 M5 장면 선택기를 표시하고 `?debug=1&scene=<장면ID>`는 저장·FSM을 변경하지 않는 직접 프리뷰를 연다. invalid ID는 게임 예외가 아니라 선택 안내로 처리한다.
 - 실제 마이크 테스트와 debug 주입 테스트를 혼동하지 않는다.
 
 ## 1.1 MVP-1 주노 음성 자유대화
@@ -174,3 +175,134 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 | QV-03 | M1 자동·수동 검증 뒤 초기 commit 생성 | 기본 브랜치 `main`, 의도적인 commit 메시지, 검증된 M1만 포함 |
 | QV-04 | private `2klips/the-judge-became-a-magical-girl` 생성→`origin` 연결→최초 push | 기존 저장소·remote를 덮어쓰지 않고 upstream 설정 성공 |
 | QV-05 | push 후 remote·branch·HEAD·working tree 확인 | 로컬·원격 HEAD 일치, `main` upstream 정상, 남은 변경은 없거나 명시됨 |
+
+## 15. M5 최종 QA 실행 가이드
+
+### 15.1 판정 단계
+
+M5 QA는 두 판정을 분리한다.
+
+1. **기능 게이트**: 외부 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음인 상태로 본편 기능·완주·회귀를 판정한다.
+2. **에셋·제출 게이트**: 외부 실파일 도착 뒤 시각·청각·라이선스·성능을 재검수한다. 이 단계 전에는 `approved`와 제출 가능 판정을 내리지 않는다.
+
+기능 게이트 통과는 누락 에셋을 완료 처리하지 않는다. `ASSET_MANIFEST.md`의 `missing` 상태와 작업자 요청을 유지한다.
+
+### 15.2 실행 전 기록
+
+- [ ] branch·commit hash·build 시각.
+- [ ] Windows·Chrome 버전.
+- [ ] 마이크 장치·권한 상태.
+- [ ] 온라인/오프라인 네트워크 조건.
+- [ ] STT 공급자와 Worker 환경.
+- [ ] `public/assets/` 파일 수·총 용량.
+- [ ] 테스트에 사용한 save 초기화 여부.
+
+### 15.3 자동 게이트
+
+순서대로 실행한다.
+
+```powershell
+npm run check
+npm test
+npm run build
+```
+
+추가 확인:
+
+- [ ] scenario node·character·flag·asset 양방향 참조 오류 0.
+- [ ] 필수 에셋 계약 파일명과 실제 파일명의 대소문자 일치.
+- [ ] 배경 1920×1080 WebP ≤500KB, 캐릭터 1200×2000 투명 PNG ≤800KB, 컷 1920×1080 WebP ≤700KB.
+- [ ] BGM MP3 128kbps·계약 길이·≤3MB.
+- [ ] 전체 runtime 에셋 30MB 이하.
+- [ ] production client·문서·로그 비밀 패턴 0.
+- [ ] `git diff --check` 오류 0.
+
+누락 실파일은 기능 게이트에서 자동 검사 `N/A — DEC-040 black/silent fallback`으로 기록한다. 존재하는 파일의 검사 실패를 `N/A`로 바꾸지 않는다.
+
+### 15.4 검은 presentation·무음 게이트
+
+- [ ] 주노 누락 장면에서 캐릭터 영역이 검은 placeholder이며 대화창·이름표·선택지·PTT가 보인다.
+- [ ] 망령 누락 장면에서 검은 placeholder로 표시되고 battle 입력과 momentum 게이지가 작동한다.
+- [ ] 변신 컷 2장 누락 상태에서 검은 컷 영역 뒤로 주문 결과·다음 진행 버튼이 보인다.
+- [ ] BGM 3종 누락 또는 로드 실패 시 예외 없이 무음 진행한다.
+- [ ] 경로별 `[ASSET_HANDOFF]` 경고는 한 번만 기록된다.
+- [ ] 누락 파일을 빈 파일로 만들거나 manifest `ready`로 승격하지 않는다.
+- [ ] 외부 파일 도착 뒤 같은 논리 ID 경로에 배치하면 코드 변경 없이 실파일로 교체된다.
+
+### 15.5 22개 장면 프리뷰
+
+`?debug=1` 선택기와 `?debug=1&scene=<장면ID>` 직접 진입을 사용한다.
+
+- [ ] 22개 프리셋 모두 예외 없이 진입.
+- [ ] 고유 배경 16장 모두 HTTP 200, 1920×1080 렌더.
+- [ ] N1 주노 미노출.
+- [ ] N3~N5 주노·망령 동시 영역.
+- [ ] N4-A/B/C 표정과 N5 도입 연속성.
+- [ ] battle p1/p2/p3 질문/p3 주문 배경·상태 전환.
+- [ ] GOOD 회복 책상→밝은 복도→검은빛 복도 전환.
+- [ ] NORMAL/BAD 전용 배경·주노 표정 구분.
+- [ ] 직접 프리뷰 전후 `localStorage`·`sessionStorage` 변경 0.
+- [ ] console error 0. 누락 에셋 경고만 허용.
+
+### 15.6 본편 완주 매트릭스
+
+최종 기능 게이트는 아래 9회를 실행한다.
+
+| 입력 경로 | GOOD | NORMAL | BAD |
+|---|---|---|---|
+| 클릭 | [ ] | [ ] | [ ] |
+| 실제 음성 | [ ] | [ ] | [ ] |
+| DevTools Offline + 로컬 폴백 | [ ] | [ ] | [ ] |
+
+각 실행에서 확인한다.
+
+- [ ] 타이틀→N0~N5→battle p1~p3→수렴→ending 순서.
+- [ ] 같은 입력이 상태·턴에 한 번만 반영.
+- [ ] 변신 성공·표준·자동 구제 중 계획한 결과 재현.
+- [ ] battle S/A/B 중 계획한 등급과 상호 배타 플래그.
+- [ ] affinity·momentum clamp 유지.
+- [ ] ending 마지막 페이지에서만 `처음부터` 표시.
+- [ ] ending 뒤 새 게임에서 이전 state·flag 제거.
+- [ ] console 미처리 exception 0.
+
+실제 음성 3회에서는 debug transcript 주입으로 대체하지 않는다. debug 주입은 원인 격리용 별도 증거로만 사용한다.
+
+### 15.7 실에셋 도착 후 재검수
+
+- [ ] 주노 5표정 오니언 스킨에서 몸·의상·좌표 이동 없음.
+- [ ] 망령 2상태가 같은 개체·구도.
+- [ ] 도윤·주노·망령의 발 위치·원근·조명 방향 자연스러움.
+- [ ] 변신 완료 컷과 battle 도윤 의상·실루엣 일치.
+- [ ] TITLE clean 교체본에 baked 글자·로고 없음.
+- [ ] BGM loop 3회 반복에서 클릭·무음·박자 점프 없음.
+- [ ] PTT duck·복귀, 장면 crossfade, 변신 one-shot 중복 없음.
+- [ ] 노트북 스피커·헤드폰 모두 대사 명료.
+- [ ] 생성 도구·작업 ID·생성일·후처리·라이선스 증빙 연결.
+
+### 15.8 성능·배포 전 조건
+
+- [ ] 목표 Chrome에서 첫 화면 3초 이내.
+- [ ] title 핵심 에셋만 preload, 나머지 lazy load.
+- [ ] Pages base 경로에서 JS/CSS/JSON/에셋 404 없음.
+- [ ] production bundle에 debug 상태 변경 기능과 API 키 없음.
+- [ ] 새로고침·직접 URL 진입·오프라인 폴백 정상.
+
+### 15.9 증거 템플릿
+
+| 항목 | 기록 |
+|---|---|
+| QA ID·경로·엔딩 |  |
+| commit·build |  |
+| 환경 |  |
+| 예상 결과 |  |
+| 실제 결과 |  |
+| PASS/FAIL/N/A |  |
+| 콘솔·네트워크 |  |
+| 스크린샷·영상 경로 |  |
+| 재현 절차·담당 |  |
+
+### 15.10 판정 규칙
+
+- 자동 3명령, black/silent fallback, 22개 프리셋, 9회 완주 중 하나라도 실패하면 M5 기능 게이트 FAIL.
+- 기능 게이트 PASS 뒤에도 외부 필수 에셋·라이선스가 남으면 `M5 기능 PASS / 에셋·제출 게이트 대기`로 보고한다.
+- 실에셋 재검수·성능·라이선스까지 통과한 뒤에만 `M5 최종 PASS`와 M6 제출 준비 가능으로 보고한다.

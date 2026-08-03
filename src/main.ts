@@ -3,13 +3,16 @@ import {
   createDebugBattleLlmPort,
   createRetryingBattleLlmPort,
   createWorkerBattleLlmPort,
+  judgeBattleWithFailureGate,
 } from "./battle/llm";
 import type { BattleAction, BattleGrade } from "./battle/state";
 import { BgmController } from "./audio/bgm";
 import { SfxPlayer } from "./audio/sfx";
 import { preloadCoreAssets } from "./assets/catalog";
+import { resolvePresentationBackground } from "./assets/presentationBackground";
 import { GameDataError, loadGameData } from "./data/loader";
 import type { BattleNode, CutsceneNode } from "./data/schema";
+import { resolveDevSceneRequest } from "./dev/scenePreview";
 import { GameEngine, type TurnResult } from "./engine/nodeRunner";
 import { BrowserPttRecordingPort } from "./input/recording";
 import {
@@ -39,7 +42,6 @@ const view = new GameView(root, recordingSupported);
 const bgm = new BgmController();
 const sfx = new SfxPlayer();
 preloadCoreAssets();
-view.renderLoading();
 
 async function bootstrap(): Promise<void> {
   try {
@@ -128,7 +130,12 @@ async function bootstrap(): Promise<void> {
       void bgm.play("bgm_transform", false);
       sfx.play(result.outcome === "perfect" ? "critical" : "cast");
       view.renderTransformationResult({
-        sceneId: node.scene.bg,
+        sceneId: resolvePresentationBackground({
+          kind: "node",
+          nodeId: node.nodeId,
+          baseBackground: node.scene.bg,
+          stage: "transformation",
+        }),
         outcome: result.outcome,
         state: engine.getState(),
         lines,
@@ -207,7 +214,15 @@ async function bootstrap(): Promise<void> {
         const delta = result.battleState.momentum - before.momentum;
         sfx.play(delta === 0 ? "confirm" : "impact");
         view.renderBattleReply({
-          sceneId: node.scene.bg,
+          sceneId: resolvePresentationBackground({
+            kind: "battle",
+            phaseId: phase.phaseId,
+            beat:
+              action.kind === "spell" || action.kind === "click-spell"
+                ? "spell"
+                : "prompt",
+            baseBackground: node.scene.bg,
+          }),
           enemyName: node.enemy.name,
           actionLabel,
           reply,
@@ -231,7 +246,12 @@ async function bootstrap(): Promise<void> {
           const delta = result.battleState.momentum - before.momentum;
           sfx.play(delta >= 25 ? "critical" : "impact");
           view.renderBattleReply({
-            sceneId: node.scene.bg,
+            sceneId: resolvePresentationBackground({
+              kind: "battle",
+              phaseId: phase.phaseId,
+              beat: "spell",
+              baseBackground: node.scene.bg,
+            }),
             enemyName: node.enemy.name,
             actionLabel: transcript,
             reply: delta >= 25 ? "『그 주문은… 완전했어.』" : delta >= 15 ? "『빛이 내 안개를 가른다…!』" : "『흐린 목소리로는 닿지 않는다.』",
@@ -249,26 +269,48 @@ async function bootstrap(): Promise<void> {
         const request = new AbortController();
         activeLlm = request;
         try {
-          const judgement = await battleLlm.judgeBattle({ phase, transcript }, request.signal);
-          if (request.signal.aborted) return;
-          applyAction(
-            { kind: "freeform", momentumDelta: judgement.momentumDelta },
-            transcript,
-            judgement.reply,
-            judgement.narration,
+          const outcome = await judgeBattleWithFailureGate(
+            battleLlm,
+            { phase, transcript },
+            request.signal,
+            {
+              getFailureCount: () => engine.getState().llmFailCount,
+              recordFailure: () => engine.recordLlmFailure(),
+              recordSuccess: () => engine.recordLlmSuccess(),
+            },
           );
-        } catch (error) {
           if (request.signal.aborted) return;
-          console.warn(
-            "Battle LLM 폴백 전환",
-            error instanceof Error ? error.message : String(error),
-          );
+          if (outcome.kind === "judged") {
+            applyAction(
+              { kind: "freeform", momentumDelta: outcome.judgement.momentumDelta },
+              transcript,
+              outcome.judgement.reply,
+              outcome.judgement.narration,
+            );
+            return;
+          }
+
+          if (outcome.reason === "failure") {
+            console.warn(
+              "Battle LLM 폴백 전환",
+              outcome.error instanceof Error
+                ? outcome.error.message
+                : String(outcome.error),
+            );
+          }
+          if (outcome.forcedLocalMode) {
+            console.warn("Battle LLM 3연속 실패: 로컬 판정 모드로 강등");
+          }
           applyAction(
             { kind: "freeform", momentumDelta: 0 },
             transcript,
             "『말은 들었다. 하지만 아직 흔들리지는 않는다.』",
-            "네트워크 판정 실패: 안전한 0점 폴백",
+            outcome.reason === "disabled"
+              ? "로컬 판정 모드: 안전한 0점 폴백"
+              : "네트워크 판정 실패: 안전한 0점 폴백",
           );
+        } catch (error) {
+          if (!request.signal.aborted) throw error;
         } finally {
           if (activeLlm === request) activeLlm = null;
         }
@@ -327,7 +369,12 @@ async function bootstrap(): Promise<void> {
           };
           engine.completeBattleForDebug(grade);
           view.renderBattleReply({
-            sceneId: node.scene.bg,
+            sceneId: resolvePresentationBackground({
+              kind: "battle",
+              phaseId: phase.phaseId,
+              beat: phase.phaseId === "p3_answer" ? "spell" : "prompt",
+              baseBackground: node.scene.bg,
+            }),
             enemyName: node.enemy.name,
             actionLabel: `DEBUG ${grade}`,
             reply: `『${grade} 등급 결과를 재현했다.』`,
@@ -424,6 +471,7 @@ async function bootstrap(): Promise<void> {
               request.signal,
             );
             if (request.signal.aborted) return true;
+            engine.recordLlmSuccess();
             const result = engine.submitLlmJudgement(transcript, judgement);
             rememberTurn(transcript, result.reply);
             renderReply(transcript, result);
@@ -566,6 +614,7 @@ function renderCutscene(
     gameView.renderLine({
       nodeId: node.nodeId,
       sceneId: node.scene.bg,
+      lineIndex,
       speaker: characterName(line.speaker),
       speakerId: line.speaker,
       emotion: line.emotion,
@@ -592,4 +641,15 @@ function providerName(provider: SttProviderId): string {
   return provider === "openai" ? "GPT" : "Gemini";
 }
 
-void bootstrap();
+const devSceneRequest = resolveDevSceneRequest(window.location.search);
+if (devSceneRequest.mode === "preview") {
+  view.renderDevScenePreview(devSceneRequest.preview, () => {
+    const bgmId = devSceneRequest.preview.bgmId;
+    if (bgmId) void bgm.play(bgmId, bgmId !== "bgm_transform");
+  });
+} else if (devSceneRequest.mode === "invalid") {
+  view.renderDevSceneError(devSceneRequest.requestedId);
+} else {
+  view.renderLoading();
+  void bootstrap();
+}

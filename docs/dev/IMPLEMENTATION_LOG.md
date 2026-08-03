@@ -316,3 +316,135 @@
 
 - 사용자 요청의 “에셋과 병렬로 JSON·로더·연출 코드를 먼저 구현하고 CSS placeholder로 테스트” 범위는 완료했다.
 - 물리 에셋이 없는 상태를 M5 최종 PASS로 간주하지 않는다. 외부 전달 파일은 자동 보정하지 않고 담당자 오류 반환→재전달→통합 QA 순서로 처리한다.
+
+## M5 — 비에셋 결함 보정
+
+- 실행일: 2026-08-02
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DOCS_UPDATE`
+- 상태: 확정 계약으로 수정 가능한 결함 완료. 사용자 결정이 필요한 N7·interim·작가 키워드·열린 ADR은 보류
+
+### 수정 내용
+
+- 타이틀·N0·N1 시작·N1 응답에서 `주노/JUNO` 정체를 숨기고 `정체불명의 목소리`·`VOICE // LINK`를 표시한다. N2 진입부터 주노 이름과 링크를 공개한다.
+- 대화·전투 LLM 성공은 연속 실패 횟수를 초기화한다. 전투 LLM은 최종 실패 턴을 1회 기록하고 3회 누적 뒤 추가 네트워크 요청 없이 안전한 0점 폴백을 적용한다.
+- 별첨1의 optional `ending.gradeVariants`를 strict zod schema에 추가하고 `GameState.battleGrade`에 해당하는 추가 대사만 기본 ending lines 뒤에 렌더한다. DEC-033에 근거와 영향을 기록했다.
+- 누락된 DEC-018 정의, Git 저장소 생성 전 상태가 남은 보안 문서, AR-03~07의 구현/QA 상태 중복을 정정했다.
+- 작가 소유 `n4_cooperate` 중복 키워드는 사용자 대체·삭제 결정 전 수정하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| N1 표시 TDD | PASS | 타이틀·N0·N1 익명, N2 주노 공개 경계 고정 |
+| battle LLM 실패 사다리 TDD | PASS | 실패 3회까지만 호출, 4번째부터 호출 0, 성공 시 실패 횟수 초기화 |
+| `gradeVariants` TDD | PASS | schema 보존, 현재 S/A/B 등급의 lines만 기본 lines 뒤에 결합 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 30 files, 109 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab Whisper chunk 경고 유지 |
+| Playwright 클릭 QA | PASS | 타이틀→N0→N1 시작·응답→N2, 공개 경계 정상, 콘솔 error 0 |
+
+### 현재 판정
+
+- 위 비에셋 결함은 수정 완료. 에셋 파일·manifest·기준 기획서·완성대본은 변경하지 않았다.
+- N7 UI, interim 자막, N4 중복 키워드, DEC-010·011·013은 사용자 결정 뒤 별도 반영한다.
+- M5 최종 게이트는 기존대로 미판정이다.
+
+## M5 — 도윤 에셋 인계 정규화
+
+- 실행일: 2026-08-03
+- 작업 모드: `ASSET_VALIDATION` + `DOCS_UPDATE`
+- 상태: 파일명 정규화·누락 추적·`doyun.magical` 임시 runtime 통합 완료
+
+### 처리 내용
+
+- commit `4adb4db`의 `docs/Asset/assets/` 도윤 PNG 23장을 전수 검사했다.
+- 외부 원본은 유지하고 채택 runtime 복사본만 계약명으로 정규화하는 DEC-034를 기록했다.
+- README의 8개 불일치 이름을 실제 납품명으로 정정하고 과거 이름→정규화명 표를 보존했다.
+- 현재 M5 필수·확장·미참조를 분리했다. 미참조 21장은 논리 ID·catalog를 추가하지 않고 납품 폴더에 유지했다.
+- `doyun.magical` 정면 포즈, 변신 컷 2장, 생성·라이선스 증빙을 작업자 재요청 목록에 기록했다.
+- 사용자 임시 승인 DEC-035 뒤 원본과 동일 바이트를 `public/assets/char/char_doyun_magical.png`에 복사했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| PNG 전수 디코딩 | PASS | 23/23 |
+| 규격·투명도·용량 | PASS | 모두 1200×2000 8-bit indexed PNG + `tRNS`, 실제 투명 픽셀, 최대 343,450B |
+| 묶음 용량 | PASS | 5,538,435B, 30MB 이하 |
+| 완전 중복 | PASS | SHA-256 중복 0 |
+| README↔실파일명 | PASS | 8개 별칭을 실제 파일명으로 정규화하고 이력 보존 |
+| `doyun.magical` 장면 QA | 임시 승인 | 정면본을 DEC-035로 M5 사용. 후면/반측면 교체 대기 |
+| runtime 파일 | PASS | resolver 계약 경로 존재, 원본·복사본 SHA-256 일치 |
+| 물리 파일 TDD | PASS | 부재 ENOENT RED → runtime 복사 → PNG signature/IHDR/투명도/용량 GREEN |
+| Playwright battle p1~p3 | PASS | 세 페이즈 모두 `마법소녀 도윤` 실이미지 유지, HTTP 200 `image/png` 301,708B, 콘솔 error 0, 도윤 fallback 경고 0 |
+
+### 현재 판정
+
+- 이름 불일치와 누락은 더 이상 작업 중단 원인이 아니다. 문서화 후 placeholder로 계속 진행한다.
+- `doyun.magical`은 `ready`다. 라이선스와 최종 후면/반측면 교체 QA 전 `approved`는 아니다.
+
+## M5 — 확정 배경 16장 장면 전환·dev 프리뷰
+
+- 실행일: 2026-08-03
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `ASSET_VALIDATION` + `DEMO_QA`
+- 상태: 확정 배경 16장 runtime 통합과 node/phase/ending 전환 완료. 누락 캐릭터·변신 컷·BGM은 placeholder 유지
+
+### 구현 내용
+
+- 원본 ZIP을 보존하고 확정 배경 16장을 `public/assets/bg/*.webp`의 1920×1080 계약 규격으로 변환했다.
+- 순수 `resolvePresentationBackground`가 N0 문장, N1, N5 영창·변신, battle p1/p2/p3 질문·주문, 수렴, GOOD/NORMAL/BAD 배경을 결정한다.
+- 사용자 승인에 따라 ending을 문장 단위 페이지로 분리했다. GOOD은 회복 책상 5페이지→밝은 복도 1페이지→검은빛 복도 1페이지다.
+- `?debug=1` 장면 선택기와 비변이 `?debug=1&scene=<id>` 직접 프리뷰를 추가했다. 22개 프리셋이 16개 배경과 실제 presentation beat를 모두 포함한다.
+- 직접 프리뷰는 bootstrap·저장·FSM을 우회한다. 잘못된 scene ID는 안전한 오류 화면으로 처리한다.
+- 선택 사항인 `ending.black_magical_girl` 계약 경로만 catalog에 등록했다. 실파일이 없으면 기존 placeholder가 유지된다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 32 files, 121 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab/transformers chunk 크기 경고만 유지 |
+| 배경 물리 규격 | PASS | 16/16 WebP, 모두 1920×1080, 합계 2,666,866B |
+| dev 전수 프리셋 | PASS | 22프리셋, 고유 배경 16개, image load 실패 0, console error 0, local/session storage 키 0 |
+| GOOD 전체 클릭 QA | PASS | N0 office→desk, N1 time stop, N5 dark→desk→transform, battle p1 wide→p2 void→p3 archive/core, 수렴 dark, GOOD 7페이지 전환 |
+| 실에셋·placeholder 합성 | PASS | 도윤 실 PNG 유지. 누락 주노·망령·변신 컷은 기대된 경고와 placeholder로 완주 |
+
+### 현재 판정
+
+- 16장 장면 매핑과 M5 presentation 구현은 완료됐다.
+- TITLE baked NHN/HACKATHON 문구·로고는 DEC-037에 따라 임시 승인 상태다. clean 교체와 생성·라이선스 증빙은 계속 요청한다.
+- M5 전체는 주노 5장, 망령 2장, 변신 컷 2장, 필수 BGM 3종과 사람 음성·오프라인 전체 경로 QA 전이므로 아직 PASS가 아니다.
+
+## M5 — 외부 에셋 black/silent 폴백·작업자 인계
+
+- 실행일: 2026-08-03
+- 작업 모드: `DOCS_UPDATE` + `ASSET_VALIDATION` + `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 작업자 문서 선행 push, 기능 폴백 구현·자동/브라우저 QA 완료. 실에셋·제출 게이트 대기
+
+### 처리 내용
+
+- `docs/Asset/M5_ASSET_HANDOFF_REQUEST.md`와 `M5_UI_BGM_REQUEST_MAPPING.md`에 P0 필수, P1 교체, P2 선택, 계약명·규격·장면·증빙·재납품 조건을 고정했다.
+- 해당 문서와 Asset README만 commit `25ba8a3`으로 먼저 원격 `codex/m5-asset-handoff-docs`에 push했다. mixed worktree의 코드·원본 에셋은 첫 commit에서 제외했다.
+- DEC-040에 따라 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 강등한다. 검은 presentation에서도 대사·자막·버튼·PTT·게이지를 유지한다.
+- 기존 논리 ID·파일명·manifest 상태를 바꾸지 않는다. 실파일 도착 시 같은 경로에 채운 뒤 시각·청각 QA를 재실행한다.
+- `QA_AND_DEMO.md` §15에 기능 게이트와 에셋·제출 게이트, 자동 검사, 22프리셋, 클릭·실제 음성·오프라인×3엔딩 9회 완주, 증거 템플릿을 추가했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD tracer | PASS | 누락 이미지 black 계약 RED 1건 확인 뒤 GREEN. BGM 오류 무음 characterization PASS |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 32 files, 123 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab/transformers chunk 경고만 유지 |
+| Playwright N2 실제 클릭 | PASS | 주노 placeholder `rgb(0, 0, 0)`, 대사·이름표·4개 입력 버튼 표시, console error 0 |
+| Playwright N5 dev | PASS | 변신 컷 black placeholder 2개, 프리뷰 UI 표시, local/session storage 키 0, console error 0 |
+| BGM 누락 | PASS | `bgm_daily` 404를 `[ASSET_HANDOFF]` 경고 1회로 기록하고 예외 없이 무음 유지 |
+| 문서 첫 push | PASS | commit `25ba8a3`, 원격 tracking branch 설정 |
+
+### 현재 판정
+
+- M5 기능 개발과 기능 QA는 외부 에셋 대기 없이 계속 가능하다.
+- 검은/무음 폴백은 `missing`을 완료 처리하지 않는다. 실에셋 시각·청각·라이선스·성능 검수 전 `M5 최종 PASS`는 아니다.
+- 최종 QA 실행 절차는 `QA_AND_DEMO.md` §15를 따른다.

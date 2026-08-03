@@ -86,7 +86,7 @@ Git 제외 대상:
 - main 실패 빌드가 마지막 검증 배포를 덮지 않게 deploy job을 검증 job 뒤에 둔다.
 - 배포 후 [QA QG-01~QG-05](QA_AND_DEMO.md)를 수행한다.
 
-현재 디렉터리는 아직 Git 저장소가 아니다. [DEC-022](DECISIONS.md)에 따라 M1에서 검증된 초기 저장소를 생성·push한다. Pages 배포는 M6까지 수행하지 않는다.
+현재 디렉터리는 Git 저장소이며 DEC-022·DEC-025에 따른 private `origin`과 기본 브랜치 `main`이 연결돼 있다. Pages 배포는 M6까지 수행하지 않는다.
 
 ### M1 GitHub 초기 게시 계약
 

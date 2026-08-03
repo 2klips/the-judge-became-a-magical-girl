@@ -134,7 +134,7 @@ STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSO
 - `minMatch` 이상: 표준 연출, momentum 50.
 - 최대 시도 미달: `failLines`로 자동 구제, 페널티 없이 momentum 50.
 - 클릭 모드·마이크 불능: “주문 외우기”로 표준 결과.
-- `[확정, DEC-016]` 주문 결과 적용 뒤 엔진이 `transform.cast` → `transform.complete`와 `bgm_transform`을 고정 재생한다. 현 `cutscene` JSON 스키마를 유지하고, 에셋 누락·불량이면 CSS placeholder로 진행한다.
+- `[확정, DEC-016·040]` 주문 결과 적용 뒤 엔진이 `transform.cast` → `transform.complete`와 `bgm_transform`을 고정 재생한다. 현 `cutscene` JSON 스키마를 유지하고, 컷 누락·불량이면 검은 presentation, BGM 누락·불량이면 무음으로 진행한다.
 
 ### Battle
 
@@ -151,6 +151,7 @@ STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSO
 
 - 챕터3 최종 분기가 ending 노드를 선택한다.
 - 기본 lines 뒤 해당 등급의 `gradeVariants`가 있으면 추가한다.
+- `[확정, DEC-039]` GOOD/NORMAL/BAD는 문장별 `계속` 페이지로 표시한다. GOOD line 0~4/5/6+에서 회복 책상→밝은 복도→검은빛 복도로 전환하고 마지막 페이지에만 재시작을 노출한다.
 - GOOD/NORMAL/BAD는 MVP 필수. HIDDEN은 목표 범위지만 MVP 컷 1순위다.
 
 ## 5. 판정 포트 `[제안]`
@@ -260,6 +261,8 @@ main(composition root)
 - 장면별 배경·표시 인물·표정·음악·컷 사용처는 [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)를 따른다. `ASSET_MANIFEST.md`는 파일명과 제작·QA 상태만 소유한다.
 - `[제안]` 에셋 매니페스트가 논리 ID를 실제 파일명과 연결한다.
 - `[제안]` 확장자·폴더 결합은 중앙 resolver 한 곳에서 수행한다.
-- `[확정, DEC-019]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 CSS placeholder 순으로 강등한다.
-- `[확정, DEC-031]` resolver는 실패한 논리 ID·기대 경로를 진단하되 외부 파일을 자동 이동·변환·rename하지 않는다.
+- `[확정, DEC-019·040]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 검은 presentation 순으로 강등한다.
+- `[확정, DEC-034]` resolver는 실패한 논리 ID·기대 경로를 진단한다. 외부 원본은 자동 이동·변환·rename하지 않고, 채택 파일의 runtime 복사본만 계약명으로 정규화하며 원본명→계약명을 기록한다.
+- `[확정, DEC-036·039]` node line, 변신 stage, battle phase/p3 spell, ending line의 세부 배경은 scenario 스키마를 늘리지 않고 presentation 고정 cue resolver가 해석한다.
+- `[확정, DEC-038]` `?debug=1&scene=<장면ID>`는 저장·FSM과 격리된 장면 프리뷰다. 정상 URL에는 선택기·프리뷰가 없다.
 - `[제안]` 누락 에셋은 로더 진단에 포함하되 M1~M4 더미 placeholder 허용 여부는 마일스톤 계약을 따른다.
