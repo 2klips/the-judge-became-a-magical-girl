@@ -154,14 +154,8 @@ describe("M5 에셋 계약", () => {
     expect(statSync(diskPath).size).toBeLessThanOrEqual(800 * 1024);
   });
 
-  it("첫 화면 핵심 배경과 주노 기본 표정을 선행 로드 목록에 둔다", () => {
-    expect(corePreloadAssets.map(({ logicalId }) => logicalId)).toEqual([
-      "bg_title",
-      "bg_office_wide",
-      "bg_hall_day",
-      "juno.neutral",
-      "juno.surprised",
-    ]);
+  it("첫 화면에서는 타이틀 핵심 배경만 선행 로드한다", () => {
+    expect(corePreloadAssets.map(({ logicalId }) => logicalId)).toEqual(["bg_title"]);
   });
 
   it("누락 파일을 변경하지 않고 담당자 반환 진단을 한 번만 남긴다", () => {

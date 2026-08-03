@@ -448,3 +448,41 @@
 - M5 기능 개발과 기능 QA는 외부 에셋 대기 없이 계속 가능하다.
 - 검은/무음 폴백은 `missing`을 완료 처리하지 않는다. 실에셋 시각·청각·라이선스·성능 검수 전 `M5 최종 PASS`는 아니다.
 - 최종 QA 실행 절차는 `QA_AND_DEMO.md` §15를 따른다.
+
+## M5 — 잔여 기능 위험 처리·전체 경로 QA
+
+- 실행일: 2026-08-03
+- 작업 모드: `DEMO_QA` + `ASSET_VALIDATION` + `MILESTONE_IMPLEMENTATION`
+- 상태: 클릭·오프라인 6경로와 fake microphone 실음성 NORMAL 완주. 초기 preload 결함 수정. 사람 발화 GOOD/BAD·실에셋 게이트 대기
+
+### 처리 내용
+
+- 22개 dev 프리셋을 개발 서버와 production preview에서 모두 재검사했다. 16개 배경은 전부 1920×1080으로 로드되고 검은 placeholder는 `rgb(0, 0, 0)`을 유지했다.
+- 클릭 GOOD/NORMAL/BAD와 DevTools Offline+첫 PTT 실패→클릭 폴백 GOOD/NORMAL/BAD를 완주했다. ending 마지막 페이지에서만 `처음부터`가 표시되고 재시작 시 호감도 50·플래그 초기화를 확인했다.
+- fake microphone의 한국어 WAV를 debug transcript 없이 MediaRecorder→OpenAI STT Worker→LLM 판정 경로로 전달했다. 대화 5턴, 변신 주문 2회, battle 7턴, 수렴 1턴 뒤 NORMAL ending에 도달했다.
+- 첫 화면에서 title 외 `bg_office_wide`, `bg_hall_day`, 누락 Juno 2종까지 preload하던 QA 계약 위반을 발견했다. `corePreloadAssets`를 `bg_title` 하나로 축소하고 회귀 테스트를 고정했다.
+- 390×844 viewport와 Pages base 경로 production preview를 검사했다. 가로 overflow, Vite overlay, 확인된 JS/CSS/배경/도윤의 HTTP·MIME 실패는 없었다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 22개 dev 프리셋 | PASS | 개발·production 각 22/22, 배경 16장 1920×1080, scene failure 0 |
+| 프리셋 저장 격리 | PASS | local/session sentinel이 22회 직접 진입 전후 동일 |
+| 클릭 ending 매트릭스 | PASS | GOOD 76/S/promise, NORMAL 73/S, BAD 46/S |
+| Offline+로컬 폴백 매트릭스 | PASS | 3/3. 첫 PTT `Failed to fetch`, 현재 턴 click 전환, GOOD/NORMAL/BAD 완주 |
+| 실음성 코드 경로 | PARTIAL PASS | fake microphone, debug 주입 0, STT/LLM 200, 실패 0, NORMAL 56/B 완주. 사람 발화 GOOD/BAD 미실행 |
+| 변신·battle 음성 구제 | PASS | 변신 0/4 재시도→2차 rescued, battle 7턴 B 등급으로 종료 |
+| 반응형 | PASS | 390×844 title·battle preview 가로 overflow 0, 조작 UI 표시 |
+| 초기 로드 | PASS | local dev title 표시 52ms, 선행 배경 요청 `bg_title` 1개, 첫 화면 console error/warning 0 |
+| production preview | PASS | Pages base, 확인된 파일 HTTP/MIME 실패 0, page error 0. 누락 9개는 black fallback |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 32 files, 123 tests |
+| `npm run build` | PASS | production build 생성. 기존 transformers chunk 경고만 유지 |
+| 보안·문서 | PASS | tracked secret 패턴 파일 0, 로컬 Markdown broken link 0, `git diff --check` 통과 |
+
+### 현재 판정
+
+- 자동·fake-device 기능 위험은 처리했다. M5 기능 경로는 외부 에셋 없이 클릭·오프라인·실음성 Worker 경로로 완주 가능하다.
+- M5 최종 PASS 전 사람 발화 GOOD/NORMAL/BAD 3회 중 GOOD/BAD 2회, 실에셋 시각·청각·라이선스 검수가 남는다. fake microphone 결과를 사람 발화로 대체하지 않는다.
+- M6 범위인 production debug 상태 변경 기능 제거, 실제 GitHub Pages 배포·제출 검수는 시작하지 않았다.

@@ -147,10 +147,6 @@ export function assetUrl(relativePath: string): string {
 
 export const corePreloadAssets = [
   { logicalId: "bg_title", path: backgrounds.bg_title.primaryPath },
-  { logicalId: "bg_office_wide", path: backgrounds.bg_office_wide.primaryPath },
-  { logicalId: "bg_hall_day", path: backgrounds.bg_hall_day.primaryPath },
-  { logicalId: "juno.neutral", path: imagePaths["juno.neutral"] },
-  { logicalId: "juno.surprised", path: imagePaths["juno.surprised"] },
 ] as const;
 
 export function preloadCoreAssets(): void {
