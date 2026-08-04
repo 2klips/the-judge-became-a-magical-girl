@@ -109,7 +109,11 @@ export function createWorkerTranscriptionPort(
   };
 }
 
-export function resolveSttProvider(params: URLSearchParams): SttProviderId {
+export function resolveSttProvider(
+  params: URLSearchParams,
+  lockedProvider?: SttProviderId,
+): SttProviderId {
+  if (lockedProvider) return lockedProvider;
   return params.get("stt") === "gemini" ? "gemini" : "openai";
 }
 

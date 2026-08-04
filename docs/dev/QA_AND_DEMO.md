@@ -121,7 +121,7 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 | QG-03 | 허용 Pages Origin→Workers | 정상 응답 |
 | QG-04 | 임의 Origin/Origin 없음→Workers | 거부, CORS 허용 헤더 없음 |
 | QG-05 | 새 main 배포 | CI check/test/build 후만 production 갱신 |
-| QG-06 | M6 production에서 STT 요청 검사 | DEC-028로 최종 선택된 공급자만 호출. 비선택 STT 라우트·Secret·비교 Lab chunk 없음 |
+| QG-06 | 공개 QA·M6 production에서 STT 요청 검사 | DEC-051의 OpenAI `/transcribe/openai`만 호출. production `/transcribe/gemini`는 404, 비교 Lab chunk는 QA bundle에 없음 |
 
 ## 11. 현장 시연 체크리스트
 
@@ -318,11 +318,13 @@ npm run build
 
 ## 16. M5 임시 QA Pages 작업자 가이드
 
-대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. 상단에 `QA PREVIEW · 타이틀 마이크 테스트 필수 · 게임 내 클릭·오프라인 · 음성 Worker 비활성` 배너가 없으면 잘못된 배포이므로 테스트를 중단한다.
+대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. 상단에 `QA PREVIEW · 타이틀 마이크 테스트 필수 · GPT STT Worker 활성 · 클릭·오프라인 폴백` 배너가 없으면 잘못된 배포이므로 테스트를 중단한다. QA Worker는 `https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`다.
 
 ### 16.1 기본 확인
 
 - [ ] 배너의 commit 7자가 전달받은 QA commit과 같다.
+- [ ] 게임 내 STT 표기가 `GPT · 고정`이고 `?stt=gemini`로 진입해도 GPT가 유지된다.
+- [ ] Network에서 음성 요청이 QA Worker의 `/transcribe/openai`로 1회 전송되고 `/transcribe/gemini` 요청은 0회다.
 - [ ] 타이틀, JS, CSS, scenario JSON, 첫 배경이 404 없이 표시된다.
 - [ ] `마이크 테스트 통과 → 새 게임 → 게임 내 클릭 모드`로 대사·선택지·변신 구제·전투·엔딩까지 진행된다.
 - [ ] 새로고침 뒤 저장 이어하기가 동작한다.
@@ -342,13 +344,15 @@ npm run build
 
 ### 16.3 의도된 제한과 실패 보고
 
-- 음성 Worker·STT·LLM 실호출은 비활성이다. 타이틀 로컬 마이크 연결·dBFS 테스트만 수행하고 STT 품질 판정에는 이 URL을 사용하지 않는다.
-- 타이틀 테스트 통과 뒤 게임의 음성 API 성공은 기대하지 않는다. 게임 내 클릭 전환·로컬 폴백으로 계속되는지만 확인한다.
+- `[확정, DEC-051]` GPT STT Worker 실호출이 활성이다. 실제 발화와 전사문 선표시를 이 URL에서 판정한다.
+- `[관찰, 2026-08-04]` 같은 Cloudflare Worker의 Gemini 대화·전투 실호출은 Google API가 `User location is not supported for the API use.`를 반환해 차단된다. 클라이언트 클릭·로컬 폴백 완주성은 유지하지만 공개 QA의 Gemini 자유 대화 판정은 검증 대상에서 제외한다. 실제 LLM을 다시 활성화하려면 공급자 또는 백엔드 위치를 사용자가 별도 확정해야 한다.
+- Worker·OpenAI·Gemini 장애 또는 쿼터 소진 때도 현재 턴 클릭 선택지와 누적 실패 로컬 강등으로 ending까지 진행돼야 한다.
+- QA Worker 허용 Origin은 `https://2klips.github.io` 하나다. 임의 Origin·Origin 없음·`/transcribe/gemini`는 거부가 정상이다.
 - `stt-lab.html`은 배포 대상이 아니며 404가 정상이다.
 - `noindex,nofollow`는 검색 노출 방지 요청일 뿐 접근 통제가 아니다. URL과 화면은 공개로 취급한다.
 - 결함 보고에는 commit, URL query, viewport, 재현 단계, 기대/실제 결과, Console/Network 오류, 스크린샷을 포함한다.
 
 ### 16.4 임시 QA 판정
 
-- `npm run check`, `npm test`, `npm run build:qa`, Pages workflow, 배포 후 데스크톱·모바일 smoke가 모두 PASS해야 링크를 배포 가능으로 표시한다.
+- `npm run check`, `npm test`, `npm run build:qa`, QA Worker dry-run/deploy, QG-03·QG-04·QG-06, Pages workflow, 배포 후 데스크톱·모바일 실제 발화 smoke가 모두 PASS해야 링크를 GPT STT QA 배포 가능으로 표시한다. Gemini 자유 대화 실판정은 위 지역 제한을 별도 BLOCKED로 기록한다.
 - 임시 QA PASS는 M5 최종 PASS 또는 M6 production PASS가 아니다.

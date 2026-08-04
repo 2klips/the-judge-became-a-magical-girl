@@ -269,6 +269,7 @@ export class GameView {
   constructor(
     private readonly root: HTMLElement,
     private readonly speechSupported: boolean,
+    private readonly lockSttProvider = false,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
     window.addEventListener("keydown", (event) => {
@@ -1491,20 +1492,7 @@ export class GameView {
       options.cancel();
       options.onModeChange("click");
     });
-    const provider = element("label", "provider-control");
-    provider.append(element("span", undefined, "STT"));
-    const providerSelect = element("select", "provider-select");
-    for (const id of ["openai", "gemini"] as const) {
-      const option = element("option", undefined, sttProviderLabel(id));
-      option.value = id;
-      option.selected = id === options.sttProvider;
-      providerSelect.append(option);
-    }
-    providerSelect.addEventListener("change", () => {
-      options.cancel();
-      options.onProviderChange(providerSelect.value === "gemini" ? "gemini" : "openai");
-    });
-    provider.append(providerSelect);
+    const provider = this.providerControl(options);
     controls.append(indicator.element, ptt, provider, clickButton);
     container.append(captions.element, controls);
 
@@ -1625,6 +1613,10 @@ export class GameView {
   private providerControl(options: SharedVoiceOptions): HTMLLabelElement {
     const provider = element("label", "provider-control");
     provider.append(element("span", undefined, "STT"));
+    if (this.lockSttProvider) {
+      provider.append(element("span", "provider-value", `${sttProviderLabel(options.sttProvider)} · 고정`));
+      return provider;
+    }
     const select = element("select", "provider-select");
     for (const id of ["openai", "gemini"] as const) {
       const option = element("option", undefined, sttProviderLabel(id));

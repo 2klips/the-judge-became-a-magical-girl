@@ -38,6 +38,10 @@ describe("M3 선택형 STT", () => {
     expect(resolveSttProvider(new URLSearchParams())).toBe("openai");
   });
 
+  it("공개 QA에서 GPT를 고정하면 Gemini 쿼리를 무시한다", () => {
+    expect(resolveSttProvider(new URLSearchParams("stt=gemini"), "openai")).toBe("openai");
+  });
+
   it("Worker 응답이 계약과 다르면 차단한다", async () => {
     const port = createWorkerTranscriptionPort({
       provider: "openai",

@@ -116,7 +116,7 @@ PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규�
 - `[확정, DEC-050]` 게임 내 PTT는 포인터·포커스된 Space/Enter와 전역 `T` 홀드/릴리스를 지원한다. 입력·선택 컨트롤 편집 중에는 전역 `T`를 가로채지 않는다.
 - `[확정, DEC-050]` 대사·판정 응답·엔딩의 다음 페이지 진행 버튼은 화면 렌더 후 2초 동안 비활성화하고, 준비 뒤 한 번만 진행한다.
 
-STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSON에 공급자 ID를 저장하지 않는다. 비교 Lab만 같은 WAV의 A/B 동시 비교를 허용한다.
+`[확정, DEC-051]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. Gemini 대화·전투 LLM은 별도 계약으로 유지한다.
 
 분기 우선순위:
 

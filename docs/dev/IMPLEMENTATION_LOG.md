@@ -661,3 +661,31 @@
 
 - 요청된 로컬 입력·진행·오류 표시·배치 수정은 통과했다.
 - DEC-041 공개 QA는 음성 Worker 비활성이다. 실제 Pages STT 활성화는 Cloudflare Worker 배포·Pages Origin·Secret·최종 공급자 결정 뒤 수행한다.
+
+## M5 — 공개 QA GPT STT Worker 활성화
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: GPT STT Worker 실배포·합성 한국어 WAV 실호출 PASS. Pages 배포·브라우저 실제 마이크 smoke 진행 중. Gemini 대화·전투는 Cloudflare egress 지역 제한 BLOCKED
+
+### 처리 내용
+
+- QA build가 명시적 HTTPS `VITE_WORKER_URL` 없이는 실패하도록 만들고 GitHub repository variable `QA_WORKER_URL`에 실제 Worker URL을 등록했다.
+- 공개 게임의 STT 공급자를 OpenAI `gpt-transcribe`로 고정했다. `?stt=gemini`도 무시하며 production `/transcribe/gemini`는 404를 반환한다. Gemini STT 비교는 로컬 전용 `wrangler.stt-lab.jsonc`로 격리했다.
+- Cloudflare `qa` Worker의 허용 Origin을 `https://2klips.github.io` 하나로 제한하고 기존 `.env.local`의 OpenAI·Gemini 키를 Secret으로 등록했다. 키 값은 로그·문서·커밋에 기록하지 않았다.
+
+### Worker 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 배포 | PASS | `nhn-voice-m5-qa-worker` 공개 `workers.dev` endpoint 생성 |
+| Secret | PASS | `OPENAI_API_KEY`, `GEMINI_API_KEY` 이름만 확인. 값 비노출 |
+| Origin | PASS | Pages Origin 200·정확한 ACAO, 임의/누락 Origin 403 |
+| GPT STT | PASS | 비개인 합성 한국어 WAV → `gpt-transcribe` 200, 원문과 동일 전사 |
+| Gemini STT 차단 | PASS | `/transcribe/gemini` 404, upstream 호출 없음 |
+| Gemini LLM | BLOCKED | 로컬 동일 Secret·payload 200, Cloudflare Worker는 Google `FAILED_PRECONDITION: User location is not supported for the API use.` 400 |
+
+### 현재 판정
+
+- 공개 QA의 GPT STT 서버 경계는 활성화됐다. Pages workflow와 공개 브라우저 실제 마이크 smoke가 남는다.
+- Gemini LLM 실패 때 기존 클릭·로컬 폴백으로 ending까지 진행할 수 있다. 공급자 변경 또는 별도 backend 도입은 제품·운영 결정이므로 사용자 확정 전 수행하지 않는다.

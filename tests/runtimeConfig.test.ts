@@ -1,17 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { QA_DISABLED_WORKER_PATH, resolveWorkerUrl } from "../src/runtimeConfig";
+import { resolveWorkerUrl } from "../src/runtimeConfig";
 
 describe("runtime Worker URL", () => {
-  it("QA 기본값은 Pages와 같은 origin의 비활성 경로를 사용한다", () => {
+  it("QA는 명시된 HTTPS Worker URL을 사용한다", () => {
     expect(
       resolveWorkerUrl({
+        explicitUrl: "https://nhn-voice-m5-qa-worker.example.workers.dev/",
         isQaPreview: true,
         origin: "https://2klips.github.io",
         baseUrl: "/the-judge-became-a-magical-girl/",
       }),
-    ).toBe(
-      `https://2klips.github.io/the-judge-became-a-magical-girl/${QA_DISABLED_WORKER_PATH}`,
-    );
+    ).toBe("https://nhn-voice-m5-qa-worker.example.workers.dev");
   });
 
   it("일반 로컬 빌드는 기존 로컬 Worker 기본값을 유지한다", () => {
@@ -24,17 +23,23 @@ describe("runtime Worker URL", () => {
     ).toBe("http://127.0.0.1:8787");
   });
 
-  it("QA에서는 명시된 환경 URL도 무시해 Worker를 강제로 비활성화한다", () => {
-    expect(
+  it("QA Worker URL이 없거나 HTTPS가 아니면 시작을 거부한다", () => {
+    expect(() =>
       resolveWorkerUrl({
-        explicitUrl: "https://worker.example.test",
         isQaPreview: true,
         origin: "https://2klips.github.io",
         baseUrl: "/the-judge-became-a-magical-girl/",
       }),
-    ).toBe(
-      `https://2klips.github.io/the-judge-became-a-magical-girl/${QA_DISABLED_WORKER_PATH}`,
-    );
+    ).toThrow("QA Worker HTTPS URL이 필요합니다");
+
+    expect(() =>
+      resolveWorkerUrl({
+        explicitUrl: "http://worker.example.test",
+        isQaPreview: true,
+        origin: "https://2klips.github.io",
+        baseUrl: "/the-judge-became-a-magical-girl/",
+      }),
+    ).toThrow("QA Worker는 HTTPS URL이어야 합니다");
   });
 
   it("일반 빌드에서는 명시된 Worker URL을 사용한다", () => {

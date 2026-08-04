@@ -211,7 +211,7 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 | 주문/키워드 판정 | 자체 모듈 (외부 의존 없음) | 정규화(공백·문장부호 제거) → 키워드 부분 포함 검사. 스트레치: 자모 분해 유사도 |
 | 마이크 테스트·음량 판정 | Web Audio `AnalyserNode` + PCM RMS/peak 분석 | 타이틀에서 입력 장치 선택·실시간 dBFS 미터·적응형 기준을 만들고, 전투 주문 녹음의 RMS·peak·clipping을 같은 기준으로 판정 |
 | LLM | **Gemini 2.5 Flash-Lite** | `responseMimeType: application/json` + `responseSchema`로 JSON 강제, `maxOutputTokens ≈ 256`, temperature 0.6, 클라이언트 타임아웃 4초 |
-| API 프록시 | **Cloudflare Workers** (wrangler 배포) | STT·LLM 키는 Workers Secret. 정확한 production Origin만 허용. GPT/Gemini STT는 MVP-1까지 전환 가능하게 두고 M6 전 하나를 선택. 대화 LLM의 Gemini 결정과 STT 공급자 선택은 별도 계약 |
+| API 프록시 | **Cloudflare Workers** (wrangler 배포) | STT·LLM 키는 Workers Secret. 정확한 production Origin만 허용. MVP-1 비교 뒤 DEC-051에서 production STT를 OpenAI `gpt-transcribe`로 확정. 대화 LLM의 Gemini 결정과 STT 공급자 선택은 별도 계약 |
 | TTS | `speechSynthesis` | 스트레치. OS별 한국어 음성 품질 확인 필요 |
 | 오디오 | `<audio loop>` BGM 크로스페이드 + **Web Audio 신스 SFX** | SFX는 오실레이터 기반 코드 생성(Codex) — 100% AI 제작 원칙 충족 + 파일 용량 0 |
 | 저장 | `localStorage` 스냅샷 | 분기 이동마다 자동 저장, 새로고침 복구 전용 |
@@ -278,7 +278,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 
 ## 9. API 키 / 프록시 (v1 결론 유지 — 요약)
 
-외부 프록시(Cloudflare Workers 무료 티어) 채택. MVP-1까지 GPT/Gemini STT Secret을 함께 보유하되 한 턴에는 선택된 공급자만 호출한다. 최종 production STT 공급자는 M6 진입 전 선택하고 비선택 STT 라우트와 전용 Secret을 제거한다. 대화 LLM용 Gemini Secret은 STT 선택과 분리한다. Origin·요청 제한·쿼터·로테이션은 공급자별로 적용한다.
+외부 프록시(Cloudflare Workers 무료 티어) 채택. MVP-1까지 GPT/Gemini STT를 비교했고, DEC-051에서 공개 QA와 production 게임 STT를 OpenAI `gpt-transcribe`로 확정했다. production Worker는 Gemini STT route를 비활성화하고 로컬 비교 Lab에만 남긴다. 대화·전투 LLM용 Gemini Secret은 STT 선택과 분리한다. Origin·요청 제한·쿼터·로테이션은 공급자별로 적용한다.
 
 ---
 
@@ -297,7 +297,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 | 마이크 권한/소음/브라우저/네트워크/키·쿼터/LLM 이탈 | v1 §10 그대로 유지 (PTT, confidence 임계, Chromium 고지+기능 감지, 4초 타임아웃+3단 폴백, 프록시+상한+로테이션, responseSchema+화이트리스트) |
 | **타이틀 마이크 테스트 실패** | 새 게임·이어하기를 비활성화하고 권한·장치·입력 크기별 해결 문구를 표시. 테스트 통과 전 플레이 진입 금지 |
 | **브라우저별 입력 레벨 차이** | 절대 dB SPL로 표시하지 않고 dBFS로 명시. 시작 시 평소 목소리를 보정 기준으로 저장하고 RMS 허용 범위와 peak clipping을 함께 판정 |
-| **STT 공급자 정확도·지연 차이** | 로컬 Whisper는 탈락. GPT/Gemini는 MVP-1까지 같은 PTT WAV와 테스트 문장으로 비교하고, 전사문 선표시·정확도·p50/p95 지연·API 비용을 근거로 M6 전에 하나 선택 |
+| **STT 공급자 정확도·지연 차이** | 로컬 Whisper는 탈락. GPT/Gemini 비교 뒤 DEC-051에서 GPT를 선택. 전사문 선표시·실발화 QA·쿼터·API 비용을 계속 기록하고 장애 시 클릭·로컬 폴백 |
 | **주문 낭독 인식 실패 (변신·전투)** | 주문 전문 화면 표시(읽기 발화는 인식률 높음), 키워드 순서 무관·부분 포함의 관대한 채점, 2회 미달 시 무페널티 자동 진행 |
 | **전투에서 momentum 정체 → 지루함** | 버티기(+3 고정)로 최저 진행 보장, 페이즈 턴 상한으로 강제 전환, 바닥 클램프 20 |
 | **자유 대응에서 LLM 판정이 이상함** | 델타 클램프(-5~+10), momentum은 등급 산정에만 쓰여 오차가 서사를 망치지 않음. 전투 프롬프트에 채점 기준 명시 |

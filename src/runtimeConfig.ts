@@ -1,5 +1,3 @@
-export const QA_DISABLED_WORKER_PATH = "__qa_worker_disabled__";
-
 interface WorkerUrlOptions {
   explicitUrl?: string;
   isQaPreview: boolean;
@@ -11,10 +9,14 @@ export function resolveWorkerUrl({
   explicitUrl,
   isQaPreview,
   origin,
-  baseUrl,
 }: WorkerUrlOptions): string {
   if (isQaPreview) {
-    return new URL(`${baseUrl}${QA_DISABLED_WORKER_PATH}`, origin).toString();
+    if (!explicitUrl) throw new Error("QA Worker HTTPS URL이 필요합니다.");
+    const workerUrl = new URL(explicitUrl, origin);
+    if (workerUrl.protocol !== "https:") {
+      throw new Error("QA Worker는 HTTPS URL이어야 합니다.");
+    }
+    return workerUrl.toString().replace(/\/$/, "");
   }
 
   if (explicitUrl) return explicitUrl;

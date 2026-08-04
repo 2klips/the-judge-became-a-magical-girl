@@ -52,6 +52,26 @@ describe("M3 Worker 경계", () => {
     expect(upstream).not.toHaveBeenCalled();
   });
 
+  it("production Worker는 Gemini STT 경로를 upstream 전에 거부한다", async () => {
+    const upstream = vi.fn();
+    const worker = createWorker(upstream);
+    const form = new FormData();
+    form.append("audio", new File(["wav"], "speech.wav", { type: "audio/wav" }));
+
+    const response = await worker.fetch(
+      new Request("http://worker.local/transcribe/gemini", {
+        method: "POST",
+        headers: { Origin: LOCAL_ORIGIN },
+        body: form,
+      }),
+      env(),
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "비활성화된 STT 공급자입니다." });
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
   it("잘못된 클라이언트 JSON은 400, 공급자 JSON은 502로 분리한다", async () => {
     const upstream = vi.fn(async () =>
       Response.json({

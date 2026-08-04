@@ -375,7 +375,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 ### 선행조건
 
 - M5 통과.
-- `[확정, DEC-028]` GPT/Gemini 중 production STT 공급자 사용자 선택 완료.
+- `[충족, DEC-051]` production STT 공급자는 OpenAI `gpt-transcribe`로 사용자 선택 완료.
 - GitHub 저장소·Pages base/Origin, Workers 배포 계정과 키 정책 확정.
 - 현장 Chrome·마이크·네트워크 조건 확보.
 

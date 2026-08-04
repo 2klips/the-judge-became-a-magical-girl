@@ -73,9 +73,16 @@ const BattleRequestSchema = z
   })
   .strict();
 
-type UpstreamFetch = (request: Request) => Promise<Response>;
+export type UpstreamFetch = (request: Request) => Promise<Response>;
 
-export function createWorker(upstreamFetch: UpstreamFetch = fetch) {
+interface WorkerOptions {
+  enableGeminiStt?: boolean;
+}
+
+export function createWorker(
+  upstreamFetch: UpstreamFetch = fetch,
+  { enableGeminiStt = false }: WorkerOptions = {},
+) {
   return {
     async fetch(request: Request, env: Env): Promise<Response> {
       const origin = request.headers.get("origin") ?? "";
@@ -92,7 +99,7 @@ export function createWorker(upstreamFetch: UpstreamFetch = fetch) {
         return withCors(
           json({
             openaiConfigured: Boolean(env.OPENAI_API_KEY),
-            geminiConfigured: Boolean(env.GEMINI_API_KEY),
+            geminiConfigured: enableGeminiStt && Boolean(env.GEMINI_API_KEY),
             openaiModel: env.OPENAI_TRANSCRIBE_MODEL || DEFAULT_OPENAI_MODEL,
             geminiModel: env.GEMINI_TRANSCRIBE_MODEL || DEFAULT_GEMINI_TRANSCRIBE_MODEL,
             llmModel: env.GEMINI_LLM_MODEL || DEFAULT_GEMINI_LLM_MODEL,
@@ -109,8 +116,10 @@ export function createWorker(upstreamFetch: UpstreamFetch = fetch) {
         let result: unknown;
         if (pathname === "/transcribe/openai") {
           result = await transcribeWithOpenAi(await readAudio(request), env, upstreamFetch);
-        } else if (pathname === "/transcribe/gemini") {
+        } else if (pathname === "/transcribe/gemini" && enableGeminiStt) {
           result = await transcribeWithGemini(await readAudio(request), env, upstreamFetch);
+        } else if (pathname === "/transcribe/gemini") {
+          throw new WorkerError(404, "비활성화된 STT 공급자입니다.");
         } else if (pathname === "/judge/dialogue") {
           result = await judgeDialogue(await readDialogueRequest(request), env, upstreamFetch);
         } else if (pathname === "/judge/battle") {

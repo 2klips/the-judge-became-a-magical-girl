@@ -12,5 +12,20 @@
   },
   "secrets": {
     "required": ["OPENAI_API_KEY", "GEMINI_API_KEY"]
+  },
+  "env": {
+    "qa": {
+      "name": "nhn-voice-m5-qa-worker",
+      "workers_dev": true,
+      "vars": {
+        "ALLOWED_ORIGINS": "https://2klips.github.io",
+        "OPENAI_TRANSCRIBE_MODEL": "gpt-transcribe",
+        "GEMINI_TRANSCRIBE_MODEL": "gemini-2.5-flash",
+        "GEMINI_LLM_MODEL": "gemini-3.1-flash-lite"
+      },
+      "secrets": {
+        "required": ["OPENAI_API_KEY", "GEMINI_API_KEY"]
+      }
+    }
   }
 }

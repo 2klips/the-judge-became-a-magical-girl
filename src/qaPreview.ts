@@ -9,14 +9,18 @@ export function installQaPreviewBanner({ commit }: QaPreviewBannerOptions): void
   banner.className = "qa-preview-banner";
   banner.dataset.qaPreviewBanner = "true";
   banner.setAttribute("role", "status");
-  banner.textContent = [
+  banner.textContent = qaPreviewStatusText(commit);
+  document.body.prepend(banner);
+}
+
+export function qaPreviewStatusText(commit?: string): string {
+  return [
     "QA PREVIEW",
     "타이틀 마이크 테스트 필수",
-    "게임 내 클릭·오프라인",
-    "음성 Worker 비활성",
+    "GPT STT Worker 활성",
+    "클릭·오프라인 폴백",
     commit ? `commit ${commit.slice(0, 7)}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
-  document.body.prepend(banner);
 }

@@ -57,7 +57,7 @@ const workerUrl = resolveWorkerUrl({
 if (isQaPreview) {
   installQaPreviewBanner({ commit: import.meta.env.VITE_QA_COMMIT });
 }
-const view = new GameView(root, recordingSupported);
+const view = new GameView(root, recordingSupported, isQaPreview);
 const bgm = new BgmController();
 const sfx = new SfxPlayer();
 const microphoneTester = new BrowserMicrophoneTester();
@@ -95,7 +95,7 @@ async function bootstrap(): Promise<void> {
 
     let activeVoice: RecordedVoiceTurnController | null = null;
     let activeLlm: AbortController | null = null;
-    let sttProvider = resolveSttProvider(params);
+    let sttProvider = resolveSttProvider(params, isQaPreview ? "openai" : undefined);
     let readyIncantationNodeId: string | null = null;
     let incantationAttempt = 1;
     let microphoneCalibration: MicrophoneCalibration | null = null;
