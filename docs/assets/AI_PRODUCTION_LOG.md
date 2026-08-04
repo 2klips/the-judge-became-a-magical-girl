@@ -1,6 +1,6 @@
 # AI 제작 로그
 
-100% AI 제작 과정 증빙용이다. 비밀값, 개인 발화 원문, 계정 정보는 기록하지 않는다. 에셋 상태는 [ASSET_MANIFEST.md](ASSET_MANIFEST.md), 기술 결정은 [DECISIONS.md](DECISIONS.md)에 따로 기록한다.
+100% AI 제작 과정 증빙용이다. 비밀값, 개인 발화 원문, 계정 정보는 기록하지 않는다. 에셋 상태는 [ASSET_MANIFEST.md](ASSET_MANIFEST.md), 기술 결정은 [DECISIONS.md](../dev/DECISIONS.md)에 따로 기록한다.
 
 ## 빈 템플릿
 
@@ -31,6 +31,8 @@
 | 2026-08-03 | M5 잔여 기능 위험 QA·초기 preload 보정 | Codex, in-app Browser, Playwright CLI | M5 QA §15, 22개 scene preset, fake microphone 한국어 WAV, local Worker, production build | 클릭·Offline 6경로 완주, fake microphone NORMAL 음성 코드 경로 완주, 모바일·production·저장 격리·성능 검증, title-only preload 수정 | 22/22 scene×dev/production, 클릭 GOOD/NORMAL/BAD, Offline GOOD/NORMAL/BAD, fake microphone STT/LLM 200 NORMAL, 390×844 overflow 0, 123 tests·check·build PASS. 실제 사람 음성 GOOD/NORMAL/BAD와 실에셋 검수는 대기 | 기능 QA·preload 수정 사용. fake microphone은 사람 발화 대체 증거로 사용하지 않음 | N/A | `src/assets/catalog.ts`, `tests/m5Assets.test.ts`, `IMPLEMENTATION_LOG.md`, `QA_AND_DEMO.md` §15 |
 | 2026-08-03 | 기획 입력·도윤 생성 원본 보존 및 Git 게시 | 외부 제공 자료; 검수 Codex | `asset/doyoon-hero-sprites*`, `docs/temp/`, `prompt/`, `files.zip` | 기존 미추적 13개 파일 11,490,328B 보존, `doyoon_*` 6개 원본명→`char_doyun_*` 보정본 매핑 기록 | 비밀 패턴 0, GitHub 95MiB 초과 0, ZIP 경로 이탈 0. PNG 6장 투명도·시각 확인, ZIP/폴더 hash 일치. 원본 4장은 800KB 초과·캔버스 불일치로 runtime 미사용. `files.zip`의 메인 기획서는 과거 snapshot이며 현재 기준 문서로 사용하지 않음 | 원본·기획 과정 증빙으로 보관. runtime·manifest 상태 변경 없음 | N/A | `asset/doyoon-hero-sprites*`, `docs/temp/`, `prompt/`, `files.zip`, `docs/Asset/README.md` |
 | 2026-08-04 | M5 임시 QA GitHub Pages 구현·배포 검증 | Codex, GitHub Actions, in-app Browser | M5 runtime, DEC-041·042, QA §16, 사용자 public 전환 승인 | game-only QA build, Worker 강제 비활성, QA/commit 배너, noindex, branch 전용 Pages workflow와 공개 테스트 URL | 127 tests·check·일반/QA build PASS. Actions run `30905769904` attempt 2 성공. root/scenario/bg 200, STT Lab/비활성 Worker 404. 데스크톱 클릭·22 preset selector·390×844 QA, console error 0 | 임시 QA 사용. M5/M6 production 완료 증거로 사용하지 않음 | N/A | `.github/workflows/qa-pages.yml`, `src/qaPreview.ts`, `src/runtimeConfig.ts`, `docs/dev/IMPLEMENTATION_LOG.md`, commit `f13231a` |
+
+| 2026-08-04 | 에셋 구조·도윤 11종·필수 마이크/dBFS 규칙 통합 | Codex, in-app Browser | 사용자 확정 6개 변경, 배경 16장, 도윤 납품 23장, 주노 source 5장, 대본·M5·QA 계약 | source/runtime 경계와 provenance 정리, 도윤 11종 장면 매핑, 동일 배경 무전환·변경 배경 420ms crossfade, 타이틀 장치 선택·dBFS 보정 게이트, battle 음량 실패 분기, 작업자 요청·QA 문서 갱신 | 35 files·138 tests, check, production/QA build PASS. runtime 27개·5,023,720B source와 분리. 데스크톱 1265×720·모바일 390×844·N0/battle dev 시각 QA, console error 0. 실제 사용자 마이크 권한·발화는 수집하지 않아 현장 QA 대기 | 코드·runtime `ready`; 외부 라이선스·실기기 전 `approved` 금지 | N/A | `assets/`, `docs/assets/`, `src/input/`, `src/assets/presentationDoyun.ts`, `src/ui/gameView.ts`, DEC-043~046 |
 
 ## 기록 규칙
 

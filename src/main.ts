@@ -14,7 +14,14 @@ import { GameDataError, loadGameData } from "./data/loader";
 import type { BattleNode, CutsceneNode } from "./data/schema";
 import { resolveDevSceneRequest } from "./dev/scenePreview";
 import { GameEngine, type TurnResult } from "./engine/nodeRunner";
-import { BrowserPttRecordingPort } from "./input/recording";
+import { beginBrowserRecording, BrowserPttRecordingPort } from "./input/recording";
+import {
+  evaluateVoiceLevel,
+  resolveVoiceLevelFailure,
+  type AudioLevelMetrics,
+  type MicrophoneCalibration,
+} from "./input/audioLevel";
+import { BrowserMicrophoneTester } from "./input/microphoneSetup";
 import {
   createWorkerTranscriptionPort,
   RecordedVoiceTurnController,
@@ -39,6 +46,7 @@ if (!root) throw new Error("#app 루트 요소가 없습니다.");
 
 const params = new URLSearchParams(window.location.search);
 const recordingSupported = BrowserPttRecordingPort.isSupported();
+const microphoneSetupSupported = recordingSupported && BrowserMicrophoneTester.isSupported();
 const isQaPreview = import.meta.env.MODE === "qa";
 const workerUrl = resolveWorkerUrl({
   explicitUrl: import.meta.env.VITE_WORKER_URL,
@@ -52,6 +60,7 @@ if (isQaPreview) {
 const view = new GameView(root, recordingSupported);
 const bgm = new BgmController();
 const sfx = new SfxPlayer();
+const microphoneTester = new BrowserMicrophoneTester();
 preloadCoreAssets();
 
 async function bootstrap(): Promise<void> {
@@ -89,6 +98,8 @@ async function bootstrap(): Promise<void> {
     let sttProvider = resolveSttProvider(params);
     let readyIncantationNodeId: string | null = null;
     let incantationAttempt = 1;
+    let microphoneCalibration: MicrophoneCalibration | null = null;
+    const battleVolumeFailures = new Map<string, number>();
     let renderCurrent: (inputNotice?: string, forceClickForTurn?: boolean) => void;
 
     const characterName = (speaker: string): string =>
@@ -160,7 +171,9 @@ async function bootstrap(): Promise<void> {
     ): void => {
       const state = engine.getState();
       const voice = new RecordedVoiceTurnController(
-        new BrowserPttRecordingPort(),
+        new BrowserPttRecordingPort(() =>
+          beginBrowserRecording(microphoneCalibration?.inputDeviceId),
+        ),
         createWorkerTranscriptionPort({ provider: sttProvider, workerUrl }),
       );
       if (state.inputMode === "voice") activeVoice = voice;
@@ -220,6 +233,7 @@ async function bootstrap(): Promise<void> {
         reply: string,
         narration?: string,
       ): void => {
+        battleVolumeFailures.delete(`${phase.phaseId}:${battleState.phaseTurn}`);
         const before = engine.getBattleState();
         const result = engine.submitBattleAction(action);
         const delta = result.battleState.momentum - before.momentum;
@@ -229,11 +243,14 @@ async function bootstrap(): Promise<void> {
             kind: "battle",
             phaseId: phase.phaseId,
             beat:
-              action.kind === "spell" || action.kind === "click-spell"
+              action.kind === "spell" ||
+              action.kind === "click-spell" ||
+              action.kind === "failed-spell"
                 ? "spell"
                 : "prompt",
             baseBackground: node.scene.bg,
           }),
+          phaseId: phase.phaseId,
           enemyName: node.enemy.name,
           actionLabel,
           reply,
@@ -250,8 +267,40 @@ async function bootstrap(): Promise<void> {
       const handleBattleTranscript = async (
         action: "spell" | "freeform",
         transcript: string,
+        audioLevel?: AudioLevelMetrics,
       ): Promise<void> => {
         if (action === "spell") {
+          if (audioLevel && microphoneCalibration) {
+            const levelResult = evaluateVoiceLevel(audioLevel, microphoneCalibration);
+            if (levelResult !== "acceptable") {
+              const failureKey = `${phase.phaseId}:${battleState.phaseTurn}`;
+              const priorFailureCount = battleVolumeFailures.get(failureKey) ?? 0;
+              if (resolveVoiceLevelFailure(priorFailureCount) === "retry") {
+                battleVolumeFailures.set(failureKey, priorFailureCount + 1);
+                sfx.play("recognition_fail");
+                const direction =
+                  levelResult === "too-quiet"
+                    ? "목소리가 너무 작아 주문이 닿지 않았어. 조금 더 크게"
+                    : "목소리가 너무 커 주문이 깨졌어. 마이크와 거리를 두고";
+                renderCurrent(
+                  `${direction} 다시 외쳐 줘. 현재 ${audioLevel.rmsDbfs.toFixed(1)} dBFS · 재시도는 턴을 소모하지 않아.`,
+                );
+                return;
+              }
+              const reply =
+                levelResult === "too-quiet"
+                  ? "『목소리가 결계에 닿지 않는다.』"
+                  : "『넘친 마력이 갈라져 주문이 흩어진다.』";
+              applyAction(
+                { kind: "failed-spell", reason: levelResult },
+                `${transcript} · ${audioLevel.rmsDbfs.toFixed(1)} dBFS`,
+                reply,
+                `음량 판정 ${levelResult === "too-quiet" ? "너무 작음" : "너무 큼"} · 주문 불발 +0`,
+              );
+              return;
+            }
+          }
+          battleVolumeFailures.delete(`${phase.phaseId}:${battleState.phaseTurn}`);
           const before = engine.getBattleState();
           const result = engine.submitBattleAction({ kind: "spell", transcript });
           const delta = result.battleState.momentum - before.momentum;
@@ -263,6 +312,7 @@ async function bootstrap(): Promise<void> {
               beat: "spell",
               baseBackground: node.scene.bg,
             }),
+            phaseId: phase.phaseId,
             enemyName: node.enemy.name,
             actionLabel: transcript,
             reply: delta >= 25 ? "『그 주문은… 완전했어.』" : delta >= 15 ? "『빛이 내 안개를 가른다…!』" : "『흐린 목소리로는 닿지 않는다.』",
@@ -386,6 +436,7 @@ async function bootstrap(): Promise<void> {
               beat: phase.phaseId === "p3_answer" ? "spell" : "prompt",
               baseBackground: node.scene.bg,
             }),
+            phaseId: phase.phaseId,
             enemyName: node.enemy.name,
             actionLabel: `DEBUG ${grade}`,
             reply: `『${grade} 등급 결과를 재현했다.』`,
@@ -581,15 +632,22 @@ async function bootstrap(): Promise<void> {
 
     view.renderTitle({
       hasSave: loaded.state !== null,
+      microphoneSupported: microphoneSetupSupported,
+      connectMicrophone: (deviceId, onLevel) => microphoneTester.connect(deviceId, onLevel),
+      disconnectMicrophone: () => microphoneTester.disconnect(),
       warning:
         loaded.warning ??
-        (recordingSupported ? null : "마이크 녹음 미지원: 클릭 모드로 시작합니다."),
-      onNewGame: (inputMode) => {
+        (microphoneSetupSupported
+          ? null
+          : "마이크 테스트 미지원: 지원 브라우저와 입력 장치가 필요합니다."),
+      onNewGame: (calibration) => {
+        microphoneCalibration = calibration;
         recentTurns.length = 0;
-        engine.startNewGame(inputMode);
+        engine.startNewGame("voice");
         renderCurrent();
       },
-      onResume: () => {
+      onResume: (calibration) => {
+        microphoneCalibration = calibration;
         if (!loaded.state) engine.startNewGame();
         else engine.resume(loaded.state);
         if (engine.getState().inputMode === "voice" && !recordingSupported) {

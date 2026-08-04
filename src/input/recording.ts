@@ -1,3 +1,5 @@
+import { calculateAudioLevel, type AudioLevelMetrics } from "./audioLevel";
+
 export interface RecordingSession {
   finish(): Promise<Blob>;
   abort(): void;
@@ -8,8 +10,13 @@ export type PushToTalkState = "idle" | "starting" | "recording" | "stopping";
 
 export interface PttRecordingPort {
   start(): Promise<void>;
-  stop(): Promise<Blob>;
+  stop(): Promise<RecordedAudio>;
   cancel(): void;
+}
+
+export interface RecordedAudio {
+  readonly wavBlob: Blob;
+  readonly level: AudioLevelMetrics;
 }
 
 export interface DecodedAudio {
@@ -113,10 +120,14 @@ export class BrowserPttRecordingPort implements PttRecordingPort {
     return this.capture.press();
   }
 
-  async stop(): Promise<Blob> {
+  async stop(): Promise<RecordedAudio> {
     const recorded = await this.capture.release();
     if (!recorded) throw new Error("종료할 음성 녹음이 없습니다.");
-    return (await normalizeRecordedAudio(recorded, this.decode)).wavBlob;
+    const normalized = await normalizeRecordedAudio(recorded, this.decode);
+    return {
+      wavBlob: normalized.wavBlob,
+      level: calculateAudioLevel(normalized.samples),
+    };
   }
 
   cancel(): void {
@@ -124,13 +135,14 @@ export class BrowserPttRecordingPort implements PttRecordingPort {
   }
 }
 
-export async function beginBrowserRecording(): Promise<RecordingSession> {
+export async function beginBrowserRecording(deviceId?: string): Promise<RecordingSession> {
   if (!BrowserPttRecordingPort.isSupported()) {
     throw new Error("이 브라우저는 마이크 녹음을 지원하지 않습니다.");
   }
 
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: {
+      ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
       autoGainControl: true,
       echoCancellation: true,
       noiseSuppression: true,

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { resolvePresentationBackground } from "../src/assets/presentationBackground";
+import { resolveBackgroundTransition } from "../src/ui/gameView";
 
 describe("M5 장면 배경 presentation 계약", () => {
+  it("같은 배경은 정지하고 실제 ID가 바뀔 때만 전환한다", () => {
+    expect(resolveBackgroundTransition(null, "bg_title")).toBe("initial");
+    expect(resolveBackgroundTransition("bg_hall_day", "bg_hall_day")).toBe("same");
+    expect(resolveBackgroundTransition("bg_hall_day", "bg_hall_dark")).toBe("change");
+  });
+
   it("N0 첫 도입만 사무실 전경이고 평가표가 시작되면 책상으로 전환한다", () => {
     expect(
       resolvePresentationBackground({

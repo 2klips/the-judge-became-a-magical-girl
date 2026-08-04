@@ -6,11 +6,13 @@ import {
 } from "../src/input/transcription";
 
 describe("M3 release 기반 녹음", () => {
+  const level = { rmsDbfs: -24, peakDbfs: -8, clippingRatio: 0 };
+
   it("press 동안 유지하고 release에서만 녹음 종료와 STT를 시작한다", async () => {
     const wav = new Blob(["voice"], { type: "audio/wav" });
     const recording: PttRecordingPort = {
       start: vi.fn(async () => undefined),
-      stop: vi.fn(async () => wav),
+      stop: vi.fn(async () => ({ wavBlob: wav, level })),
       cancel: vi.fn(),
     };
     const transcription: TranscriptionPort = {
@@ -28,6 +30,7 @@ describe("M3 release 기반 녹음", () => {
     await expect(controller.release()).resolves.toEqual({
       kind: "transcript",
       transcript: "마법소녀가 직업이야?",
+      audioLevel: level,
     });
     expect(recording.stop).toHaveBeenCalledTimes(1);
     expect(transcription.transcribe).toHaveBeenCalledTimes(1);
@@ -41,7 +44,10 @@ describe("M3 release 기반 녹음", () => {
     });
     const recording: PttRecordingPort = {
       start: vi.fn(async () => undefined),
-      stop: vi.fn(async () => new Blob(["voice"], { type: "audio/wav" })),
+      stop: vi.fn(async () => ({
+        wavBlob: new Blob(["voice"], { type: "audio/wav" }),
+        level,
+      })),
       cancel: vi.fn(),
     };
     const transcription: TranscriptionPort = {

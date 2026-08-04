@@ -5,7 +5,7 @@
 | 영역 | 담당 | 외부 파일 요청 |
 |---|---|---|
 | 대화창·이름표·버튼·게이지·자막·dev selector | Codex, HTML/CSS | 없음 |
-| 마이크 상태 아이콘 | Codex, SVG/CSS | 없음 |
+| 마이크 상태·입력 장치·dBFS 테스트 UI | Codex, DOM/SVG/CSS | 없음 |
 | 결정·시전·크리티컬·타격·인식 실패 SFX | Codex, Web Audio | 없음 |
 | BGM·변신 징글 | 외부 음악 작업자 | 있음 |
 | 캐릭터·배경·컷 | 외부 이미지 작업자 | [`M5_ASSET_HANDOFF_REQUEST.md`](M5_ASSET_HANDOFF_REQUEST.md) |
@@ -17,12 +17,15 @@
 | UI | 구현 | 표시 위치·상태 | 완료 기준 |
 |---|---|---|---|
 | `mic.idle` | SVG/CSS | 입력 대기 | 정지 상태, 클릭 가능 여부 식별 |
+| `mic.setup` | DOM/SVG/CSS | 타이틀 필수 테스트 | 장치 선택, 실시간 dBFS 막대, 테스트 진행률, 통과 상태 |
+| `mic.tooQuiet` | DOM/CSS | 타이틀·battle 주문 | 너무 작은 입력을 수치와 함께 안내 |
+| `mic.tooLoud` | DOM/CSS | 타이틀·battle 주문 | 너무 큰 입력을 수치와 함께 안내 |
 | `mic.listening` | SVG/CSS pulse | PTT 누르는 동안 | 맥동·청취 문구·interim 자막 동시 표시 |
 | `mic.processing` | SVG/CSS | release 뒤 판정 중 | 처리 상태 표시, 중복 입력 차단 |
 | 호감도 게이지 | CSS | 대화·엔딩 수렴 | affinity 변화가 즉시 보임 |
 | 기세 게이지 | CSS | battle p1~p3 | momentum 변화가 즉시 보임 |
 | 실시간 자막 | CSS/DOM | 음성 입력 | interim 뒤 final로 교체 |
-| 클릭 폴백 | CSS button | 대화·변신·battle | 음성 실패와 오프라인에서도 완주 |
+| 클릭 폴백 | CSS button | 게임 진입 뒤 대화·변신·battle | 타이틀 마이크 테스트 통과 후 음성 실패와 오프라인에서도 완주 |
 | 장면 dev selector | DOM/CSS | `?debug=1` | 22개 장면·16개 배경 직접 검수 |
 
 검은 화면 placeholder에서도 모든 UI는 유지한다. 검은 presentation이 입력 상태나 대사를 가리면 실패다.

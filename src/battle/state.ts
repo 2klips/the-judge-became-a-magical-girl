@@ -31,6 +31,7 @@ export interface BattleState {
 
 export type BattleAction =
   | { kind: "spell"; transcript: string }
+  | { kind: "failed-spell"; reason: "too-quiet" | "too-loud" }
   | { kind: "click-spell" }
   | { kind: "freeform"; momentumDelta: number }
   | { kind: "guard" };
@@ -114,6 +115,7 @@ export function overrideBattleMomentum(
 }
 
 function actionDelta(action: BattleAction, phase: BattlePhaseContract): number {
+  if (action.kind === "failed-spell") return 0;
   if (action.kind === "guard") return 3;
   if (action.kind === "click-spell") return 15;
   if (action.kind === "freeform") return clamp(Math.trunc(action.momentumDelta), -5, 10);

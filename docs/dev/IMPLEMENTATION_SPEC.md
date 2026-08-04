@@ -258,11 +258,14 @@ main(composition root)
 ## 9. 자산 해석
 
 - 시나리오의 `scene.bg`, `scene.bgm`은 확장자 없는 논리 ID다.
-- 장면별 배경·표시 인물·표정·음악·컷 사용처는 [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)를 따른다. `ASSET_MANIFEST.md`는 파일명과 제작·QA 상태만 소유한다.
+- 장면별 배경·표시 인물·표정·음악·컷 사용처는 [SCENE_ASSET_MAPPING.md](../assets/SCENE_ASSET_MAPPING.md)를 따른다. [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md)는 파일명과 제작·QA 상태만 소유한다.
 - `[제안]` 에셋 매니페스트가 논리 ID를 실제 파일명과 연결한다.
 - `[제안]` 확장자·폴더 결합은 중앙 resolver 한 곳에서 수행한다.
 - `[확정, DEC-019·040]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 검은 presentation 순으로 강등한다.
 - `[확정, DEC-034]` resolver는 실패한 논리 ID·기대 경로를 진단한다. 외부 원본은 자동 이동·변환·rename하지 않고, 채택 파일의 runtime 복사본만 계약명으로 정규화하며 원본명→계약명을 기록한다.
 - `[확정, DEC-036·039]` node line, 변신 stage, battle phase/p3 spell, ending line의 세부 배경은 scenario 스키마를 늘리지 않고 presentation 고정 cue resolver가 해석한다.
+- `[확정]` 타이틀은 마이크 연결·입력 장치 선택·실시간 dBFS 테스트를 통과해야 새 게임/이어하기를 허용한다. 시작 뒤 STT 실패는 기존 클릭·로컬 폴백으로 완주한다.
+- `[확정]` battle의 `spell` 입력만 보정된 dBFS 범위를 검사한다. 너무 작거나 큰 첫 실패는 턴을 보존하고, 같은 턴 두 번째 실패는 `failed-spell` `+0`으로 턴을 소비한다. `freeform`에는 음량 게이트를 적용하지 않는다.
+- `[확정]` 동일 배경 논리 ID는 재렌더만 하고 애니메이션하지 않는다. 논리 ID 변경에만 420ms crossfade를 적용한다.
 - `[확정, DEC-038]` `?debug=1&scene=<장면ID>`는 저장·FSM과 격리된 장면 프리뷰다. 정상 URL에는 선택기·프리뷰가 없다.
 - `[제안]` 누락 에셋은 로더 진단에 포함하되 M1~M4 더미 placeholder 허용 여부는 마일스톤 계약을 따른다.

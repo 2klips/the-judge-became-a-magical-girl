@@ -11,7 +11,8 @@ export function installQaPreviewBanner({ commit }: QaPreviewBannerOptions): void
   banner.setAttribute("role", "status");
   banner.textContent = [
     "QA PREVIEW",
-    "클릭·오프라인 전용",
+    "타이틀 마이크 테스트 필수",
+    "게임 내 클릭·오프라인",
     "음성 Worker 비활성",
     commit ? `commit ${commit.slice(0, 7)}` : null,
   ]

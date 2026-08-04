@@ -96,7 +96,7 @@ Git 제외 대상:
 - 공개범위: 저장소가 private이어도 Pages URL은 공개될 수 있다. 비공개 자료·비밀·개인 발화·API 키를 포함하지 않는다.
 - 빌드: `npm run build:qa`. 게임 `index.html`만 만들며 `stt-lab.html`, 로컬 Whisper WASM·모델을 제외한다.
 - 네트워크: QA 모드는 `VITE_WORKER_URL` 주입값도 무시한다. Worker URL을 Pages same-origin의 존재하지 않는 `__qa_worker_disabled__` 경로로 고정해 외부 STT·LLM 호출과 테스터 PC localhost 전송을 막는다.
-- 화면: `QA PREVIEW`, 클릭·오프라인 전용, Worker 비활성, commit 7자를 표시하고 검색 엔진에 `noindex,nofollow`를 요청한다.
+- 화면: `QA PREVIEW`, 타이틀 마이크 테스트 필수, 게임 내 클릭·오프라인, 음성 Worker 비활성, commit 7자를 표시하고 검색 엔진에 `noindex,nofollow`를 요청한다.
 - debug: `?debug=1`과 장면 프리뷰는 작업자 QA를 위해 의도적으로 유지한다. 정식 production의 상태 변경 debug 정책은 DEC-021 해결 전이며 이 예외로 확정하지 않는다.
 - 종료: M6 정식 배포 때 production workflow·Worker Origin·최종 STT·debug 정책으로 교체하거나 임시 Pages를 내린다.
 - 환경 보호: `github-pages` 배포 허용 branch는 `main`, `codex/m5-asset-handoff-docs` 두 개다. 임의 branch나 tag는 허용하지 않는다.

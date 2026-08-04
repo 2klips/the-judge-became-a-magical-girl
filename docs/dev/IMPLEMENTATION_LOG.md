@@ -523,3 +523,39 @@
 - `?debug=1` 장면 선택기와 `?debug=1&scene=<장면ID>` 직접 프리뷰를 사용할 수 있다.
 - 누락 BGM·주노 runtime·망령·변신 컷은 기존 black/silent 인계 경고 대상이다. 음성 API와 STT Lab은 이 QA URL의 테스트 범위가 아니다.
 - 실제 사람 음성 3엔딩, 신규 실에셋 통합·라이선스, M6 production debug/Worker/STT 결정은 계속 남는다.
+
+## M5 — 에셋 구조 통합·도윤 전면 배치·마이크 음량 게임 규칙
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `ASSET_VALIDATION` + `DOCS_UPDATE` + `DEMO_QA`
+- 상태: 구현·자동 검증·로컬 데스크톱/모바일 QA PASS. 실제 마이크·Pages 재배포 QA 대기
+
+### 처리 내용
+
+- 물리 에셋을 `assets/source/`와 `assets/runtime/`으로 통합하고 에셋 문서를 `docs/assets/`에 모았다. Vite dev는 runtime을 `/assets/`로 제공하고 build에서 `dist/assets/`만 게시한다.
+- ZIP entry와 hash가 같은 `asset/doyoon-hero-sprites/` 압축 해제 중복 6장은 제거하고 ZIP과 삭제 이력을 보존했다. 출처·업로드자·도구·권리의 확인/미확인을 `PROVENANCE.md`에 분리했다.
+- 도윤 11장을 source와 동일 바이트로 runtime에 채택했다. 타이틀·N0 첫 두 대사만 숨기고 이후 일상·관계·변신·battle·수렴·엔딩 매핑을 코드·대본·22개 dev 프리셋에 연결했다.
+- 동일 배경 ID는 애니메이션하지 않고 변경 ID만 420ms crossfade한다. 감소 모션은 즉시 전환한다.
+- 타이틀을 필수 마이크 설정 화면으로 교체했다. 입력 장치 선택, 실시간 RMS/peak/clipping dBFS, 900ms 적응형 보정, 테스트 통과 전 시작·이어하기 차단을 구현했다. 선택 장치 ID는 실제 PTT 녹음에도 유지한다.
+- battle `spell`에만 음량 판정을 적용했다. 너무 작거나 큰 첫 실패는 무료 재시도, 같은 턴 두 번째는 `failed-spell +0`으로 턴을 소비한다. 게임 진입 뒤 클릭·로컬 폴백은 유지한다.
+- 짧은 데스크톱 화면에서 시작 버튼이 첫 화면 아래로 밀리던 문제와 Vitest가 Vite build 훅으로 임시 에셋 폴더를 만들던 문제를 QA 중 발견해 수정했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 35 files, 138 tests. 재실행 뒤 임시 에셋 폴더 생성 0 |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| runtime 격리 | PASS | source 0, ZIP 0, runtime 27개·5,023,720B가 dist에 동일 복사, QA에서 STT Lab 0 |
+| 데스크톱 타이틀 | PASS | 1265×720에서 마이크 UI·비활성 시작/이어하기가 한 화면에 표시, overlay·console error·가로 overflow 0 |
+| 도윤 dev 프리뷰 | PASS | N0 `normal_tired`, battle p1 `magical_defend` 실파일 표시. 누락 주노·망령은 검은 presentation 유지 |
+| QA 모바일 | PASS | 390×844, 새 QA 배너·필수 마이크 화면·비활성 시작 버튼 표시, 가로 overflow·console error 0 |
+| 실제 마이크·battle 음량 수동 QA | 대기 | 브라우저 자동화에서 사용자 마이크 권한을 승인하거나 실제 음성을 수집하지 않음. 심사 PC에서 별도 수행 |
+
+### 현재 판정
+
+- 이번 확정 기능의 코드·문서·자동 QA는 통과했다.
+- 주노 runtime 승인, 망령 2장, 변신 컷 2장, 필수 BGM 3종, 생성·라이선스 증빙과 실제 마이크 저/정상/고음량 검증은 남아 있다.
+- 위 외부·현장 게이트 전에는 `M5 기능 구현 PASS / 최종 에셋·현장 QA 대기`로 보고한다.

@@ -35,11 +35,11 @@ const wraith = (state: "normal" | "weakened"): DevSceneVisual => ({
   role: "enemy",
 });
 
-const doyun: DevSceneVisual = {
-  logicalId: "doyun.magical",
-  label: "마법소녀 도윤",
+const doyun = (state: string): DevSceneVisual => ({
+  logicalId: `doyun.${state}`,
+  label: `도윤 · ${state}`,
   role: "player",
-};
+});
 
 export const M5_SCENE_PREVIEWS = [
   {
@@ -67,10 +67,10 @@ export const M5_SCENE_PREVIEWS = [
     label: "N0 · 평가표 책상",
     backgroundId: "bg_hall_day",
     nodeId: "n0_review",
-    beat: "line 2~5/5",
+    beat: "line 3/5 · 도윤 등장",
     bgmId: "bgm_daily",
-    layout: "empty",
-    visuals: [],
+    layout: "dialogue",
+    visuals: [doyun("normal_tired")],
   },
   {
     id: "n1-first-voice",
@@ -80,7 +80,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "주노 미노출",
     bgmId: "bgm_daily",
     layout: "dialogue",
-    visuals: [],
+    visuals: [doyun("normal_startled")],
     showVoiceOrb: true,
   },
   {
@@ -91,7 +91,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "surprised → happy",
     bgmId: "bgm_daily",
     layout: "dialogue",
-    visuals: [juno("surprised")],
+    visuals: [doyun("normal_startled"), juno("surprised")],
   },
   {
     id: "n3-wraith",
@@ -101,7 +101,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "주노 + 망령",
     bgmId: "bgm_battle",
     layout: "dialogue",
-    visuals: [wraith("normal"), juno("upset")],
+    visuals: [doyun("normal_startled"), wraith("normal"), juno("upset")],
   },
   {
     id: "n4-team",
@@ -111,7 +111,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "happy",
     bgmId: "bgm_battle",
     layout: "dialogue",
-    visuals: [wraith("normal"), juno("happy")],
+    visuals: [doyun("normal_smile"), wraith("normal"), juno("happy")],
   },
   {
     id: "n4-cooperate",
@@ -121,7 +121,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "neutral",
     bgmId: "bgm_battle",
     layout: "dialogue",
-    visuals: [wraith("normal"), juno("neutral")],
+    visuals: [doyun("normal"), wraith("normal"), juno("neutral")],
   },
   {
     id: "n4-awkward",
@@ -131,7 +131,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "upset",
     bgmId: "bgm_battle",
     layout: "dialogue",
-    visuals: [wraith("normal"), juno("upset")],
+    visuals: [doyun("normal_shy"), wraith("normal"), juno("upset")],
   },
   {
     id: "n5-intro",
@@ -141,7 +141,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "도입 line",
     bgmId: "bgm_battle",
     layout: "dialogue",
-    visuals: [wraith("normal"), juno("surprised")],
+    visuals: [doyun("normal_shy"), wraith("normal"), juno("surprised")],
   },
   {
     id: "n5-incantation",
@@ -151,7 +151,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "incantation",
     bgmId: "bgm_battle",
     layout: "dialogue",
-    visuals: [juno("surprised")],
+    visuals: [doyun("normal_shy"), juno("surprised")],
   },
   {
     id: "n5-transformation",
@@ -162,6 +162,7 @@ export const M5_SCENE_PREVIEWS = [
     bgmId: "bgm_transform",
     layout: "transform",
     visuals: [
+      doyun("magical_pose"),
       { logicalId: "transform.cast", label: "변신 영창 컷", role: "cut" },
       { logicalId: "transform.complete", label: "변신 완료 컷", role: "cut" },
     ],
@@ -174,7 +175,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "p1_defend",
     bgmId: "bgm_battle",
     layout: "battle",
-    visuals: [doyun, wraith("normal"), juno("neutral")],
+    visuals: [doyun("magical_defend"), wraith("normal"), juno("neutral")],
   },
   {
     id: "battle-p2",
@@ -184,7 +185,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "p2_attack",
     bgmId: "bgm_battle",
     layout: "battle",
-    visuals: [doyun, wraith("weakened"), juno("happy")],
+    visuals: [doyun("magical_attack"), wraith("weakened"), juno("happy")],
   },
   {
     id: "battle-p3-question",
@@ -194,7 +195,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "p3_answer · prompt",
     bgmId: "bgm_battle",
     layout: "battle",
-    visuals: [doyun, wraith("weakened"), juno("neutral")],
+    visuals: [doyun("magical_finish"), wraith("weakened"), juno("neutral")],
   },
   {
     id: "battle-p3-spell",
@@ -204,7 +205,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "p3_answer · spell",
     bgmId: "bgm_battle",
     layout: "battle",
-    visuals: [doyun, wraith("weakened"), juno("neutral")],
+    visuals: [doyun("magical_finish"), wraith("weakened"), juno("neutral")],
   },
   {
     id: "convergence",
@@ -214,7 +215,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "전투 후 질문",
     bgmId: "bgm_daily",
     layout: "dialogue",
-    visuals: [juno("neutral")],
+    visuals: [doyun("magical_pose"), juno("neutral")],
   },
   {
     id: "ending-good",
@@ -224,7 +225,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "line 1~5",
     bgmId: "bgm_daily",
     layout: "ending",
-    visuals: [juno("happy")],
+    visuals: [doyun("normal_smile"), juno("happy")],
   },
   {
     id: "ending-good-corridor",
@@ -260,7 +261,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "전체",
     bgmId: "bgm_daily",
     layout: "ending",
-    visuals: [juno("neutral")],
+    visuals: [doyun("normal_smile"), juno("neutral")],
   },
   {
     id: "ending-bad",
@@ -270,7 +271,7 @@ export const M5_SCENE_PREVIEWS = [
     beat: "전체",
     bgmId: "bgm_daily",
     layout: "ending",
-    visuals: [juno("upset")],
+    visuals: [doyun("normal_empty"), juno("upset")],
   },
 ] as const satisfies readonly DevScenePreview[];
 

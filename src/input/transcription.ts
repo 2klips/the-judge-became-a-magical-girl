@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { AudioLevelMetrics } from "./audioLevel";
 import type { PttRecordingPort } from "./recording";
 
 export type SttProviderId = "openai" | "gemini";
@@ -9,7 +10,7 @@ export interface TranscriptionPort {
 }
 
 export type RecordedVoiceResult =
-  | { kind: "transcript"; transcript: string }
+  | { kind: "transcript"; transcript: string; audioLevel: AudioLevelMetrics }
   | { kind: "cancelled" }
   | { kind: "error"; error: Error };
 
@@ -53,10 +54,12 @@ export class RecordedVoiceTurnController {
     try {
       const audio = await this.recording.stop();
       if (requestId !== this.requestId) return { kind: "cancelled" };
-      const transcript = (await this.transcription.transcribe(audio, controller.signal)).trim();
+      const transcript = (
+        await this.transcription.transcribe(audio.wavBlob, controller.signal)
+      ).trim();
       if (requestId !== this.requestId) return { kind: "cancelled" };
       if (!transcript) return { kind: "error", error: new Error("전사문이 비어 있습니다.") };
-      return { kind: "transcript", transcript };
+      return { kind: "transcript", transcript, audioLevel: audio.level };
     } catch (error) {
       if (requestId !== this.requestId || controller.signal.aborted) return { kind: "cancelled" };
       return { kind: "error", error: toError(error) };

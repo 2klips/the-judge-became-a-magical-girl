@@ -4,15 +4,18 @@
 
 `[확정]` M5 개발은 외부 필수 에셋을 기다리지 않고 진행한다. 아직 없는 이미지·컷은 검은 presentation으로, 아직 없는 BGM은 무음으로 대체한다. 대사·자막·버튼·PTT·게이지는 계속 표시해 클릭·음성·오프라인 완주 경로를 유지한다.
 
+현재 배경 16장과 도윤 11장은 runtime에 통합됐다. 주노 5장은 source 납품·자동 규격 검사가 끝났지만 레퍼런스 권한·생성 서비스 공개 사용 허용과 runtime 통합 승인이 남았다. 주노를 중복 제작하지 말고 아래 증빙을 먼저 보완한다.
+
 실파일이 도착하면 아래 계약 파일명과 논리 ID를 유지한 채 교체한다. 외부 납품 원본은 수정·삭제·rename하지 않는다. 실제 파일명이 다르면 개발자가 원본명→계약명을 기록하고 채택 복사본만 runtime 경로에 정규화한다.
 
-- 상세 장면 사용처: [`../dev/SCENE_ASSET_MAPPING.md`](../dev/SCENE_ASSET_MAPPING.md)
-- 논리 ID·규격·상태: [`../dev/ASSET_MANIFEST.md`](../dev/ASSET_MANIFEST.md)
+- 상세 장면 사용처: [`SCENE_ASSET_MAPPING.md`](SCENE_ASSET_MAPPING.md)
+- 논리 ID·규격·상태: [`ASSET_MANIFEST.md`](ASSET_MANIFEST.md)
+- 확인된 출처·미확인 항목: [`PROVENANCE.md`](PROVENANCE.md)
 - 제작 기준: [`../별첨2_에셋_제작_가이드라인.md`](../별첨2_에셋_제작_가이드라인.md)
 
 ## 2. 최우선 필수 납품
 
-### 2.1 주노 표정 5종
+### 2.1 주노 표정 5종 — 실파일 존재, 증빙·통합 승인 필요
 
 | 우선순위 | 논리 ID | 계약 파일명 | 장면 |
 |---:|---|---|---|
@@ -21,6 +24,12 @@
 | P0 | `juno.shy` | `char_juno_shy.png` | 관계 회복, 일부 N5 |
 | P0 | `juno.upset` | `char_juno_upset.png` | N2 거절, N3, N4-C, BAD |
 | P0 | `juno.surprised` | `char_juno_surprised.png` | N2 등장, N5, GOOD 후속 |
+
+현재 파일 위치는 `assets/source/juno/delivery/`다. 재제작 요청이 아니라 다음 P0 확인 요청이다.
+
+- 첨부 레퍼런스의 사용·파생·공개 저장소 게시 권한.
+- 생성 서비스 플랜의 해커톤 제출·공개 사용 허용.
+- 사람 시각 검수와 runtime 통합 승인.
 
 납품 규격:
 
@@ -72,7 +81,7 @@
 
 | 우선순위 | 대상 | 현재 상태 | 요청 |
 |---:|---|---|---|
-| P1 | `doyun.magical` / `char_doyun_magical.png` | 정면본 runtime 임시 사용 | battle p1~p3용 뒷모습 또는 반측면 단일 포즈로 교체 |
+| P1 | `doyun.magical` / `char_doyun_magical.png` | 정면 fallback 포즈 runtime 임시 사용. p1~p3은 별도 defend/attack/finish 포즈 사용 | 변신 기본·fallback용 뒷모습 또는 반측면 포즈로 교체 |
 | P1 | `bg_title` / `bg_title.webp` | baked NHN/HACKATHON 문구·로고 포함본 임시 승인 | 문구·로고가 없는 clean 배경 재납품 |
 
 교체 전에도 M5 개발과 기능 QA는 진행한다. 교체 파일은 같은 계약명으로 전달한다.

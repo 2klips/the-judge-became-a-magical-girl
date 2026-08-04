@@ -162,7 +162,7 @@ Git commit 작성자 정보가 없으면 전역 Git 설정을 임의 변경하�
 9. 오류를 숨기거나 잘못된 JSON을 자동 보정하지 않는다.
 10. 기존 기준 문서를 재작성하지 않는다.
 11. 구현 중 새 결정이 생긴 경우만 docs/dev/DECISIONS.md를 갱신한다.
-12. docs/dev/AI_PRODUCTION_LOG.md에 이번 Codex 작업과 최종 commit을 기록한다.
+12. docs/assets/AI_PRODUCTION_LOG.md에 이번 Codex 작업과 최종 commit을 기록한다.
 13. 검증이 실패하면 원인을 수정하고 관련 검증을 다시 실행한다.
 14. 검증을 실행하지 못한 항목은 완료로 표현하지 않는다.
 

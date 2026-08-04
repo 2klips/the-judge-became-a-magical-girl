@@ -4,7 +4,7 @@
 
 - 모든 작업에서 이 파일과 [문서 지도](docs/dev/PROJECT_MAP.md)를 먼저 읽는다.
 - 마일스톤 구현은 [마일스톤 계약](docs/dev/MILESTONES.md)의 해당 절만 범위로 삼는다.
-- 시나리오·캐릭터 작업은 [완성대본 v2](docs/심사역은_마법소녀가_되었다_완성대본_v2.md)와 [별첨1](docs/별첨1_스토리_작가_가이드라인.md), 에셋 작업은 [별첨2](docs/별첨2_에셋_제작_가이드라인.md)와 [장면별 에셋 매핑 명세](docs/dev/SCENE_ASSET_MAPPING.md)를 추가로 읽는다.
+- 시나리오·캐릭터 작업은 [완성대본 v2](docs/심사역은_마법소녀가_되었다_완성대본_v2.md)와 [별첨1](docs/별첨1_스토리_작가_가이드라인.md), 에셋 작업은 [별첨2](docs/별첨2_에셋_제작_가이드라인.md)와 [장면별 에셋 매핑 명세](docs/assets/SCENE_ASSET_MAPPING.md)를 추가로 읽는다.
 - 제품 충돌은 최신 사용자 결정 → 메인 기획서 → 스토리·캐릭터 영역의 완성대본 v2 → 해당 별첨 → 승인 ADR → 구현 문서 → 코드 순서로 해결한다.
 - `[확정]`, `[제안]`, `[미결정]`을 구분한다. 제안을 확정사항처럼 구현하지 않는다.
 
@@ -47,7 +47,7 @@
 - M1 최초 게시는 검증된 M1만 초기 commit으로 `main`에 push한다. GitHub Pages 배포는 M6 전까지 수행하지 않는다.
 - Origin은 배포 Origin과 명시적 로컬 개발 Origin만 허용한다.
 - 작가 소유 JSON 필드를 임의 해석하거나 자동 수정하지 않는다. 오류 위치와 해결법을 한국어로 보고한다.
-- 에셋 파일명·논리 ID·장면 사용처 변경 시 시나리오 참조, resolver, [장면별 에셋 매핑 명세](docs/dev/SCENE_ASSET_MAPPING.md), [에셋 매니페스트](docs/dev/ASSET_MANIFEST.md)를 같은 변경에서 갱신한다.
+- 에셋 파일명·논리 ID·장면 사용처 변경 시 시나리오 참조, resolver, [장면별 에셋 매핑 명세](docs/assets/SCENE_ASSET_MAPPING.md), [에셋 매니페스트](docs/assets/ASSET_MANIFEST.md)를 같은 변경에서 갱신한다.
 
 ## 6. 최종 보고
 

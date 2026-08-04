@@ -83,7 +83,15 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: asset-fade-in 420ms ease-out both;
+}
+
+.scene-background-entering {
+  animation: background-crossfade-in 420ms ease-out both;
+}
+
+.scene-background-leaving {
+  z-index: -3;
+  animation: background-crossfade-out 420ms ease-out both;
 }
 
 .scene-derived-dark .scene-background {
@@ -290,6 +298,36 @@ button {
 .has-companion {
   right: clamp(1%, 4vw, 7%);
   width: min(30vw, 400px);
+}
+
+.scene-player-visual {
+  right: auto;
+  left: clamp(20%, 29vw, 36%);
+  width: min(34vw, 460px);
+}
+
+.dialogue-player-visual {
+  left: clamp(18%, 26vw, 32%);
+  width: min(31vw, 420px);
+}
+
+.incantation-player-visual,
+.transformation-player-visual {
+  opacity: 0.58;
+}
+
+.transformation-player-visual {
+  right: auto;
+  left: 50%;
+  z-index: -1;
+  width: min(38vw, 500px);
+  transform: translateX(-50%);
+}
+
+.ending-player-visual {
+  right: auto;
+  left: clamp(3%, 8vw, 12%);
+  width: min(32vw, 430px);
 }
 
 .ending-tone-good .scene-background {
@@ -542,6 +580,14 @@ button {
   transform: translateY(-2px);
 }
 
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  filter: grayscale(0.55);
+  transform: none;
+}
+
 .secondary-button {
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
@@ -600,6 +646,11 @@ button {
   backdrop-filter: blur(22px);
 }
 
+.title-block {
+  width: min(920px, 100%);
+  padding: clamp(24px, 4vw, 48px);
+}
+
 .eyebrow {
   margin: 0 0 14px;
   color: #ffdf87;
@@ -637,6 +688,158 @@ button {
   gap: 10px;
   justify-content: center;
   margin-top: 32px;
+}
+
+.microphone-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.75fr);
+  gap: 14px 22px;
+  margin-top: 28px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid rgba(255, 223, 135, 0.28);
+  border-radius: 20px;
+  background:
+    linear-gradient(90deg, rgba(255, 223, 135, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(255, 223, 135, 0.04) 1px, transparent 1px),
+    rgba(5, 6, 14, 0.74);
+  background-size: 24px 24px;
+  text-align: left;
+}
+
+.microphone-setup-header {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+
+.microphone-step,
+.microphone-db,
+.microphone-progress {
+  color: #ffdf87;
+  font-family: "Courier New", monospace;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.microphone-title {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+}
+
+.microphone-copy {
+  grid-column: 2;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.microphone-device {
+  display: grid;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.76rem;
+}
+
+.microphone-device-select {
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: #fff8df;
+  background: #171526;
+  font: inherit;
+}
+
+.microphone-meter {
+  position: relative;
+  align-self: end;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 12px, rgba(5, 6, 14, 0.9) 12px 15px),
+    rgba(255, 255, 255, 0.05);
+}
+
+.microphone-meter::after {
+  position: absolute;
+  inset: 0 20% 0 auto;
+  width: 2px;
+  content: "";
+  background: rgba(255, 124, 124, 0.8);
+}
+
+.microphone-meter-fill {
+  width: var(--microphone-level, 0%);
+  height: 100%;
+  background: linear-gradient(90deg, #62d6ff 0 58%, #ffe066 78%, #ff6f91 100%);
+  box-shadow: 0 0 22px rgba(98, 214, 255, 0.28);
+  transition: width 70ms linear;
+}
+
+.microphone-readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 26px;
+}
+
+.microphone-db {
+  font-size: 0.88rem;
+}
+
+.microphone-progress {
+  font-size: 0.72rem;
+}
+
+.microphone-status,
+.microphone-test-prompt {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.microphone-status {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.microphone-test-prompt {
+  padding: 9px 11px;
+  border-left: 2px solid #ffdf87;
+  color: #fff2c7;
+  background: rgba(255, 223, 135, 0.06);
+}
+
+.microphone-connect {
+  justify-self: end;
+  min-width: 150px;
+}
+
+.microphone-setup[data-state="passed"] {
+  border-color: rgba(108, 255, 183, 0.62);
+  box-shadow: inset 0 0 32px rgba(108, 255, 183, 0.05);
+}
+
+.microphone-setup[data-state="passed"] .microphone-status,
+.microphone-setup[data-state="passed"] .microphone-progress {
+  color: #8cffc2;
+}
+
+.microphone-setup[data-state="too-loud"],
+.microphone-setup[data-state="error"],
+.microphone-setup[data-state="unsupported"] {
+  border-color: rgba(255, 111, 145, 0.55);
+}
+
+.microphone-setup[data-state="too-loud"] .microphone-status,
+.microphone-setup[data-state="error"] .microphone-status,
+.microphone-setup[data-state="unsupported"] .microphone-status {
+  color: #ffb1c3;
 }
 
 .warning-message {
@@ -948,6 +1151,13 @@ button {
   margin: -20px -8px 8px 18px;
 }
 
+.battle-reply-player {
+  float: right;
+  width: min(30%, 190px);
+  height: 170px;
+  margin: -20px 12px 8px 18px;
+}
+
 .battle-juno-visual {
   height: 190px;
   align-self: end;
@@ -1004,6 +1214,16 @@ button {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+@keyframes background-crossfade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes background-crossfade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes dialogue-reveal {
@@ -1171,6 +1391,40 @@ button {
   75% { transform: translateX(-4px); }
 }
 
+@media (min-width: 761px) and (max-height: 800px) {
+  .title-screen {
+    padding-block: 18px;
+  }
+
+  .title-block {
+    padding: 20px 30px;
+  }
+
+  .title-block .eyebrow {
+    margin-bottom: 8px;
+  }
+
+  .game-title {
+    font-size: clamp(2.5rem, 4.8vw, 3.7rem);
+    line-height: 1.04;
+  }
+
+  .title-subtitle {
+    margin-top: 12px;
+    line-height: 1.45;
+  }
+
+  .microphone-setup {
+    gap: 10px 18px;
+    margin-top: 14px;
+    padding: 16px 20px;
+  }
+
+  .title-actions {
+    margin-top: 14px;
+  }
+}
+
 @media (max-width: 760px) {
   html[data-qa-preview="true"] {
     --qa-preview-banner-height: 48px;
@@ -1199,6 +1453,46 @@ button {
     width: 64vw;
     height: 48vh;
     opacity: 0.48;
+  }
+
+  .title-screen {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .title-block {
+    margin: auto 0;
+    padding: 22px 18px;
+  }
+
+  .microphone-setup {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .microphone-setup-header,
+  .microphone-copy {
+    grid-column: 1;
+  }
+
+  .microphone-setup-header {
+    grid-template-columns: 1fr;
+  }
+
+  .microphone-connect {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .title-actions {
+    flex-direction: column;
+  }
+
+  .scene-player-visual,
+  .dialogue-player-visual,
+  .ending-player-visual {
+    right: auto;
+    left: -5%;
   }
 
   .battle-visual-stage {

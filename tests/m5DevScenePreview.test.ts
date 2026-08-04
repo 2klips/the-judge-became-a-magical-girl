@@ -44,4 +44,19 @@ describe("M5 dev 장면 프리뷰 계약", () => {
       requestedId: "missing",
     });
   });
+
+  it("도윤이 등장하는 장면 프리셋에 장면별 runtime 상태를 연결한다", () => {
+    const logicalIds = (id: string): readonly string[] =>
+      M5_SCENE_PREVIEWS.find((preview) => preview.id === id)?.visuals.map(
+        ({ logicalId }) => logicalId,
+      ) ?? [];
+
+    expect(logicalIds("n0-office")).not.toContain("doyun.normal_tired");
+    expect(logicalIds("n0-desk")).toContain("doyun.normal_tired");
+    expect(logicalIds("n1-first-voice")).toContain("doyun.normal_startled");
+    expect(logicalIds("battle-p1")).toContain("doyun.magical_defend");
+    expect(logicalIds("battle-p2")).toContain("doyun.magical_attack");
+    expect(logicalIds("battle-p3-spell")).toContain("doyun.magical_finish");
+    expect(logicalIds("ending-bad")).toContain("doyun.normal_empty");
+  });
 });
