@@ -151,7 +151,7 @@ describe("M5 에셋 계약", () => {
       const sourcePath = resolve(process.cwd(), "assets", "source", "doyun", "delivery", filename);
       const file = readFileSync(diskPath);
 
-      expect(file, filename).toEqual(readFileSync(sourcePath));
+      expect(file.equals(readFileSync(sourcePath)), filename).toBe(true);
       expect(file.subarray(0, 8), filename).toEqual(
         Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
       );
