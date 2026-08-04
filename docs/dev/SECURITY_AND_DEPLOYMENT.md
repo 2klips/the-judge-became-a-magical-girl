@@ -91,6 +91,7 @@ Git 제외 대상:
 ### M5 임시 QA Pages 예외
 
 - URL: `https://2klips.github.io/the-judge-became-a-magical-girl/`.
+- 저장소 공개범위: `public`. GitHub Free의 private Pages 미지원으로 DEC-042에서 사용자가 코드·에셋 전체 공개를 승인해 DEC-025의 `private` 계약 중 공개범위만 대체했다.
 - 소스: `codex/m5-asset-handoff-docs` 브랜치 push와 수동 실행만 허용한다.
 - 공개범위: 저장소가 private이어도 Pages URL은 공개될 수 있다. 비공개 자료·비밀·개인 발화·API 키를 포함하지 않는다.
 - 빌드: `npm run build:qa`. 게임 `index.html`만 만들며 `stt-lab.html`, 로컬 Whisper WASM·모델을 제외한다.
@@ -98,12 +99,13 @@ Git 제외 대상:
 - 화면: `QA PREVIEW`, 클릭·오프라인 전용, Worker 비활성, commit 7자를 표시하고 검색 엔진에 `noindex,nofollow`를 요청한다.
 - debug: `?debug=1`과 장면 프리뷰는 작업자 QA를 위해 의도적으로 유지한다. 정식 production의 상태 변경 debug 정책은 DEC-021 해결 전이며 이 예외로 확정하지 않는다.
 - 종료: M6 정식 배포 때 production workflow·Worker Origin·최종 STT·debug 정책으로 교체하거나 임시 Pages를 내린다.
+- 환경 보호: `github-pages` 배포 허용 branch는 `main`, `codex/m5-asset-handoff-docs` 두 개다. 임의 branch나 tag는 허용하지 않는다.
 
 ### M1 GitHub 초기 게시 계약
 
 - 소유자: `2klips`.
 - 저장소명: `the-judge-became-a-magical-girl`.
-- 공개범위: `private`.
+- 최초 게시 공개범위: `private`. 현재는 DEC-042에 따라 `public`이며 이 항목은 M1 당시 이력이다.
 - 기본 브랜치: `main`.
 - Vite base: `/the-judge-became-a-magical-girl/`.
 - 시작 전 `git --version`, `gh --version`, `gh auth status`를 확인한다.

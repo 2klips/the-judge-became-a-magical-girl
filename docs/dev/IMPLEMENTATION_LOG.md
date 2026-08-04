@@ -487,3 +487,39 @@
 - 자동·fake-device 기능 위험은 처리했다. M5 기능 경로는 외부 에셋 없이 클릭·오프라인·음성 Worker 코드 경로로 완주 가능하다.
 - M5 최종 PASS 전 실제 사람 발화 GOOD/NORMAL/BAD 3회와 실에셋 시각·청각·라이선스 검수가 남는다. fake microphone 결과를 사람 발화로 대체하지 않는다.
 - M6 범위인 production debug 상태 변경 기능 제거, 실제 GitHub Pages 배포·제출 검수는 시작하지 않았다.
+
+## M5 — 임시 QA GitHub Pages 배포
+
+- 실행일: 2026-08-04
+- 작업 모드: `FEATURE_EVALUATION` + `DEMO_QA` + `DOCS_UPDATE`
+- 상태: public 임시 QA 배포·데스크톱/모바일 smoke 완료. 클릭·오프라인 전용이며 M5/M6 최종 PASS 아님
+
+### 처리 내용
+
+- 사용자 승인으로 M6 이전 임시 QA 예외를 DEC-041에 기록했다. `build:qa`는 게임 entry만 만들고 `stt-lab.html`, 로컬 Whisper WASM·transformers chunk를 제외한다.
+- QA 모드는 `.env.local`이나 `VITE_WORKER_URL` 주입값도 무시하고 Pages same-origin의 `__qa_worker_disabled__`로 고정한다. 외부 STT·LLM과 테스터 PC localhost에 음성을 보내지 않는다.
+- 화면 상단에 QA/클릭·오프라인/Worker 비활성/commit 배너를 표시하고 HTML에 `noindex,nofollow`를 추가했다.
+- private Pages 활성화가 현재 GitHub 요금제에서 `HTTP 422`로 거절됐다. 사용자 후속 승인으로 저장소 전체를 public 전환하고 DEC-042에 기록했다.
+- 최초 deploy는 `github-pages` 환경의 `main` 전용 branch 정책으로 거절됐다. 허용 목록에 현재 QA 브랜치만 추가하고 failed job을 재실행해 성공했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 33 files, 127 tests |
+| `npm run build` | PASS | 일반 game+STT Lab build 유지. 기존 transformers 크기 경고만 존재 |
+| `npm run build:qa` | PASS | game JS/CSS와 runtime asset만 생성. `stt-lab.html`·WASM·transformers 없음 |
+| tracked 비밀 패턴 | PASS | 실제 키·토큰·private key 고신뢰 패턴 0. `.env.local` 미추적 |
+| GitHub Actions | PASS | run `30905769904`, attempt 2. check/test/build/artifact/deploy 성공 |
+| 배포 HTTP | PASS | root/scenario/background 200, `stt-lab.html`·`__qa_worker_disabled__` 404 |
+| 데스크톱 브라우저 | PASS | commit 배너, `noindex`, title, 클릭 시작→N0, 1920×1080 배경, overlay/console error 0 |
+| dev 장면 | PASS | `battle-p3-spell`, 23 options(실플레이+22 preset), 배경 1920×1080, 누락 인물 경고만 존재 |
+| 모바일 | PASS | 390×844, 배너 48px·shell offset 48px, 가로 overflow/overlay/console error 0 |
+
+### 현재 판정
+
+- 작업자 테스트 URL: `https://2klips.github.io/the-judge-became-a-magical-girl/`.
+- `?debug=1` 장면 선택기와 `?debug=1&scene=<장면ID>` 직접 프리뷰를 사용할 수 있다.
+- 누락 BGM·주노 runtime·망령·변신 컷은 기존 black/silent 인계 경고 대상이다. 음성 API와 STT Lab은 이 QA URL의 테스트 범위가 아니다.
+- 실제 사람 음성 3엔딩, 신규 실에셋 통합·라이선스, M6 production debug/Worker/STT 결정은 계속 남는다.
