@@ -952,6 +952,7 @@ export class GameView {
     sceneId: string;
     characterId: string;
     emotion: Emotion;
+    intentId?: string;
     speaker: string;
     selectedLabel: string;
     reply: string;
@@ -979,6 +980,7 @@ export class GameView {
       options.nodeId,
       { id: options.characterId, name: identity.speaker },
       options.emotion,
+      options.intentId,
     );
     const panel = this.dialoguePanel(identity.speaker, options.reply);
     panel.insertBefore(
@@ -1198,8 +1200,9 @@ export class GameView {
     nodeId: string,
     character: Pick<Character, "id" | "name">,
     emotion: Emotion,
+    intentId?: string,
   ): void {
-    const doyunVisual = resolveDoyunVisual({ kind: "node", nodeId });
+    const doyunVisual = resolveDoyunVisual({ kind: "node", nodeId, intentId });
     if (doyunVisual) {
       shell.append(
         this.createAssetVisual(

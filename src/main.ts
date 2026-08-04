@@ -469,7 +469,11 @@ async function bootstrap(): Promise<void> {
         const character = characters.get(node.npc.id);
         if (!character) throw new Error(`캐릭터를 찾을 수 없습니다: ${node.npc.id}`);
 
-        const renderReply = (selectedLabel: string, result: TurnResult): void => {
+        const renderReply = (
+          selectedLabel: string,
+          result: TurnResult,
+          intentId?: string,
+        ): void => {
           activeVoice = null;
           activeLlm = null;
           view.renderDialogueReply({
@@ -477,6 +481,7 @@ async function bootstrap(): Promise<void> {
             sceneId: node.scene.bg,
             characterId: character.id,
             emotion: engine.getState().npcEmotion,
+            intentId,
             speaker: character.name,
             selectedLabel,
             reply: result.reply,
@@ -489,7 +494,7 @@ async function bootstrap(): Promise<void> {
         const selectIntent = (intentId: string): void => {
           sfx.play("confirm");
           const result = engine.chooseIntent(intentId);
-          renderReply(result.clickLabel, result);
+          renderReply(result.clickLabel, result, intentId);
         };
 
         const voice = new RecordedVoiceTurnController(
@@ -512,7 +517,7 @@ async function bootstrap(): Promise<void> {
           const local = engine.submitTranscript(transcript);
           if (local.kind === "matched") {
             rememberTurn(transcript, local.reply);
-            renderReply(transcript, local);
+            renderReply(transcript, local, local.intentId);
             return true;
           }
 
@@ -536,7 +541,7 @@ async function bootstrap(): Promise<void> {
             engine.recordLlmSuccess();
             const result = engine.submitLlmJudgement(transcript, judgement);
             rememberTurn(transcript, result.reply);
-            renderReply(transcript, result);
+            renderReply(transcript, result, result.intentId);
             return true;
           } catch (error) {
             if (request.signal.aborted) return true;

@@ -594,3 +594,38 @@
 - 주노 5표정은 `missing`에서 `ready`로 전환했다. 레퍼런스 권한과 생성 서비스 공개·해커톤 사용 허용 확인 전 `approved`는 아니다.
 - 도윤 우측 상반신 구도는 구현·시각 QA 통과. 장면별 반대 방향 전환은 승인되지 않아 추가하지 않았다.
 - 망령 2장, 변신 컷 2장, 필수 BGM 3종, 실제 마이크 QA는 계속 남는다.
+
+## M5 — 대사별 도윤 감정·캐릭터 배치·게임 UI 보정
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `SCENARIO_VALIDATION` + `ASSET_VALIDATION` + `DEMO_QA`
+- 상태: 기존 승인 에셋 안에서 구현·자동·Browser QA PASS. 누락 외부 에셋·권리·실제 마이크 게이트 유지
+
+### 처리 내용
+
+- dialogue 응답에서 버려지던 `intentId`를 클릭·로컬 매칭·LLM 판정부터 `GameView`까지 전달했다. `presentationDoyun`이 N2~N4의 실제 플레이어 태도를 기존 runtime 11종 표정으로 해석한다. 의도 판정이 불가능한 폴백은 장면 기본 표정을 유지한다.
+- 도윤을 더 확대·하향하고 화면 중심 쪽으로 옮겨 하반신 crop을 허용했다. 작은 주노는 도윤 쪽으로 붙여 데스크톱·모바일·battle·dev 프리뷰의 인물군 간격을 통일했다.
+- 사용자 지정 LobeHub `sanali209-pla_teplate-game-ui-design`과 frontend design 지침을 적용했다. 심사 콘솔·사원증 모티프, 앰버/시안 포인트, 5% 안전 영역, 14px 이상 보조 글자, 48px 이상 조작 영역, focus-visible, reduced-motion을 반영했다.
+- QA 빌드 검사에서 상단 배너가 화면 모서리에 붙고 dev 장면 선택기와 겹치는 문제를 발견했다. 배너를 안전 영역 안으로 옮기고 별도 offset으로 선택기를 분리했다.
+- 승인되지 않은 source 추가 도윤 스프라이트와 작가 소유 scenario JSON은 변경하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 도윤 감정 TDD | PASS | N2 첫 반응·후속, N3 망령 대응, N4 관계 대사별 4개 RED→GREEN cycle |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 35 files, 143 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 크기 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| Browser desktop | PASS | title·N2·N4-C·battle p1, 의미 있는 DOM·에셋 로드·framework overlay 없음 |
+| Browser mobile | PASS | 390×844 title·N2, 도윤 확대·하향 crop과 주노 접근 배치, 가로 overflow 0 |
+| Browser interaction | PASS | dev 장면 선택기 N2→N3 전환 뒤 URL·선택 상태·N3 DOM 확인 |
+| console | 조건부 PASS | error 0. 계약된 미제작 `gray_wraith.normal` `[ASSET_HANDOFF]` warning만 존재 |
+| QA 안전 영역 | PASS | banner 8px inset, banner/dev nav 비겹침, `noindex,nofollow`, 가로 overflow 0 |
+
+### 현재 판정
+
+- 요청된 도윤·주노 배치, N2~N4 응답 감정 매핑, UI 디자인 보정은 M5 기능 범위에서 통과했다.
+- 망령 2장, 변신 컷 2장, 필수 BGM 3종, 주노·도윤 권리 증빙, 실제 마이크 저·정상·고음량 검증은 계속 남는다.
+- 신규 source 도윤 스프라이트 활성화가 필요하면 논리 ID·장면 용도를 사용자가 별도 확정해야 한다.

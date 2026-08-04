@@ -3,6 +3,7 @@ export type DoyunPresentationCue =
       readonly kind: "node";
       readonly nodeId: string;
       readonly lineIndex?: number;
+      readonly intentId?: string;
       readonly stage?: "incantation" | "transformation";
     }
   | {
@@ -36,13 +37,32 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
     return lineIndex >= 4 ? "doyun.normal_startled" : "doyun.normal_tired";
   }
   if (cue.nodeId === "n1_first_voice" || cue.nodeId === "n2_juno_intro") {
+    if (cue.intentId === "curious_magic") return "doyun.normal_smile";
+    if (cue.intentId === "realistic_objection") return "doyun.normal";
+    if (cue.intentId === "reject_juno") return "doyun.normal_tired";
     return "doyun.normal_startled";
   }
-  if (cue.nodeId === "n2_juno_followup") return "doyun.normal";
-  if (cue.nodeId === "n3_wraith_choice") return "doyun.normal_startled";
-  if (cue.nodeId === "n4_team") return "doyun.normal_smile";
-  if (cue.nodeId === "n4_cooperate") return "doyun.normal";
-  if (cue.nodeId === "n4_awkward") return "doyun.normal_shy";
+  if (cue.nodeId === "n2_juno_followup") {
+    if (cue.intentId === "ask_why_chosen") return "doyun.normal_shy";
+    if (cue.intentId === "stay_cold") return "doyun.normal_tired";
+    return "doyun.normal";
+  }
+  if (cue.nodeId === "n3_wraith_choice") {
+    if (cue.intentId === "seek_method") return "doyun.normal";
+    if (cue.intentId === "withdraw_or_agree") return "doyun.normal_tired";
+    return "doyun.normal_startled";
+  }
+  if (cue.nodeId === "n4_team") {
+    return cue.intentId === "focus_action" ? "doyun.normal" : "doyun.normal_smile";
+  }
+  if (cue.nodeId === "n4_cooperate") {
+    return cue.intentId === "complain_then_help" ? "doyun.normal_shy" : "doyun.normal";
+  }
+  if (cue.nodeId === "n4_awkward") {
+    if (cue.intentId === "repair_relation") return "doyun.normal_smile";
+    if (cue.intentId === "keep_distance") return "doyun.normal_tired";
+    return cue.intentId ? "doyun.normal" : "doyun.normal_shy";
+  }
   if (cue.nodeId === "n5_transform") {
     return cue.stage === "transformation" ? "doyun.magical_pose" : "doyun.normal_shy";
   }

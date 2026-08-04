@@ -123,6 +123,19 @@
 | N4-B `n4_cooperate` | 마지못한 협력 | `bg_hall_dark` | 도윤 `normal` + `juno.neutral`; 망령 유지 | 계속 crisis/폴백 | 주노를 N4-A보다 작고 차분하게 배치 |
 | N4-C `n4_awkward` | 서먹함·회복 기회 | `bg_hall_dark` | 도윤 `normal_shy` + 주노 시작 `upset`, 회복 `shy`, 거리 유지 `neutral`; 망령 유지 | 계속 crisis/폴백 | 주노 발광량 감소는 CSS. 별도 어두운 스프라이트 금지 |
 
+#### 대화 응답 직후 도윤 감정 매핑
+
+시나리오 작가 JSON은 수정하지 않는다. NPC 응답 화면에서 판정된 `intentId`만 presentation 계층에 전달해 다음 표를 적용한다. 표에 없는 opening·폴백 상태는 위 장면 기본값을 유지한다.
+
+| 노드 | 플레이어 의도 | 도윤 논리 ID | 대본 감정 근거 |
+|---|---|---|---|
+| `n2_juno_intro` | `curious_magic` / `realistic_objection` / `reject_juno` | `normal_smile` / `normal` / `normal_tired` | 호기심 / 현실적 확인 / 피로한 거절 |
+| `n2_juno_followup` | `ask_identity` / `ask_why_chosen` / `stay_cold` | `normal` / `normal_shy` / `normal_tired` | 정체 확인 / 자신이 선택된 이유에 대한 당혹 / 냉담 유지 |
+| `n3_wraith_choice` | `protect_others` / `seek_method` / `withdraw_or_agree` | `normal_startled` / `normal` / `normal_tired` | 위기 속 타인 걱정 / 해결법 탐색 / 철수·체념 |
+| `n4_team` | `match_rhythm`, `tease_juno` / `focus_action` | `normal_smile` / `normal` | 콤비 호흡·농담 / 즉시 행동 집중 |
+| `n4_cooperate` | `follow_steps`, `demand_answers` / `complain_then_help` | `normal` / `normal_shy` | 제한적 협력·추궁 / 투덜거리며 주문 수용 |
+| `n4_awkward` | `repair_relation` / `limited_cooperation` / `keep_distance` | `normal_smile` / `normal` / `normal_tired` | 관계 회복 / 제한적 협력 / 거리 유지 |
+
 ### 4.2 N5 변신·N6~N8 전투
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물·컷 | 음악 | 추가 연출·개발 주의 |
@@ -152,7 +165,7 @@
 - 시나리오 `scene.bg`, `scene.bgm`은 확장자 없는 논리 ID만 저장한다.
 - 캐릭터 경로는 `{characterId}.{emotion}`으로 중앙 resolver가 찾는다.
 - 도윤은 `presentationDoyun` 고정 매핑으로 표시한다. 타이틀과 N0 첫 두 대사만 숨기고, 이후 독백을 포함한 본편 장면에서는 위 표의 도윤 상태를 표시한다.
-- `[확정, DEC-047]` 도윤은 화면 오른쪽에 크게 두고 PNG 상단을 기준으로 crop해 상반신 위주로 표시한다. 대화·컷씬·엔딩·battle·dev 프리뷰 모두 같은 좌우 방향을 유지하며 원본 파일을 물리 crop하지 않는다.
+- `[확정, DEC-049]` 도윤은 화면 오른쪽 영역 안에서 중심 쪽으로 더 옮기고, 확대·하향해 하반신 crop을 허용한다. PNG 상단을 기준으로 상반신을 보존한다. 작은 주노는 도윤 쪽으로 붙여 같은 인물군으로 읽히게 한다. 대화·컷씬·엔딩·battle·dev 프리뷰 모두 같은 좌우 방향을 유지하며 원본 파일을 물리 crop하지 않는다.
 - 전투 적 상태는 `momentum >= 65`면 `gray_wraith.weakened`, 아니면 `gray_wraith.normal`이다.
 - N1의 주노 미노출, N3/N4/N5의 주노+망령 동시 표시, battle의 주노 보조 표시는 노드 타입 기본 렌더만으로 추론하지 않는다. 이 문서의 장면 규칙을 presentation 계층에서 적용한다.
 - `[확정, DEC-036]` scenario의 단일 `scene.bg`는 저장·복구용 베이스 ID다. N0 line beat, N5 주문 단계, battle phase/p3 spell, ending 후속 beat의 세부 배경 교체는 새 JSON 필드 없이 presentation 계층의 고정 매핑으로 적용한다.
@@ -174,6 +187,7 @@
 - `[구현]` 도윤 11종을 `assets/runtime/char/`에 계약명으로 배치하고 N0 세 번째 대사부터 N5·battle·수렴·3엔딩에 연결했다. 원본은 `assets/source/doyun/delivery/`에 보존한다.
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
+- `[구현·QA PASS, DEC-049]` N2~N4 응답 `intentId`별 도윤 표정 resolver를 적용했다. 도윤은 더 크게·낮게·왼쪽으로, 주노는 도윤 쪽으로 보정했으며 desktop N2/N4/battle과 390×844 N2에서 crop·겹침·가로 overflow를 확인했다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
 - `[구현]` 타이틀에서 마이크 연결·장치 선택·실시간 dBFS 테스트를 통과해야 시작·이어하기가 열린다. 게임 진입 뒤 STT 실패 시 클릭 폴백은 유지한다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
