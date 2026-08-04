@@ -666,7 +666,7 @@
 
 - 실행일: 2026-08-04
 - 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
-- 상태: GPT STT Worker 실배포·합성 한국어 WAV 실호출 PASS. Pages 배포·브라우저 실제 마이크 smoke 진행 중. Gemini 대화·전투는 Cloudflare egress 지역 제한 BLOCKED
+- 상태: GPT STT Worker 실배포·합성 한국어 WAV 실호출·Pages 배포·공개 브라우저 쉘 PASS. 사용자 실제 발화 smoke 대기. Gemini 대화·전투는 Cloudflare egress 지역 제한 BLOCKED
 
 ### 처리 내용
 
@@ -684,8 +684,11 @@
 | GPT STT | PASS | 비개인 합성 한국어 WAV → `gpt-transcribe` 200, 원문과 동일 전사 |
 | Gemini STT 차단 | PASS | `/transcribe/gemini` 404, upstream 호출 없음 |
 | Gemini LLM | BLOCKED | 로컬 동일 Secret·payload 200, Cloudflare Worker는 Google `FAILED_PRECONDITION: User location is not supported for the API use.` 400 |
+| Pages workflow | PASS | run `30921607665`, commit `5e51abc`, check/test/build·artifact 경계·배포 성공 |
+| 공개 브라우저 | PASS | commit 배너, 마이크 선행 게이트, 장치 열거, `noindex,nofollow`, 이미지 실패 0, 가로 overflow 0, Console error/warning 0 |
+| 브라우저 실제 발화 | 대기 | 마이크 연결은 성공했으나 자동 QA 중 입력이 `-96 dBFS` 무음. 사용자가 테스트 문장을 말해 통과·게임 내 GPT 전사를 확인해야 함 |
 
 ### 현재 판정
 
-- 공개 QA의 GPT STT 서버 경계는 활성화됐다. Pages workflow와 공개 브라우저 실제 마이크 smoke가 남는다.
+- 공개 QA의 GPT STT 서버 경계와 Pages 배포는 활성화됐다. 사용자 실제 마이크로 타이틀 테스트 문장과 게임 내 GPT 전사를 각 1회 확인하는 smoke만 남는다.
 - Gemini LLM 실패 때 기존 클릭·로컬 폴백으로 ending까지 진행할 수 있다. 공급자 변경 또는 별도 backend 도입은 제품·운영 결정이므로 사용자 확정 전 수행하지 않는다.
