@@ -66,6 +66,22 @@ describe("M4 battle LLM port", () => {
     ).rejects.toThrow();
   });
 
+  it("전투 Worker 대신 HTML이 반환되면 연결 오류로 안내한다", async () => {
+    const port = createWorkerBattleLlmPort({
+      workerUrl: "https://pages.example/game/",
+      fetcher: vi.fn(async (_request: Request) =>
+        new Response("<html><body>Pages fallback</body></html>", {
+          status: 404,
+          headers: { "Content-Type": "text/html" },
+        }),
+      ),
+    });
+
+    await expect(
+      port.judgeBattle({ phase, transcript: "자유 발화" }, new AbortController().signal),
+    ).rejects.toThrow("전투 LLM Worker 응답이 JSON이 아닙니다");
+  });
+
   it("실패 뒤 1회 재시도한다", async () => {
     const inner: BattleLlmPort = {
       judgeBattle: vi

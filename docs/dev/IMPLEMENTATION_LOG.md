@@ -629,3 +629,35 @@
 - 요청된 도윤·주노 배치, N2~N4 응답 감정 매핑, UI 디자인 보정은 M5 기능 범위에서 통과했다.
 - 망령 2장, 변신 컷 2장, 필수 BGM 3종, 주노·도윤 권리 증빙, 실제 마이크 저·정상·고음량 검증은 계속 남는다.
 - 신규 source 도윤 스프라이트 활성화가 필요하면 논리 ID·장면 용도를 사용자가 별도 확정해야 한다.
+
+## M5 — T 키 PTT·진행 잠금·Worker 응답·화면 배치 수정
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA PASS. 공개 QA 실제 STT 활성화 결정 대기
+
+### 처리 내용
+
+- 게임 내 dialogue·변신 주문·battle PTT에 전역 `T` 홀드/릴리스와 `aria-keyshortcuts`를 추가했다. 입력·선택 컨트롤 편집 중에는 가로채지 않는다. battle PTT가 둘이면 현재 포커스 버튼을 우선한다.
+- 대사·응답·battle 결과·변신 결과·엔딩 페이지의 진행 버튼을 렌더 후 2초간 비활성화했다. 상태기가 준비 전·중복 진행을 함께 차단한다.
+- STT·대화 LLM·battle LLM Worker 응답의 Content-Type과 JSON 파싱을 중앙 경계에서 검사한다. Pages HTML fallback을 원문 파싱 예외 대신 서비스별 한국어 연결 오류로 바꿨다.
+- 상단 상태 헤더를 `vw` 기준 64px에서 `vh` 기준 21.6px으로 올렸다. 1280×720 본편에서 도윤 컨테이너 top을 -1.6px에서 70.4px으로 내려 머리 전체와 헤더 경계를 분리했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | HTML Worker 응답 RED→GREEN, T 홀드/릴리스 RED→GREEN, 2초 잠금 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 37 files, 150 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| Browser desktop | PASS | 1280×720 실제 title 마이크 통과→N0→N1. 헤더 top 21.6px, 도윤 top 70.4px, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844 도윤 top 203.4px, 머리 잘림·가로 overflow 0 |
+| 2초 진행 | PASS | 렌더 직후 `계속 · 2초 후` disabled, 2초 뒤 `계속` 활성·한 번 진행 |
+| T 키 UI | PASS | N1 PTT에서 `T` 입력이 녹음 경로를 호출했다. 짧은 입력은 영문 디코딩 오류 대신 한국어 재시도 안내와 현재 턴 클릭 폴백으로 전환됐다. 실제 외부 전사는 미실행 |
+
+### 현재 판정
+
+- 요청된 로컬 입력·진행·오류 표시·배치 수정은 통과했다.
+- DEC-041 공개 QA는 음성 Worker 비활성이다. 실제 Pages STT 활성화는 Cloudflare Worker 배포·Pages Origin·Secret·최종 공급자 결정 뒤 수행한다.

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { readWorkerJson } from "../network/workerResponse";
 import type { AudioLevelMetrics } from "./audioLevel";
 import type { PttRecordingPort } from "./recording";
 
@@ -98,7 +99,7 @@ export function createWorkerTranscriptionPort(
         signal,
         timeoutMs,
       );
-      const body: unknown = await response.json();
+      const body = await readWorkerJson(response, "STT Worker");
       if (!response.ok) {
         const parsed = WorkerErrorSchema.safeParse(body);
         throw new Error(parsed.success ? parsed.data.error : `STT 요청 실패 (${response.status})`);
@@ -114,6 +115,13 @@ export function resolveSttProvider(params: URLSearchParams): SttProviderId {
 
 export function sttProviderLabel(provider: SttProviderId): string {
   return provider === "openai" ? "GPT" : "Gemini";
+}
+
+export function formatVoiceInputError(error: Error): string {
+  if (/unable to decode audio data/i.test(error.message)) {
+    return "녹음이 너무 짧아 음성을 처리하지 못했어. 버튼이나 T 키를 누른 채 말해 줘.";
+  }
+  return error.message.trim() || "음성을 처리하지 못했어. 한 번 더 시도해 줘.";
 }
 
 async function fetchWithTimeout(

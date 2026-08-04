@@ -1687,7 +1687,7 @@ button {
 
 .top-status {
   z-index: 8;
-  top: clamp(24px, 5vw, 72px);
+  top: clamp(16px, 3vh, 32px);
   right: clamp(24px, 5vw, 72px);
   left: clamp(24px, 5vw, 72px);
   min-height: 44px;
@@ -1968,7 +1968,7 @@ input:focus-visible {
 .ending-player-visual,
 .transformation-player-visual {
   right: clamp(4%, 7vw, 10%);
-  bottom: -8vh;
+  bottom: -18vh;
   left: auto;
   z-index: 1;
   width: min(60vw, 860px);
@@ -2051,7 +2051,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   }
 
   .top-status {
-    top: 16px;
+    top: 12px;
     right: 16px;
     left: 16px;
     padding: 7px 9px;
@@ -2071,7 +2071,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   .ending-player-visual,
   .transformation-player-visual {
     right: -1%;
-    bottom: -6vh;
+    bottom: -10vh;
     width: 96vw;
     height: 84vh;
     opacity: 0.78;

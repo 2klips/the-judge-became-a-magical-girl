@@ -5,6 +5,7 @@ import {
   type BattleJudgementResult,
 } from "../judge/schema";
 import type { LlmDebugMode } from "../judge/llm";
+import { readWorkerJson } from "../network/workerResponse";
 
 export interface BattleJudgeContext {
   phase: BattlePhase;
@@ -94,7 +95,7 @@ export function createWorkerBattleLlmPort(
           }),
         }),
       );
-      const body: unknown = await response.json();
+      const body = await readWorkerJson(response, "전투 LLM Worker");
       if (!response.ok) {
         const parsed = WorkerErrorSchema.safeParse(body);
         throw new Error(

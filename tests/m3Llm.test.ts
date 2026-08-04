@@ -158,4 +158,23 @@ describe("M3 LLM 판정", () => {
     expect(request.url).toBe("http://127.0.0.1:8787/judge/dialogue");
     expect(request.headers.get("content-type")).toContain("application/json");
   });
+
+  it("LLM Worker 대신 HTML이 반환되면 연결 오류로 안내한다", async () => {
+    const port = createWorkerLlmPort({
+      workerUrl: "https://pages.example/game/",
+      fetcher: vi.fn(async (_request: Request) =>
+        new Response("<html><body>Pages fallback</body></html>", {
+          status: 404,
+          headers: { "Content-Type": "text/html" },
+        }),
+      ),
+    });
+
+    await expect(
+      port.judgeDialogue(
+        { node: dialogueNode(), transcript: "테스트", recentTurns: [] },
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow("LLM Worker 응답이 JSON이 아닙니다");
+  });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createWorkerTranscriptionPort,
+  formatVoiceInputError,
   resolveSttProvider,
 } from "../src/input/transcription";
 
@@ -47,5 +48,28 @@ describe("M3 선택형 STT", () => {
     await expect(
       port.transcribe(new Blob(["wav"], { type: "audio/wav" }), new AbortController().signal),
     ).rejects.toThrow();
+  });
+
+  it("Worker 대신 HTML이 반환되면 원문 파싱 오류를 숨기고 연결 오류로 안내한다", async () => {
+    const port = createWorkerTranscriptionPort({
+      provider: "openai",
+      workerUrl: "https://pages.example/game/",
+      fetcher: vi.fn(async (_request: Request) =>
+        new Response("<html><head></head><body>Pages fallback</body></html>", {
+          status: 404,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }),
+      ),
+    });
+
+    await expect(
+      port.transcribe(new Blob(["wav"], { type: "audio/wav" }), new AbortController().signal),
+    ).rejects.toThrow("STT Worker 응답이 JSON이 아닙니다");
+  });
+
+  it("너무 짧은 녹음의 브라우저 디코드 오류를 한국어로 안내한다", () => {
+    expect(formatVoiceInputError(new Error("Unable to decode audio data"))).toBe(
+      "녹음이 너무 짧아 음성을 처리하지 못했어. 버튼이나 T 키를 누른 채 말해 줘.",
+    );
   });
 });

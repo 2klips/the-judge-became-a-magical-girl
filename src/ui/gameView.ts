@@ -37,12 +37,17 @@ import type {
   RecordedVoiceResult,
   SttProviderId,
 } from "../input/transcription";
-import { sttProviderLabel } from "../input/transcription";
+import { formatVoiceInputError, sttProviderLabel } from "../input/transcription";
+import {
+  PushToTalkShortcutController,
+  type PushToTalkShortcutBinding,
+} from "../input/keyboardPtt";
 import { afterTranscriptVisible } from "../engine/dialogueTurn";
 import type { GameState, InputMode } from "../state";
 import { CaptionsView } from "./captions";
 import { MicIndicatorView } from "./micIndicator";
 import { applySceneEffect, type SceneEffect } from "./effects";
+import { DIALOGUE_ADVANCE_DELAY_MS, DelayedActionGate } from "./advanceGate";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
 
@@ -245,8 +250,20 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || target.matches("input, textarea, select"))
+  );
+}
+
 export class GameView {
   private readonly debugEnabled: boolean;
+  private readonly keyboardPtt = new PushToTalkShortcutController();
+  private readonly keyboardPttBindings = new WeakMap<
+    HTMLButtonElement,
+    PushToTalkShortcutBinding
+  >();
   private currentBackgroundId: string | null = null;
 
   constructor(
@@ -254,6 +271,19 @@ export class GameView {
     private readonly speechSupported: boolean,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
+    window.addEventListener("keydown", (event) => {
+      if (event.ctrlKey || event.altKey || event.metaKey || isEditableKeyboardTarget(event.target)) {
+        return;
+      }
+      const target = this.resolveKeyboardPttTarget();
+      if (target && this.keyboardPtt.keyDown(event.key, event.repeat, target.binding)) {
+        target.button.focus({ preventScroll: true });
+        event.preventDefault();
+      }
+    });
+    window.addEventListener("keyup", (event) => {
+      if (this.keyboardPtt.keyUp(event.key)) event.preventDefault();
+    });
   }
 
   renderLoading(): void {
@@ -568,9 +598,11 @@ export class GameView {
     }
 
     const panel = this.dialoguePanel(options.speaker, options.text);
-    const button = element("button", "primary-button compact", options.continueLabel);
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
+    const button = this.delayedAdvanceButton(
+      "primary-button compact",
+      options.continueLabel,
+      options.onContinue,
+    );
     panel.append(button);
     shell.append(
       panel,
@@ -612,7 +644,7 @@ export class GameView {
         "p",
         "incantation-guide",
         state.inputMode === "voice"
-          ? "마이크를 누른 채 주문을 읽고, 다 읽은 뒤 버튼을 놓아."
+          ? "마이크 버튼 또는 T 키를 누른 채 주문을 읽고, 다 읽은 뒤 놓아."
           : "클릭 주문은 표준 변신으로 안전하게 진행돼.",
       ),
     );
@@ -626,7 +658,7 @@ export class GameView {
       const captions = new CaptionsView();
       const indicator = new MicIndicatorView();
       const controls = element("div", "voice-controls");
-      const ptt = element("button", "ptt-button", "누르고 주문 읽기");
+      const ptt = element("button", "ptt-button", "누르고 주문 읽기 · T");
       ptt.type = "button";
       ptt.setAttribute("aria-pressed", "false");
       const provider = this.providerControl(options);
@@ -698,9 +730,11 @@ export class GameView {
           : "표준 변신 · MOMENTUM 50";
     card.append(element("p", "eyebrow", "TRANSFORMATION"), element("h2", "ending-title", title));
     options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
-    const button = element("button", "primary-button", "언령 배틀 시작");
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
+    const button = this.delayedAdvanceButton(
+      "primary-button",
+      "언령 배틀 시작",
+      options.onContinue,
+    );
     card.append(button);
     shell.append(card, this.inputStatus(options.state), this.debugPanel(options.state));
     this.commit(shell);
@@ -776,8 +810,8 @@ export class GameView {
     if (state.inputMode === "voice" && options.speechSupported) {
       const indicator = new MicIndicatorView();
       const controls = element("div", "battle-actions");
-      const spell = element("button", "ptt-button", "주문 · 누르고 말하기");
-      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기");
+      const spell = element("button", "ptt-button", "주문 · 누르고 말하기 · T");
+      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 · T");
       const guard = element("button", "secondary-button", "버티기 +3");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
@@ -881,13 +915,11 @@ export class GameView {
       this.dialoguePanel(options.enemyName, options.reply),
     );
     if (options.narration) card.append(element("p", "ending-line", options.narration));
-    const button = element(
-      "button",
+    const button = this.delayedAdvanceButton(
       "primary-button",
       options.completed ? `${options.grade} 등급으로 수렴` : "다음 행동",
+      options.onContinue,
     );
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
     card.append(button);
     shell.append(card, this.inputStatus(options.state), this.debugPanel(options.state));
     this.commit(shell);
@@ -987,13 +1019,11 @@ export class GameView {
       element("p", "player-line", `도윤 · ${options.selectedLabel}`),
       panel.firstChild,
     );
-    const button = element(
-      "button",
+    const button = this.delayedAdvanceButton(
       "primary-button compact",
       options.advanced ? "다음 장면" : "계속 대화",
+      options.onContinue,
     );
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
     panel.append(button);
     shell.append(
       panel,
@@ -1057,11 +1087,12 @@ export class GameView {
         card.append(element("p", "ending-line", `${speaker}${page.line.text}`));
       }
 
-      const button = element(
-        "button",
-        "primary-button",
-        page.isLast ? "처음부터" : "계속",
-      );
+      const button = page.isLast
+        ? element("button", "primary-button", "처음부터")
+        : this.delayedAdvanceButton("primary-button", "계속", () => {
+            pageIndex += 1;
+            renderPage();
+          });
       button.type = "button";
       if (page.isLast) {
         card.append(
@@ -1072,15 +1103,6 @@ export class GameView {
           ),
         );
         button.addEventListener("click", onNewGame, { once: true });
-      } else {
-        button.addEventListener(
-          "click",
-          () => {
-            pageIndex += 1;
-            renderPage();
-          },
-          { once: true },
-        );
       }
       card.append(button);
       shell.append(card, this.debugPanel(state));
@@ -1301,6 +1323,27 @@ export class GameView {
     return panel;
   }
 
+  private delayedAdvanceButton(
+    className: string,
+    label: string,
+    onContinue: () => void,
+  ): HTMLButtonElement {
+    const button = element("button", className, `${label} · 2초 후`);
+    button.type = "button";
+    button.disabled = true;
+    const gate = new DelayedActionGate({
+      delayMs: DIALOGUE_ADVANCE_DELAY_MS,
+      onReadyChange: (ready) => {
+        button.disabled = !ready;
+        button.textContent = ready ? label : `${label} · 2초 후`;
+      },
+      onAction: onContinue,
+    });
+    button.addEventListener("click", () => gate.trigger());
+    gate.arm();
+    return button;
+  }
+
   private inputStatus(state?: GameState): HTMLElement {
     const status = element("div", "input-status");
     const mode = state?.inputMode ?? (this.speechSupported ? "voice" : "click");
@@ -1340,6 +1383,7 @@ export class GameView {
   }
 
   private commit(shell: HTMLElement): void {
+    this.keyboardPtt.cancel();
     if (this.debugEnabled) {
       shell.append(this.devSceneNavigator());
     }
@@ -1427,14 +1471,16 @@ export class GameView {
       container.append(element("p", "input-notice", options.notice));
     }
     container.append(
-      element("p", "prompt-label", "마이크를 누른 채 말하고, 놓으면 판정해."),
+      element("p", "prompt-label", "마이크 버튼 또는 T 키를 누른 채 말하고, 놓으면 판정해."),
     );
     const captions = new CaptionsView();
     const indicator = new MicIndicatorView();
     const controls = element("div", "voice-controls");
-    const ptt = element("button", "ptt-button", "누르고 말하기");
+    const ptt = element("button", "ptt-button", "누르고 말하기 · T");
     ptt.type = "button";
     ptt.setAttribute("aria-pressed", "false");
+    ptt.setAttribute("aria-keyshortcuts", "T Space Enter");
+    ptt.title = "T 키를 누른 채 말하고 놓아서 전송";
     const clickButton = element(
       "button",
       "secondary-button compact-input",
@@ -1479,15 +1525,15 @@ export class GameView {
       }
       capturing = true;
       ptt.setAttribute("aria-pressed", "true");
-      ptt.textContent = "듣는 중… 놓아서 전송";
+      ptt.textContent = "듣는 중… T 또는 버튼을 놓아서 전송";
       indicator.setState("listening");
-      captions.showMessage("녹음 중 · 버튼을 떼면 종료");
+      captions.showMessage("녹음 중 · T 키 또는 버튼을 떼면 종료");
       try {
         await options.startCapture();
       } catch (error) {
         capturing = false;
         ptt.setAttribute("aria-pressed", "false");
-        ptt.textContent = "누르고 말하기";
+        ptt.textContent = "누르고 말하기 · T";
         indicator.setState("error", "microphone");
         options.onUnavailable(microphoneErrorMessage(error));
       }
@@ -1502,7 +1548,7 @@ export class GameView {
       const result = await options.finishCapture();
       if (!this.root.contains(container)) return;
       ptt.setAttribute("aria-pressed", "false");
-      ptt.textContent = "누르고 말하기";
+      ptt.textContent = "누르고 말하기 · T";
       await this.handleVoiceResult(result, captions, indicator, options, showClickFallback);
     };
 
@@ -1525,6 +1571,7 @@ export class GameView {
         void stopCapture();
       }
     });
+    this.registerKeyboardPtt(ptt, beginCapture, stopCapture);
 
     const utilities = element("div", "input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
@@ -1568,9 +1615,10 @@ export class GameView {
       return;
     }
     if (result.kind === "error") {
-      captions.showMessage(result.error.message);
+      const message = formatVoiceInputError(result.error);
+      captions.showMessage(message);
       indicator.setState("error", "STT");
-      options.onTurnFailed(result.error.message);
+      options.onTurnFailed(message);
     }
   }
 
@@ -1603,15 +1651,17 @@ export class GameView {
     }) => void | Promise<void>,
   ): void {
     let capturing = false;
+    button.setAttribute("aria-keyshortcuts", "T Space Enter");
+    button.title = "T 키를 누른 채 말하고 놓아서 전송";
     const begin = async (): Promise<void> => {
       if (capturing) return;
       capturing = true;
       button.setAttribute("aria-pressed", "true");
       const label = button.textContent ?? "누르고 말하기";
       button.dataset.idleLabel = label;
-      button.textContent = "듣는 중… 놓아서 전송";
+      button.textContent = "듣는 중… T 또는 버튼을 놓아서 전송";
       indicator.setState("listening");
-      captions.showMessage("녹음 중 · 버튼을 떼면 종료");
+      captions.showMessage("녹음 중 · T 키 또는 버튼을 떼면 종료");
       try {
         await options.startCapture();
       } catch (error) {
@@ -1631,9 +1681,10 @@ export class GameView {
       button.setAttribute("aria-pressed", "false");
       button.textContent = button.dataset.idleLabel ?? "누르고 말하기";
       if (result.kind === "error") {
-        captions.showMessage(result.error.message);
+        const message = formatVoiceInputError(result.error);
+        captions.showMessage(message);
         indicator.setState("error", "STT");
-        options.onTurnFailed(result.error.message);
+        options.onTurnFailed(message);
         return;
       }
       if (result.kind === "cancelled") {
@@ -1670,6 +1721,32 @@ export class GameView {
         void finish();
       }
     });
+    this.registerKeyboardPtt(button, begin, finish);
+  }
+
+  private registerKeyboardPtt(
+    button: HTMLButtonElement,
+    begin: () => void | Promise<void>,
+    finish: () => void | Promise<void>,
+  ): void {
+    this.keyboardPttBindings.set(button, { begin, finish });
+  }
+
+  private resolveKeyboardPttTarget(): {
+    button: HTMLButtonElement;
+    binding: PushToTalkShortcutBinding;
+  } | null {
+    const focused = document.activeElement;
+    if (focused instanceof HTMLButtonElement && this.root.contains(focused)) {
+      const binding = this.keyboardPttBindings.get(focused);
+      if (binding && !focused.disabled) return { button: focused, binding };
+    }
+
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>(".ptt-button")) {
+      const binding = this.keyboardPttBindings.get(button);
+      if (binding && !button.disabled) return { button, binding };
+    }
+    return null;
   }
 
   private battleDebugControls(
