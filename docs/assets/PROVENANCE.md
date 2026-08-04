@@ -9,7 +9,7 @@
 | 배경 원본 16장 | `assets/source/background/심사역은_마법소녀가_되었다_최종확정_배경세트.zip` | commit `c2e3e1a`, 2026-08-03, 업로드자 `lj33126` | 미확인 | 미확인 | 규격·장면 QA `ready`, 출처 승인 대기 |
 | 도윤 외부 원본 6장 | `assets/source/doyun/doyoon-hero-sprites.zip` | commit `af26039`, 2026-08-03, 업로드자 `2klips` | 미확인 | 미확인 | 원본 추적용 |
 | 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 미확인 | 미확인 | 자동 규격 `ready`, 사용자 장면 사용 승인 |
-| 주노 납품 5장 | `assets/source/juno/delivery/` | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격 `ready`, runtime 통합 승인 대기 |
+| 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격·runtime 합성 `ready`, 권리 승인 대기 |
 
 ## 배경 원본
 
@@ -60,12 +60,14 @@
 
 ## 주노 납품
 
+- 과거 저장 위치는 `docs/Asset/juno-reference-v2/`다. commit `6940236`에서 delivery 5장, source 10장, preview, 도구가 현재 `assets/source/juno/`로 `R100` 이동됐다. 파일 삭제나 재생성으로 해석하지 않는다.
 - 제작 증빙 원문은 [JUNO_PRODUCTION_EVIDENCE.md](provenance/JUNO_PRODUCTION_EVIDENCE.md)에 보존한다.
 - 작업 ID 5개, 2026-08-03 제작일, Codex 내장 OpenAI 이미지 생성 도구 사용은 전달 문서로 확인된다.
 - 정확한 모델명·버전은 도구가 노출하지 않아 미확인이다.
 - 레퍼런스 원본 경로는 작업자 로컬 임시 경로여서 저장소에서 재검증할 수 없다.
 - 레퍼런스 사용 권한, 생성 서비스 플랜·약관, 해커톤 제출·공개 저장소 사용 허용은 미확인이다.
 - 5장 1200×2000 투명 PNG, 총 872,471B 자동 규격 검사는 [JUNO_VALIDATION_REPORT.md](validation/JUNO_VALIDATION_REPORT.md)에서 확인된다.
+- 5개 delivery 파일은 2026-08-04 `assets/runtime/char/`에 동일 바이트로 채택됐다. N2·battle dev 장면에서 투명 합성과 1200×2000 로드를 확인했으며 상태는 `ready`다.
 
 ## 승인 규칙
 

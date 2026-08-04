@@ -4,7 +4,7 @@
 
 `[확정]` M5 개발은 외부 필수 에셋을 기다리지 않고 진행한다. 아직 없는 이미지·컷은 검은 presentation으로, 아직 없는 BGM은 무음으로 대체한다. 대사·자막·버튼·PTT·게이지는 계속 표시해 클릭·음성·오프라인 완주 경로를 유지한다.
 
-현재 배경 16장과 도윤 11장은 runtime에 통합됐다. 주노 5장은 source 납품·자동 규격 검사가 끝났지만 레퍼런스 권한·생성 서비스 공개 사용 허용과 runtime 통합 승인이 남았다. 주노를 중복 제작하지 말고 아래 증빙을 먼저 보완한다.
+현재 배경 16장, 도윤 11장, 주노 5장은 runtime에 통합됐다. 주노는 과거 `docs/Asset/juno-reference-v2/`에서 현재 `assets/source/juno/`로 이동된 동일 파일을 확인해 채택했다. 주노를 중복 제작하지 말고 레퍼런스 권한·생성 서비스 공개 사용 허용 증빙만 보완한다.
 
 실파일이 도착하면 아래 계약 파일명과 논리 ID를 유지한 채 교체한다. 외부 납품 원본은 수정·삭제·rename하지 않는다. 실제 파일명이 다르면 개발자가 원본명→계약명을 기록하고 채택 복사본만 runtime 경로에 정규화한다.
 
@@ -15,7 +15,7 @@
 
 ## 2. 최우선 필수 납품
 
-### 2.1 주노 표정 5종 — 실파일 존재, 증빙·통합 승인 필요
+### 2.1 주노 표정 5종 — runtime 통합 완료, 권리 증빙 필요
 
 | 우선순위 | 논리 ID | 계약 파일명 | 장면 |
 |---:|---|---|---|
@@ -25,11 +25,11 @@
 | P0 | `juno.upset` | `char_juno_upset.png` | N2 거절, N3, N4-C, BAD |
 | P0 | `juno.surprised` | `char_juno_surprised.png` | N2 등장, N5, GOOD 후속 |
 
-현재 파일 위치는 `assets/source/juno/delivery/`다. 재제작 요청이 아니라 다음 P0 확인 요청이다.
+source는 `assets/source/juno/delivery/`, 채택본은 `assets/runtime/char/`에 있다. 재제작·재납품 요청이 아니라 다음 P0 확인 요청이다.
 
 - 첨부 레퍼런스의 사용·파생·공개 저장소 게시 권한.
 - 생성 서비스 플랜의 해커톤 제출·공개 사용 허용.
-- 사람 시각 검수와 runtime 통합 승인.
+- 레퍼런스 권리 확인자의 이름·날짜·근거 링크.
 
 납품 규격:
 
@@ -104,11 +104,6 @@
 ```text
 delivery/
   char/
-    char_juno_neutral.png
-    char_juno_happy.png
-    char_juno_shy.png
-    char_juno_upset.png
-    char_juno_surprised.png
     char_gray_wraith_normal.png
     char_gray_wraith_weakened.png
     char_doyun_magical.png
@@ -127,7 +122,7 @@ delivery/
   PRODUCTION_EVIDENCE.md
 ```
 
-필수 파일만 먼저 납품해도 된다. 부분 납품마다 변경 파일 목록을 함께 기록한다.
+주노 5종은 이미 통합됐으므로 위 신규 납품 구조에서 제외한다. 필수 파일만 먼저 납품해도 된다. 부분 납품마다 변경 파일 목록을 함께 기록한다.
 
 ## 6. 생성·라이선스 증빙
 

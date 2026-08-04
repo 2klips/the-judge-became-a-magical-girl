@@ -152,6 +152,7 @@
 - 시나리오 `scene.bg`, `scene.bgm`은 확장자 없는 논리 ID만 저장한다.
 - 캐릭터 경로는 `{characterId}.{emotion}`으로 중앙 resolver가 찾는다.
 - 도윤은 `presentationDoyun` 고정 매핑으로 표시한다. 타이틀과 N0 첫 두 대사만 숨기고, 이후 독백을 포함한 본편 장면에서는 위 표의 도윤 상태를 표시한다.
+- `[확정, DEC-047]` 도윤은 화면 오른쪽에 크게 두고 PNG 상단을 기준으로 crop해 상반신 위주로 표시한다. 대화·컷씬·엔딩·battle·dev 프리뷰 모두 같은 좌우 방향을 유지하며 원본 파일을 물리 crop하지 않는다.
 - 전투 적 상태는 `momentum >= 65`면 `gray_wraith.weakened`, 아니면 `gray_wraith.normal`이다.
 - N1의 주노 미노출, N3/N4/N5의 주노+망령 동시 표시, battle의 주노 보조 표시는 노드 타입 기본 렌더만으로 추론하지 않는다. 이 문서의 장면 규칙을 presentation 계층에서 적용한다.
 - `[확정, DEC-036]` scenario의 단일 `scene.bg`는 저장·복구용 베이스 ID다. N0 line beat, N5 주문 단계, battle phase/p3 spell, ending 후속 beat의 세부 배경 교체는 새 JSON 필드 없이 presentation 계층의 고정 매핑으로 적용한다.
@@ -171,6 +172,8 @@
 - `[구현]` `bgm_transform`은 주문 결과 뒤 one-shot으로 재생한다. N5 도입은 `bgm_battle` crisis 폴백을 유지하고, PTT 청취 중 현재 BGM을 duck한다.
 - `[구현]` 물리 파일은 기본 핵심분만 preload하고 나머지는 장면 진입 시 지연 로드한다. 실패는 `physical → 지정 파생 → 검은 presentation`으로 강등하며 `[ASSET_HANDOFF]`를 경로별 한 번 기록한다. BGM 실패는 무음으로 계속한다.
 - `[구현]` 도윤 11종을 `assets/runtime/char/`에 계약명으로 배치하고 N0 세 번째 대사부터 N5·battle·수렴·3엔딩에 연결했다. 원본은 `assets/source/doyun/delivery/`에 보존한다.
+- `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
+- `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
 - `[구현]` 타이틀에서 마이크 연결·장치 선택·실시간 dBFS 테스트를 통과해야 시작·이어하기가 열린다. 게임 진입 뒤 STT 실패 시 클릭 폴백은 유지한다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
@@ -221,12 +224,12 @@
 
 | ID | 상태 | 위험 | 영향 | 담당·해결 게이트 |
 |---|---|---|---|---|
-| AR-01 | `부분 통합·에셋 대기` | 배경 16개·도윤 11개는 `ready`; 주노·망령·변신 컷·필수 BGM은 아직 `missing` | black/silent 기능 QA는 가능. 실제 합성·청각·제출 QA는 불가 | 나머지 외부 제작자 납품 → 자동 규격 검사 → manifest `ready` |
+| AR-01 | `부분 통합·에셋 대기` | 배경 16개·도윤 11개·주노 5개는 `ready`; 망령·변신 컷·필수 BGM은 아직 `missing` | 주노 포함 장면 QA 가능. 남은 black/silent 장면의 최종 합성·청각·제출 QA는 불가 | 나머지 외부 제작자 납품 → 자동 규격 검사 → manifest `ready` |
 | AR-02 | `OPEN` | 스타일 앵커와 사람 시각 검수 미완료 | 캐릭터·배경 화풍 불일치 가능 | 팀 스타일 앵커 승인 후 본생산 |
-| AR-03 | `PASS` | N1 정체 마스킹과 `bg_hall_time_stop`→N2 공개 전환 구현 | 회귀 시 주노 등장 연출·대본 모순 | unit + Playwright 클릭 QA PASS. 이후 실 주노 에셋 도착 시 합성 재검수 |
+| AR-03 | `PASS` | N1 정체 마스킹과 `bg_hall_time_stop`→N2 실제 주노 공개 전환 구현 | 회귀 시 주노 등장 연출·대본 모순 | unit + Browser N2 실제 PNG 합성 QA PASS |
 | AR-04 | `구현·QA 대기` | N3~N5 복수 인물과 N4→N5 표정 연속성 구현, 실에셋 사람 검증 전 | 관계 감정선과 망령 위협 약화 가능 | 장면별 인물·표정 수동 QA |
 | AR-05 | `black 폴백 PASS·실파일 QA 대기` | `gray_wraith.normal/weakened` resolver와 누락 black presentation 구현 | 납품 전 검은 영역 노출. 최종 합성은 검증 불가 | 통합 뒤 요청 경로·404·상태 전환 검사 |
-| AR-06 | `구현·QA 대기` | battle 주노 보조 위치 구현, 실에셋 위치 고정 검증 전 | 페이즈 전환 때 인물 위치가 튈 수 있음 | phase별 위치 고정 수동 QA |
+| AR-06 | `부분 PASS` | battle 주노 보조 위치와 도윤 우측 상반신 구도 구현 | 페이즈 전환 전체 플레이에서 위치가 튈 수 있음 | p1 dev 합성 PASS. p1→p2→p3 실제 전환 수동 QA 유지 |
 | AR-07 | `구현·QA 대기` | `bgm_transform` 결과 뒤 one-shot 구현, 실음원 청각 검증 전 | 징글 반복·타이밍 오류 가능 | 통합 뒤 loop·진입 시점 청각 QA |
 | AR-08 | `OPEN·비차단` | `bgm_crisis`, `bgm_ending`, 검은 마법소녀 컷 미제작/미연결 | 연출 밀도 감소 | 일정 여유 시 제작·연결. 없으면 문서 지정 폴백 사용 |
 | AR-09 | `OPEN` | 생성물 라이선스·대회 제출 허용 확인 미완료 | `approved` 승격·제출 차단 | 제작 도구 플랜·약관·대회 규정 사람 확인 |
@@ -240,7 +243,7 @@
 ### 다음 단계 순서
 
 1. 제작자/사용자: 과거 17번째 배경 식별자와 생성·라이선스 증빙을 전달한다. clean TITLE은 현 임시본 교체용으로 요청 유지한다.
-2. 제작자: 주노 5표정, 망령 2상태, 변신 컷 2장, 필수 BGM 3곡을 계약명·규격으로 납품한다.
+2. 제작자: 망령 2상태, 변신 컷 2장, 필수 BGM 3곡을 계약명·규격으로 납품한다. 주노는 재제작하지 않고 권리 증빙만 보완한다.
 3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지하고, 다른 실에셋 도착 뒤 남은 시각·청각 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.
 5. 문서 담당: 자동 규격 통과분만 `ASSET_MANIFEST.md`를 `ready`로 갱신하고 제작 증빙을 `AI_PRODUCTION_LOG.md`에 연결한다.

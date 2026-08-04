@@ -559,3 +559,38 @@
 - 이번 확정 기능의 코드·문서·자동 QA는 통과했다.
 - 주노 runtime 승인, 망령 2장, 변신 컷 2장, 필수 BGM 3종, 생성·라이선스 증빙과 실제 마이크 저/정상/고음량 검증은 남아 있다.
 - 위 외부·현장 게이트 전에는 `M5 기능 구현 PASS / 최종 에셋·현장 QA 대기`로 보고한다.
+
+## M5 — 주노 runtime 통합·도윤 우측 상반신 구도
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `ASSET_VALIDATION` + `DOCS_UPDATE` + `DEMO_QA`
+- 상태: 주노 5표정 runtime 통합, 도윤 반응형 배치, 자동·Browser 장면 QA PASS. 권리·남은 외부 에셋 대기
+
+### 처리 내용
+
+- commit `6076466`의 과거 `docs/Asset/juno-reference-v2/`와 commit `6940236`의 현재 경로를 대조했다. delivery 5장과 source 10장이 `assets/source/juno/`로 `R100` 이동된 동일 파일임을 확인했다.
+- 자동 규격 보고서를 통과한 delivery 5장을 `assets/runtime/char/`에 source와 동일 바이트로 채택했다. 기존 `juno.neutral/happy/shy/upset/surprised` resolver를 그대로 사용했다.
+- 도윤에 `doyun-visual` presentation class를 부여했다. 일반 대화·컷씬·엔딩은 화면 오른쪽에서 확대하고 상단 기준 crop으로 상반신을 표시한다. battle·dev 프리뷰도 같은 좌우 방향을 유지한다.
+- 주노는 대화에서 중앙/왼쪽 보조 위치, battle에서는 도윤과 망령 사이의 작은 보조 위치로 배치했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 주노 asset TDD | PASS | runtime 부재 ENOENT RED → 5장 복사 → 8개 M5 asset 테스트 GREEN |
+| 주노 물리 계약 | PASS | 5/5 source/runtime hash 일치, 1200×2000, 8-bit indexed PNG + `tRNS`, 개별 800KB 이하 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 35 files, 139 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| runtime 격리 | PASS | 32개·5,896,191B가 dist에 동일 복사, 주노 5장 포함, source·ZIP 0 |
+| Browser N2 | PASS | `surprised` 투명 PNG와 도윤 우측 확대가 실제 `bg_hall_day` 위에 표시, 깨진 이미지 0 |
+| Browser battle p1 | PASS | `neutral` 주노, 망령 black fallback, 도윤 우측 상반신 구도 동시 표시 |
+| 모바일 | PASS | 390×844, 가로 overflow 0, 이미지 로드 실패 0 |
+| 콘솔 | PASS | error 0. 미제작 `gray_wraith.normal`의 계약된 `[ASSET_HANDOFF]` warning만 발생 |
+
+### 현재 판정
+
+- 주노 5표정은 `missing`에서 `ready`로 전환했다. 레퍼런스 권한과 생성 서비스 공개·해커톤 사용 허용 확인 전 `approved`는 아니다.
+- 도윤 우측 상반신 구도는 구현·시각 QA 통과. 장면별 반대 방향 전환은 승인되지 않아 추가하지 않았다.
+- 망령 2장, 변신 컷 2장, 필수 BGM 3종, 실제 마이크 QA는 계속 남는다.

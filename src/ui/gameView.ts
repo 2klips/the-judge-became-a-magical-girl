@@ -280,7 +280,7 @@ export class GameView {
         const figure = this.createAssetVisual(
           visual.logicalId,
           visual.label,
-          `asset-visual dev-preview-visual dev-role-${visual.role}`,
+          `asset-visual dev-preview-visual dev-role-${visual.role}${visual.role === "player" ? " doyun-visual" : ""}`,
         );
         figure.dataset.logicalId = visual.logicalId;
         stage.append(figure);
@@ -535,7 +535,7 @@ export class GameView {
         this.createAssetVisual(
           doyunVisual,
           "한도윤",
-          "character-visual scene-player-visual",
+          "character-visual scene-player-visual doyun-visual",
         ),
       );
     }
@@ -601,7 +601,7 @@ export class GameView {
         resolveDoyunVisual({ kind: "node", nodeId: node.nodeId, stage: "incantation" }) ??
           "doyun.normal_shy",
         "한도윤",
-        "character-visual scene-player-visual incantation-player-visual",
+        "character-visual scene-player-visual incantation-player-visual doyun-visual",
       ),
     );
     const card = element("section", "incantation-card");
@@ -670,7 +670,7 @@ export class GameView {
         resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", stage: "transformation" }) ??
           "doyun.magical_pose",
         "마법소녀 도윤",
-        "character-visual transformation-player-visual",
+        "character-visual transformation-player-visual doyun-visual",
       ),
     );
     const cutStage = element("section", "transform-cut-stage");
@@ -740,7 +740,7 @@ export class GameView {
       this.createAssetVisual(
         resolveDoyunVisual({ kind: "battle", phaseId: phase.phaseId }) ?? "doyun.magical",
         "마법소녀 도윤",
-        "asset-visual battle-character player-visual",
+        "asset-visual battle-character player-visual doyun-visual",
       ),
       this.createCharacterVisual(
         "juno",
@@ -861,7 +861,7 @@ export class GameView {
       this.createAssetVisual(
         resolveDoyunVisual({ kind: "battle", phaseId: options.phaseId }) ?? "doyun.magical",
         "마법소녀 도윤",
-        "asset-visual battle-reply-player",
+        "asset-visual battle-reply-player doyun-visual",
       ),
       this.createAssetVisual(
         `gray_wraith.${options.battleState.enemyState}`,
@@ -1025,7 +1025,7 @@ export class GameView {
           this.createAssetVisual(
             doyunVisual,
             "한도윤",
-            "character-visual ending-player-visual",
+            "character-visual ending-player-visual doyun-visual",
           ),
         );
       }
@@ -1205,7 +1205,7 @@ export class GameView {
         this.createAssetVisual(
           doyunVisual,
           "한도윤",
-          "character-visual scene-player-visual dialogue-player-visual",
+          "character-visual scene-player-visual dialogue-player-visual doyun-visual",
         ),
       );
     }

@@ -9,19 +9,19 @@
 - `ready`: 파일 존재·기본 규격 통과.
 - `approved`: 사람 QA·라이선스 확인까지 완료.
 
-`[확정, DEC-030·034·035·036·037·040 및 2026-08-04 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장과 장면에 채택한 도윤 11장이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 배경·도윤은 자동 규격과 장면 합성 검사를 통과했지만 생성 증빙·라이선스와 일부 교체 요청이 남아 `ready`이며 `approved`는 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
+`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 배경·도윤·주노는 자동 규격과 장면 합성 검사를 통과했지만 생성 증빙·라이선스와 일부 교체 요청이 남아 `ready`이며 `approved`는 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 27개 파일, 총 `5,023,720 bytes`다.
+현재 `assets/runtime/`은 32개 파일, 총 `5,896,191 bytes`다.
 
 ## 이미지
 
 | 논리 ID | 파일명 | 종류 | 규격 | 용량 상한 | 우선순위 | 상태 | 생성 도구 | 라이선스 | 시나리오 참조 위치 | QA |
 |---|---|---|---|---:|---|---|---|---|---|---|
-| `juno.neutral` | `char_juno_neutral.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | OpenAI 이미지 생성·모델 미확인 | 미확인 | `characters.json` emotion + dialogue NPC | source 자동 규격 PASS, runtime 미통합 |
-| `juno.happy` | `char_juno_happy.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source 자동 규격 PASS, runtime 미통합 |
-| `juno.shy` | `char_juno_shy.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source 자동 규격 PASS, runtime 미통합 |
-| `juno.upset` | `char_juno_upset.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source 자동 규격 PASS, runtime 미통합 |
-| `juno.surprised` | `char_juno_surprised.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source 자동 규격 PASS, runtime 미통합 |
+| `juno.neutral` | `char_juno_neutral.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 생성·모델 미확인 | 미확인 | `characters.json` emotion + dialogue NPC | source/runtime 동일 바이트·자동 규격·N2/battle 합성 PASS |
+| `juno.happy` | `char_juno_happy.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격 PASS |
+| `juno.shy` | `char_juno_shy.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격 PASS |
+| `juno.upset` | `char_juno_upset.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격 PASS |
+| `juno.surprised` | `char_juno_surprised.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격·N2 합성 PASS |
 | `gray_wraith.normal` | `char_gray_wraith_normal.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | 미제작 | 미확인 | battle `enemy.id` + state | 대기 |
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | 미제작 | 미확인 | battle `enemy.id` + state | 대기 |
 | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N0 3~4번째 문장 | 자동 규격 PASS, 장면 QA 대기 |
@@ -103,6 +103,15 @@
 2. `cut_transform_01.webp`: N5 영창 순간, 1920×1080 WebP ≤700KB.
 3. `cut_transform_02.webp`: N5 변신 완료, 도윤 뒷모습 또는 반측면, 1920×1080 WebP ≤700KB.
 4. 생성 도구·모델, 프롬프트/작업 ID, 생성일, 사용 플랜·라이선스 확인 결과.
+
+### 2026-08-04 주노 과거 경로 확인·runtime 채택
+
+- 최초 납품: commit `6076466`의 `docs/Asset/juno-reference-v2/`.
+- 이동 확인: commit `6940236`에서 delivery 5장과 source 10장이 각각 `assets/source/juno/delivery/`, `assets/source/juno/intermediate/`로 `R100` 이동됐다. 삭제·재생성된 파일이 아니다.
+- 채택 범위: 계약 파일명 5장을 `assets/runtime/char/`에 source와 동일 바이트로 복사했다.
+- 자동 검사: 5장 모두 1200×2000 8-bit indexed PNG + `tRNS`, 개별 800KB 이하, source/runtime hash 일치.
+- 장면 검사: N2 `surprised`, battle p1 `neutral`이 실제 배경 위에 투명 합성되고 도윤 우측 확대 구도와 함께 표시된다.
+- 남은 게이트: 첨부 레퍼런스 파생·공개 사용 권한과 생성 서비스 플랜 확인. 확인 전 상태는 `ready`다.
 
 ## 오디오
 

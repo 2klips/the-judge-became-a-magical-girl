@@ -295,20 +295,37 @@ button {
   opacity: 0.7;
 }
 
+.dialogue-character,
+.cutscene-character,
+.ending-character {
+  right: auto;
+  left: clamp(3%, 7vw, 10%);
+  width: min(25vw, 330px);
+  height: min(54vh, 600px);
+}
+
 .has-companion {
-  right: clamp(1%, 4vw, 7%);
-  width: min(30vw, 400px);
+  right: auto;
+  left: clamp(25%, 29vw, 33%);
+  width: min(18vw, 240px);
 }
 
 .scene-player-visual {
-  right: auto;
-  left: clamp(20%, 29vw, 36%);
-  width: min(34vw, 460px);
+  right: clamp(-2%, 2vw, 4%);
+  bottom: 0;
+  left: auto;
+  width: min(52vw, 720px);
+  height: min(100vh, 1040px);
 }
 
 .dialogue-player-visual {
-  left: clamp(18%, 26vw, 32%);
-  width: min(31vw, 420px);
+  right: clamp(-2%, 2vw, 4%);
+  left: auto;
+}
+
+.doyun-visual.character-visual .asset-image {
+  object-fit: cover;
+  object-position: center top;
 }
 
 .incantation-player-visual,
@@ -317,17 +334,20 @@ button {
 }
 
 .transformation-player-visual {
-  right: auto;
-  left: 50%;
+  right: clamp(-2%, 2vw, 4%);
+  bottom: 0;
+  left: auto;
   z-index: -1;
-  width: min(38vw, 500px);
-  transform: translateX(-50%);
+  width: min(54vw, 760px);
+  height: min(100vh, 1080px);
 }
 
 .ending-player-visual {
-  right: auto;
-  left: clamp(3%, 8vw, 12%);
-  width: min(32vw, 430px);
+  right: clamp(-2%, 2vw, 4%);
+  bottom: 0;
+  left: auto;
+  width: min(52vw, 720px);
+  height: min(100vh, 1040px);
 }
 
 .ending-tone-good .scene-background {
@@ -955,7 +975,48 @@ button {
 }
 
 .dev-role-player {
-  width: min(22vw, 300px);
+  order: 3;
+  width: min(40vw, 560px);
+  height: min(76vh, 800px);
+  overflow: hidden;
+}
+
+.dev-role-player .asset-image {
+  object-fit: cover;
+  object-position: center 10%;
+}
+
+.dev-layout-dialogue .dev-preview-stage,
+.dev-layout-battle .dev-preview-stage,
+.dev-layout-ending .dev-preview-stage {
+  display: block;
+}
+
+.dev-layout-dialogue .dev-preview-visual,
+.dev-layout-battle .dev-preview-visual,
+.dev-layout-ending .dev-preview-visual {
+  position: absolute;
+  bottom: 0;
+}
+
+.dev-layout-dialogue .dev-role-player,
+.dev-layout-battle .dev-role-player,
+.dev-layout-ending .dev-role-player {
+  right: 0;
+  width: min(44vw, 560px);
+  height: min(64vh, 680px);
+}
+
+.dev-layout-dialogue .dev-role-juno,
+.dev-layout-battle .dev-role-juno,
+.dev-layout-ending .dev-role-juno {
+  right: min(46%, 360px);
+}
+
+.dev-layout-dialogue .dev-role-enemy,
+.dev-layout-battle .dev-role-enemy,
+.dev-layout-ending .dev-role-enemy {
+  left: 0;
 }
 
 .dev-layout-transform .dev-preview-stage {
@@ -1124,7 +1185,7 @@ button {
 .battle-visual-stage {
   display: grid;
   min-height: 210px;
-  grid-template-columns: 1fr 1fr 0.72fr;
+  grid-template-columns: 0.72fr 1fr 1.15fr;
   gap: 18px;
   overflow: hidden;
   border-radius: 22px;
@@ -1133,6 +1194,25 @@ button {
 
 .battle-character {
   height: 230px;
+}
+
+.battle-juno-visual {
+  order: 1;
+}
+
+.battle-visual-stage .enemy-visual {
+  order: 2;
+}
+
+.battle-visual-stage .player-visual {
+  order: 3;
+  height: 270px;
+  overflow: hidden;
+}
+
+.battle-visual-stage .player-visual .asset-image {
+  object-fit: cover;
+  object-position: center 10%;
 }
 
 .enemy-visual .asset-image {
@@ -1155,7 +1235,13 @@ button {
   float: right;
   width: min(30%, 190px);
   height: 170px;
+  overflow: hidden;
   margin: -20px 12px 8px 18px;
+}
+
+.battle-reply-player .asset-image {
+  object-fit: cover;
+  object-position: center 10%;
 }
 
 .battle-juno-visual {
@@ -1491,8 +1577,28 @@ button {
   .scene-player-visual,
   .dialogue-player-visual,
   .ending-player-visual {
+    right: -10%;
+    bottom: 0;
+    left: auto;
+    width: 78vw;
+    height: 76vh;
+    opacity: 0.66;
+  }
+
+  .dialogue-character,
+  .cutscene-character,
+  .ending-character {
     right: auto;
-    left: -5%;
+    bottom: 38%;
+    left: -8%;
+    width: 46vw;
+    height: 42vh;
+    opacity: 0.76;
+  }
+
+  .has-companion {
+    left: 24%;
+    width: 36vw;
   }
 
   .battle-visual-stage {
@@ -1502,6 +1608,10 @@ button {
 
   .battle-character {
     height: 160px;
+  }
+
+  .battle-visual-stage .player-visual {
+    height: 190px;
   }
 
   .battle-juno-visual {

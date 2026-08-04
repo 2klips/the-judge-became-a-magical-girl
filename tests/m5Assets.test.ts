@@ -45,6 +45,14 @@ const runtimeDoyun = [
   "char_doyun_magical_pose.png",
 ] as const;
 
+const runtimeJuno = [
+  "char_juno_neutral.png",
+  "char_juno_happy.png",
+  "char_juno_shy.png",
+  "char_juno_upset.png",
+  "char_juno_surprised.png",
+] as const;
+
 const runtimeDiskPath = (assetPath: string): string =>
   resolve(process.cwd(), "assets", "runtime", assetPath.replace(/^assets\//, ""));
 
@@ -82,6 +90,41 @@ function readWebpDimensions(file: Buffer): { width: number; height: number } {
     offset = dataOffset + chunkSize + (chunkSize % 2);
   }
   throw new Error("WebP dimension chunk를 찾을 수 없습니다.");
+}
+
+function expectTransparentCharacterAsset(
+  filename: string,
+  sourceDirectory: string,
+): void {
+  const diskPath = resolve(process.cwd(), "assets", "runtime", "char", filename);
+  const sourcePath = resolve(process.cwd(), sourceDirectory, filename);
+  const file = readFileSync(diskPath);
+
+  expect(file.equals(readFileSync(sourcePath)), filename).toBe(true);
+  expect(file.subarray(0, 8), filename).toEqual(
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+  );
+  expect(file.subarray(12, 16).toString("ascii"), filename).toBe("IHDR");
+  expect(file.readUInt32BE(16), filename).toBe(1200);
+  expect(file.readUInt32BE(20), filename).toBe(2000);
+  expect(file[24], filename).toBe(8);
+  const colorType = file[25];
+  const chunkTypes: string[] = [];
+  let offset = 8;
+  while (offset + 12 <= file.length) {
+    const length = file.readUInt32BE(offset);
+    const type = file.subarray(offset + 4, offset + 8).toString("ascii");
+    chunkTypes.push(type);
+    offset += length + 12;
+    if (type === "IEND") break;
+  }
+  expect(
+    colorType === 4 ||
+      colorType === 6 ||
+      (colorType === 3 && chunkTypes.includes("tRNS")),
+    filename,
+  ).toBe(true);
+  expect(statSync(diskPath).size, filename).toBeLessThanOrEqual(800 * 1024);
 }
 
 afterEach(() => {
@@ -147,35 +190,19 @@ describe("M5 에셋 계약", () => {
 
   it("도윤 runtime 11장은 source와 같은 1200×2000 투명 PNG다", () => {
     for (const filename of runtimeDoyun) {
-      const diskPath = resolve(process.cwd(), "assets", "runtime", "char", filename);
-      const sourcePath = resolve(process.cwd(), "assets", "source", "doyun", "delivery", filename);
-      const file = readFileSync(diskPath);
-
-      expect(file.equals(readFileSync(sourcePath)), filename).toBe(true);
-      expect(file.subarray(0, 8), filename).toEqual(
-        Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-      );
-      expect(file.subarray(12, 16).toString("ascii"), filename).toBe("IHDR");
-      expect(file.readUInt32BE(16), filename).toBe(1200);
-      expect(file.readUInt32BE(20), filename).toBe(2000);
-      expect(file[24], filename).toBe(8);
-      const colorType = file[25];
-      const chunkTypes: string[] = [];
-      let offset = 8;
-      while (offset + 12 <= file.length) {
-        const length = file.readUInt32BE(offset);
-        const type = file.subarray(offset + 4, offset + 8).toString("ascii");
-        chunkTypes.push(type);
-        offset += length + 12;
-        if (type === "IEND") break;
-      }
-      expect(
-        colorType === 4 ||
-          colorType === 6 ||
-          (colorType === 3 && chunkTypes.includes("tRNS")),
+      expectTransparentCharacterAsset(
         filename,
-      ).toBe(true);
-      expect(statSync(diskPath).size, filename).toBeLessThanOrEqual(800 * 1024);
+        resolve("assets", "source", "doyun", "delivery"),
+      );
+    }
+  });
+
+  it("주노 runtime 5장은 이동된 source와 같은 1200×2000 투명 PNG다", () => {
+    for (const filename of runtimeJuno) {
+      expectTransparentCharacterAsset(
+        filename,
+        resolve("assets", "source", "juno", "delivery"),
+      );
     }
   });
 
