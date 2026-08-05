@@ -807,7 +807,7 @@
 
 - 실행일: 2026-08-05
 - 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
-- 상태: 코드·자동·Browser QA PASS, Pages 재배포 확인 대기
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
 
 ### 처리 내용
 
@@ -831,9 +831,10 @@
 | Browser mobile | PASS | 390×844, 안내 0, 상태 영역 0, 가로 overflow 0 |
 | Browser interaction | PASS | `T` 입력에서 release 후 `판정 중…`, disabled, `aria-busy=true`; `aria-keyshortcuts="T Space Enter"` 유지 |
 | Browser console | 조건부 PASS | 앱 오류 0. 저장소 밖 하네스 origin 때문에 runtime 에셋 3종의 의도된 `[ASSET_HANDOFF]` 경고만 발생 |
-| Pages workflow | 대기 | code commit push 뒤 재배포·공개 DOM 확인 |
+| Pages workflow | PASS | run `31009304184`, commit `d1cd516`, check/test/build·artifact 경계·배포 성공 |
+| 공개 Pages | PASS | `data-qa-commit=d1cd516`, `data-qa-preview=true`, 제거 대상 영역·문구 0, 가로 overflow 0, 공개 URL console error/warn 0 |
 
 ### 현재 판정
 
-- 요청된 PTT 단일 표시 계약은 코드·자동·렌더 QA에서 통과했다.
-- 실제 사람 음성으로 STT·LLM까지 완료되는 공개 Pages smoke와 배포 commit 확인이 남는다.
+- 요청된 PTT 단일 표시 계약은 코드·자동·렌더·공개 Pages QA에서 통과했다.
+- 실제 사람 음성으로 STT·LLM까지 완료되는 공개 Pages smoke는 수동 QA로 남는다.
