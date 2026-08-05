@@ -21,7 +21,7 @@
 
 - 실제 이미지·BGM·SFX를 요구하지 않는다.
 - CSS 단색·그라데이션 배경과 하단 미연시 대화창만 사용한다.
-- 하단 이름표에 `주노`를 표시하고, 대화 본문·마이크 상태·실시간 transcript를 표시한다.
+- 하단 이름표에 `주노`와 대화 본문을 표시한다. `[확정, DEC-054·055]` M5 본편은 transcript·별도 마이크 상태 영역 없이 PTT 버튼만 표시한다.
 - Asset 경로를 임시 파일명으로 만들지 않는다. 누락 요청·404 없이 실행한다.
 
 ### 대화 계약
@@ -38,7 +38,7 @@
 
 - M1은 같은 화면을 클릭·고정 응답으로 실행한다.
 - M2는 Web Speech 기반 PTT, `ko-KR`, interim transcript, 로컬 intent 판정을 연결해 UI·폴백·상태 경계를 검증한다. Web Speech transcript는 M3 이후 최종 권위가 아니다.
-- M3는 버튼 release까지 녹음한 동일 WAV를 Cloudflare Workers의 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 어댑터 하나에 보내고, 검증된 최종 transcript를 화면에 먼저 표시한 뒤 LLM 자유대화를 호출한다.
+- M3는 버튼 release까지 녹음한 동일 WAV를 Cloudflare Workers의 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 어댑터 하나에 보내고, 검증된 최종 transcript로 LLM 자유대화를 호출한다. `[확정, DEC-054·055]` M5 본편 UI에는 transcript와 별도 음성 상태 영역을 표시하지 않는다.
 - `[확정, DEC-028]` MVP-1까지 GPT/Gemini STT를 개발·QA 설정으로 전환할 수 있어야 한다. 일반 플레이 한 턴에서 두 공급자를 동시에 호출하지 않는다. 로컬 Whisper는 게임 경로에 연결하지 않는다.
 - 마이크 거부·STT 실패·LLM 지연·오프라인에서도 클릭·로컬 고정 응답으로 대화를 계속하고 테스트 종료 지점까지 도달한다.
 
@@ -108,7 +108,7 @@ interface BattleState {
 한 턴의 고정 순서:
 
 ```text
-PTT release → 선택된 STT 전사 → UI에는 음성 입력 완료 상태만 표시 → 정규화
+PTT release → 선택된 STT 전사 → PTT 버튼을 처리 중 상태로 잠금 → 정규화
 → 로컬 intent 판정 → 미매칭이면 LLM 판정
 → 판정 검증/클램프 → 응답 연출 → 상태 적용 → 턴 증가 → 분기 평가
 ```
@@ -116,7 +116,7 @@ PTT release → 선택된 STT 전사 → UI에는 음성 입력 완료 상태만
 - `[확정, DEC-050]` 게임 내 PTT는 포인터·포커스된 Space/Enter와 전역 `T` 홀드/릴리스를 지원한다. 입력·선택 컨트롤 편집 중에는 전역 `T`를 가로채지 않는다.
 - `[확정, DEC-050]` 대사·판정 응답·엔딩의 다음 페이지 진행 버튼은 화면 렌더 후 2초 동안 비활성화하고, 준비 뒤 한 번만 진행한다.
 
-`[확정, DEC-051·054]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않으며 게임 UI에는 `STT`, `GPT · 고정`, 최종 transcript를 표시하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
+`[확정, DEC-051·054·055]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않으며 게임 UI에는 `STT`, `GPT · 고정`, 최종 transcript, 별도 음성 입력 상태 영역을 표시하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
 
 분기 우선순위:
 
@@ -272,5 +272,5 @@ main(composition root)
 - `[확정]` battle의 `spell` 입력만 보정된 dBFS 범위를 검사한다. 너무 작거나 큰 첫 실패는 턴을 보존하고, 같은 턴 두 번째 실패는 `failed-spell` `+0`으로 턴을 소비한다. `freeform`에는 음량 게이트를 적용하지 않는다.
 - `[확정]` 동일 배경 논리 ID는 재렌더만 하고 애니메이션하지 않는다. 논리 ID 변경에만 420ms crossfade를 적용한다.
 - `[확정, DEC-038]` `?debug=1&scene=<장면ID>`는 저장·FSM과 격리된 장면 프리뷰다. 정상 URL에는 선택기·프리뷰가 없다.
-- `[확정, DEC-053·054]` 본편 대화 UI는 화자별 색과 화면 방향을 갖는 하단 미연시 프레임이다. 주노는 yellow·좌측, 회색 망령은 violet·좌측, 도윤은 rose·우측, 익명 voice는 amber·중앙, 내레이션은 중립색·중앙이다. 내레이션은 이름표 없이 본문을 `(…)`로 표시한다. 진행 버튼은 문구를 바꾸지 않고 렌더 후 2초 동안 disabled다. 상단에는 `?debug=1` 장면 선택기 외 상태·QA 표식을 렌더하지 않는다. 고정 공급자와 최종 transcript도 표시하지 않는다.
+- `[확정, DEC-053·054·055]` 본편 대화 UI는 화자별 색과 화면 방향을 갖는 하단 미연시 프레임이다. 주노는 yellow·좌측, 회색 망령은 violet·좌측, 도윤은 rose·우측, 익명 voice는 amber·중앙, 내레이션은 중립색·중앙이다. 내레이션은 이름표 없이 본문을 `(…)`로 표시한다. 진행 버튼은 문구를 바꾸지 않고 렌더 후 2초 동안 disabled다. 상단에는 `?debug=1` 장면 선택기 외 상태·QA 표식을 렌더하지 않는다. 고정 공급자·최종 transcript·음성 안내/상태 영역도 표시하지 않고 `누르고 말하기` 계열 PTT 버튼 자체만 청취·판정 상태를 전달한다.
 - `[제안]` 누락 에셋은 로더 진단에 포함하되 M1~M4 더미 placeholder 허용 여부는 마일스톤 계약을 따른다.

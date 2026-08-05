@@ -99,7 +99,7 @@ Git 제외 대상:
 - 네트워크: `[확정, DEC-051]` QA 모드는 GitHub Actions repository variable `QA_WORKER_URL`을 `VITE_WORKER_URL`로 주입한다. 값은 HTTPS `*.workers.dev`여야 하며 없거나 HTTP면 build/runtime 게이트가 실패한다. Worker `env.qa`는 Pages Origin만 허용하고 OpenAI STT route만 활성화한다.
 - 배포값: `QA_WORKER_URL=https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`.
 - LLM: `[확정, DEC-052]` Gemini 지역 제한을 우회하지 않고 공개 QA의 `/judge/dialogue`, `/judge/battle`만 OpenAI `gpt-5.6-luna`로 전환한다. 공개 HTTP 요청·응답 스키마와 클릭·로컬 폴백은 유지한다. M6 production LLM은 별도 확정 전 기존 계약을 바꾸지 않는다.
-- 화면·식별: `[확정, DEC-053·054]` 상단 QA 배너는 표시하지 않는다. 대신 `<html>`의 `data-qa-preview="true"`, `data-qa-commit="7자"`로 배포를 식별하고 검색 엔진에 `noindex,nofollow`를 요청한다. 게임 UI에는 고정 STT 공급자와 최종 transcript를 표시하지 않으며 실제 GPT 고정 여부는 Network 경로로 검증한다.
+- 화면·식별: `[확정, DEC-053·054·055]` 상단 QA 배너는 표시하지 않는다. 대신 `<html>`의 `data-qa-preview="true"`, `data-qa-commit="7자"`로 배포를 식별하고 검색 엔진에 `noindex,nofollow`를 요청한다. 게임 UI에는 고정 STT 공급자·최종 transcript·별도 음성 입력 상태 영역을 표시하지 않으며 실제 GPT 고정 여부는 Network 경로로 검증한다.
 - debug: `?debug=1`과 장면 프리뷰는 작업자 QA를 위해 의도적으로 유지한다. 정식 production의 상태 변경 debug 정책은 DEC-021 해결 전이며 이 예외로 확정하지 않는다.
 - 종료: M6 정식 배포 때 production workflow·Worker Origin·GPT STT·debug 정책으로 교체하거나 임시 Pages를 내린다.
 - 환경 보호: `github-pages` 배포 허용 branch는 `main`, `codex/m5-asset-handoff-docs` 두 개다. 임의 branch나 tag는 허용하지 않는다.

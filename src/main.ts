@@ -57,7 +57,7 @@ const workerUrl = resolveWorkerUrl({
 if (isQaPreview) {
   installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
-const view = new GameView(root, recordingSupported, isQaPreview);
+const view = new GameView(root, isQaPreview);
 const bgm = new BgmController();
 const sfx = new SfxPlayer();
 const microphoneTester = new BrowserMicrophoneTester();

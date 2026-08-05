@@ -330,46 +330,8 @@ button {
   line-height: 1.5;
 }
 
-.captions {
-  min-height: 82px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.045);
-}
-
-.captions[data-state="interim"] {
-  border-color: rgba(255, 223, 135, 0.4);
-}
-
-.captions[data-state="final"] {
-  border-color: rgba(155, 255, 216, 0.36);
-}
-
-.caption-label,
-.caption-text {
-  margin: 0;
-}
-
-.caption-label {
-  color: rgba(255, 255, 255, 0.46);
-  font-family: "Courier New", monospace;
-  font-size: 0.875rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.caption-text {
-  margin-top: 8px;
-  color: #f9f4d7;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
 .voice-controls,
 .input-utilities,
-.mic-indicator,
 .provider-control,
 .debug-transcript {
   display: flex;
@@ -394,41 +356,6 @@ button {
 
 .voice-controls {
   margin-top: 12px;
-}
-
-.mic-indicator {
-  min-width: 110px;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 0.875rem;
-}
-
-.mic-indicator-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #ffda7d;
-  box-shadow: 0 0 12px rgba(255, 218, 125, 0.7);
-}
-
-.mic-indicator[data-state="listening"] .mic-indicator-dot {
-  background: #ff7aab;
-  box-shadow: 0 0 18px rgba(255, 122, 171, 0.9);
-  animation: mic-pulse 900ms ease-in-out infinite alternate;
-}
-
-.mic-indicator[data-state="processing"] .mic-indicator-dot {
-  background: #a6e9ff;
-  box-shadow: 0 0 14px rgba(166, 233, 255, 0.8);
-}
-
-.mic-indicator[data-state="error"] .mic-indicator-dot {
-  background: #ff9c83;
-}
-
-@keyframes mic-pulse {
-  to {
-    transform: scale(1.55);
-  }
 }
 
 .ptt-button {
@@ -561,29 +488,7 @@ button {
   padding: 9px 18px;
 }
 
-.input-status {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
-  white-space: nowrap;
-}
-
-.input-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #ffda7d;
-  box-shadow: 0 0 12px #ffda7d;
-}
-
-.muted,
-.input-divider {
+.muted {
   color: rgba(255, 255, 255, 0.38);
 }
 
@@ -1015,10 +920,6 @@ button {
     flex-direction: column;
   }
 
-  .mic-indicator {
-    min-width: 0;
-  }
-
   .debug-transcript {
     width: 100%;
     margin-left: 0;
@@ -1302,7 +1203,7 @@ button {
 
 .battle-actions {
   display: grid;
-  grid-template-columns: auto minmax(150px, 1fr) minmax(150px, 1fr) auto;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
   gap: 10px;
   align-items: center;
 }
@@ -1571,10 +1472,7 @@ button {
 }
 
 .prompt-label,
-.caption-label,
 .provider-control,
-.mic-indicator,
-.input-status,
 .eyebrow,
 .microphone-step,
 .microphone-db,
@@ -1808,7 +1706,6 @@ input:focus-visible {
   outline-offset: 3px;
 }
 
-.captions,
 .input-notice,
 .enemy-card,
 .battle-command {
@@ -2320,17 +2217,6 @@ input:focus-visible {
 .cutscene-character,
 .ending-character {
   z-index: 2;
-}
-
-.input-status {
-  z-index: 11;
-  bottom: 13px;
-  min-height: 26px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(8, 9, 18, 0.68);
-  font-size: 0.875rem;
 }
 
 .dev-scene-nav {

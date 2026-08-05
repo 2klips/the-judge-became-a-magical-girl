@@ -802,3 +802,38 @@
 - 사용자 요청 3건은 구현·검증됐다. STT·GPT 기능 및 공개 QA 공급자는 변경하지 않고 표시만 제거했다.
 - 실제 마이크 권한·사람 음성·전사 비노출 상태의 판정 진행은 브라우저 자동화로 대신할 수 없어 수동 QA로 유지한다.
 - 미제공 `gray_wraith.normal`은 기존 에셋 인계 항목이며 이번 변경과 무관하다.
+
+## M5 PTT 단일 표시와 음성 상태 영역 제거
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA PASS, Pages 재배포 확인 대기
+
+### 처리 내용
+
+- 대화의 “마이크 버튼 또는 T 키를 누른 채 말하고, 놓으면 판정해.” 고정 안내문을 제거했다. 변신 주문의 동일 성격 안내문도 제거했다.
+- 본편 대화·변신 주문·전투에서 `음성 입력` 카드, 마이크 상태 배지, 하단 `음성 모드/실패 횟수` pill을 제거했다. 관련 미사용 view·CSS·턴 표시 helper도 함께 삭제했다.
+- 대화 PTT의 기본 문구는 `누르고 말하기`로 고정했다. 주문·전투는 행동 구분만 앞에 유지하고 노출된 `· T` 문구는 제거했다.
+- 포인터·Space/Enter·전역 `T` 홀드/릴리스 기능은 유지한다. 같은 버튼이 청취 중 `듣는 중… 놓으면 전송`, release 뒤 `판정 중…`으로 바뀌며 판정 중에는 disabled와 `aria-busy=true`를 적용한다.
+- STT 전사·LLM 판정·오류 notice·클릭/로컬 폴백·타이틀 마이크 테스트는 변경하지 않았다. 신규 에셋 요청 없음.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 별도 안내·상태 영역 없이 `누르고 말하기`만 표시하는 계약 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 37 files, 159 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL·QA commit 주입 조건의 game-only QA build 성공 |
+| QA artifact | PASS | 고정 안내·`음성 입력 완료`·`응답 판정 중`·caption/mic/input-status selector 노출 0, PTT 3상태 문구 포함 |
+| Browser desktop | PASS | 1280×720, `누르고 말하기`, 안내 0, 상태 영역 0, 공급자 UI 0, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844, 안내 0, 상태 영역 0, 가로 overflow 0 |
+| Browser interaction | PASS | `T` 입력에서 release 후 `판정 중…`, disabled, `aria-busy=true`; `aria-keyshortcuts="T Space Enter"` 유지 |
+| Browser console | 조건부 PASS | 앱 오류 0. 저장소 밖 하네스 origin 때문에 runtime 에셋 3종의 의도된 `[ASSET_HANDOFF]` 경고만 발생 |
+| Pages workflow | 대기 | code commit push 뒤 재배포·공개 DOM 확인 |
+
+### 현재 판정
+
+- 요청된 PTT 단일 표시 계약은 코드·자동·렌더 QA에서 통과했다.
+- 실제 사람 음성으로 STT·LLM까지 완료되는 공개 Pages smoke와 배포 commit 확인이 남는다.
