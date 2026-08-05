@@ -838,3 +838,44 @@
 
 - 요청된 PTT 단일 표시 계약은 코드·자동·렌더·공개 Pages QA에서 통과했다.
 - 실제 사람 음성으로 STT·LLM까지 완료되는 공개 Pages smoke는 수동 QA로 남는다.
+
+## M5 PTT 키 표기·전달 상태·진행 잠금 단축
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA` + STT 모델 조사
+- 상태: 코드·자동·Browser QA PASS, Pages 재배포 전
+
+### 처리 내용
+
+- 대사 진행 잠금을 2초에서 1.5초로 단축했다. 대사·판정 응답·엔딩 모두 같은 `DelayedActionGate`를 사용한다.
+- 게임 내 대화·변신 주문·전투 PTT 버튼에 실제 전역 단축키 `(T)`를 표시했다. 포인터·Space/Enter·전역 T 동작과 `aria-keyshortcuts="T Space Enter"`는 유지한다.
+- release 뒤 처리 문구를 `판정 중…`에서 `목소리 전달 중…`으로 변경했다. 처리 중 `disabled`, `aria-busy=true` 계약은 유지한다.
+- 장면 selector는 일반 플레이 노출과 debug 헤더 이동 중 사용자 답이 없어 변경하지 않았다. 기존 `?debug=1` 우측 상단 selector만 유지한다.
+- 신규 외부 이미지·BGM·UI 에셋은 추가하지 않았다.
+
+### STT 모델 조사
+
+- 현재 공개 QA는 OpenAI 권장 파일 전사 모델 `gpt-transcribe`를 사용한다. Worker는 이미 `languages[]=ko`와 한국어·고유명사 prompt를 전달한다.
+- 정확도 우선 즉시 후보는 모델 교체보다 `keywords[]` 추가 후 한국어 발화 세트 CER/p50/p95 재측정이다.
+- `gpt-live-transcribe`는 저지연 live transcript 후보지만 Realtime WebSocket·오디오 스트리밍 전환이 필요해 현재 multipart Worker의 drop-in 교체가 아니다.
+- `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `whisper-1`은 API 대안이지만 최신 공식 가이드는 일반 파일 전사에 `gpt-transcribe`를 먼저 권장한다. 승인 없이 모델·Worker 경로를 변경하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 1.5초·`누르고 말하기 (T)`·`목소리 전달 중…` 계약 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 37 files, 159 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL·QA commit 주입 조건의 game-only QA build 성공 |
+| Browser PTT | PASS | 1280×720, `(T)`·`aria-keyshortcuts` 표시, 별도 상태 영역 0, 가로 overflow 0 |
+| Browser interaction | PASS | T release 뒤 `목소리 전달 중…`, disabled, `aria-busy=true`, `aria-pressed=false` |
+| Browser advance gate | PASS | 즉시·1.0초 waiting/disabled, 1.7초 ready/enabled, 연타 적용 1회 |
+| Browser console | 조건부 PASS | 앱 예외·framework overlay 0. 저장소 밖 하네스 origin의 의도된 `[ASSET_HANDOFF]` 경고만 발생 |
+
+### 현재 판정
+
+- 확정된 UI 변경은 구현·자동·렌더 QA를 통과했다.
+- 실제 한국어 음성 정확도·지연은 동일 발화 세트로 `gpt-transcribe + keywords`와 `gpt-live-transcribe`를 별도 비교해야 한다.
+- 장면 selector 노출 범위와 STT 실험안은 사용자 결정 전 보류한다.

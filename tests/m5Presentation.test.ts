@@ -11,6 +11,7 @@ import {
   resolveSceneBrand,
   resolveSttProviderControlVisibility,
   resolveVoiceInputPresentation,
+  VOICE_PROCESSING_LABEL,
   VOICE_TITLE_SUBTITLE,
 } from "../src/ui/gameView";
 
@@ -81,10 +82,11 @@ describe("M5 장면 표시 계약", () => {
 
   it("음성 입력은 별도 안내·상태 영역 없이 누르고 말하기 버튼만 표시한다", () => {
     expect(resolveVoiceInputPresentation()).toEqual({
-      buttonLabel: "누르고 말하기",
+      buttonLabel: "누르고 말하기 (T)",
       showInstruction: false,
       showStatusRegion: false,
     });
+    expect(VOICE_PROCESSING_LABEL).toBe("목소리 전달 중…");
   });
 
   it("ending 본문 뒤에 현재 전투 등급의 추가 대사만 붙인다", () => {

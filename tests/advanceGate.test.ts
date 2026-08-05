@@ -4,10 +4,11 @@ import {
   DelayedActionGate,
 } from "../src/ui/advanceGate";
 
-describe("대화 진행 2초 잠금", () => {
-  it("2초 전에는 진행하지 않고 이후 한 번만 진행한다", async () => {
+describe("대화 진행 1.5초 잠금", () => {
+  it("1.5초 전에는 진행하지 않고 이후 한 번만 진행한다", async () => {
     vi.useFakeTimers();
     try {
+      expect(DIALOGUE_ADVANCE_DELAY_MS).toBe(1_500);
       const readyStates: boolean[] = [];
       const action = vi.fn();
       const gate = new DelayedActionGate({

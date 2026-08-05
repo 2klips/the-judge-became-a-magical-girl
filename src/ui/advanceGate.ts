@@ -1,4 +1,4 @@
-export const DIALOGUE_ADVANCE_DELAY_MS = 2_000;
+export const DIALOGUE_ADVANCE_DELAY_MS = 1_500;
 
 interface DelayedActionGateOptions {
   delayMs: number;

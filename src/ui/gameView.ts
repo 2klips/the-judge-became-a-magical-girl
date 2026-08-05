@@ -92,14 +92,16 @@ export function resolveSttProviderControlVisibility(
 }
 
 export interface VoiceInputPresentation {
-  readonly buttonLabel: "누르고 말하기";
+  readonly buttonLabel: "누르고 말하기 (T)";
   readonly showInstruction: false;
   readonly showStatusRegion: false;
 }
 
+export const VOICE_PROCESSING_LABEL = "목소리 전달 중…";
+
 export function resolveVoiceInputPresentation(): VoiceInputPresentation {
   return {
-    buttonLabel: "누르고 말하기",
+    buttonLabel: "누르고 말하기 (T)",
     showInstruction: false,
     showStatusRegion: false,
   };
@@ -306,13 +308,13 @@ function isEditableKeyboardTarget(target: EventTarget | null): boolean {
 type PttButtonState = "idle" | "listening" | "processing";
 
 function setPttButtonState(button: HTMLButtonElement, state: PttButtonState): void {
-  const idleLabel = button.dataset.idleLabel ?? "누르고 말하기";
+  const idleLabel = button.dataset.idleLabel ?? "누르고 말하기 (T)";
   button.dataset.voiceState = state;
   button.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
   button.disabled = state === "processing";
   if (state === "processing") {
     button.setAttribute("aria-busy", "true");
-    button.textContent = "판정 중…";
+    button.textContent = VOICE_PROCESSING_LABEL;
     return;
   }
   button.removeAttribute("aria-busy");
@@ -707,7 +709,7 @@ export class GameView {
 
     if (state.inputMode === "voice" && options.speechSupported) {
       const controls = element("div", "voice-controls");
-      const ptt = element("button", "ptt-button", "누르고 주문 읽기");
+      const ptt = element("button", "ptt-button", "누르고 주문 읽기 (T)");
       ptt.type = "button";
       ptt.setAttribute("aria-pressed", "false");
       const provider = this.providerControl(options);
@@ -850,8 +852,8 @@ export class GameView {
 
     if (state.inputMode === "voice" && options.speechSupported) {
       const controls = element("div", "battle-actions");
-      const spell = element("button", "ptt-button", "주문 · 누르고 말하기");
-      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기");
+      const spell = element("button", "ptt-button", "주문 · 누르고 말하기 (T)");
+      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 (T)");
       const guard = element("button", "secondary-button", "버티기 +3");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
@@ -1596,7 +1598,7 @@ export class GameView {
   ): void {
     let capturing = false;
     button.setAttribute("aria-keyshortcuts", "T Space Enter");
-    button.dataset.idleLabel = button.textContent ?? "누르고 말하기";
+    button.dataset.idleLabel = button.textContent ?? "누르고 말하기 (T)";
     const begin = async (): Promise<void> => {
       if (capturing) return;
       capturing = true;
