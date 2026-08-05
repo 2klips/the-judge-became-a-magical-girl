@@ -383,23 +383,13 @@ button {
 }
 
 .provider-select {
-  min-height: 38px;
+  min-height: 48px;
   padding: 7px 26px 7px 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 10px;
   color: #fff8df;
   background: #2b213e;
   font: inherit;
-}
-
-.provider-value {
-  min-height: 38px;
-  padding: 9px 12px;
-  border: 1px solid rgba(126, 249, 214, 0.3);
-  border-radius: 10px;
-  color: #bfffe9;
-  background: rgba(15, 54, 51, 0.72);
-  font-weight: 700;
 }
 
 .voice-controls {
@@ -1984,7 +1974,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   --vn-panel: rgba(13, 14, 27, 0.93);
   --vn-panel-soft: rgba(20, 21, 38, 0.88);
   --vn-border: rgba(255, 255, 255, 0.28);
-  --vn-juno: #76d8f4;
+  --vn-juno: #ffd84d;
   --vn-doyun: #ff8db6;
   --vn-wraith: #b79cff;
   --vn-voice: #ffd27a;
@@ -2104,7 +2094,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
 
 .dialogue-tone-juno {
   --dialogue-accent: var(--vn-juno);
-  --dialogue-surface: rgba(8, 27, 42, 0.93);
+  --dialogue-surface: rgba(43, 34, 10, 0.94);
 }
 
 .dialogue-tone-doyun {

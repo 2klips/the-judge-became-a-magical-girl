@@ -211,7 +211,7 @@ async function bootstrap(): Promise<void> {
         onProviderChange: (provider) => {
           sttProvider = provider;
           updateProviderQuery(provider);
-          renderCurrent(`${providerName(provider)} STT로 전환했어.`);
+          renderCurrent(`${providerName(provider)} 음성 인식으로 전환했어.`);
         },
       });
     };
@@ -415,7 +415,7 @@ async function bootstrap(): Promise<void> {
         onProviderChange: (provider) => {
           sttProvider = provider;
           updateProviderQuery(provider);
-          renderCurrent(`${providerName(provider)} STT로 전환했어.`);
+          renderCurrent(`${providerName(provider)} 음성 인식으로 전환했어.`);
         },
         onDebugMomentum: (momentum) => {
           engine.setBattleMomentumForDebug(momentum);
@@ -568,7 +568,7 @@ async function bootstrap(): Promise<void> {
             const failure = engine.recordSttTurnFailure();
             if (failure.forcedClickMode) {
               engine.setInputMode("click");
-              renderCurrent("STT 실패가 5회 누적돼 클릭 모드로 전환했어.");
+              renderCurrent("음성 인식 실패가 5회 누적돼 클릭 모드로 전환했어.");
             } else {
               renderCurrent(`${message} 이 턴은 클릭으로 진행해 줘.`, true);
             }
@@ -590,7 +590,7 @@ async function bootstrap(): Promise<void> {
           onProviderChange: (provider) => {
             sttProvider = provider;
             updateProviderQuery(provider);
-            renderCurrent(`${providerName(provider)} STT로 전환했어.`);
+            renderCurrent(`${providerName(provider)} 음성 인식으로 전환했어.`);
           },
         });
         return;

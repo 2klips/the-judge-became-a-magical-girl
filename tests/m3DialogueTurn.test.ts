@@ -1,18 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { afterTranscriptVisible } from "../src/engine/dialogueTurn";
+import { afterVoiceAccepted } from "../src/engine/dialogueTurn";
 
-describe("M3 transcript-first 턴 순서", () => {
-  it("화면 표시 완료 전에는 로컬/LLM 판정을 시작하지 않는다", async () => {
+describe("M3 음성 입력 완료 턴 순서", () => {
+  it("전사문을 UI에 넘기지 않고 입력 완료 상태 다음에 판정을 시작한다", async () => {
     const events: string[] = [];
     let finishPaint!: () => void;
     const painted = new Promise<void>((resolve) => {
       finishPaint = resolve;
     });
 
-    const turn = afterTranscriptVisible(
-      "내 말 먼저 보여 줘",
-      async (transcript) => {
-        events.push(`render:${transcript}`);
+    const turn = afterVoiceAccepted(
+      async () => {
+        events.push("accepted");
         await painted;
         events.push("painted");
       },
@@ -23,10 +22,10 @@ describe("M3 transcript-first 턴 순서", () => {
     );
 
     await Promise.resolve();
-    expect(events).toEqual(["render:내 말 먼저 보여 줘"]);
+    expect(events).toEqual(["accepted"]);
     finishPaint();
 
     await expect(turn).resolves.toBe("reply");
-    expect(events).toEqual(["render:내 말 먼저 보여 줘", "painted", "judge"]);
+    expect(events).toEqual(["accepted", "painted", "judge"]);
   });
 });

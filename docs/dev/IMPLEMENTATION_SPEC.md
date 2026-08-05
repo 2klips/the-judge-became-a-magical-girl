@@ -108,7 +108,7 @@ interface BattleState {
 한 턴의 고정 순서:
 
 ```text
-PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규화
+PTT release → 선택된 STT 전사 → UI에는 음성 입력 완료 상태만 표시 → 정규화
 → 로컬 intent 판정 → 미매칭이면 LLM 판정
 → 판정 검증/클램프 → 응답 연출 → 상태 적용 → 턴 증가 → 분기 평가
 ```
@@ -116,7 +116,7 @@ PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규�
 - `[확정, DEC-050]` 게임 내 PTT는 포인터·포커스된 Space/Enter와 전역 `T` 홀드/릴리스를 지원한다. 입력·선택 컨트롤 편집 중에는 전역 `T`를 가로채지 않는다.
 - `[확정, DEC-050]` 대사·판정 응답·엔딩의 다음 페이지 진행 버튼은 화면 렌더 후 2초 동안 비활성화하고, 준비 뒤 한 번만 진행한다.
 
-`[확정, DEC-051]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
+`[확정, DEC-051·054]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않으며 게임 UI에는 `STT`, `GPT · 고정`, 최종 transcript를 표시하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
 
 분기 우선순위:
 
@@ -272,5 +272,5 @@ main(composition root)
 - `[확정]` battle의 `spell` 입력만 보정된 dBFS 범위를 검사한다. 너무 작거나 큰 첫 실패는 턴을 보존하고, 같은 턴 두 번째 실패는 `failed-spell` `+0`으로 턴을 소비한다. `freeform`에는 음량 게이트를 적용하지 않는다.
 - `[확정]` 동일 배경 논리 ID는 재렌더만 하고 애니메이션하지 않는다. 논리 ID 변경에만 420ms crossfade를 적용한다.
 - `[확정, DEC-038]` `?debug=1&scene=<장면ID>`는 저장·FSM과 격리된 장면 프리뷰다. 정상 URL에는 선택기·프리뷰가 없다.
-- `[확정, DEC-053]` 본편 대화 UI는 화자별 색과 화면 방향을 갖는 하단 미연시 프레임이다. 주노·회색 망령은 좌측, 도윤은 우측, 익명 voice·내레이션은 중앙이며 내레이션 이름표는 렌더하지 않는다. 진행 버튼은 문구를 바꾸지 않고 렌더 후 2초 동안 disabled다. 상단에는 `?debug=1` 장면 선택기 외 상태·QA 표식을 렌더하지 않는다.
+- `[확정, DEC-053·054]` 본편 대화 UI는 화자별 색과 화면 방향을 갖는 하단 미연시 프레임이다. 주노는 yellow·좌측, 회색 망령은 violet·좌측, 도윤은 rose·우측, 익명 voice는 amber·중앙, 내레이션은 중립색·중앙이다. 내레이션은 이름표 없이 본문을 `(…)`로 표시한다. 진행 버튼은 문구를 바꾸지 않고 렌더 후 2초 동안 disabled다. 상단에는 `?debug=1` 장면 선택기 외 상태·QA 표식을 렌더하지 않는다. 고정 공급자와 최종 transcript도 표시하지 않는다.
 - `[제안]` 누락 에셋은 로더 진단에 포함하되 M1~M4 더미 placeholder 허용 여부는 마일스톤 계약을 따른다.

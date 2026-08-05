@@ -1,8 +1,7 @@
-export async function afterTranscriptVisible<T>(
-  transcript: string,
-  revealTranscript: (transcript: string) => void | Promise<void>,
+export async function afterVoiceAccepted<T>(
+  revealAccepted: () => void | Promise<void>,
   continueTurn: () => T | Promise<T>,
 ): Promise<T> {
-  await revealTranscript(transcript);
+  await revealAccepted();
   return continueTurn();
 }

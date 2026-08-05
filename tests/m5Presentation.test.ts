@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EndingNode } from "../src/data/schema";
 import {
+  formatDialogueText,
   resolveDialogueIdentity,
   resolveDialoguePresentation,
   resolveEndingLines,
@@ -8,6 +9,7 @@ import {
   resolveEndingVisual,
   resolveMissingAssetPresentation,
   resolveSceneBrand,
+  resolveSttProviderControlVisibility,
   VOICE_TITLE_SUBTITLE,
 } from "../src/ui/gameView";
 
@@ -63,6 +65,17 @@ describe("M5 장면 표시 계약", () => {
       tone: "voice",
       showName: true,
     });
+  });
+
+  it("내레이션만 소괄호로 감싸고 이미 감싼 문장은 중복 처리하지 않는다", () => {
+    expect(formatDialogueText("퇴근하고 싶다.", "narration")).toBe("(퇴근하고 싶다.)");
+    expect(formatDialogueText("(이미 감싼 독백)", "narration")).toBe("(이미 감싼 독백)");
+    expect(formatDialogueText("오늘은 같이 가자!", "juno")).toBe("오늘은 같이 가자!");
+  });
+
+  it("고정 STT 공급자는 내부 동작만 유지하고 UI 표시는 숨긴다", () => {
+    expect(resolveSttProviderControlVisibility(true)).toBe("hidden");
+    expect(resolveSttProviderControlVisibility(false)).toBe("select");
   });
 
   it("ending 본문 뒤에 현재 전투 등급의 추가 대사만 붙인다", () => {

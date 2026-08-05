@@ -42,7 +42,7 @@ import {
   PushToTalkShortcutController,
   type PushToTalkShortcutBinding,
 } from "../input/keyboardPtt";
-import { afterTranscriptVisible } from "../engine/dialogueTurn";
+import { afterVoiceAccepted } from "../engine/dialogueTurn";
 import type { GameState, InputMode } from "../state";
 import { CaptionsView } from "./captions";
 import { MicIndicatorView } from "./micIndicator";
@@ -78,6 +78,20 @@ export function resolveDialoguePresentation(speakerId: string): DialoguePresenta
     default:
       return { side: "center", tone: "voice", showName: true };
   }
+}
+
+export function formatDialogueText(text: string, speakerId: string): string {
+  if (speakerId !== "narration") return text;
+  const normalized = text.trim();
+  return normalized.startsWith("(") && normalized.endsWith(")")
+    ? normalized
+    : `(${normalized})`;
+}
+
+export function resolveSttProviderControlVisibility(
+  lockSttProvider: boolean,
+): "hidden" | "select" {
+  return lockSttProvider ? "hidden" : "select";
 }
 
 export interface MissingAssetPresentation {
@@ -675,14 +689,16 @@ export class GameView {
       ptt.type = "button";
       ptt.setAttribute("aria-pressed", "false");
       const provider = this.providerControl(options);
-      controls.append(indicator.element, ptt, provider, fallback);
+      controls.append(indicator.element, ptt);
+      if (provider) controls.append(provider);
+      controls.append(fallback);
       inputArea.append(captions.element, controls);
       this.bindHoldToTalk(ptt, captions, indicator, options, async (transcript) => {
         await options.onTranscript(transcript.text);
       });
       const utilities = element("div", "input-utilities");
       this.appendDebugTranscript(utilities, async (transcript) => {
-        captions.showFinal(transcript);
+        captions.showAccepted();
         await nextPaint();
         await options.onTranscript(transcript);
       });
@@ -822,7 +838,9 @@ export class GameView {
       const guard = element("button", "secondary-button", "버티기 +3");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
-      controls.append(indicator.element, spell, freeform, guard, this.providerControl(options));
+      controls.append(indicator.element, spell, freeform, guard);
+      const provider = this.providerControl(options);
+      if (provider) controls.append(provider);
       command.append(controls);
       this.bindHoldToTalk(spell, captions, indicator, options, (transcript) =>
         options.onTranscript("spell", transcript.text, transcript.audioLevel),
@@ -864,7 +882,7 @@ export class GameView {
     }
     const utilities = element("div", "input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
-      captions.showFinal(transcript);
+      captions.showAccepted();
       await nextPaint();
       await options.onTranscript("spell", transcript);
     });
@@ -915,7 +933,9 @@ export class GameView {
       createGauge("MOMENTUM", options.battleState.momentum, 20, 100),
       this.dialoguePanel(options.enemyName, options.reply, "gray_wraith"),
     );
-    if (options.narration) card.append(element("p", "ending-line", options.narration));
+    if (options.narration) {
+      card.append(element("p", "ending-line", formatDialogueText(options.narration, "narration")));
+    }
     const button = this.delayedAdvanceButton(
       "primary-button",
       options.completed ? `${options.grade} 등급으로 수렴` : "다음 행동",
@@ -1075,7 +1095,8 @@ export class GameView {
           page.line.speaker === "narration"
             ? ""
             : `${characterNames.get(page.line.speaker) ?? page.line.speaker} · `;
-        card.append(element("p", "ending-line", `${speaker}${page.line.text}`));
+        const lineText = formatDialogueText(page.line.text, page.line.speaker);
+        card.append(element("p", "ending-line", `${speaker}${lineText}`));
       }
 
       const button = page.isLast
@@ -1299,7 +1320,7 @@ export class GameView {
     panel.dataset.speaker = speakerId;
     panel.setAttribute("aria-live", "polite");
     if (presentation.showName) panel.append(element("div", "nameplate", speaker));
-    panel.append(element("p", "dialogue-text", text));
+    panel.append(element("p", "dialogue-text", formatDialogueText(text, speakerId)));
     return panel;
   }
 
@@ -1336,8 +1357,8 @@ export class GameView {
         "span",
         "muted",
         state
-          ? `STT 실패 ${state.sttFailCount}/5 · LLM 실패 ${state.llmFailCount}/3`
-          : "STT 우선 · 클릭 폴백",
+          ? `음성 실패 ${state.sttFailCount}/5 · 응답 실패 ${state.llmFailCount}/3`
+          : "음성 우선 · 클릭 폴백",
       ),
     );
     return status;
@@ -1453,7 +1474,9 @@ export class GameView {
       options.onModeChange("click");
     });
     const provider = this.providerControl(options);
-    controls.append(indicator.element, ptt, provider, clickButton);
+    controls.append(indicator.element, ptt);
+    if (provider) controls.append(provider);
+    controls.append(clickButton);
     container.append(captions.element, controls);
 
     let capturing = false;
@@ -1492,7 +1515,7 @@ export class GameView {
       }
       capturing = false;
       indicator.setState("processing");
-      captions.showMessage(`${sttProviderLabel(options.sttProvider)} 전사 중…`);
+      captions.showMessage("음성 인식 중…");
       const result = await options.finishCapture();
       if (!this.root.contains(container)) return;
       ptt.setAttribute("aria-pressed", "false");
@@ -1525,10 +1548,9 @@ export class GameView {
     this.appendDebugTranscript(utilities, async (transcript) => {
       options.cancel();
       indicator.setState("processing", "debug transcript");
-      const handled = await afterTranscriptVisible(
-        transcript,
-        async (visibleTranscript) => {
-          captions.showFinal(visibleTranscript);
+      const handled = await afterVoiceAccepted(
+        async () => {
+          captions.showAccepted();
           await nextPaint();
         },
         () => options.onTranscript(transcript),
@@ -1549,10 +1571,9 @@ export class GameView {
   ): Promise<void> {
     if (result.kind === "transcript") {
       indicator.setState("processing", "전사 확인");
-      const handled = await afterTranscriptVisible(
-        result.transcript,
-        async (transcript) => {
-          captions.showFinal(transcript);
+      const handled = await afterVoiceAccepted(
+        async () => {
+          captions.showAccepted();
           await nextPaint();
         },
         () => options.onTranscript(result.transcript),
@@ -1565,18 +1586,15 @@ export class GameView {
     if (result.kind === "error") {
       const message = formatVoiceInputError(result.error);
       captions.showMessage(message);
-      indicator.setState("error", "STT");
+      indicator.setState("error", "음성 인식");
       options.onTurnFailed(message);
     }
   }
 
-  private providerControl(options: SharedVoiceOptions): HTMLLabelElement {
+  private providerControl(options: SharedVoiceOptions): HTMLLabelElement | null {
+    if (resolveSttProviderControlVisibility(this.lockSttProvider) === "hidden") return null;
     const provider = element("label", "provider-control");
-    provider.append(element("span", undefined, "STT"));
-    if (this.lockSttProvider) {
-      provider.append(element("span", "provider-value", `${sttProviderLabel(options.sttProvider)} · 고정`));
-      return provider;
-    }
+    provider.append(element("span", undefined, "음성 인식"));
     const select = element("select", "provider-select");
     for (const id of ["openai", "gemini"] as const) {
       const option = element("option", undefined, sttProviderLabel(id));
@@ -1628,14 +1646,14 @@ export class GameView {
       if (!capturing) return;
       capturing = false;
       indicator.setState("processing");
-      captions.showMessage(`${sttProviderLabel(options.sttProvider)} 전사 중…`);
+      captions.showMessage("음성 인식 중…");
       const result = await options.finishCapture();
       button.setAttribute("aria-pressed", "false");
       button.textContent = button.dataset.idleLabel ?? "누르고 말하기";
       if (result.kind === "error") {
         const message = formatVoiceInputError(result.error);
         captions.showMessage(message);
-        indicator.setState("error", "STT");
+        indicator.setState("error", "음성 인식");
         options.onTurnFailed(message);
         return;
       }
@@ -1645,10 +1663,9 @@ export class GameView {
         return;
       }
       indicator.setState("processing", "전사 확인");
-      await afterTranscriptVisible(
-        result.transcript,
-        async (transcript) => {
-          captions.showFinal(transcript);
+      await afterVoiceAccepted(
+        async () => {
+          captions.showAccepted();
           await nextPaint();
         },
         () => onTranscript({ text: result.transcript, audioLevel: result.audioLevel }),

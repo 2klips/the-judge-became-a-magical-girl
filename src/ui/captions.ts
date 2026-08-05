@@ -7,8 +7,8 @@ function paragraph(className: string, text: string): HTMLParagraphElement {
 
 export class CaptionsView {
   readonly element = document.createElement("section");
-  private readonly label = paragraph("caption-label", "최종 transcript");
-  private readonly text = paragraph("caption-text", "버튼을 놓으면 전사문이 먼저 표시돼.");
+  private readonly label = paragraph("caption-label", "음성 입력");
+  private readonly text = paragraph("caption-text", "버튼 또는 T 키를 누른 채 말해 줘.");
 
   constructor() {
     this.element.className = "captions";
@@ -22,10 +22,10 @@ export class CaptionsView {
     this.text.textContent = transcript || "…";
   }
 
-  showFinal(transcript: string): void {
-    this.element.dataset.state = "final";
-    this.label.textContent = "인식 완료 · final";
-    this.text.textContent = transcript;
+  showAccepted(): void {
+    this.element.dataset.state = "accepted";
+    this.label.textContent = "음성 입력 완료";
+    this.text.textContent = "응답 판정 중…";
   }
 
   showMessage(message: string): void {

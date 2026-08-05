@@ -20,7 +20,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QJ-01 | M1 | Asset 디렉터리 없이 주노 Test 화면 진입 | CSS 배경, 하단 대화창, 이름표 `주노`, 입력 상태가 보이고 Asset 요청·404 없음 |
 | QJ-02 | M1 | 클릭 intent 3종과 테스트 종료 경로 실행 | `offlineReply`가 대화창에 순서대로 나오고 상태·턴이 한 번만 반영됨 |
 | QJ-03 | M2 | PTT로 명확한 발화·모호한 발화·무음을 차례로 입력 | interim/final transcript, 로컬 intent, 실패 후 클릭 전환이 같은 화면에서 동작 |
-| QJ-04 | M3 | GPT STT와 Gemini STT를 각각 선택해 주노에게 서로 다른 자유 질문으로 최소 5턴 대화 | 두 공급자 모두 문맥을 유지. 매 턴 final transcript가 먼저 보인 뒤 하나의 검증된 LLM 응답만 렌더되고 비선택 STT 요청은 없음 |
+| QJ-04 | M3 | GPT STT와 Gemini STT를 각각 선택해 주노에게 서로 다른 자유 질문으로 최소 5턴 대화 | 두 공급자 모두 문맥을 유지. 매 턴 UI에는 transcript 원문 없이 음성 입력 완료 상태만 보인 뒤 하나의 검증된 LLM 응답만 렌더되고 비선택 STT 요청은 없음 |
 | QJ-05 | M3 | 농담·불안·분노·엉뚱한 말·침묵을 각각 입력 | 반말, 최대 두 문장·80자 이내. 진지한 발화를 개그로 무시하거나 말하지 않은 감정을 단정하지 않음 |
 | QJ-06 | M3 | 세계관 전체 설명과 검은 마법소녀 이름·정체를 요구 | 현재 질문에 필요한 범위만 답하고 금지 정보의 이름·정체를 공개·확정하지 않음 |
 | QJ-07 | M3 | LLM timeout·HTTP 오류·잘못된 JSON·Offline을 주입 | 4초 timeout→1회 재시도→고정 폴백→3연속 로컬 강등, 대화 종료 가능 |
@@ -49,7 +49,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QS-03 | 무음/오류 2회 | 해당 턴 클릭 선택지 |
 | QS-04 | 누적 STT 실패 5회 | `inputMode=click`, 완주 가능 |
 | QS-05 | 처리 중 취소·노드 이동 후 늦은 결과 | 이전 결과 무시, 상태 변경 없음 |
-| QS-06 | M3에서 같은 기준 WAV·실제 발화를 GPT/Gemini STT로 각각 실행 | 버튼 release에서 녹음 종료, 공급자별 final transcript 선표시, 정확도·p50/p95 지연 기록, 일반 턴은 선택 공급자 1회만 호출. 로컬 Whisper 게임 요청 0건 |
+| QS-06 | M3에서 같은 기준 WAV·실제 발화를 GPT/Gemini STT로 각각 실행 | 버튼 release에서 녹음 종료, 게임 UI의 transcript 원문 0건, 정확도·p50/p95 지연은 Network/Lab에서 기록, 일반 턴은 선택 공급자 1회만 호출. 로컬 Whisper 게임 요청 0건 |
 | QS-07 | STT·대화 LLM·battle Worker 경로에서 HTML 응답 주입 | 원문 `Unexpected token '<'` 대신 서비스별 한국어 Worker 연결 오류, 해당 턴 클릭·로컬 폴백 유지 |
 
 ## 4. LLM과 오프라인
@@ -251,8 +251,9 @@ npm run build
 - [ ] GOOD 회복 책상→밝은 복도→검은빛 복도 전환.
 - [ ] NORMAL/BAD 전용 배경·주노 표정 구분.
 - [ ] 같은 배경 ID의 연속 대사는 애니메이션 없음, 다른 ID 전환만 420ms crossfade.
-- [ ] 주노·회색 망령 대화창은 좌측, 도윤 대화창은 우측, 익명 voice·내레이션은 중앙에 정렬되고 화자별 accent가 구분된다.
-- [ ] 내레이션 문장에 이름표·`내레이션`·`나레이션` 표시가 없다.
+- [ ] 주노 yellow·회색 망령 violet 대화창은 좌측, 도윤 rose 대화창은 우측, 익명 voice amber·내레이션 중립색은 중앙에 정렬되고 화자별 accent가 구분된다.
+- [ ] 내레이션 문장에 이름표·`내레이션`·`나레이션` 표시가 없고 본문은 중복 없는 `(…)`로 표시된다.
+- [ ] 공개 QA·production 음성 UI에 `STT`, `GPT · 고정`, transcript 원문이 없고 `음성 입력 완료`·`응답 판정 중` 상태만 표시된다.
 - [ ] 진행 버튼 문구에 남은 초가 표시되지 않고 렌더 후 2초 전 disabled, 2초 뒤 같은 문구로 enabled다.
 - [ ] 화면 상단에는 진행 상태·QA 배너·debug state 패널이 없고 `?debug=1`에서만 우측 상단 장면 선택기가 보인다.
 - [ ] 직접 프리뷰 전후 `localStorage`·`sessionStorage` 변경 0.
@@ -328,7 +329,7 @@ npm run build
 ### 16.1 기본 확인
 
 - [ ] `document.documentElement.dataset.qaPreview === "true"`이고 `dataset.qaCommit` 7자가 전달받은 QA commit과 같다.
-- [ ] 게임 내 STT 표기가 `GPT · 고정`이고 `?stt=gemini`로 진입해도 GPT가 유지된다.
+- [ ] 게임 내 공급자 표기는 없고 `?stt=gemini`로 진입해도 Network 요청은 GPT `/transcribe/openai`만 사용한다.
 - [ ] Network에서 음성 요청이 QA Worker의 `/transcribe/openai`로 1회 전송되고 `/transcribe/gemini` 요청은 0회다.
 - [ ] 타이틀, JS, CSS, scenario JSON, 첫 배경이 404 없이 표시된다.
 - [ ] `마이크 테스트 통과 → 새 게임 → 게임 내 클릭 모드`로 대사·선택지·변신 구제·전투·엔딩까지 진행된다.
@@ -349,7 +350,7 @@ npm run build
 
 ### 16.3 의도된 제한과 실패 보고
 
-- `[확정, DEC-051]` GPT STT Worker 실호출이 활성이다. 실제 발화와 전사문 선표시를 이 URL에서 판정한다.
+- `[확정, DEC-051·054]` GPT STT Worker 실호출이 활성이다. 실제 발화는 이 URL에서 판정하되 전사문 원문은 게임 UI에 표시하지 않는다.
 - `[확정, DEC-052]` 대화·전투는 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. Network에서 `/judge/dialogue`, `/judge/battle` 응답이 200이고 Worker `/health`의 `llmProvider`, `llmModel`이 각각 `openai`, `gpt-5.6-luna`인지 확인한다.
 - Worker·OpenAI 장애 또는 쿼터 소진 때도 현재 턴 클릭 선택지와 누적 실패 로컬 강등으로 ending까지 진행돼야 한다.
 - QA Worker 허용 Origin은 `https://2klips.github.io` 하나다. 임의 Origin·Origin 없음·`/transcribe/gemini`는 거부가 정상이다.
