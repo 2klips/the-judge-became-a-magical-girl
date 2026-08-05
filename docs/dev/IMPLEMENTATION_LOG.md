@@ -735,7 +735,7 @@
 
 - 실행일: 2026-08-05
 - 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
-- 상태: 코드·자동·Browser QA PASS. Pages 재배포 확인 대기
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
 
 ### 처리 내용
 
@@ -759,8 +759,10 @@
 | Browser mobile | PASS | 390×844, 가로 overflow 0, 마이크 연결 버튼 첫 화면 노출, 세로 스크롤 정상 |
 | Browser debug | PASS | 우측 상단 `DEBUG` 선택기만 표시, N2→N3 전환·URL·선택값 갱신 |
 | QA artifact | PASS | `data-qa-preview=true`, `noindex,nofollow`, 비밀 입력 UI 0, 타이틀 렌더 정상 |
+| Pages workflow | PASS | run `31004896656`, commit `93dae99`, check/test/build·artifact 경계·배포 성공 |
+| 공개 Pages | PASS | commit `93dae99`, 1280×720 overflow 0, 시작 버튼 완전 노출, 상단 상태·QA 배너·일반 화면 debug 선택기 0 |
 
 ### 현재 판정
 
 - 요청된 UI 계약은 구현·검증됐다. 실제 마이크 권한과 사람 음성 STT는 브라우저 자동화에서 대신 승인하지 않았으므로 기존 수동 QA 항목으로 유지한다.
-- 공개 Pages는 이 변경 commit 푸시 뒤 워크플로 성공과 배포 화면을 다시 확인해야 한다.
+- 공개 Pages 재배포와 브라우저 확인까지 완료됐다. Actions에 Node 20 폐기 예정 경고가 있으나 GitHub가 Node 24로 강제 실행해 현재 build·deploy에는 영향이 없다.
