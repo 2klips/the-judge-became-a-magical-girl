@@ -59,6 +59,27 @@ export interface DialogueIdentity {
   brand: string;
 }
 
+export interface DialoguePresentation {
+  readonly side: "left" | "right" | "center";
+  readonly tone: "juno" | "doyun" | "wraith" | "voice" | "narration";
+  readonly showName: boolean;
+}
+
+export function resolveDialoguePresentation(speakerId: string): DialoguePresentation {
+  switch (speakerId) {
+    case "juno":
+      return { side: "left", tone: "juno", showName: true };
+    case "doyun":
+      return { side: "right", tone: "doyun", showName: true };
+    case "gray_wraith":
+      return { side: "left", tone: "wraith", showName: true };
+    case "narration":
+      return { side: "center", tone: "narration", showName: false };
+    default:
+      return { side: "center", tone: "voice", showName: true };
+  }
+}
+
 export interface MissingAssetPresentation {
   readonly className: "asset-black-placeholder";
   readonly ariaLabel: string;
@@ -548,14 +569,6 @@ export class GameView {
         lineIndex: options.lineIndex,
       }),
     );
-    shell.append(
-      this.topStatus(
-        options.state,
-        options.progress,
-        resolveSceneBrand(options.nodeId),
-      ),
-    );
-
     const doyunVisual = resolveDoyunVisual({
       kind: "node",
       nodeId: options.nodeId,
@@ -598,18 +611,18 @@ export class GameView {
       );
     }
 
-    const panel = this.dialoguePanel(options.speaker, options.text);
+    const panel = this.dialoguePanel(
+      options.speaker,
+      options.text,
+      options.speakerId ?? "narration",
+    );
     const button = this.delayedAdvanceButton(
       "primary-button compact",
       options.continueLabel,
       options.onContinue,
     );
     panel.append(button);
-    shell.append(
-      panel,
-      this.inputStatus(options.state),
-      this.debugPanel(options.state),
-    );
+    shell.append(panel, this.inputStatus(options.state));
     this.commit(shell);
   }
 
@@ -629,7 +642,6 @@ export class GameView {
     );
     shell.classList.add("incantation-screen");
     shell.append(
-      this.topStatus(state, `변신 주문 ${options.attempt}/${gate.maxAttempts}`),
       this.createAssetVisual(
         resolveDoyunVisual({ kind: "node", nodeId: node.nodeId, stage: "incantation" }) ??
           "doyun.normal_shy",
@@ -685,7 +697,7 @@ export class GameView {
       }
     }
     card.append(inputArea);
-    shell.append(card, this.inputStatus(state), this.debugPanel(state));
+    shell.append(card, this.inputStatus(state));
     this.commit(shell);
   }
 
@@ -737,7 +749,7 @@ export class GameView {
       options.onContinue,
     );
     card.append(button);
-    shell.append(card, this.inputStatus(options.state), this.debugPanel(options.state));
+    shell.append(card, this.inputStatus(options.state));
     this.commit(shell);
   }
 
@@ -757,12 +769,6 @@ export class GameView {
       }),
     );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
-    shell.append(
-      this.topStatus(
-        state,
-        `전투 ${battleState.phaseIndex + 1}/3 · 턴 ${battleState.phaseTurn + 1}/${phase.maxTurns}`,
-      ),
-    );
     const arena = element("section", "battle-arena");
     const visualStage = element("section", "battle-visual-stage");
     visualStage.setAttribute("aria-label", "전투 인물");
@@ -864,7 +870,7 @@ export class GameView {
     });
     command.append(utilities, this.battleDebugControls(options, battleState));
     arena.append(command);
-    shell.append(arena, this.inputStatus(state), this.debugPanel(state));
+    shell.append(arena, this.inputStatus(state));
     this.commit(shell);
   }
 
@@ -885,12 +891,6 @@ export class GameView {
     const shell = this.createShell(options.sceneId);
     shell.classList.add("battle-screen");
     applySceneEffect(shell, options.effect);
-    shell.append(
-      this.topStatus(
-        options.state,
-        options.completed ? `전투 종료 · ${options.grade} 등급` : `전투 ${options.battleState.phaseIndex + 1}/3`,
-      ),
-    );
     const card = element("section", "battle-result-card");
     card.append(
       this.createAssetVisual(
@@ -913,7 +913,7 @@ export class GameView {
     card.append(
       element("p", "player-line", `도윤 · ${options.actionLabel}`),
       createGauge("MOMENTUM", options.battleState.momentum, 20, 100),
-      this.dialoguePanel(options.enemyName, options.reply),
+      this.dialoguePanel(options.enemyName, options.reply, "gray_wraith"),
     );
     if (options.narration) card.append(element("p", "ending-line", options.narration));
     const button = this.delayedAdvanceButton(
@@ -922,7 +922,7 @@ export class GameView {
       options.onContinue,
     );
     card.append(button);
-    shell.append(card, this.inputStatus(options.state), this.debugPanel(options.state));
+    shell.append(card, this.inputStatus(options.state));
     this.commit(shell);
   }
 
@@ -941,13 +941,6 @@ export class GameView {
       }),
     );
     const identity = resolveDialogueIdentity(node.nodeId, character.name);
-    shell.append(
-      this.topStatus(
-        state,
-        `대화 ${state.nodeTurn + 1}/${node.maxTurns}`,
-        identity.brand,
-      ),
-    );
     this.appendDialogueVisuals(
       shell,
       node.nodeId,
@@ -955,7 +948,11 @@ export class GameView {
       node.npc.startEmotion,
     );
 
-    const panel = this.dialoguePanel(identity.speaker, node.opening);
+    const panel = this.dialoguePanel(
+      identity.speaker,
+      node.opening,
+      node.nodeId === "n1_first_voice" ? "voice" : character.id,
+    );
     const inputArea = element("section", "dialogue-input");
     inputArea.dataset.inputMode = state.inputMode;
     panel.append(inputArea);
@@ -976,7 +973,7 @@ export class GameView {
       );
     }
 
-    shell.append(panel, this.inputStatus(state), this.debugPanel(state));
+    shell.append(panel, this.inputStatus(state));
     this.commit(shell);
   }
 
@@ -1001,13 +998,6 @@ export class GameView {
       }),
     );
     const identity = resolveDialogueIdentity(options.nodeId, options.speaker);
-    shell.append(
-      this.topStatus(
-        options.state,
-        `누적 ${options.state.totalTurn}턴`,
-        identity.brand,
-      ),
-    );
     this.appendDialogueVisuals(
       shell,
       options.nodeId,
@@ -1015,7 +1005,11 @@ export class GameView {
       options.emotion,
       options.intentId,
     );
-    const panel = this.dialoguePanel(identity.speaker, options.reply);
+    const panel = this.dialoguePanel(
+      identity.speaker,
+      options.reply,
+      options.nodeId === "n1_first_voice" ? "voice" : options.characterId,
+    );
     panel.insertBefore(
       element("p", "player-line", `도윤 · ${options.selectedLabel}`),
       panel.firstChild,
@@ -1026,11 +1020,7 @@ export class GameView {
       options.onContinue,
     );
     panel.append(button);
-    shell.append(
-      panel,
-      this.inputStatus(options.state),
-      this.debugPanel(options.state),
-    );
+    shell.append(panel, this.inputStatus(options.state));
     this.commit(shell);
   }
 
@@ -1106,7 +1096,7 @@ export class GameView {
         button.addEventListener("click", onNewGame, { once: true });
       }
       card.append(button);
-      shell.append(card, this.debugPanel(state));
+      shell.append(card);
       this.commit(shell);
     };
 
@@ -1300,27 +1290,16 @@ export class GameView {
     return figure;
   }
 
-  private topStatus(
-    state: GameState,
-    progress: string,
-    brand = "JUNO // LINK",
-  ): HTMLElement {
-    const status = element("header", "top-status");
-    status.append(
-      element("span", "brand-mark", brand),
-      element("span", "status-chip", `호감도 ${state.affinity}`),
-      element("span", "status-chip", progress),
+  private dialoguePanel(speaker: string, text: string, speakerId: string): HTMLElement {
+    const presentation = resolveDialoguePresentation(speakerId);
+    const panel = element(
+      "section",
+      `dialogue-panel dialogue-side-${presentation.side} dialogue-tone-${presentation.tone}`,
     );
-    return status;
-  }
-
-  private dialoguePanel(speaker: string, text: string): HTMLElement {
-    const panel = element("section", "dialogue-panel");
+    panel.dataset.speaker = speakerId;
     panel.setAttribute("aria-live", "polite");
-    panel.append(
-      element("div", "nameplate", speaker),
-      element("p", "dialogue-text", text),
-    );
+    if (presentation.showName) panel.append(element("div", "nameplate", speaker));
+    panel.append(element("p", "dialogue-text", text));
     return panel;
   }
 
@@ -1329,14 +1308,15 @@ export class GameView {
     label: string,
     onContinue: () => void,
   ): HTMLButtonElement {
-    const button = element("button", className, `${label} · 2초 후`);
+    const button = element("button", className, label);
     button.type = "button";
     button.disabled = true;
+    button.dataset.advanceState = "waiting";
     const gate = new DelayedActionGate({
       delayMs: DIALOGUE_ADVANCE_DELAY_MS,
       onReadyChange: (ready) => {
         button.disabled = !ready;
-        button.textContent = ready ? label : `${label} · 2초 후`;
+        button.dataset.advanceState = ready ? "ready" : "waiting";
       },
       onAction: onContinue,
     });
@@ -1363,26 +1343,6 @@ export class GameView {
     return status;
   }
 
-  private debugPanel(state: GameState): HTMLElement {
-    if (!this.debugEnabled) {
-      return element("div", "debug-panel hidden");
-    }
-    const panel = element("details", "debug-panel") as HTMLDetailsElement;
-    panel.open = true;
-    panel.append(element("summary", undefined, "M5 상태"));
-    const output = element("pre");
-    output.textContent = JSON.stringify(
-      {
-        ...state,
-        flags: [...state.flags],
-      },
-      null,
-      2,
-    );
-    panel.append(output);
-    return panel;
-  }
-
   private commit(shell: HTMLElement): void {
     this.keyboardPtt.cancel();
     if (this.debugEnabled) {
@@ -1395,7 +1355,7 @@ export class GameView {
   private devSceneNavigator(): HTMLElement {
     const nav = element("aside", "dev-scene-nav");
     nav.setAttribute("aria-label", "M5 장면 선택기");
-    const label = element("label", undefined, "DEV 장면");
+    const label = element("label", undefined, "DEBUG");
     const select = element("select");
     select.name = "devScene";
     const game = element("option", undefined, "실제 플레이");
@@ -1745,7 +1705,7 @@ export class GameView {
     options: BattleInputOptions,
     battleState: BattleState,
   ): HTMLElement {
-    if (!this.debugEnabled) return element("div", "debug-panel hidden");
+    if (!this.debugEnabled) return element("div", "hidden");
     const panel = element("section", "battle-debug");
     const momentum = element("input");
     momentum.type = "number";

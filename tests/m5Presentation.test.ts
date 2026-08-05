@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { EndingNode } from "../src/data/schema";
 import {
   resolveDialogueIdentity,
+  resolveDialoguePresentation,
   resolveEndingLines,
   resolveEndingPages,
   resolveEndingVisual,
@@ -34,6 +35,34 @@ describe("M5 장면 표시 계약", () => {
     expect(resolveSceneBrand("n0_review")).toBe("VOICE // LINK");
     expect(resolveSceneBrand("n1_first_voice")).toBe("VOICE // LINK");
     expect(resolveSceneBrand("n2_juno_intro")).toBe("JUNO // LINK");
+  });
+
+  it("화자별 미연시 대화창 방향·색상과 무기명 내레이션을 고정한다", () => {
+    expect(resolveDialoguePresentation("juno")).toEqual({
+      side: "left",
+      tone: "juno",
+      showName: true,
+    });
+    expect(resolveDialoguePresentation("doyun")).toEqual({
+      side: "right",
+      tone: "doyun",
+      showName: true,
+    });
+    expect(resolveDialoguePresentation("gray_wraith")).toEqual({
+      side: "left",
+      tone: "wraith",
+      showName: true,
+    });
+    expect(resolveDialoguePresentation("narration")).toEqual({
+      side: "center",
+      tone: "narration",
+      showName: false,
+    });
+    expect(resolveDialoguePresentation("voice")).toEqual({
+      side: "center",
+      tone: "voice",
+      showName: true,
+    });
   });
 
   it("ending 본문 뒤에 현재 전투 등급의 추가 대사만 붙인다", () => {

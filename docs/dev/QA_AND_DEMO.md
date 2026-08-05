@@ -251,6 +251,10 @@ npm run build
 - [ ] GOOD 회복 책상→밝은 복도→검은빛 복도 전환.
 - [ ] NORMAL/BAD 전용 배경·주노 표정 구분.
 - [ ] 같은 배경 ID의 연속 대사는 애니메이션 없음, 다른 ID 전환만 420ms crossfade.
+- [ ] 주노·회색 망령 대화창은 좌측, 도윤 대화창은 우측, 익명 voice·내레이션은 중앙에 정렬되고 화자별 accent가 구분된다.
+- [ ] 내레이션 문장에 이름표·`내레이션`·`나레이션` 표시가 없다.
+- [ ] 진행 버튼 문구에 남은 초가 표시되지 않고 렌더 후 2초 전 disabled, 2초 뒤 같은 문구로 enabled다.
+- [ ] 화면 상단에는 진행 상태·QA 배너·debug state 패널이 없고 `?debug=1`에서만 우측 상단 장면 선택기가 보인다.
 - [ ] 직접 프리뷰 전후 `localStorage`·`sessionStorage` 변경 0.
 - [ ] console error 0. 누락 에셋 경고만 허용.
 
@@ -319,11 +323,11 @@ npm run build
 
 ## 16. M5 임시 QA Pages 작업자 가이드
 
-대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. 상단에 `QA PREVIEW · 타이틀 마이크 테스트 필수 · GPT STT 활성 · OpenAI LLM 활성 · 클릭·오프라인 폴백` 배너가 없으면 잘못된 배포이므로 테스트를 중단한다. QA Worker는 `https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`다.
+대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. QA 식별자는 화면을 가리지 않고 `<html data-qa-preview="true" data-qa-commit="xxxxxxx">`에 기록한다. DevTools Elements 또는 `document.documentElement.dataset`으로 확인한다. QA Worker는 `https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`다.
 
 ### 16.1 기본 확인
 
-- [ ] 배너의 commit 7자가 전달받은 QA commit과 같다.
+- [ ] `document.documentElement.dataset.qaPreview === "true"`이고 `dataset.qaCommit` 7자가 전달받은 QA commit과 같다.
 - [ ] 게임 내 STT 표기가 `GPT · 고정`이고 `?stt=gemini`로 진입해도 GPT가 유지된다.
 - [ ] Network에서 음성 요청이 QA Worker의 `/transcribe/openai`로 1회 전송되고 `/transcribe/gemini` 요청은 0회다.
 - [ ] 타이틀, JS, CSS, scenario JSON, 첫 배경이 404 없이 표시된다.

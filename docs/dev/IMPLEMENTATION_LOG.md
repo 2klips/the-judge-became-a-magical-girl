@@ -730,3 +730,37 @@
 
 - 공개 QA 서버의 대화·전투 LLM 지역 제한은 OpenAI 전환으로 해소됐다. 배포 직후 첫 POST 한 번은 구버전 isolate 응답이었으나 cache-buster 재호출과 Secret 제거 뒤 health·대화·전투가 새 버전에서 반복 통과했다.
 - Pages 배너·commit 배포와 브라우저 렌더 확인까지 완료됐다. 사람 음성 STT와 여러 자유 발화의 말투·판정 품질은 별도 수동 QA로 남는다.
+
+## M5 비주얼 노벨 UI 전면 개편
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA PASS. Pages 재배포 확인 대기
+
+### 처리 내용
+
+- `game-ui-design`의 가독성·safe zone·피드백 규칙을 적용해 대화창을 화면 하단의 일반적인 비주얼 노벨 구조로 개편했다. 주노는 좌측·청록, 도윤은 우측·분홍, 회색 망령은 좌측·보라, 정체불명 목소리는 중앙·금색으로 구분한다.
+- 내레이션은 중앙의 중립색 대화창만 표시하고 이름표를 렌더하지 않는다. 캐릭터 대사는 발화자 방향에 맞춰 대화창과 이름표 위치를 좌우로 전환한다.
+- 진행 버튼의 `2초 후`·초 단위 카운트다운 문구를 제거했다. 버튼 문구는 고정하고 2초 동안 실제 `disabled`, 이후 활성화한다.
+- 플레이 화면의 상단 테스트 단계·상태 헤더와 공개 QA 시각 배너를 제거했다. QA 여부와 commit은 `html[data-qa-preview][data-qa-commit]` 비가시 DOM 표식으로 확인한다. `?debug=1`에서만 우측 상단 `DEBUG` 장면 선택기를 표시한다.
+- 1280×720에서 시작 버튼이 화면 아래로 잘리던 레이아웃을 압축했다. 모바일은 기존 세로 스크롤과 48px 입력 크기를 유지한다.
+- 신규 외부 이미지·BGM·UI 에셋은 추가하지 않았다. 이번 개편에 따른 에셋 작업자 추가 요청 없음.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 발화자별 방향·색상·이름표 계약, QA commit 표식 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 157 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL 주입 조건의 game-only QA build 성공 |
+| Browser desktop | PASS | 1280×720, 시작 버튼 완전 노출, 가로·세로 overflow 0, 상단 상태·QA 배너 0 |
+| Browser mobile | PASS | 390×844, 가로 overflow 0, 마이크 연결 버튼 첫 화면 노출, 세로 스크롤 정상 |
+| Browser debug | PASS | 우측 상단 `DEBUG` 선택기만 표시, N2→N3 전환·URL·선택값 갱신 |
+| QA artifact | PASS | `data-qa-preview=true`, `noindex,nofollow`, 비밀 입력 UI 0, 타이틀 렌더 정상 |
+
+### 현재 판정
+
+- 요청된 UI 계약은 구현·검증됐다. 실제 마이크 권한과 사람 음성 STT는 브라우저 자동화에서 대신 승인하지 않았으므로 기존 수동 QA 항목으로 유지한다.
+- 공개 Pages는 이 변경 commit 푸시 뒤 워크플로 성공과 배포 화면을 다시 확인해야 한다.

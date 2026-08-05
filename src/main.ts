@@ -36,7 +36,7 @@ import {
   type RecentDialogueTurn,
 } from "./judge/llm";
 import type { IncantationResult } from "./judge/incantation";
-import { installQaPreviewBanner } from "./qaPreview";
+import { installQaPreviewMarker } from "./qaPreview";
 import { resolveWorkerUrl } from "./runtimeConfig";
 import { SaveRepository } from "./storage/saveRepository";
 import { GameView } from "./ui/gameView";
@@ -55,7 +55,7 @@ const workerUrl = resolveWorkerUrl({
   baseUrl: import.meta.env.BASE_URL,
 });
 if (isQaPreview) {
-  installQaPreviewBanner({ commit: import.meta.env.VITE_QA_COMMIT });
+  installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
 const view = new GameView(root, recordingSupported, isQaPreview);
 const bgm = new BgmController();
