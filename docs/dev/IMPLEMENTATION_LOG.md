@@ -880,3 +880,42 @@
 - 확정된 UI 변경은 구현·자동·렌더 QA를 통과했다.
 - 실제 한국어 음성 정확도·지연은 동일 발화 세트로 `gpt-transcribe + keywords`와 `gpt-live-transcribe`를 별도 비교해야 한다.
 - 장면 selector 노출 범위와 STT 실험안은 사용자 결정 전 보류한다.
+
+## M5 debug STT 단일 모델 selector
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA` + OpenAI Realtime 실호출
+- 상태: 코드·자동·로컬/공개 Worker·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- 일반 플레이 STT는 `gpt-transcribe`, 대화·전투 LLM은 `gpt-5.6-luna`로 유지했다. 일반 화면에는 모델 selector·전사 결과·지연을 표시하지 않는다.
+- `?debug=1` 우측 상단에 `gpt-transcribe`/`gpt-live-transcribe` 중 하나만 선택하는 STT selector를 추가했다. 같은 패널에 선택 모델·전사 결과·왕복/Worker/첫 delta 지연과 고정 LLM을 표시한다.
+- 파일 전사는 16kHz WAV multipart를 유지하고 live 전사는 24kHz 16-bit mono PCM을 Realtime transcription WebSocket `intent=transcription` 세션에 append·commit한다. 한국어·고유명사 힌트와 `delay=low`를 사용한다.
+- Worker는 모델 allowlist와 `ENABLE_OPENAI_STT_MODEL_SELECTOR` 환경 플래그를 모두 통과한 요청만 live 경로에 보낸다. API 키는 QA Secret에만 유지하고 클라이언트·문서·로그에 기록하지 않았다.
+- 공개 Cloudflare 홍콩 edge에서 Realtime handshake가 `unsupported_country_region_territory` 403으로 거부되는 문제를 재현했다. 한국 regional endpoint는 Realtime 미지원이라 사용하지 않고 QA Worker에 Placement Hint `aws:us-east-1`을 적용해 해결했다.
+- 신규 외부 이미지·BGM·UI 에셋은 필요하지 않다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | debug 전용 모델 해석·16/24kHz·단일 model 필드·Worker 게이트·Realtime append/commit 5 tests RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 164 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| 로컬 OpenAI 실호출 | PASS | 같은 한국어 WAV 정확 전사. `gpt-transcribe` 총 1.374초, live 총 3.513초·첫 delta 1.234초 |
+| 공개 QA Worker | PASS | version `9b6eac8d-94dc-42af-b182-27a0e2847d21`; health 모델/LLM 계약 200. 파일 전사 upstream 1621ms, live upstream 3275ms·첫 delta 765ms |
+| Worker 보안 경계 | PASS | 지원 외 모델 400, 비허용 Origin 403, Secret 값 diff 노출 0 |
+| Browser desktop | PASS | 1280×720, 일반 selector/결과 0, debug selector 2개 option·LLM 표기·query 전환, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844 override, debug selector 표시, 가로 overflow 0 |
+| Browser console | PASS | 공개 Pages error/warn 0 |
+| Pages workflow | PASS | run `31017761407`, commit `534efb5`, source 검증·QA artifact 경계·배포 성공 |
+| 공개 Pages | PASS | `data-qa-commit=534efb5`, `data-qa-preview=true`, 일반/debug 표시 경계 정상 |
+
+### 현재 판정
+
+- 요청된 두 STT 모델의 debug 단일 선택 비교와 공개 QA 실호출이 동작한다.
+- 측정값은 깨끗한 동일 WAV 1건 결과다. 실제 마이크·억양·배경 소음별 정확도와 p50/p95는 작업자 수동 QA가 남는다.
+- M6 production에서 debug selector를 유지할지는 DEC-021과 함께 별도 확정해야 한다.
