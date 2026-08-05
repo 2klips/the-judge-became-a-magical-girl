@@ -22,7 +22,11 @@ describe("M3 선택형 STT", () => {
 
     await expect(
       port.transcribe(new Blob(["wav"], { type: "audio/wav" }), new AbortController().signal),
-    ).resolves.toBe("주노 맞지?");
+    ).resolves.toMatchObject({
+      text: "주노 맞지?",
+      model: `${provider}-model`,
+      roundTripMs: expect.any(Number),
+    });
 
     expect(fetcher).toHaveBeenCalledTimes(1);
     const request = fetcher.mock.calls[0]?.[0];

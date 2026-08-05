@@ -9,7 +9,7 @@ import {
   resolveEndingVisual,
   resolveMissingAssetPresentation,
   resolveSceneBrand,
-  resolveSttProviderControlVisibility,
+  resolveSttModelControlVisibility,
   resolveVoiceInputPresentation,
   VOICE_PROCESSING_LABEL,
   VOICE_TITLE_SUBTITLE,
@@ -76,8 +76,8 @@ describe("M5 장면 표시 계약", () => {
   });
 
   it("고정 STT 공급자는 내부 동작만 유지하고 UI 표시는 숨긴다", () => {
-    expect(resolveSttProviderControlVisibility(true)).toBe("hidden");
-    expect(resolveSttProviderControlVisibility(false)).toBe("select");
+    expect(resolveSttModelControlVisibility(false)).toBe("hidden");
+    expect(resolveSttModelControlVisibility(true)).toBe("select");
   });
 
   it("음성 입력은 별도 안내·상태 영역 없이 누르고 말하기 버튼만 표시한다", () => {

@@ -17,7 +17,11 @@ describe("M3 release 기반 녹음", () => {
     };
     const transcription: TranscriptionPort = {
       provider: "openai",
-      transcribe: vi.fn(async () => "마법소녀가 직업이야?"),
+      transcribe: vi.fn(async () => ({
+        text: "마법소녀가 직업이야?",
+        model: "gpt-transcribe",
+        roundTripMs: 320,
+      })),
     };
     const controller = new RecordedVoiceTurnController(recording, transcription);
 
@@ -31,6 +35,11 @@ describe("M3 release 기반 녹음", () => {
       kind: "transcript",
       transcript: "마법소녀가 직업이야?",
       audioLevel: level,
+      observation: {
+        text: "마법소녀가 직업이야?",
+        model: "gpt-transcribe",
+        roundTripMs: 320,
+      },
     });
     expect(recording.stop).toHaveBeenCalledTimes(1);
     expect(transcription.transcribe).toHaveBeenCalledTimes(1);
@@ -38,8 +47,16 @@ describe("M3 release 기반 녹음", () => {
   });
 
   it("cancel 후 늦게 도착한 전사 결과를 무시한다", async () => {
-    let finish!: (value: string) => void;
-    const pending = new Promise<string>((resolve) => {
+    let finish!: (value: {
+      text: string;
+      model: string;
+      roundTripMs: number;
+    }) => void;
+    const pending = new Promise<{
+      text: string;
+      model: string;
+      roundTripMs: number;
+    }>((resolve) => {
       finish = resolve;
     });
     const recording: PttRecordingPort = {
@@ -59,7 +76,7 @@ describe("M3 release 기반 녹음", () => {
     const result = controller.release();
 
     controller.cancel();
-    finish("늦은 결과");
+    finish({ text: "늦은 결과", model: "gemini-2.5-flash", roundTripMs: 900 });
 
     await expect(result).resolves.toEqual({ kind: "cancelled" });
     expect(recording.cancel).toHaveBeenCalledTimes(1);

@@ -34,10 +34,11 @@ import type {
   MicrophoneInputDevice,
 } from "../input/microphoneSetup";
 import type {
+  OpenAiSttModel,
   RecordedVoiceResult,
-  SttProviderId,
+  TranscriptionObservation,
 } from "../input/transcription";
-import { formatVoiceInputError, sttProviderLabel } from "../input/transcription";
+import { formatVoiceInputError } from "../input/transcription";
 import {
   PushToTalkShortcutController,
   type PushToTalkShortcutBinding,
@@ -85,10 +86,10 @@ export function formatDialogueText(text: string, speakerId: string): string {
     : `(${normalized})`;
 }
 
-export function resolveSttProviderControlVisibility(
-  lockSttProvider: boolean,
+export function resolveSttModelControlVisibility(
+  debugEnabled: boolean,
 ): "hidden" | "select" {
-  return lockSttProvider ? "hidden" : "select";
+  return debugEnabled ? "select" : "hidden";
 }
 
 export interface VoiceInputPresentation {
@@ -224,7 +225,6 @@ interface TitleOptions {
 
 export interface DialogueInputOptions {
   speechSupported: boolean;
-  sttProvider: SttProviderId;
   notice?: string;
   forceClickForTurn?: boolean;
   startCapture(): Promise<void>;
@@ -234,7 +234,6 @@ export interface DialogueInputOptions {
   onTurnFailed(message: string): void;
   onUnavailable(message: string): void;
   onModeChange(inputMode: InputMode): void;
-  onProviderChange(provider: SttProviderId): void;
 }
 
 interface LineViewOptions {
@@ -253,7 +252,6 @@ interface LineViewOptions {
 
 interface SharedVoiceOptions {
   speechSupported: boolean;
-  sttProvider: SttProviderId;
   notice?: string;
   startCapture(): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
@@ -261,7 +259,11 @@ interface SharedVoiceOptions {
   onTurnFailed(message: string): void;
   onUnavailable(message: string): void;
   onModeChange(inputMode: InputMode): void;
-  onProviderChange(provider: SttProviderId): void;
+}
+
+interface DebugSttOptions {
+  readonly model: OpenAiSttModel;
+  readonly onModelChange: (model: OpenAiSttModel) => void;
 }
 
 export interface IncantationInputOptions extends SharedVoiceOptions {
@@ -329,12 +331,15 @@ export class GameView {
     PushToTalkShortcutBinding
   >();
   private currentBackgroundId: string | null = null;
+  private debugSttModel: OpenAiSttModel;
+  private latestTranscription: TranscriptionObservation | null = null;
 
   constructor(
     private readonly root: HTMLElement,
-    private readonly lockSttProvider = false,
+    private readonly debugSttOptions: DebugSttOptions,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
+    this.debugSttModel = debugSttOptions.model;
     window.addEventListener("keydown", (event) => {
       if (event.ctrlKey || event.altKey || event.metaKey || isEditableKeyboardTarget(event.target)) {
         return;
@@ -712,9 +717,7 @@ export class GameView {
       const ptt = element("button", "ptt-button", "누르고 주문 읽기 (T)");
       ptt.type = "button";
       ptt.setAttribute("aria-pressed", "false");
-      const provider = this.providerControl(options);
       controls.append(ptt);
-      if (provider) controls.append(provider);
       controls.append(fallback);
       inputArea.append(controls);
       this.bindHoldToTalk(ptt, options, async (transcript) => {
@@ -858,8 +861,6 @@ export class GameView {
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       controls.append(spell, freeform, guard);
-      const provider = this.providerControl(options);
-      if (provider) controls.append(provider);
       command.append(controls);
       this.bindHoldToTalk(spell, options, (transcript) =>
         options.onTranscript("spell", transcript.text, transcript.audioLevel),
@@ -1395,7 +1396,28 @@ export class GameView {
       window.location.assign(url);
     });
     label.append(select);
-    nav.append(label);
+    const sttLabel = element("label", "debug-stt-selector", "STT");
+    const sttSelect = element("select");
+    sttSelect.name = "debugSttModel";
+    for (const model of ["gpt-transcribe", "gpt-live-transcribe"] as const) {
+      const option = element("option", undefined, model);
+      option.value = model;
+      option.selected = model === this.debugSttModel;
+      sttSelect.append(option);
+    }
+    sttSelect.addEventListener("change", () => {
+      const model: OpenAiSttModel =
+        sttSelect.value === "gpt-live-transcribe"
+          ? "gpt-live-transcribe"
+          : "gpt-transcribe";
+      this.debugSttModel = model;
+      this.latestTranscription = null;
+      this.debugSttOptions.onModelChange(model);
+    });
+    sttLabel.append(sttSelect);
+    const models = element("div", "debug-model-summary");
+    models.append(sttLabel, element("span", undefined, "LLM · gpt-5.6-luna"));
+    nav.append(label, models, this.debugTranscriptionResult());
     return nav;
   }
 
@@ -1468,9 +1490,7 @@ export class GameView {
       options.cancel();
       options.onModeChange("click");
     });
-    const provider = this.providerControl(options);
     controls.append(ptt);
-    if (provider) controls.append(provider);
     controls.append(clickButton);
     container.append(controls);
 
@@ -1552,6 +1572,7 @@ export class GameView {
     showClickFallback: (message: string) => void,
   ): Promise<void> {
     if (result.kind === "transcript") {
+      this.rememberTranscription(result.observation);
       const handled = await options.onTranscript(result.transcript);
       if (!handled && this.root.contains(button)) {
         showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
@@ -1567,25 +1588,6 @@ export class GameView {
       return;
     }
     setPttButtonState(button, "idle");
-  }
-
-  private providerControl(options: SharedVoiceOptions): HTMLLabelElement | null {
-    if (resolveSttProviderControlVisibility(this.lockSttProvider) === "hidden") return null;
-    const provider = element("label", "provider-control");
-    provider.append(element("span", undefined, "음성 인식"));
-    const select = element("select", "provider-select");
-    for (const id of ["openai", "gemini"] as const) {
-      const option = element("option", undefined, sttProviderLabel(id));
-      option.value = id;
-      option.selected = id === options.sttProvider;
-      select.append(option);
-    }
-    select.addEventListener("change", () => {
-      options.cancel();
-      options.onProviderChange(select.value === "gemini" ? "gemini" : "openai");
-    });
-    provider.append(select);
-    return provider;
   }
 
   private bindHoldToTalk(
@@ -1626,6 +1628,7 @@ export class GameView {
         setPttButtonState(button, "idle");
         return;
       }
+      this.rememberTranscription(result.observation);
       await onTranscript({ text: result.transcript, audioLevel: result.audioLevel });
       if (button.isConnected) setPttButtonState(button, "idle");
     };
@@ -1649,6 +1652,34 @@ export class GameView {
       }
     });
     this.registerKeyboardPtt(button, begin, finish);
+  }
+
+  private rememberTranscription(observation: TranscriptionObservation): void {
+    if (!this.debugEnabled) return;
+    this.latestTranscription = observation;
+  }
+
+  private debugTranscriptionResult(): HTMLElement {
+    const result = element("section", "debug-stt-result");
+    result.setAttribute("aria-live", "polite");
+    if (!this.latestTranscription) {
+      result.append(element("span", undefined, "인식 결과 대기 중"));
+      return result;
+    }
+    const observation = this.latestTranscription;
+    const timings = [`왕복 ${observation.roundTripMs}ms`];
+    if (observation.upstreamMs !== undefined) {
+      timings.push(`Worker ${observation.upstreamMs}ms`);
+    }
+    if (observation.firstDeltaMs !== undefined) {
+      timings.push(`첫 delta ${observation.firstDeltaMs}ms`);
+    }
+    result.append(
+      element("strong", undefined, observation.model),
+      element("span", undefined, timings.join(" · ")),
+      element("p", undefined, observation.text),
+    );
+    return result;
   }
 
   private registerKeyboardPtt(

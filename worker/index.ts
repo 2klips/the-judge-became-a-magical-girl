@@ -6,14 +6,24 @@ import {
 } from "../src/judge/schema";
 
 const DEFAULT_OPENAI_MODEL = "gpt-transcribe";
+const OPENAI_LIVE_TRANSCRIBE_MODEL = "gpt-live-transcribe";
+const OPENAI_REALTIME_TRANSCRIPTION_URL =
+  "https://api.openai.com/v1/realtime?intent=transcription";
 const DEFAULT_OPENAI_LLM_MODEL = "gpt-5.6-luna";
 const DEFAULT_GEMINI_TRANSCRIBE_MODEL = "gemini-2.5-flash";
 const DEFAULT_GEMINI_LLM_MODEL = "gemini-3.1-flash-lite";
 const OPENAI_LLM_REASONING_EFFORT = "low";
 const MAX_AUDIO_BYTES = 14 * 1024 * 1024;
 const MAX_JSON_BYTES = 32 * 1024;
+const REALTIME_TIMEOUT_MS = 12_000;
+const REALTIME_PCM_SAMPLE_RATE = 24_000;
+const REALTIME_PCM_CHUNK_BYTES = 48_000;
 
 const OpenAiTranscriptSchema = z.object({ text: z.string() });
+const OpenAiSttModelSchema = z.enum([
+  DEFAULT_OPENAI_MODEL,
+  OPENAI_LIVE_TRANSCRIBE_MODEL,
+]);
 const LlmProviderSchema = z.enum(["gemini", "openai"]);
 const OpenAiResponseSchema = z.object({
   status: z.string().optional(),
@@ -101,7 +111,42 @@ export type UpstreamFetch = (request: Request) => Promise<Response>;
 
 interface WorkerOptions {
   enableGeminiStt?: boolean;
+  liveTranscribe?: OpenAiLiveTranscribe;
 }
+
+type OpenAiSttModel = z.infer<typeof OpenAiSttModelSchema>;
+
+interface AudioRequest {
+  readonly audio: File;
+  readonly requestedModel?: string;
+}
+
+interface TranscriptionMetrics {
+  readonly upstreamMs: number;
+  readonly firstDeltaMs?: number;
+}
+
+interface TranscriptionResponse {
+  readonly model: OpenAiSttModel;
+  readonly text: string;
+  readonly metrics: TranscriptionMetrics;
+}
+
+interface WorkerWebSocket extends EventTarget {
+  accept(): void;
+  send(message: string): void;
+  close(code?: number, reason?: string): void;
+  addEventListener(type: "message", listener: (event: MessageEvent) => void): void;
+  addEventListener(type: "error" | "close", listener: () => void): void;
+  removeEventListener(type: "message", listener: (event: MessageEvent) => void): void;
+  removeEventListener(type: "error" | "close", listener: () => void): void;
+}
+
+type OpenAiLiveTranscribe = (
+  audio: File,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+) => Promise<TranscriptionResponse>;
 
 interface StructuredLlmRequest {
   label: string;
@@ -114,7 +159,10 @@ interface StructuredLlmRequest {
 
 export function createWorker(
   upstreamFetch: UpstreamFetch = fetch,
-  { enableGeminiStt = false }: WorkerOptions = {},
+  {
+    enableGeminiStt = false,
+    liveTranscribe = transcribeWithOpenAiRealtime,
+  }: WorkerOptions = {},
 ) {
   return {
     async fetch(request: Request, env: Env): Promise<Response> {
@@ -135,6 +183,10 @@ export function createWorker(
             openaiConfigured: Boolean(env.OPENAI_API_KEY),
             geminiConfigured: enableGeminiStt && Boolean(env.GEMINI_API_KEY),
             openaiModel: env.OPENAI_TRANSCRIBE_MODEL || DEFAULT_OPENAI_MODEL,
+            openaiSelectableModels:
+              env.ENABLE_OPENAI_STT_MODEL_SELECTOR === "true"
+                ? OpenAiSttModelSchema.options
+                : [DEFAULT_OPENAI_MODEL],
             geminiModel: env.GEMINI_TRANSCRIBE_MODEL || DEFAULT_GEMINI_TRANSCRIBE_MODEL,
             llmProvider,
             llmConfigured:
@@ -154,9 +206,14 @@ export function createWorker(
       try {
         let result: unknown;
         if (pathname === "/transcribe/openai") {
-          result = await transcribeWithOpenAi(await readAudio(request), env, upstreamFetch);
+          const input = await readAudio(request);
+          const model = resolveOpenAiSttModel(input.requestedModel, env);
+          result =
+            model === OPENAI_LIVE_TRANSCRIBE_MODEL
+              ? await liveTranscribe(input.audio, env, upstreamFetch)
+              : await transcribeWithOpenAi(input.audio, env, upstreamFetch);
         } else if (pathname === "/transcribe/gemini" && enableGeminiStt) {
-          result = await transcribeWithGemini(await readAudio(request), env, upstreamFetch);
+          result = await transcribeWithGemini((await readAudio(request)).audio, env, upstreamFetch);
         } else if (pathname === "/transcribe/gemini") {
           throw new WorkerError(404, "비활성화된 STT 공급자입니다.");
         } else if (pathname === "/judge/dialogue") {
@@ -188,7 +245,7 @@ export function createWorker(
   };
 }
 
-async function readAudio(request: Request): Promise<File> {
+async function readAudio(request: Request): Promise<AudioRequest> {
   requireContentType(request, "multipart/form-data");
   rejectOversizedContentLength(request, MAX_AUDIO_BYTES + 64 * 1024);
   let form: FormData;
@@ -207,7 +264,14 @@ async function readAudio(request: Request): Promise<File> {
   if (audio.size > MAX_AUDIO_BYTES) {
     throw new WorkerError(413, "오디오 파일이 14MB 제한을 초과했습니다.");
   }
-  return audio;
+  const requestedModel = form.get("model");
+  if (requestedModel instanceof File) {
+    throw new WorkerError(400, "STT 모델 형식이 올바르지 않습니다.");
+  }
+  return {
+    audio,
+    ...(typeof requestedModel === "string" ? { requestedModel } : {}),
+  };
 }
 
 async function readDialogueRequest(request: Request): Promise<z.infer<typeof DialogueRequestSchema>> {
@@ -243,8 +307,8 @@ async function transcribeWithOpenAi(
   audio: File,
   env: Env,
   upstreamFetch: UpstreamFetch,
-): Promise<{ model: string; text: string }> {
-  const model = env.OPENAI_TRANSCRIBE_MODEL || DEFAULT_OPENAI_MODEL;
+): Promise<TranscriptionResponse> {
+  const model = DEFAULT_OPENAI_MODEL;
   const form = new FormData();
   form.append("file", audio, "speech.wav");
   form.append("model", model);
@@ -254,6 +318,7 @@ async function transcribeWithOpenAi(
     "prompt",
     "한국어 발화를 원문 그대로 정확히 전사한다. 고유명사: 주노, 심사역, 마법소녀, 언령, 투자심사.",
   );
+  const startedAt = performance.now();
   const response = await upstreamFetch(
     new Request("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
@@ -263,7 +328,256 @@ async function transcribeWithOpenAi(
   );
   if (!response.ok) throw new WorkerError(502, `OpenAI STT 호출 실패 (${response.status})`);
   const transcript = OpenAiTranscriptSchema.parse(await response.json());
-  return { model, text: transcript.text.trim() };
+  return {
+    model,
+    text: transcript.text.trim(),
+    metrics: { upstreamMs: elapsedMs(startedAt) },
+  };
+}
+
+async function transcribeWithOpenAiRealtime(
+  audio: File,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+): Promise<TranscriptionResponse> {
+  const pcm = await extractPcm16MonoWav(audio, REALTIME_PCM_SAMPLE_RATE);
+  const startedAt = performance.now();
+  const response = await upstreamFetch(
+    new Request(
+      OPENAI_REALTIME_TRANSCRIPTION_URL,
+      {
+        headers: {
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          Upgrade: "websocket",
+        },
+      },
+    ),
+  );
+  const socket = (
+    response as Response & { readonly webSocket?: WorkerWebSocket | null }
+  ).webSocket;
+  if (!socket || response.status !== 101) {
+    const diagnostic = await response.text().catch(() => "");
+    console.warn(
+      "OpenAI Realtime STT handshake failed",
+      response.status,
+      diagnostic.slice(0, 240),
+    );
+    throw new WorkerError(502, `OpenAI Realtime STT 연결 실패 (${response.status})`);
+  }
+  socket.accept();
+
+  return new Promise<TranscriptionResponse>((resolve, reject) => {
+    let transcript = "";
+    let firstDeltaMs: number | undefined;
+    let settled = false;
+    const timer = setTimeout(
+      () => fail(new WorkerError(504, "OpenAI Realtime STT 응답 시간이 초과되었습니다.")),
+      REALTIME_TIMEOUT_MS,
+    );
+
+    const cleanup = (): void => {
+      clearTimeout(timer);
+      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("error", onError);
+      socket.removeEventListener("close", onClose);
+    };
+    const fail = (error: Error): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      try {
+        socket.close(1011, "transcription failed");
+      } catch {
+        // 연결이 이미 닫힌 경우 무시한다.
+      }
+      reject(error);
+    };
+    const complete = (finalTranscript: string): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      try {
+        socket.close(1000, "transcription complete");
+      } catch {
+        // 연결이 이미 닫힌 경우 무시한다.
+      }
+      resolve({
+        model: OPENAI_LIVE_TRANSCRIBE_MODEL,
+        text: finalTranscript.trim(),
+        metrics: {
+          upstreamMs: elapsedMs(startedAt),
+          ...(firstDeltaMs === undefined ? {} : { firstDeltaMs }),
+        },
+      });
+    };
+    const onMessage = (event: MessageEvent): void => {
+      if (typeof event.data !== "string") return;
+      let payload: unknown;
+      try {
+        payload = JSON.parse(event.data);
+      } catch {
+        fail(new WorkerError(502, "OpenAI Realtime STT 응답 형식이 올바르지 않습니다."));
+        return;
+      }
+      if (!payload || typeof payload !== "object") return;
+      const realtimeEvent = payload as {
+        type?: string;
+        delta?: string;
+        transcript?: string;
+        error?: { type?: string; code?: string; message?: string };
+      };
+      if (realtimeEvent.type === "conversation.item.input_audio_transcription.delta") {
+        if (firstDeltaMs === undefined) firstDeltaMs = elapsedMs(startedAt);
+        transcript += realtimeEvent.delta ?? "";
+      } else if (
+        realtimeEvent.type === "conversation.item.input_audio_transcription.completed"
+      ) {
+        complete(realtimeEvent.transcript ?? transcript);
+      } else if (realtimeEvent.type === "error") {
+        console.warn(
+          "OpenAI Realtime STT event error",
+          realtimeEvent.error?.type ?? "unknown_type",
+          realtimeEvent.error?.code ?? "unknown_code",
+          (realtimeEvent.error?.message ?? "unknown_message").slice(0, 240),
+        );
+        fail(new WorkerError(502, "OpenAI Realtime STT 호출에 실패했습니다."));
+      }
+    };
+    const onError = (): void =>
+      fail(new WorkerError(502, "OpenAI Realtime STT 연결 오류가 발생했습니다."));
+    const onClose = (): void =>
+      fail(new WorkerError(502, "OpenAI Realtime STT 연결이 일찍 종료되었습니다."));
+
+    socket.addEventListener("message", onMessage);
+    socket.addEventListener("error", onError);
+    socket.addEventListener("close", onClose);
+
+    try {
+      socket.send(
+        JSON.stringify({
+          type: "session.update",
+          session: {
+            type: "transcription",
+            audio: {
+              input: {
+                format: { type: "audio/pcm", rate: REALTIME_PCM_SAMPLE_RATE },
+                transcription: {
+                  model: OPENAI_LIVE_TRANSCRIBE_MODEL,
+                  prompt:
+                    "한국어 발화를 원문 그대로 정확히 전사한다. 고유명사: 주노, 심사역, 마법소녀, 언령, 투자심사.",
+                  keywords: ["주노", "심사역", "마법소녀", "언령", "투자심사"],
+                  languages: ["ko"],
+                  delay: "low",
+                },
+                turn_detection: null,
+              },
+            },
+          },
+        }),
+      );
+      for (let offset = 0; offset < pcm.length; offset += REALTIME_PCM_CHUNK_BYTES) {
+        socket.send(
+          JSON.stringify({
+            type: "input_audio_buffer.append",
+            audio: bytesToBase64(pcm.subarray(offset, offset + REALTIME_PCM_CHUNK_BYTES)),
+          }),
+        );
+      }
+      socket.send(JSON.stringify({ type: "input_audio_buffer.commit" }));
+    } catch {
+      fail(new WorkerError(502, "OpenAI Realtime STT 오디오 전송에 실패했습니다."));
+    }
+  });
+}
+
+function resolveOpenAiSttModel(
+  requestedModel: string | undefined,
+  env: Env,
+): OpenAiSttModel {
+  if (!requestedModel) return DEFAULT_OPENAI_MODEL;
+  const parsed = OpenAiSttModelSchema.safeParse(requestedModel);
+  if (!parsed.success) throw new WorkerError(400, "지원하지 않는 STT 모델입니다.");
+  if (
+    parsed.data !== DEFAULT_OPENAI_MODEL &&
+    env.ENABLE_OPENAI_STT_MODEL_SELECTOR !== "true"
+  ) {
+    throw new WorkerError(400, "테스트 STT 모델 선택이 비활성화되어 있습니다.");
+  }
+  return parsed.data;
+}
+
+async function extractPcm16MonoWav(
+  audio: File,
+  expectedSampleRate: number,
+): Promise<Uint8Array> {
+  const buffer = await audio.arrayBuffer();
+  const view = new DataView(buffer);
+  if (
+    buffer.byteLength < 44 ||
+    readAscii(view, 0, 4) !== "RIFF" ||
+    readAscii(view, 8, 4) !== "WAVE"
+  ) {
+    throw new WorkerError(400, "WAV 헤더가 올바르지 않습니다.");
+  }
+
+  let format: { channels: number; sampleRate: number; bitsPerSample: number } | undefined;
+  let pcm: Uint8Array | undefined;
+  for (let offset = 12; offset + 8 <= buffer.byteLength; ) {
+    const chunkId = readAscii(view, offset, 4);
+    const chunkSize = view.getUint32(offset + 4, true);
+    const chunkStart = offset + 8;
+    const chunkEnd = chunkStart + chunkSize;
+    if (chunkEnd > buffer.byteLength) {
+      throw new WorkerError(400, "WAV 청크 길이가 올바르지 않습니다.");
+    }
+    if (chunkId === "fmt ") {
+      if (chunkSize < 16 || view.getUint16(chunkStart, true) !== 1) {
+        throw new WorkerError(415, "PCM WAV 형식만 지원합니다.");
+      }
+      format = {
+        channels: view.getUint16(chunkStart + 2, true),
+        sampleRate: view.getUint32(chunkStart + 4, true),
+        bitsPerSample: view.getUint16(chunkStart + 14, true),
+      };
+    } else if (chunkId === "data") {
+      pcm = new Uint8Array(buffer.slice(chunkStart, chunkEnd));
+    }
+    offset = chunkEnd + (chunkSize % 2);
+  }
+
+  if (!format || !pcm?.length) throw new WorkerError(400, "WAV PCM 데이터가 없습니다.");
+  if (
+    format.channels !== 1 ||
+    format.bitsPerSample !== 16 ||
+    format.sampleRate !== expectedSampleRate
+  ) {
+    throw new WorkerError(
+      415,
+      `${expectedSampleRate}Hz 16-bit mono PCM WAV 형식이 필요합니다.`,
+    );
+  }
+  return pcm;
+}
+
+function readAscii(view: DataView, offset: number, length: number): string {
+  let value = "";
+  for (let index = 0; index < length; index += 1) {
+    value += String.fromCharCode(view.getUint8(offset + index));
+  }
+  return value;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 32_768) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 32_768));
+  }
+  return btoa(binary);
+}
+
+function elapsedMs(startedAt: number): number {
+  return Math.max(0, Math.round(performance.now() - startedAt));
 }
 
 async function transcribeWithGemini(

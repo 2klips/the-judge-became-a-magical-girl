@@ -14,7 +14,11 @@ import { GameDataError, loadGameData } from "./data/loader";
 import type { BattleNode, CutsceneNode } from "./data/schema";
 import { resolveDevSceneRequest } from "./dev/scenePreview";
 import { GameEngine, type TurnResult } from "./engine/nodeRunner";
-import { beginBrowserRecording, BrowserPttRecordingPort } from "./input/recording";
+import {
+  beginBrowserRecording,
+  BrowserPttRecordingPort,
+  decodeWithBrowserAudioContext,
+} from "./input/recording";
 import {
   evaluateVoiceLevel,
   resolveVoiceLevelFailure,
@@ -25,8 +29,9 @@ import { BrowserMicrophoneTester } from "./input/microphoneSetup";
 import {
   createWorkerTranscriptionPort,
   RecordedVoiceTurnController,
-  resolveSttProvider,
-  type SttProviderId,
+  resolveOpenAiSttModel,
+  sttSampleRate,
+  type OpenAiSttModel,
 } from "./input/transcription";
 import {
   createDebugLlmPort,
@@ -45,6 +50,12 @@ const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("#app 루트 요소가 없습니다.");
 
 const params = new URLSearchParams(window.location.search);
+const debugEnabled = params.has("debug");
+let selectedSttModel = resolveOpenAiSttModel(params, debugEnabled);
+let handleDebugSttModelChange = (model: OpenAiSttModel): void => {
+  selectedSttModel = model;
+  updateSttModelQuery(model);
+};
 const recordingSupported = BrowserPttRecordingPort.isSupported();
 const microphoneSetupSupported = recordingSupported && BrowserMicrophoneTester.isSupported();
 const isQaPreview = import.meta.env.MODE === "qa";
@@ -57,7 +68,10 @@ const workerUrl = resolveWorkerUrl({
 if (isQaPreview) {
   installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
-const view = new GameView(root, isQaPreview);
+const view = new GameView(root, {
+  model: selectedSttModel,
+  onModelChange: (model) => handleDebugSttModelChange(model),
+});
 const bgm = new BgmController();
 const sfx = new SfxPlayer();
 const microphoneTester = new BrowserMicrophoneTester();
@@ -95,12 +109,20 @@ async function bootstrap(): Promise<void> {
 
     let activeVoice: RecordedVoiceTurnController | null = null;
     let activeLlm: AbortController | null = null;
-    let sttProvider = resolveSttProvider(params, isQaPreview ? "openai" : undefined);
     let readyIncantationNodeId: string | null = null;
     let incantationAttempt = 1;
     let microphoneCalibration: MicrophoneCalibration | null = null;
     const battleVolumeFailures = new Map<string, number>();
     let renderCurrent: (inputNotice?: string, forceClickForTurn?: boolean) => void;
+
+    handleDebugSttModelChange = (model): void => {
+      selectedSttModel = model;
+      updateSttModelQuery(model);
+      if (activeVoice) {
+        activeVoice.cancel();
+        renderCurrent(`${model} 음성 인식으로 전환했어.`);
+      }
+    };
 
     const characterName = (speaker: string): string =>
       speaker === "narration" ? "나레이션" : characters.get(speaker)?.name ?? speaker;
@@ -136,6 +158,20 @@ async function bootstrap(): Promise<void> {
       },
     });
 
+    const createVoiceTurn = (inputDeviceId?: string): RecordedVoiceTurnController =>
+      new RecordedVoiceTurnController(
+        new BrowserPttRecordingPort(
+          () => beginBrowserRecording(inputDeviceId),
+          decodeWithBrowserAudioContext,
+          sttSampleRate(selectedSttModel),
+        ),
+        createWorkerTranscriptionPort({
+          provider: "openai",
+          workerUrl,
+          ...(debugEnabled ? { model: selectedSttModel } : {}),
+        }),
+      );
+
     const showTransformationResult = (
       node: CutsceneNode & { incantationGate: NonNullable<CutsceneNode["incantationGate"]> },
       result: IncantationResult,
@@ -170,16 +206,10 @@ async function bootstrap(): Promise<void> {
       notice?: string,
     ): void => {
       const state = engine.getState();
-      const voice = new RecordedVoiceTurnController(
-        new BrowserPttRecordingPort(() =>
-          beginBrowserRecording(microphoneCalibration?.inputDeviceId),
-        ),
-        createWorkerTranscriptionPort({ provider: sttProvider, workerUrl }),
-      );
+      const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
       if (state.inputMode === "voice") activeVoice = voice;
       view.renderIncantation(node, state, {
         speechSupported: recordingSupported,
-        sttProvider,
         attempt: incantationAttempt,
         notice,
         ...voiceCapture(voice),
@@ -208,11 +238,6 @@ async function bootstrap(): Promise<void> {
           engine.setInputMode(inputMode);
           renderCurrent();
         },
-        onProviderChange: (provider) => {
-          sttProvider = provider;
-          updateProviderQuery(provider);
-          renderCurrent(`${providerName(provider)} 음성 인식으로 전환했어.`);
-        },
       });
     };
 
@@ -221,10 +246,7 @@ async function bootstrap(): Promise<void> {
       const battleState = engine.getBattleState();
       const phase = node.phases[battleState.phaseIndex];
       if (!phase) throw new Error("현재 battle phase를 찾을 수 없습니다.");
-      const voice = new RecordedVoiceTurnController(
-        new BrowserPttRecordingPort(),
-        createWorkerTranscriptionPort({ provider: sttProvider, workerUrl }),
-      );
+      const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
       if (state.inputMode === "voice") activeVoice = voice;
 
       const applyAction = (
@@ -379,7 +401,6 @@ async function bootstrap(): Promise<void> {
 
       view.renderBattle(node, phase, battleState, state, {
         speechSupported: recordingSupported,
-        sttProvider,
         notice,
         ...voiceCapture(voice),
         onTranscript: handleBattleTranscript,
@@ -411,11 +432,6 @@ async function bootstrap(): Promise<void> {
         onModeChange: (inputMode) => {
           engine.setInputMode(inputMode);
           renderCurrent();
-        },
-        onProviderChange: (provider) => {
-          sttProvider = provider;
-          updateProviderQuery(provider);
-          renderCurrent(`${providerName(provider)} 음성 인식으로 전환했어.`);
         },
         onDebugMomentum: (momentum) => {
           engine.setBattleMomentumForDebug(momentum);
@@ -497,10 +513,7 @@ async function bootstrap(): Promise<void> {
           renderReply(result.clickLabel, result, intentId);
         };
 
-        const voice = new RecordedVoiceTurnController(
-          new BrowserPttRecordingPort(),
-          createWorkerTranscriptionPort({ provider: sttProvider, workerUrl }),
-        );
+        const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
         if (state.inputMode === "voice") activeVoice = voice;
 
         const applyFallback = (transcript: string, failureRecorded: boolean): boolean => {
@@ -558,7 +571,6 @@ async function bootstrap(): Promise<void> {
 
         view.renderDialogue(node, character, state, selectIntent, {
           speechSupported: recordingSupported,
-          sttProvider,
           notice: inputNotice,
           forceClickForTurn,
           ...voiceCapture(voice),
@@ -586,11 +598,6 @@ async function bootstrap(): Promise<void> {
             if (inputMode === "voice") engine.recordLlmSuccess();
             engine.setInputMode(inputMode);
             renderCurrent();
-          },
-          onProviderChange: (provider) => {
-            sttProvider = provider;
-            updateProviderQuery(provider);
-            renderCurrent(`${providerName(provider)} 음성 인식으로 전환했어.`);
           },
         });
         return;
@@ -705,14 +712,10 @@ function renderCutscene(
   renderLine();
 }
 
-function updateProviderQuery(provider: SttProviderId): void {
+function updateSttModelQuery(model: OpenAiSttModel): void {
   const url = new URL(window.location.href);
-  url.searchParams.set("stt", provider);
+  url.searchParams.set("sttModel", model);
   window.history.replaceState(null, "", url);
-}
-
-function providerName(provider: SttProviderId): string {
-  return provider === "openai" ? "GPT" : "Gemini";
 }
 
 const devSceneRequest = resolveDevSceneRequest(window.location.search);

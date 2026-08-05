@@ -935,6 +935,63 @@ button {
   }
 }
 
+.dev-scene-nav {
+  display: grid;
+  width: min(520px, calc(100vw - 24px));
+  gap: 8px;
+}
+
+.debug-model-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.debug-model-summary > span {
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+
+.debug-stt-selector {
+  min-width: 0;
+}
+
+.debug-stt-result {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.debug-stt-result strong {
+  color: var(--vn-voice);
+}
+
+.debug-stt-result p {
+  grid-column: 1 / -1;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--vn-ink);
+}
+
+@media (max-width: 760px) {
+  .debug-model-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .debug-model-summary > span {
+    display: none;
+  }
+}
+
 .incantation-screen,
 .battle-screen {
   overflow-y: auto;

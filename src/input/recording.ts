@@ -32,7 +32,7 @@ export interface NormalizedAudio {
 
 export type AudioDecoder = (blob: Blob) => Promise<DecodedAudio>;
 
-const TARGET_SAMPLE_RATE = 16_000;
+const DEFAULT_TARGET_SAMPLE_RATE = 16_000;
 
 export class PushToTalkCapture {
   state: PushToTalkState = "idle";
@@ -101,6 +101,7 @@ export class BrowserPttRecordingPort implements PttRecordingPort {
   constructor(
     beginRecording: BeginRecording = beginBrowserRecording,
     private readonly decode: AudioDecoder = decodeWithBrowserAudioContext,
+    private readonly targetSampleRate = DEFAULT_TARGET_SAMPLE_RATE,
   ) {
     this.capture = new PushToTalkCapture(beginRecording);
   }
@@ -123,7 +124,11 @@ export class BrowserPttRecordingPort implements PttRecordingPort {
   async stop(): Promise<RecordedAudio> {
     const recorded = await this.capture.release();
     if (!recorded) throw new Error("종료할 음성 녹음이 없습니다.");
-    const normalized = await normalizeRecordedAudio(recorded, this.decode);
+    const normalized = await normalizeRecordedAudio(
+      recorded,
+      this.decode,
+      this.targetSampleRate,
+    );
     return {
       wavBlob: normalized.wavBlob,
       level: calculateAudioLevel(normalized.samples),
@@ -195,14 +200,15 @@ export async function beginBrowserRecording(deviceId?: string): Promise<Recordin
 export async function normalizeRecordedAudio(
   source: Blob,
   decode: AudioDecoder,
+  targetSampleRate = DEFAULT_TARGET_SAMPLE_RATE,
 ): Promise<NormalizedAudio> {
   const decoded = await decode(source);
   const mono = mixToMono(decoded);
-  const samples = resampleLinear(mono, decoded.sampleRate, TARGET_SAMPLE_RATE);
+  const samples = resampleLinear(mono, decoded.sampleRate, targetSampleRate);
   return {
     samples,
-    wavBlob: encodePcm16Wav(samples, TARGET_SAMPLE_RATE),
-    durationMs: (samples.length / TARGET_SAMPLE_RATE) * 1_000,
+    wavBlob: encodePcm16Wav(samples, targetSampleRate),
+    durationMs: (samples.length / targetSampleRate) * 1_000,
   };
 }
 

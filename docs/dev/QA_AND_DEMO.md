@@ -51,6 +51,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QS-05 | 처리 중 취소·노드 이동 후 늦은 결과 | 이전 결과 무시, 상태 변경 없음 |
 | QS-06 | M3에서 같은 기준 WAV·실제 발화를 GPT/Gemini STT로 각각 실행 | 버튼 release에서 녹음 종료, 게임 UI의 transcript 원문 0건, 정확도·p50/p95 지연은 Network/Lab에서 기록, 일반 턴은 선택 공급자 1회만 호출. 로컬 Whisper 게임 요청 0건 |
 | QS-07 | STT·대화 LLM·battle Worker 경로에서 HTML 응답 주입 | 원문 `Unexpected token '<'` 대신 서비스별 한국어 Worker 연결 오류, 해당 턴 클릭·로컬 폴백 유지 |
+| QS-08 | 일반 URL과 `?debug=1`에서 동일 발화를 각각 실행하고 debug에서 두 STT 모델을 번갈아 선택 | 일반 URL은 `gpt-transcribe` 1회·모델/transcript UI 0건. debug는 선택 모델 하나만 호출하고 모델·전사 결과·왕복/Worker 지연, live의 첫 delta 지연을 표시. `gpt-live-transcribe` 요청은 24kHz PCM Realtime append·commit |
 
 ## 4. LLM과 오프라인
 
@@ -123,6 +124,7 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 | QG-05 | 새 main 배포 | CI check/test/build 후만 production 갱신 |
 | QG-06 | 공개 QA·M6 production에서 STT 요청 검사 | DEC-051의 OpenAI `/transcribe/openai`만 호출. production `/transcribe/gemini`는 404, 비교 Lab chunk는 QA bundle에 없음 |
 | QG-07 | 공개 QA 대화·전투 LLM 요청 검사 | DEC-052의 `/judge/dialogue`, `/judge/battle`이 OpenAI `gpt-5.6-luna`로 200. `/health`는 `llmProvider=openai`, `llmModel=gpt-5.6-luna`. 실패 때 클릭·로컬 폴백 유지 |
+| QG-08 | 공개 QA `?debug=1`에서 STT selector를 각 모델로 변경해 한 번씩 발화 | `gpt-transcribe`/`gpt-live-transcribe`가 한 번에 하나씩 200, 전사·지연 표시. 일반 URL 재진입 시 selector·결과 패널 없음. Worker의 임의 모델·비허용 Origin 요청은 거부. Realtime 실호출에 지역 403이 없음 |
 
 ## 11. 현장 시연 체크리스트
 
@@ -253,9 +255,9 @@ npm run build
 - [ ] 같은 배경 ID의 연속 대사는 애니메이션 없음, 다른 ID 전환만 420ms crossfade.
 - [ ] 주노 yellow·회색 망령 violet 대화창은 좌측, 도윤 rose 대화창은 우측, 익명 voice amber·내레이션 중립색은 중앙에 정렬되고 화자별 accent가 구분된다.
 - [ ] 내레이션 문장에 이름표·`내레이션`·`나레이션` 표시가 없고 본문은 중복 없는 `(…)`로 표시된다.
-- [ ] 공개 QA·production 음성 UI에 고정 사용 안내, `STT`, `GPT · 고정`, transcript 원문, 별도 음성 상태 영역이 없고 `(T)`가 포함된 `누르고 말하기` 계열 PTT 버튼만 표시된다.
+- [ ] 일반 공개 QA·production 음성 UI에 고정 사용 안내, `STT`, `GPT · 고정`, transcript 원문, 별도 음성 상태 영역이 없고 `(T)`가 포함된 `누르고 말하기` 계열 PTT 버튼만 표시된다. `?debug=1`에서만 STT selector·전사 결과·지연 패널이 보인다.
 - [ ] 진행 버튼 문구에 남은 초가 표시되지 않고 렌더 후 1.5초 전 disabled, 1.5초 뒤 같은 문구로 enabled다.
-- [ ] 화면 상단에는 진행 상태·QA 배너·debug state 패널이 없고 `?debug=1`에서만 우측 상단 장면 선택기가 보인다.
+- [ ] 화면 상단에는 진행 상태·QA 배너·debug state 패널이 없고 `?debug=1`에서만 우측 상단 장면/STT 선택기와 STT 측정 결과가 보인다.
 - [ ] 직접 프리뷰 전후 `localStorage`·`sessionStorage` 변경 0.
 - [ ] console error 0. 누락 에셋 경고만 허용.
 
@@ -350,7 +352,7 @@ npm run build
 
 ### 16.3 의도된 제한과 실패 보고
 
-- `[확정, DEC-051·054]` GPT STT Worker 실호출이 활성이다. 실제 발화는 이 URL에서 판정하되 전사문 원문은 게임 UI에 표시하지 않는다.
+- `[확정, DEC-051·054·057]` GPT STT Worker 실호출이 활성이다. 일반 URL의 실제 발화는 `gpt-transcribe`로 판정하고 전사문 원문을 표시하지 않는다. `?debug=1`에서만 `gpt-transcribe`/`gpt-live-transcribe` 단일 선택과 전사·지연 표시를 허용한다.
 - `[확정, DEC-052]` 대화·전투는 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. Network에서 `/judge/dialogue`, `/judge/battle` 응답이 200이고 Worker `/health`의 `llmProvider`, `llmModel`이 각각 `openai`, `gpt-5.6-luna`인지 확인한다.
 - Worker·OpenAI 장애 또는 쿼터 소진 때도 현재 턴 클릭 선택지와 누적 실패 로컬 강등으로 ending까지 진행돼야 한다.
 - QA Worker 허용 Origin은 `https://2klips.github.io` 하나다. 임의 Origin·Origin 없음·`/transcribe/gemini`는 거부가 정상이다.
