@@ -697,7 +697,7 @@
 
 - 실행일: 2026-08-05
 - 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
-- 상태: QA Worker OpenAI 대화·전투 실호출 PASS. Pages 새 배너 배포·사람 음성/대화 품질 smoke 진행 중
+- 상태: QA Worker OpenAI 대화·전투 실호출과 Pages·Browser QA PASS. 사람 음성/다중 대화 품질 smoke 대기
 
 ### 처리 내용
 
@@ -721,8 +721,12 @@
 | OpenAI 대화 실호출 | PASS | Pages Origin, `/judge/dialogue` 200, JSON 판정 반환 |
 | OpenAI 전투 실호출 | PASS | Pages Origin, `/judge/battle` 200, momentum·narration JSON 판정 반환 |
 | Secret 최소화 | PASS | QA Secret 이름 목록에 `OPENAI_API_KEY`만 존재. 값 비노출 |
+| Pages workflow | PASS | run `31002296462`, commit `4efc6a8`, check/test/build·artifact 경계·배포 성공 |
+| Browser desktop | PASS | 새 OpenAI 배너·commit, 마이크 선행 화면, title 확인. framework overlay·console warn/error 0 |
+| Browser mobile | PASS | 390×844, 가로 overflow 0, 새 배너·마이크 화면 표시. console warn/error 0 |
+| Browser interaction | PASS | `?debug=1` 장면 선택기에서 N2 주노 등장 선택, 선택 상태·도윤/주노 DOM·장면 메타 갱신 |
 
 ### 현재 판정
 
 - 공개 QA 서버의 대화·전투 LLM 지역 제한은 OpenAI 전환으로 해소됐다. 배포 직후 첫 POST 한 번은 구버전 isolate 응답이었으나 cache-buster 재호출과 Secret 제거 뒤 health·대화·전투가 새 버전에서 반복 통과했다.
-- Pages 배너·commit 배포와 브라우저 Network 확인을 끝내면 링크 수준 전환이 완료된다. 사람 음성 STT와 여러 자유 발화의 말투·판정 품질은 별도 수동 QA로 남는다.
+- Pages 배너·commit 배포와 브라우저 렌더 확인까지 완료됐다. 사람 음성 STT와 여러 자유 발화의 말투·판정 품질은 별도 수동 QA로 남는다.
