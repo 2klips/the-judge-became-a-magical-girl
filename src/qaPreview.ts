@@ -17,7 +17,8 @@ export function qaPreviewStatusText(commit?: string): string {
   return [
     "QA PREVIEW",
     "타이틀 마이크 테스트 필수",
-    "GPT STT Worker 활성",
+    "GPT STT 활성",
+    "OpenAI LLM 활성",
     "클릭·오프라인 폴백",
     commit ? `commit ${commit.slice(0, 7)}` : null,
   ]

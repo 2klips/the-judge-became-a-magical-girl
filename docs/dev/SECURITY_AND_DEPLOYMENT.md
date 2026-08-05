@@ -12,11 +12,11 @@ Chrome on GitHub Pages
 Cloudflare Worker
   → Origin/요청 검증, Secret 주입
   → 선택된 STT 공급자(OpenAI 또는 Gemini)
-  → Gemini LLM API
+  → 환경별 선택 LLM API(OpenAI 또는 Gemini)
 ```
 
 - GitHub Pages 번들은 공개 정보다. 비밀을 넣을 수 없다.
-- Worker만 STT 공급자와 Gemini LLM 자격증명을 읽는다.
+- Worker만 STT 공급자와 환경별 선택 LLM 자격증명을 읽는다.
 - `[확정, DEC-028]` MVP-1까지 OpenAI/Gemini STT Secret을 모두 사용할 수 있지만 일반 턴은 선택된 공급자 하나만 호출한다. M6 production은 최종 선택 공급자만 활성화한다.
 - LLM 응답은 신뢰하지 않고 클라이언트에서 다시 zod 검증·클램프한다.
 
@@ -49,14 +49,14 @@ Cloudflare Worker
 - 오류는 일반화된 코드로 반환한다. 공급자 응답·키·내부 스택을 브라우저에 노출하지 않는다.
 - `[제안]` 요청별 상관 ID를 생성하되 발화나 개인정보를 ID에 넣지 않는다.
 
-## 5. STT 공급자·Gemini LLM 쿼터와 키 운영
+## 5. STT 공급자·LLM 쿼터와 키 운영
 
 - OpenAI와 Google 콘솔에서 평가용 STT 키의 사용 상한을 각각 설정한다.
 - GPT/Gemini STT와 Gemini LLM의 모델 ID, 무료 한도, 가격, rate limit은 M3 시작 직전 공식 문서와 콘솔에서 확인한다. 2026-08-02 확인 결과 대화 LLM은 DEC-018에 따라 `gemini-3.1-flash-lite`, `thinkingLevel: minimal`을 사용한다.
 - MVP-1 측정은 공급자·오디오 길이·성공 여부·지연만 기록하고 키나 개인 발화 원문은 기록하지 않는다.
 - `[확정, DEC-051]` 공개 QA와 이후 production 게임 STT는 OpenAI `gpt-transcribe`로 고정한다. production Worker는 Gemini STT route를 노출하지 않으며, Gemini STT는 격리된 로컬 비교 Lab에만 남긴다.
-- `GEMINI_API_KEY`는 비선택 STT Secret이 아니라 기존 대화·전투 LLM 판정 Secret이다. 공개 QA에서 계속 필요하며 STT 요청에는 사용하지 않는다.
-- 시연 전날·직전에 선택 STT와 Gemini LLM 사용량·차단 상태를 확인한다.
+- `[확정, DEC-052]` 공개 QA 대화·전투는 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`, strict JSON Schema, `store: false`로 고정한다. QA Worker에는 `OPENAI_API_KEY`만 필요하며 `GEMINI_API_KEY`는 제거한다. 로컬 M3 회귀·비교는 Gemini 기본값과 로컬 Secret을 유지한다.
+- 시연 전날·직전에 선택 STT와 해당 환경 LLM 사용량·차단 상태를 확인한다.
 - 예비 키 로테이션 담당자와 절차를 팀 내부 비공개 운영 기록에 둔다.
 - STT 쿼터 소진은 클릭·로컬 입력 경로, LLM 쿼터 소진은 고정 응답·로컬 판정 경로로 강등한다. 게임 실패로 처리하지 않는다.
 
@@ -98,8 +98,8 @@ Git 제외 대상:
 - 빌드: `npm run build:qa`. 게임 `index.html`만 만들며 `stt-lab.html`, 로컬 Whisper WASM·모델을 제외한다.
 - 네트워크: `[확정, DEC-051]` QA 모드는 GitHub Actions repository variable `QA_WORKER_URL`을 `VITE_WORKER_URL`로 주입한다. 값은 HTTPS `*.workers.dev`여야 하며 없거나 HTTP면 build/runtime 게이트가 실패한다. Worker `env.qa`는 Pages Origin만 허용하고 OpenAI STT route만 활성화한다.
 - 배포값: `QA_WORKER_URL=https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`.
-- LLM 제한: 2026-08-04 Cloudflare 실호출에서 Gemini가 `User location is not supported for the API use.`로 400을 반환했다. Secret·모델·structured output 요청은 로컬에서 200을 확인했으므로 현재 원인은 Cloudflare egress 위치다. 공개 QA는 클릭·로컬 폴백으로 완주하며, 실제 대화·전투 LLM 공급자나 백엔드 위치는 사용자 결정 전 변경하지 않는다.
-- 화면: `QA PREVIEW`, 타이틀 마이크 테스트 필수, GPT STT Worker 활성, 클릭·오프라인 폴백, commit 7자를 표시하고 검색 엔진에 `noindex,nofollow`를 요청한다. 게임 공급자 선택 UI는 `GPT · 고정`으로 표시한다.
+- LLM: `[확정, DEC-052]` Gemini 지역 제한을 우회하지 않고 공개 QA의 `/judge/dialogue`, `/judge/battle`만 OpenAI `gpt-5.6-luna`로 전환한다. 공개 HTTP 요청·응답 스키마와 클릭·로컬 폴백은 유지한다. M6 production LLM은 별도 확정 전 기존 계약을 바꾸지 않는다.
+- 화면: `QA PREVIEW`, 타이틀 마이크 테스트 필수, GPT STT 활성, OpenAI LLM 활성, 클릭·오프라인 폴백, commit 7자를 표시하고 검색 엔진에 `noindex,nofollow`를 요청한다. 게임 STT 공급자 선택 UI는 `GPT · 고정`으로 표시한다.
 - debug: `?debug=1`과 장면 프리뷰는 작업자 QA를 위해 의도적으로 유지한다. 정식 production의 상태 변경 debug 정책은 DEC-021 해결 전이며 이 예외로 확정하지 않는다.
 - 종료: M6 정식 배포 때 production workflow·Worker Origin·GPT STT·debug 정책으로 교체하거나 임시 Pages를 내린다.
 - 환경 보호: `github-pages` 배포 허용 branch는 `main`, `codex/m5-asset-handoff-docs` 두 개다. 임의 branch나 tag는 허용하지 않는다.
@@ -138,9 +138,10 @@ M1 초기 commit 전에는 추가로 `git diff --cached --check`, staged 파일 
 
 - [x] M5 QA Pages Origin 확정 — `https://2klips.github.io`
 - [x] QA Worker allowlist 최소화 — exact Origin 1개
-- [x] 최종 STT 공급자 확정 — OpenAI `gpt-transcribe`; Gemini LLM 모델은 `gemini-3.1-flash-lite`
-- [x] OpenAI·Gemini Secret 등록, Gemini STT route 제거, 코드 미포함
-- [ ] 공개 QA 대화·전투 LLM 지역 제한 해결 — 공급자 또는 백엔드 위치 사용자 결정 필요
+- [x] 최종 STT 공급자 확정 — OpenAI `gpt-transcribe`
+- [x] 공개 QA 대화·전투 LLM 확정 — OpenAI `gpt-5.6-luna`, `reasoning.effort: low`
+- [x] QA `OPENAI_API_KEY` Secret 등록, Gemini STT route 제거, 코드 미포함
+- [x] 공개 QA OpenAI 대화·전투 실호출 smoke — 두 route 200·스키마·안전 검증 통과. 다중 발화 품질 QA는 계속
 - [ ] `.gitignore`와 예시 env 확인
 - [ ] CI check/test/build 성공
 - [ ] Pages base와 asset/scenario 경로 성공

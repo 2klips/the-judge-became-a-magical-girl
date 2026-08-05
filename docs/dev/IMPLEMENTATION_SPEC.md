@@ -116,7 +116,7 @@ PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규�
 - `[확정, DEC-050]` 게임 내 PTT는 포인터·포커스된 Space/Enter와 전역 `T` 홀드/릴리스를 지원한다. 입력·선택 컨트롤 편집 중에는 전역 `T`를 가로채지 않는다.
 - `[확정, DEC-050]` 대사·판정 응답·엔딩의 다음 페이지 진행 버튼은 화면 렌더 후 2초 동안 비활성화하고, 준비 뒤 한 번만 진행한다.
 
-`[확정, DEC-051]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. Gemini 대화·전투 LLM은 별도 계약으로 유지한다.
+`[확정, DEC-051]` 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
 
 분기 우선순위:
 
@@ -247,7 +247,7 @@ LLM 로컬 모드는 런타임 어댑터 상태다. 제품 `GameState`에 새 �
 | `ui/*` | 렌더·사용자 이벤트 전달 | 상태 규칙 |
 | `audio/*` | BGM/SFX 재생 | 분기 규칙 |
 | `data/loader.ts` | fetch, zod, 참조 무결성 | 자동 JSON 수정 |
-| `worker/` | Origin 검증, GPT/Gemini STT 공급자 라우팅, Gemini LLM 호출, 요청·응답 제한 | 게임 상태·시나리오 소유 |
+| `worker/` | Origin 검증, GPT/Gemini STT 라우팅, OpenAI/Gemini LLM 어댑터, 요청·응답 제한 | 게임 상태·시나리오 소유 |
 
 ```text
 main(composition root)

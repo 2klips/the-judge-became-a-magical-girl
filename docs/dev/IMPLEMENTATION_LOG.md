@@ -692,3 +692,37 @@
 
 - 공개 QA의 GPT STT 서버 경계와 Pages 배포는 활성화됐다. 사용자 실제 마이크로 타이틀 테스트 문장과 게임 내 GPT 전사를 각 1회 확인하는 smoke만 남는다.
 - Gemini LLM 실패 때 기존 클릭·로컬 폴백으로 ending까지 진행할 수 있다. 공급자 변경 또는 별도 backend 도입은 제품·운영 결정이므로 사용자 확정 전 수행하지 않는다.
+
+## M5 — 공개 QA 대화·전투 OpenAI 전환
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: QA Worker OpenAI 대화·전투 실호출 PASS. Pages 새 배너 배포·사람 음성/대화 품질 smoke 진행 중
+
+### 처리 내용
+
+- 사용자 결정 DEC-052에 따라 공개 QA `/judge/dialogue`, `/judge/battle`을 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`로 전환했다. `text.format` strict JSON Schema, `store: false`, 최대 출력 256 토큰을 적용했다.
+- Worker 내부에 OpenAI/Gemini structured LLM 어댑터를 추가했다. 로컬 M3 회귀 기본값은 Gemini로 유지하고 공개 `qa` 환경만 OpenAI로 고정했다. 공개 HTTP route, 클라이언트 zod 검증, intent·flag 화이트리스트, 안전 응답 검사, 클릭·로컬 완주 폴백은 바꾸지 않았다.
+- `/health`에 실제 LLM 공급자·설정 여부·모델을 추가했다. QA 배너에도 `OpenAI LLM 활성`을 표시했다.
+- QA Worker의 `GEMINI_API_KEY` Secret을 제거했다. 로컬 `.env.local`과 비교 Lab 설정은 변경하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | OpenAI 대화 502 RED→200 GREEN, battle 502 RED→200 GREEN, QA 배너 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 156 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| Wrangler dry-run | PASS | `env.qa` OpenAI binding 확인, 설정 경고 0 |
+| Worker deploy | PASS | version `26429c08-8976-48a4-a126-b27a733df679`, startup 19ms |
+| Worker health | PASS | `llmProvider=openai`, `llmConfigured=true`, `llmModel=gpt-5.6-luna`, `geminiConfigured=false` |
+| OpenAI 대화 실호출 | PASS | Pages Origin, `/judge/dialogue` 200, JSON 판정 반환 |
+| OpenAI 전투 실호출 | PASS | Pages Origin, `/judge/battle` 200, momentum·narration JSON 판정 반환 |
+| Secret 최소화 | PASS | QA Secret 이름 목록에 `OPENAI_API_KEY`만 존재. 값 비노출 |
+
+### 현재 판정
+
+- 공개 QA 서버의 대화·전투 LLM 지역 제한은 OpenAI 전환으로 해소됐다. 배포 직후 첫 POST 한 번은 구버전 isolate 응답이었으나 cache-buster 재호출과 Secret 제거 뒤 health·대화·전투가 새 버전에서 반복 통과했다.
+- Pages 배너·commit 배포와 브라우저 Network 확인을 끝내면 링크 수준 전환이 완료된다. 사람 음성 STT와 여러 자유 발화의 말투·판정 품질은 별도 수동 QA로 남는다.

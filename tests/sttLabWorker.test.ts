@@ -84,6 +84,7 @@ function env(overrides: Partial<SttLabEnv>): SttLabEnv {
     GEMINI_API_KEY: "test-gemini-key",
     OPENAI_TRANSCRIBE_MODEL: "gpt-transcribe",
     GEMINI_TRANSCRIBE_MODEL: "gemini-2.5-flash",
+    LLM_PROVIDER: "gemini",
     GEMINI_LLM_MODEL: "gemini-3.1-flash-lite",
     ...overrides,
   };

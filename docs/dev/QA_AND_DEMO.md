@@ -122,13 +122,14 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 | QG-04 | 임의 Origin/Origin 없음→Workers | 거부, CORS 허용 헤더 없음 |
 | QG-05 | 새 main 배포 | CI check/test/build 후만 production 갱신 |
 | QG-06 | 공개 QA·M6 production에서 STT 요청 검사 | DEC-051의 OpenAI `/transcribe/openai`만 호출. production `/transcribe/gemini`는 404, 비교 Lab chunk는 QA bundle에 없음 |
+| QG-07 | 공개 QA 대화·전투 LLM 요청 검사 | DEC-052의 `/judge/dialogue`, `/judge/battle`이 OpenAI `gpt-5.6-luna`로 200. `/health`는 `llmProvider=openai`, `llmModel=gpt-5.6-luna`. 실패 때 클릭·로컬 폴백 유지 |
 
 ## 11. 현장 시연 체크리스트
 
 ### 전날
 
 - [ ] 검증된 Pages URL과 Workers health 확인
-- [ ] 최종 선택 STT 공급자와 Gemini LLM의 일일 쿼터·결제/무료 한도·예비 키 상태 확인
+- [ ] 최종 선택 STT 공급자와 해당 환경 LLM의 일일 쿼터·결제/무료 한도·예비 키 상태 확인
 - [ ] 현장용 Chrome 프로필, 마이크 권한 초기화 방법 확인
 - [ ] 정상·클릭·오프라인 경로 각각 완주
 - [ ] 충전기, 유선/무선 마이크, 네트워크 대안 준비
@@ -139,7 +140,7 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 - [ ] 다른 마이크 앱 종료, 입력 장치·레벨 확인
 - [ ] Chrome에서 Pages 탭만 열고 캐시/버전 확인
 - [ ] 타이틀에서 마이크 1회 테스트 후 상태 초기화
-- [ ] Workers·최종 선택 STT 공급자·Gemini LLM 쿼터 확인
+- [ ] Workers·최종 선택 STT 공급자·해당 환경 LLM 쿼터 확인
 - [ ] `?debug=1` 비상 탭과 일반 시연 탭 준비
 
 ### 시연 순서
@@ -318,7 +319,7 @@ npm run build
 
 ## 16. M5 임시 QA Pages 작업자 가이드
 
-대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. 상단에 `QA PREVIEW · 타이틀 마이크 테스트 필수 · GPT STT Worker 활성 · 클릭·오프라인 폴백` 배너가 없으면 잘못된 배포이므로 테스트를 중단한다. QA Worker는 `https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`다.
+대상 URL은 `https://2klips.github.io/the-judge-became-a-magical-girl/`이다. 상단에 `QA PREVIEW · 타이틀 마이크 테스트 필수 · GPT STT 활성 · OpenAI LLM 활성 · 클릭·오프라인 폴백` 배너가 없으면 잘못된 배포이므로 테스트를 중단한다. QA Worker는 `https://nhn-voice-m5-qa-worker.the-judge-became-a-magical-girl.workers.dev`다.
 
 ### 16.1 기본 확인
 
@@ -345,8 +346,8 @@ npm run build
 ### 16.3 의도된 제한과 실패 보고
 
 - `[확정, DEC-051]` GPT STT Worker 실호출이 활성이다. 실제 발화와 전사문 선표시를 이 URL에서 판정한다.
-- `[관찰, 2026-08-04]` 같은 Cloudflare Worker의 Gemini 대화·전투 실호출은 Google API가 `User location is not supported for the API use.`를 반환해 차단된다. 클라이언트 클릭·로컬 폴백 완주성은 유지하지만 공개 QA의 Gemini 자유 대화 판정은 검증 대상에서 제외한다. 실제 LLM을 다시 활성화하려면 공급자 또는 백엔드 위치를 사용자가 별도 확정해야 한다.
-- Worker·OpenAI·Gemini 장애 또는 쿼터 소진 때도 현재 턴 클릭 선택지와 누적 실패 로컬 강등으로 ending까지 진행돼야 한다.
+- `[확정, DEC-052]` 대화·전투는 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. Network에서 `/judge/dialogue`, `/judge/battle` 응답이 200이고 Worker `/health`의 `llmProvider`, `llmModel`이 각각 `openai`, `gpt-5.6-luna`인지 확인한다.
+- Worker·OpenAI 장애 또는 쿼터 소진 때도 현재 턴 클릭 선택지와 누적 실패 로컬 강등으로 ending까지 진행돼야 한다.
 - QA Worker 허용 Origin은 `https://2klips.github.io` 하나다. 임의 Origin·Origin 없음·`/transcribe/gemini`는 거부가 정상이다.
 - `stt-lab.html`은 배포 대상이 아니며 404가 정상이다.
 - `noindex,nofollow`는 검색 노출 방지 요청일 뿐 접근 통제가 아니다. URL과 화면은 공개로 취급한다.
@@ -354,5 +355,5 @@ npm run build
 
 ### 16.4 임시 QA 판정
 
-- `npm run check`, `npm test`, `npm run build:qa`, QA Worker dry-run/deploy, QG-03·QG-04·QG-06, Pages workflow, 배포 후 데스크톱·모바일 실제 발화 smoke가 모두 PASS해야 링크를 GPT STT QA 배포 가능으로 표시한다. Gemini 자유 대화 실판정은 위 지역 제한을 별도 BLOCKED로 기록한다.
+- `npm run check`, `npm test`, `npm run build:qa`, QA Worker dry-run/deploy, QG-03·QG-04·QG-06·QG-07, Pages workflow, 배포 후 데스크톱·모바일 실제 발화와 OpenAI 대화·전투 smoke가 모두 PASS해야 링크를 공개 QA 가능으로 표시한다.
 - 임시 QA PASS는 M5 최종 PASS 또는 M6 production PASS가 아니다.

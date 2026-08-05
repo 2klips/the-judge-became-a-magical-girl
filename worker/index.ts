@@ -6,12 +6,36 @@ import {
 } from "../src/judge/schema";
 
 const DEFAULT_OPENAI_MODEL = "gpt-transcribe";
+const DEFAULT_OPENAI_LLM_MODEL = "gpt-5.6-luna";
 const DEFAULT_GEMINI_TRANSCRIBE_MODEL = "gemini-2.5-flash";
 const DEFAULT_GEMINI_LLM_MODEL = "gemini-3.1-flash-lite";
+const OPENAI_LLM_REASONING_EFFORT = "low";
 const MAX_AUDIO_BYTES = 14 * 1024 * 1024;
 const MAX_JSON_BYTES = 32 * 1024;
 
 const OpenAiTranscriptSchema = z.object({ text: z.string() });
+const LlmProviderSchema = z.enum(["gemini", "openai"]);
+const OpenAiResponseSchema = z.object({
+  status: z.string().optional(),
+  output: z.array(
+    z
+      .object({
+        type: z.string(),
+        content: z
+          .array(
+            z
+              .object({
+                type: z.string(),
+                text: z.string().optional(),
+                refusal: z.string().optional(),
+              })
+              .passthrough(),
+          )
+          .optional(),
+      })
+      .passthrough(),
+  ),
+});
 const GeminiResponseSchema = z.object({
   candidates: z
     .array(
@@ -79,6 +103,15 @@ interface WorkerOptions {
   enableGeminiStt?: boolean;
 }
 
+interface StructuredLlmRequest {
+  label: string;
+  systemInstruction: string;
+  input: string;
+  schemaName: string;
+  responseJsonSchema: Record<string, unknown>;
+  maxOutputTokens: number;
+}
+
 export function createWorker(
   upstreamFetch: UpstreamFetch = fetch,
   { enableGeminiStt = false }: WorkerOptions = {},
@@ -96,13 +129,19 @@ export function createWorker(
 
       const { pathname } = new URL(request.url);
       if (request.method === "GET" && pathname === "/health") {
+        const llmProvider = resolveLlmProvider(env);
         return withCors(
           json({
             openaiConfigured: Boolean(env.OPENAI_API_KEY),
             geminiConfigured: enableGeminiStt && Boolean(env.GEMINI_API_KEY),
             openaiModel: env.OPENAI_TRANSCRIBE_MODEL || DEFAULT_OPENAI_MODEL,
             geminiModel: env.GEMINI_TRANSCRIBE_MODEL || DEFAULT_GEMINI_TRANSCRIBE_MODEL,
-            llmModel: env.GEMINI_LLM_MODEL || DEFAULT_GEMINI_LLM_MODEL,
+            llmProvider,
+            llmConfigured:
+              llmProvider === "openai"
+                ? Boolean(env.OPENAI_API_KEY)
+                : Boolean(env.GEMINI_API_KEY),
+            llmModel: resolveLlmModel(env, llmProvider),
           }),
           origin,
         );
@@ -235,7 +274,7 @@ async function transcribeWithGemini(
   const model = env.GEMINI_TRANSCRIBE_MODEL || DEFAULT_GEMINI_TRANSCRIBE_MODEL;
   const response = await callGemini(
     model,
-    env.GEMINI_API_KEY,
+    requireWorkerSecret(env.GEMINI_API_KEY, "Gemini"),
     {
       contents: [
         {
@@ -275,80 +314,61 @@ async function judgeDialogue(
   env: Env,
   upstreamFetch: UpstreamFetch,
 ): Promise<z.infer<typeof DialogueJudgementSchema>> {
-  const model = env.GEMINI_LLM_MODEL || DEFAULT_GEMINI_LLM_MODEL;
   const intentIds = input.intents.map(({ id }) => id);
-  const response = await callGemini(
-    model,
-    env.GEMINI_API_KEY,
-    {
-      systemInstruction: {
-        parts: [
-          {
-            text: [
-              `너는 ${input.persona.name}, ${input.persona.role}다.`,
-              `성격: ${input.persona.traits.join(" / ")}`,
-              `말투: ${input.persona.speechRules.join(" / ")}`,
-              `금기: ${input.persona.taboos.join(" / ")}`,
-              "반말, 최대 두 문장, 80자 이내. 플레이어가 말하지 않은 감정을 단정하지 마라.",
-              "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
-              "허용 intent와 flag 외 값을 만들지 마라.",
-              "intentId는 상태 분류용이다. reply는 intent 예시를 반복하지 말고 플레이어의 실제 말에 직접 답하라.",
-              "플레이어가 불안·두려움·분노·진지한 고민을 직접 말하면 먼저 존중하고 안심시켜라. 농담, 압박, 무관한 자기소개나 질문으로 회피하지 마라.",
-              "플레이어가 직접 말한 감정만 같은 표현으로 받아들여라. 분노를 놀람처럼 다른 감정으로 바꾸어 단정하지 마라.",
-              "엉뚱한 농담에는 짧게 받아친 뒤 현재 대화로 돌아와라. 금지 정보 요구는 그 존재를 확인하지 말고 짧게 거절하라.",
-              "flag는 플레이어가 해당 약속이나 선택을 명시적으로 말한 경우에만 설정하라. 단순 질문·감정 표현·농담에서는 빈 배열을 사용하라.",
-            ].join("\n"),
-          },
-        ],
+  const systemInstruction = [
+    `너는 ${input.persona.name}, ${input.persona.role}다.`,
+    `성격: ${input.persona.traits.join(" / ")}`,
+    `말투: ${input.persona.speechRules.join(" / ")}`,
+    `금기: ${input.persona.taboos.join(" / ")}`,
+    "반말, 최대 두 문장, 80자 이내. 플레이어가 말하지 않은 감정을 단정하지 마라.",
+    "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
+    "허용 intent와 flag 외 값을 만들지 마라.",
+    "intentId는 상태 분류용이다. reply는 intent 예시를 반복하지 말고 플레이어의 실제 말에 직접 답하라.",
+    "플레이어가 불안·두려움·분노·진지한 고민을 직접 말하면 먼저 존중하고 안심시켜라. 농담, 압박, 무관한 자기소개나 질문으로 회피하지 마라.",
+    "플레이어가 직접 말한 감정만 같은 표현으로 받아들여라. 분노를 놀람처럼 다른 감정으로 바꾸어 단정하지 마라.",
+    "엉뚱한 농담에는 짧게 받아친 뒤 현재 대화로 돌아와라. 금지 정보 요구는 그 존재를 확인하지 말고 짧게 거절하라.",
+    "flag는 플레이어가 해당 약속이나 선택을 명시적으로 말한 경우에만 설정하라. 단순 질문·감정 표현·농담에서는 빈 배열을 사용하라.",
+  ].join("\n");
+  const responseJsonSchema = {
+    type: "object",
+    properties: {
+      intentId: { type: "string", enum: intentIds },
+      affinityDelta: { type: "integer", minimum: -3, maximum: 3 },
+      emotion: {
+        type: "string",
+        enum: ["neutral", "happy", "shy", "upset", "surprised"],
       },
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: JSON.stringify({
-                objective: input.objective,
-                context: input.llmContext,
-                recentTurns: input.recentTurns,
-                player: input.transcript,
-                intents: input.intents,
-                allowedFlags: input.allowedFlags,
-                sampleLines: input.persona.sampleLines,
-              }),
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 256,
-        thinkingConfig: { thinkingLevel: "minimal" },
-        responseMimeType: "application/json",
-        responseJsonSchema: {
-          type: "object",
-          properties: {
-            intentId: { type: "string", enum: intentIds },
-            affinityDelta: { type: "integer", minimum: -3, maximum: 3 },
-            emotion: {
-              type: "string",
-              enum: ["neutral", "happy", "shy", "upset", "surprised"],
-            },
-            flags: {
-              type: "array",
-              items: { type: "string", enum: input.allowedFlags },
-              maxItems: input.allowedFlags.length,
-            },
-            reply: { type: "string", maxLength: 80 },
-          },
-          required: ["intentId", "affinityDelta", "emotion", "flags", "reply"],
-          additionalProperties: false,
-        },
+      flags: {
+        type: "array",
+        items: { type: "string", enum: input.allowedFlags },
+        maxItems: input.allowedFlags.length,
       },
+      reply: { type: "string", maxLength: 80 },
     },
+    required: ["intentId", "affinityDelta", "emotion", "flags", "reply"],
+    additionalProperties: false,
+  };
+  const response = await callStructuredLlm(
+    {
+      label: "대화 LLM",
+      systemInstruction,
+      input: JSON.stringify({
+        objective: input.objective,
+        context: input.llmContext,
+        recentTurns: input.recentTurns,
+        player: input.transcript,
+        intents: input.intents,
+        allowedFlags: input.allowedFlags,
+        sampleLines: input.persona.sampleLines,
+      }),
+      schemaName: "dialogue_judgement",
+      responseJsonSchema,
+      maxOutputTokens: 256,
+    },
+    env,
     upstreamFetch,
-    "Gemini LLM",
   );
-  const parsed = DialogueJudgementSchema.parse(extractGeminiJson(response));
+  const parsed = DialogueJudgementSchema.parse(response);
   if (!intentIds.includes(parsed.intentId)) throw new WorkerError(502, "허용되지 않은 intent입니다.");
   if (parsed.flags.some((flag) => !input.allowedFlags.includes(flag))) {
     throw new WorkerError(502, "허용되지 않은 flag입니다.");
@@ -366,64 +386,43 @@ async function judgeBattle(
   env: Env,
   upstreamFetch: UpstreamFetch,
 ): Promise<z.infer<typeof BattleJudgementSchema>> {
-  const model = env.GEMINI_LLM_MODEL || DEFAULT_GEMINI_LLM_MODEL;
-  const response = await callGemini(
-    model,
-    env.GEMINI_API_KEY,
+  const response = await callStructuredLlm(
     {
-      systemInstruction: {
-        parts: [
-          {
-            text: [
-              "너는 언령 배틀의 적과 나레이션을 판정한다.",
-              "플레이어 발화가 현재 적의 약점을 얼마나 정확히 찌르는지 평가하라.",
-              "momentumDelta는 반드시 -5에서 +10 사이 정수다.",
-              "reply와 narration은 각각 80자 이내로 작성하라.",
-              "플레이어가 말하지 않은 감정을 단정하지 마라.",
-              "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
-            ].join("\n"),
+      label: "전투 LLM",
+      systemInstruction: [
+        "너는 언령 배틀의 적과 나레이션을 판정한다.",
+        "플레이어 발화가 현재 적의 약점을 얼마나 정확히 찌르는지 평가하라.",
+        "momentumDelta는 반드시 -5에서 +10 사이 정수다.",
+        "reply와 narration은 각각 80자 이내로 작성하라.",
+        "플레이어가 말하지 않은 감정을 단정하지 마라.",
+        "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
+      ].join("\n"),
+      input: JSON.stringify({
+        enemyPrompt: input.enemyPrompt,
+        context: input.llmContext,
+        player: input.transcript,
+      }),
+      schemaName: "battle_judgement",
+      responseJsonSchema: {
+        type: "object",
+        properties: {
+          reply: { type: "string", maxLength: 80 },
+          intent: {
+            type: "string",
+            enum: ["persuade", "taunt", "encourage", "other"],
           },
-        ],
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: JSON.stringify({
-                enemyPrompt: input.enemyPrompt,
-                context: input.llmContext,
-                player: input.transcript,
-              }),
-            },
-          ],
+          momentumDelta: { type: "integer", minimum: -5, maximum: 10 },
+          narration: { type: "string", maxLength: 80 },
         },
-      ],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 256,
-        thinkingConfig: { thinkingLevel: "minimal" },
-        responseMimeType: "application/json",
-        responseJsonSchema: {
-          type: "object",
-          properties: {
-            reply: { type: "string", maxLength: 80 },
-            intent: {
-              type: "string",
-              enum: ["persuade", "taunt", "encourage", "other"],
-            },
-            momentumDelta: { type: "integer", minimum: -5, maximum: 10 },
-            narration: { type: "string", maxLength: 80 },
-          },
-          required: ["reply", "intent", "momentumDelta"],
-          additionalProperties: false,
-        },
+        required: ["reply", "intent", "momentumDelta"],
+        additionalProperties: false,
       },
+      maxOutputTokens: 256,
     },
+    env,
     upstreamFetch,
-    "Gemini battle LLM",
   );
-  const parsed = BattleJudgementSchema.parse(extractGeminiJson(response));
+  const parsed = BattleJudgementSchema.parse(response);
   try {
     assertReplyPolicy(parsed.reply, input.transcript);
     if (parsed.narration) assertReplyPolicy(parsed.narration, input.transcript);
@@ -431,6 +430,115 @@ async function judgeBattle(
     throw new WorkerError(502, "전투 응답이 안전 규칙을 위반했습니다.");
   }
   return parsed;
+}
+
+async function callStructuredLlm(
+  request: StructuredLlmRequest,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+): Promise<unknown> {
+  const provider = resolveLlmProvider(env);
+  if (provider === "openai") {
+    const response = await callOpenAiResponses(
+      resolveLlmModel(env, provider),
+      env.OPENAI_API_KEY,
+      request,
+      upstreamFetch,
+    );
+    return extractOpenAiJson(response);
+  }
+
+  const response = await callGemini(
+    resolveLlmModel(env, provider),
+    requireWorkerSecret(env.GEMINI_API_KEY, "Gemini"),
+    {
+      systemInstruction: { parts: [{ text: request.systemInstruction }] },
+      contents: [{ role: "user", parts: [{ text: request.input }] }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: request.maxOutputTokens,
+        thinkingConfig: { thinkingLevel: "minimal" },
+        responseMimeType: "application/json",
+        responseJsonSchema: request.responseJsonSchema,
+      },
+    },
+    upstreamFetch,
+    `Gemini ${request.label}`,
+  );
+  return extractGeminiJson(response);
+}
+
+async function callOpenAiResponses(
+  model: string,
+  apiKey: string,
+  request: StructuredLlmRequest,
+  upstreamFetch: UpstreamFetch,
+): Promise<z.infer<typeof OpenAiResponseSchema>> {
+  const response = await upstreamFetch(
+    new Request("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        instructions: request.systemInstruction,
+        input: request.input,
+        reasoning: { effort: OPENAI_LLM_REASONING_EFFORT },
+        max_output_tokens: request.maxOutputTokens,
+        store: false,
+        text: {
+          format: {
+            type: "json_schema",
+            name: request.schemaName,
+            strict: true,
+            schema: makeOpenAiStrictSchema(request.responseJsonSchema),
+          },
+        },
+      }),
+    }),
+  );
+  if (!response.ok) {
+    throw new WorkerError(502, `OpenAI ${request.label} 호출 실패 (${response.status})`);
+  }
+  return OpenAiResponseSchema.parse(await response.json());
+}
+
+function extractOpenAiJson(response: z.infer<typeof OpenAiResponseSchema>): unknown {
+  if (response.status && response.status !== "completed") {
+    throw new WorkerError(502, "OpenAI LLM 응답이 완료되지 않았습니다.");
+  }
+  const content = response.output
+    .flatMap((item) => item.content ?? [])
+    .find((part) => part.type === "output_text" && part.text?.trim());
+  if (!content?.text) throw new WorkerError(502, "OpenAI LLM 응답 본문이 없습니다.");
+  try {
+    return JSON.parse(content.text);
+  } catch {
+    throw new WorkerError(502, "OpenAI LLM 응답 형식이 올바르지 않습니다.");
+  }
+}
+
+function resolveLlmProvider(env: Env): z.infer<typeof LlmProviderSchema> {
+  return LlmProviderSchema.parse(env.LLM_PROVIDER || "gemini");
+}
+
+function makeOpenAiStrictSchema(schema: Record<string, unknown>): Record<string, unknown> {
+  const properties = schema.properties;
+  if (!properties || typeof properties !== "object" || Array.isArray(properties)) return schema;
+  return { ...schema, required: Object.keys(properties) };
+}
+
+function resolveLlmModel(env: Env, provider: z.infer<typeof LlmProviderSchema>): string {
+  return provider === "openai"
+    ? env.OPENAI_LLM_MODEL || DEFAULT_OPENAI_LLM_MODEL
+    : env.GEMINI_LLM_MODEL || DEFAULT_GEMINI_LLM_MODEL;
+}
+
+function requireWorkerSecret(value: string | undefined, provider: string): string {
+  if (!value) throw new WorkerError(500, `${provider} API 설정이 없습니다.`);
+  return value;
 }
 
 async function callGemini(
