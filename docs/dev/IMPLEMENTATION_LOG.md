@@ -766,3 +766,39 @@
 
 - 요청된 UI 계약은 구현·검증됐다. 실제 마이크 권한과 사람 음성 STT는 브라우저 자동화에서 대신 승인하지 않았으므로 기존 수동 QA 항목으로 유지한다.
 - 공개 Pages 재배포와 브라우저 확인까지 완료됐다. Actions에 Node 20 폐기 예정 경고가 있으나 GitHub가 Node 24로 강제 실행해 현재 build·deploy에는 영향이 없다.
+
+## M5 주노 색·내레이션·음성 UI 후속 정리
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- 주노의 발화자 색을 청록에서 노란색 계열로 변경했다. 어두운 대화창 표면과 밝은 노란색 테두리·이름표를 함께 적용해 배경 위 대비를 유지한다.
+- `speaker: narration`인 독백·내레이션을 화면에서 `(…)` 형식으로 표시한다. 이미 괄호가 있는 문장은 중복으로 감싸지 않으며 원본 시나리오 JSON은 변경하지 않는다.
+- 고정된 STT·GPT 공급자 표기를 플레이 UI에서 제거했다. 공개 QA의 내부 공급자 계약은 OpenAI `gpt-transcribe`·`gpt-5.6-luna`로 유지한다.
+- 음성 인식이 끝난 뒤 최종 TRANSCRIPT를 화면에 표시하지 않고 `음성 입력 완료`·`응답 판정 중…` 상태만 표시한다. 실제 전사 문자열은 대화·전투 판정 내부 입력으로 계속 사용한다.
+- 신규 외부 이미지·BGM·UI 에셋은 추가하지 않았다. 이번 변경에 따른 에셋 작업자 추가 요청 없음.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 내레이션 괄호·중복 방지·캐릭터 원문 유지, 고정 공급자 컨트롤 숨김 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 159 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL·QA commit 주입 조건의 game-only QA build 성공 |
+| QA artifact | PASS | `GPT · 고정`, `최종 TRANSCRIPT`, `인식 완료 · final` 문자열 노출 0, `noindex,nofollow` 유지 |
+| Browser desktop | PASS | 1280×720, 주노 `#ffd84d`, 고정 공급자·최종 TRANSCRIPT 노출 0, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844, 주노 색 토큰 반영, 고정 공급자·최종 TRANSCRIPT 노출 0, 가로 overflow 0 |
+| Browser debug | PASS | N3 전환·URL·선택값 갱신, 발화자 색 반영, 일반 화면 debug 선택기 0 |
+| Pages workflow | PASS | run `31006360858`, commit `526a1fd`, check/test/build·artifact 경계·배포 성공 |
+| 공개 Pages | PASS | `data-qa-commit=526a1fd`, `data-qa-preview=true`, 주노 `#ffd84d`, 제거 대상 노출 0, 가로 overflow 0 |
+
+### 현재 판정
+
+- 사용자 요청 3건은 구현·검증됐다. STT·GPT 기능 및 공개 QA 공급자는 변경하지 않고 표시만 제거했다.
+- 실제 마이크 권한·사람 음성·전사 비노출 상태의 판정 진행은 브라우저 자동화로 대신할 수 없어 수동 QA로 유지한다.
+- 미제공 `gray_wraith.normal`은 기존 에셋 인계 항목이며 이번 변경과 무관하다.
