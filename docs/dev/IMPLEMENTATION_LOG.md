@@ -843,7 +843,7 @@
 
 - 실행일: 2026-08-05
 - 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA` + STT 모델 조사
-- 상태: 코드·자동·Browser QA PASS, Pages 재배포 전
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
 
 ### 처리 내용
 
@@ -873,6 +873,7 @@
 | Browser interaction | PASS | T release 뒤 `목소리 전달 중…`, disabled, `aria-busy=true`, `aria-pressed=false` |
 | Browser advance gate | PASS | 즉시·1.0초 waiting/disabled, 1.7초 ready/enabled, 연타 적용 1회 |
 | Browser console | 조건부 PASS | 앱 예외·framework overlay 0. 저장소 밖 하네스 origin의 의도된 `[ASSET_HANDOFF]` 경고만 발생 |
+| 공개 Pages | PASS | Actions run `31011960612`, `data-qa-commit=27c18cc`, `data-qa-preview=true`, 새 PTT·전달 문구 번들 반영, 기존 `판정 중…` 0, 가로 overflow 0 |
 
 ### 현재 판정
 
