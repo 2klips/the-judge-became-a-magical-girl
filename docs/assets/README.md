@@ -13,6 +13,8 @@ assets/
     bgm/
   source/                  # 외부 납품 원본·중간본; 빌드 제외
     background/
+    bgm/
+      delivery/            # 최종 BGM 납품본; runtime 미연결
     doyun/
     juno/
 
@@ -47,9 +49,12 @@ docs/assets/
 | [`provenance/`](provenance/) | 작업자가 전달한 원문 증빙·인계 문서 |
 | [`validation/`](validation/) | 자동 규격 검사 보고서 |
 
+BGM 납품·효과음 제작 준비 문서는 각각 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md), [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md), [SFX_PRODUCTION_PLAN.md](provenance/SFX_PRODUCTION_PLAN.md)를 따른다.
+
 ## 정리 이력
 
 - 2026-08-04: `asset/`, `docs/Asset/assets/`, `public/assets/`에 흩어진 물리 파일을 `assets/source/`와 `assets/runtime/`으로 통합했다.
 - `asset/doyoon-hero-sprites/` 6장은 보관 ZIP entry와 SHA-256이 같은 압축 해제 중복본이어서 제거했다. ZIP은 `assets/source/doyun/doyoon-hero-sprites.zip`에 보존한다.
 - 도윤 23장 납품본, 주노 원본·중간본·납품본, 배경 원본 ZIP은 삭제하지 않고 역할별 하위 폴더로 이동했다.
 - 주노 과거 `docs/Asset/juno-reference-v2/` 파일은 commit `6940236`에서 `assets/source/juno/`로 `R100` 이동된 것으로 확인했다. delivery 5장은 2026-08-04 `assets/runtime/char/`에 동일 바이트로 채택했다.
+- 2026-08-06: 최종 편집 BGM 5종을 `assets/source/bgm/delivery/`에 외부 납품본으로 추가했다. runtime 채택과 효과음 파일 제작은 사람 검수·개발자 통합 뒤 진행한다.
