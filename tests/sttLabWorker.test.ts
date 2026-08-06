@@ -20,6 +20,7 @@ describe("STT Lab Worker", () => {
     await expect(response.json()).resolves.toEqual({
       model: "gpt-transcribe",
       text: "마법소녀 주노입니다",
+      metrics: { upstreamMs: expect.any(Number) },
     });
     expect(upstreamRequest?.url).toBe("https://api.openai.com/v1/audio/transcriptions");
     expect(upstreamRequest?.headers.get("authorization")).toBe("Bearer test-openai-key");
@@ -83,7 +84,9 @@ function env(overrides: Partial<SttLabEnv>): SttLabEnv {
     OPENAI_API_KEY: "test-openai-key",
     GEMINI_API_KEY: "test-gemini-key",
     OPENAI_TRANSCRIBE_MODEL: "gpt-transcribe",
+    ENABLE_OPENAI_STT_MODEL_SELECTOR: "true",
     GEMINI_TRANSCRIBE_MODEL: "gemini-2.5-flash",
+    LLM_PROVIDER: "gemini",
     GEMINI_LLM_MODEL: "gemini-3.1-flash-lite",
     ...overrides,
   };

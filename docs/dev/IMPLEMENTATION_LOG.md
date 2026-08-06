@@ -316,3 +316,606 @@
 
 - 사용자 요청의 “에셋과 병렬로 JSON·로더·연출 코드를 먼저 구현하고 CSS placeholder로 테스트” 범위는 완료했다.
 - 물리 에셋이 없는 상태를 M5 최종 PASS로 간주하지 않는다. 외부 전달 파일은 자동 보정하지 않고 담당자 오류 반환→재전달→통합 QA 순서로 처리한다.
+
+## M5 — 비에셋 결함 보정
+
+- 실행일: 2026-08-02
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DOCS_UPDATE`
+- 상태: 확정 계약으로 수정 가능한 결함 완료. 사용자 결정이 필요한 N7·interim·작가 키워드·열린 ADR은 보류
+
+### 수정 내용
+
+- 타이틀·N0·N1 시작·N1 응답에서 `주노/JUNO` 정체를 숨기고 `정체불명의 목소리`·`VOICE // LINK`를 표시한다. N2 진입부터 주노 이름과 링크를 공개한다.
+- 대화·전투 LLM 성공은 연속 실패 횟수를 초기화한다. 전투 LLM은 최종 실패 턴을 1회 기록하고 3회 누적 뒤 추가 네트워크 요청 없이 안전한 0점 폴백을 적용한다.
+- 별첨1의 optional `ending.gradeVariants`를 strict zod schema에 추가하고 `GameState.battleGrade`에 해당하는 추가 대사만 기본 ending lines 뒤에 렌더한다. DEC-033에 근거와 영향을 기록했다.
+- 누락된 DEC-018 정의, Git 저장소 생성 전 상태가 남은 보안 문서, AR-03~07의 구현/QA 상태 중복을 정정했다.
+- 작가 소유 `n4_cooperate` 중복 키워드는 사용자 대체·삭제 결정 전 수정하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| N1 표시 TDD | PASS | 타이틀·N0·N1 익명, N2 주노 공개 경계 고정 |
+| battle LLM 실패 사다리 TDD | PASS | 실패 3회까지만 호출, 4번째부터 호출 0, 성공 시 실패 횟수 초기화 |
+| `gradeVariants` TDD | PASS | schema 보존, 현재 S/A/B 등급의 lines만 기본 lines 뒤에 결합 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 30 files, 109 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab Whisper chunk 경고 유지 |
+| Playwright 클릭 QA | PASS | 타이틀→N0→N1 시작·응답→N2, 공개 경계 정상, 콘솔 error 0 |
+
+### 현재 판정
+
+- 위 비에셋 결함은 수정 완료. 에셋 파일·manifest·기준 기획서·완성대본은 변경하지 않았다.
+- N7 UI, interim 자막, N4 중복 키워드, DEC-010·011·013은 사용자 결정 뒤 별도 반영한다.
+- M5 최종 게이트는 기존대로 미판정이다.
+
+## M5 — 도윤 에셋 인계 정규화
+
+- 실행일: 2026-08-03
+- 작업 모드: `ASSET_VALIDATION` + `DOCS_UPDATE`
+- 상태: 파일명 정규화·누락 추적·`doyun.magical` 임시 runtime 통합 완료
+
+### 처리 내용
+
+- commit `4adb4db`의 `docs/Asset/assets/` 도윤 PNG 23장을 전수 검사했다.
+- 외부 원본은 유지하고 채택 runtime 복사본만 계약명으로 정규화하는 DEC-034를 기록했다.
+- README의 8개 불일치 이름을 실제 납품명으로 정정하고 과거 이름→정규화명 표를 보존했다.
+- 현재 M5 필수·확장·미참조를 분리했다. 미참조 21장은 논리 ID·catalog를 추가하지 않고 납품 폴더에 유지했다.
+- `doyun.magical` 정면 포즈, 변신 컷 2장, 생성·라이선스 증빙을 작업자 재요청 목록에 기록했다.
+- 사용자 임시 승인 DEC-035 뒤 원본과 동일 바이트를 `public/assets/char/char_doyun_magical.png`에 복사했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| PNG 전수 디코딩 | PASS | 23/23 |
+| 규격·투명도·용량 | PASS | 모두 1200×2000 8-bit indexed PNG + `tRNS`, 실제 투명 픽셀, 최대 343,450B |
+| 묶음 용량 | PASS | 5,538,435B, 30MB 이하 |
+| 완전 중복 | PASS | SHA-256 중복 0 |
+| README↔실파일명 | PASS | 8개 별칭을 실제 파일명으로 정규화하고 이력 보존 |
+| `doyun.magical` 장면 QA | 임시 승인 | 정면본을 DEC-035로 M5 사용. 후면/반측면 교체 대기 |
+| runtime 파일 | PASS | resolver 계약 경로 존재, 원본·복사본 SHA-256 일치 |
+| 물리 파일 TDD | PASS | 부재 ENOENT RED → runtime 복사 → PNG signature/IHDR/투명도/용량 GREEN |
+| Playwright battle p1~p3 | PASS | 세 페이즈 모두 `마법소녀 도윤` 실이미지 유지, HTTP 200 `image/png` 301,708B, 콘솔 error 0, 도윤 fallback 경고 0 |
+
+### 현재 판정
+
+- 이름 불일치와 누락은 더 이상 작업 중단 원인이 아니다. 문서화 후 placeholder로 계속 진행한다.
+- `doyun.magical`은 `ready`다. 라이선스와 최종 후면/반측면 교체 QA 전 `approved`는 아니다.
+
+## M5 — 확정 배경 16장 장면 전환·dev 프리뷰
+
+- 실행일: 2026-08-03
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `ASSET_VALIDATION` + `DEMO_QA`
+- 상태: 확정 배경 16장 runtime 통합과 node/phase/ending 전환 완료. 누락 캐릭터·변신 컷·BGM은 placeholder 유지
+
+### 구현 내용
+
+- 원본 ZIP을 보존하고 확정 배경 16장을 `public/assets/bg/*.webp`의 1920×1080 계약 규격으로 변환했다.
+- 순수 `resolvePresentationBackground`가 N0 문장, N1, N5 영창·변신, battle p1/p2/p3 질문·주문, 수렴, GOOD/NORMAL/BAD 배경을 결정한다.
+- 사용자 승인에 따라 ending을 문장 단위 페이지로 분리했다. GOOD은 회복 책상 5페이지→밝은 복도 1페이지→검은빛 복도 1페이지다.
+- `?debug=1` 장면 선택기와 비변이 `?debug=1&scene=<id>` 직접 프리뷰를 추가했다. 22개 프리셋이 16개 배경과 실제 presentation beat를 모두 포함한다.
+- 직접 프리뷰는 bootstrap·저장·FSM을 우회한다. 잘못된 scene ID는 안전한 오류 화면으로 처리한다.
+- 선택 사항인 `ending.black_magical_girl` 계약 경로만 catalog에 등록했다. 실파일이 없으면 기존 placeholder가 유지된다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 32 files, 121 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab/transformers chunk 크기 경고만 유지 |
+| 배경 물리 규격 | PASS | 16/16 WebP, 모두 1920×1080, 합계 2,666,866B |
+| dev 전수 프리셋 | PASS | 22프리셋, 고유 배경 16개, image load 실패 0, console error 0, local/session storage 키 0 |
+| GOOD 전체 클릭 QA | PASS | N0 office→desk, N1 time stop, N5 dark→desk→transform, battle p1 wide→p2 void→p3 archive/core, 수렴 dark, GOOD 7페이지 전환 |
+| 실에셋·placeholder 합성 | PASS | 도윤 실 PNG 유지. 누락 주노·망령·변신 컷은 기대된 경고와 placeholder로 완주 |
+
+### 현재 판정
+
+- 16장 장면 매핑과 M5 presentation 구현은 완료됐다.
+- TITLE baked NHN/HACKATHON 문구·로고는 DEC-037에 따라 임시 승인 상태다. clean 교체와 생성·라이선스 증빙은 계속 요청한다.
+- M5 전체는 주노 5장, 망령 2장, 변신 컷 2장, 필수 BGM 3종과 사람 음성·오프라인 전체 경로 QA 전이므로 아직 PASS가 아니다.
+
+## M5 — 외부 에셋 black/silent 폴백·작업자 인계
+
+- 실행일: 2026-08-03
+- 작업 모드: `DOCS_UPDATE` + `ASSET_VALIDATION` + `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 작업자 문서 선행 push, 기능 폴백 구현·자동/브라우저 QA 완료. 실에셋·제출 게이트 대기
+
+### 처리 내용
+
+- `docs/Asset/M5_ASSET_HANDOFF_REQUEST.md`와 `M5_UI_BGM_REQUEST_MAPPING.md`에 P0 필수, P1 교체, P2 선택, 계약명·규격·장면·증빙·재납품 조건을 고정했다.
+- 해당 문서와 Asset README만 commit `25ba8a3`으로 먼저 원격 `codex/m5-asset-handoff-docs`에 push했다. mixed worktree의 코드·원본 에셋은 첫 commit에서 제외했다.
+- DEC-040에 따라 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 강등한다. 검은 presentation에서도 대사·자막·버튼·PTT·게이지를 유지한다.
+- 기존 논리 ID·파일명·manifest 상태를 바꾸지 않는다. 실파일 도착 시 같은 경로에 채운 뒤 시각·청각 QA를 재실행한다.
+- `QA_AND_DEMO.md` §15에 기능 게이트와 에셋·제출 게이트, 자동 검사, 22프리셋, 클릭·실제 음성·오프라인×3엔딩 9회 완주, 증거 템플릿을 추가했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD tracer | PASS | 누락 이미지 black 계약 RED 1건 확인 뒤 GREEN. BGM 오류 무음 characterization PASS |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 32 files, 123 tests |
+| `npm run build` | PASS | production build 생성. 기존 STT Lab/transformers chunk 경고만 유지 |
+| Playwright N2 실제 클릭 | PASS | 주노 placeholder `rgb(0, 0, 0)`, 대사·이름표·4개 입력 버튼 표시, console error 0 |
+| Playwright N5 dev | PASS | 변신 컷 black placeholder 2개, 프리뷰 UI 표시, local/session storage 키 0, console error 0 |
+| BGM 누락 | PASS | `bgm_daily` 404를 `[ASSET_HANDOFF]` 경고 1회로 기록하고 예외 없이 무음 유지 |
+| 문서 첫 push | PASS | commit `25ba8a3`, 원격 tracking branch 설정 |
+
+### 현재 판정
+
+- M5 기능 개발과 기능 QA는 외부 에셋 대기 없이 계속 가능하다.
+- 검은/무음 폴백은 `missing`을 완료 처리하지 않는다. 실에셋 시각·청각·라이선스·성능 검수 전 `M5 최종 PASS`는 아니다.
+- 최종 QA 실행 절차는 `QA_AND_DEMO.md` §15를 따른다.
+
+## M5 — 잔여 기능 위험 처리·전체 경로 QA
+
+- 실행일: 2026-08-03
+- 작업 모드: `DEMO_QA` + `ASSET_VALIDATION` + `MILESTONE_IMPLEMENTATION`
+- 상태: 클릭·오프라인 6경로와 fake microphone 음성 코드 경로 NORMAL 완주. 초기 preload 결함 수정. 실제 사람 음성 GOOD/NORMAL/BAD·실에셋 게이트 대기
+
+### 처리 내용
+
+- 22개 dev 프리셋을 개발 서버와 production preview에서 모두 재검사했다. 16개 배경은 전부 1920×1080으로 로드되고 검은 placeholder는 `rgb(0, 0, 0)`을 유지했다.
+- 클릭 GOOD/NORMAL/BAD와 DevTools Offline+첫 PTT 실패→클릭 폴백 GOOD/NORMAL/BAD를 완주했다. ending 마지막 페이지에서만 `처음부터`가 표시되고 재시작 시 호감도 50·플래그 초기화를 확인했다.
+- fake microphone의 한국어 WAV를 debug transcript 없이 MediaRecorder→OpenAI STT Worker→LLM 판정 경로로 전달했다. 대화 5턴, 변신 주문 2회, battle 7턴, 수렴 1턴 뒤 NORMAL ending에 도달했다.
+- 첫 화면에서 title 외 `bg_office_wide`, `bg_hall_day`, 누락 Juno 2종까지 preload하던 QA 계약 위반을 발견했다. `corePreloadAssets`를 `bg_title` 하나로 축소하고 회귀 테스트를 고정했다.
+- 390×844 viewport와 Pages base 경로 production preview를 검사했다. 가로 overflow, Vite overlay, 확인된 JS/CSS/배경/도윤의 HTTP·MIME 실패는 없었다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 22개 dev 프리셋 | PASS | 개발·production 각 22/22, 배경 16장 1920×1080, scene failure 0 |
+| 프리셋 저장 격리 | PASS | local/session sentinel이 22회 직접 진입 전후 동일 |
+| 클릭 ending 매트릭스 | PASS | GOOD 76/S/promise, NORMAL 73/S, BAD 46/S |
+| Offline+로컬 폴백 매트릭스 | PASS | 3/3. 첫 PTT `Failed to fetch`, 현재 턴 click 전환, GOOD/NORMAL/BAD 완주 |
+| fake microphone 음성 코드 경로 | PASS | debug 주입 0, STT/LLM 200, 실패 0, NORMAL 56/B 완주 |
+| 실제 사람 음성 매트릭스 | 대기 | GOOD/NORMAL/BAD 3회 미실행. fake microphone 결과로 대체하지 않음 |
+| 변신·battle 음성 구제 | PASS | 변신 0/4 재시도→2차 rescued, battle 7턴 B 등급으로 종료 |
+| 반응형 | PASS | 390×844 title·battle preview 가로 overflow 0, 조작 UI 표시 |
+| 초기 로드 | PASS | local dev title 표시 52ms, 선행 배경 요청 `bg_title` 1개, 첫 화면 console error/warning 0 |
+| production preview | PASS | Pages base, 확인된 파일 HTTP/MIME 실패 0, page error 0. 누락 9개는 black fallback |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 32 files, 123 tests |
+| `npm run build` | PASS | production build 생성. 기존 transformers chunk 경고만 유지 |
+| 보안·문서 | PASS | tracked secret 패턴 파일 0, 로컬 Markdown broken link 0, `git diff --check` 통과 |
+
+### 현재 판정
+
+- 자동·fake-device 기능 위험은 처리했다. M5 기능 경로는 외부 에셋 없이 클릭·오프라인·음성 Worker 코드 경로로 완주 가능하다.
+- M5 최종 PASS 전 실제 사람 발화 GOOD/NORMAL/BAD 3회와 실에셋 시각·청각·라이선스 검수가 남는다. fake microphone 결과를 사람 발화로 대체하지 않는다.
+- M6 범위인 production debug 상태 변경 기능 제거, 실제 GitHub Pages 배포·제출 검수는 시작하지 않았다.
+
+## M5 — 임시 QA GitHub Pages 배포
+
+- 실행일: 2026-08-04
+- 작업 모드: `FEATURE_EVALUATION` + `DEMO_QA` + `DOCS_UPDATE`
+- 상태: public 임시 QA 배포·데스크톱/모바일 smoke 완료. 클릭·오프라인 전용이며 M5/M6 최종 PASS 아님
+
+### 처리 내용
+
+- 사용자 승인으로 M6 이전 임시 QA 예외를 DEC-041에 기록했다. `build:qa`는 게임 entry만 만들고 `stt-lab.html`, 로컬 Whisper WASM·transformers chunk를 제외한다.
+- QA 모드는 `.env.local`이나 `VITE_WORKER_URL` 주입값도 무시하고 Pages same-origin의 `__qa_worker_disabled__`로 고정한다. 외부 STT·LLM과 테스터 PC localhost에 음성을 보내지 않는다.
+- 화면 상단에 QA/클릭·오프라인/Worker 비활성/commit 배너를 표시하고 HTML에 `noindex,nofollow`를 추가했다.
+- private Pages 활성화가 현재 GitHub 요금제에서 `HTTP 422`로 거절됐다. 사용자 후속 승인으로 저장소 전체를 public 전환하고 DEC-042에 기록했다.
+- 최초 deploy는 `github-pages` 환경의 `main` 전용 branch 정책으로 거절됐다. 허용 목록에 현재 QA 브랜치만 추가하고 failed job을 재실행해 성공했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 33 files, 127 tests |
+| `npm run build` | PASS | 일반 game+STT Lab build 유지. 기존 transformers 크기 경고만 존재 |
+| `npm run build:qa` | PASS | game JS/CSS와 runtime asset만 생성. `stt-lab.html`·WASM·transformers 없음 |
+| tracked 비밀 패턴 | PASS | 실제 키·토큰·private key 고신뢰 패턴 0. `.env.local` 미추적 |
+| GitHub Actions | PASS | run `30905769904`, attempt 2. check/test/build/artifact/deploy 성공 |
+| 배포 HTTP | PASS | root/scenario/background 200, `stt-lab.html`·`__qa_worker_disabled__` 404 |
+| 데스크톱 브라우저 | PASS | commit 배너, `noindex`, title, 클릭 시작→N0, 1920×1080 배경, overlay/console error 0 |
+| dev 장면 | PASS | `battle-p3-spell`, 23 options(실플레이+22 preset), 배경 1920×1080, 누락 인물 경고만 존재 |
+| 모바일 | PASS | 390×844, 배너 48px·shell offset 48px, 가로 overflow/overlay/console error 0 |
+
+### 현재 판정
+
+- 작업자 테스트 URL: `https://2klips.github.io/the-judge-became-a-magical-girl/`.
+- `?debug=1` 장면 선택기와 `?debug=1&scene=<장면ID>` 직접 프리뷰를 사용할 수 있다.
+- 누락 BGM·주노 runtime·망령·변신 컷은 기존 black/silent 인계 경고 대상이다. 음성 API와 STT Lab은 이 QA URL의 테스트 범위가 아니다.
+- 실제 사람 음성 3엔딩, 신규 실에셋 통합·라이선스, M6 production debug/Worker/STT 결정은 계속 남는다.
+
+## M5 — 에셋 구조 통합·도윤 전면 배치·마이크 음량 게임 규칙
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `ASSET_VALIDATION` + `DOCS_UPDATE` + `DEMO_QA`
+- 상태: 구현·자동 검증·로컬 데스크톱/모바일 QA PASS. 실제 마이크·Pages 재배포 QA 대기
+
+### 처리 내용
+
+- 물리 에셋을 `assets/source/`와 `assets/runtime/`으로 통합하고 에셋 문서를 `docs/assets/`에 모았다. Vite dev는 runtime을 `/assets/`로 제공하고 build에서 `dist/assets/`만 게시한다.
+- ZIP entry와 hash가 같은 `asset/doyoon-hero-sprites/` 압축 해제 중복 6장은 제거하고 ZIP과 삭제 이력을 보존했다. 출처·업로드자·도구·권리의 확인/미확인을 `PROVENANCE.md`에 분리했다.
+- 도윤 11장을 source와 동일 바이트로 runtime에 채택했다. 타이틀·N0 첫 두 대사만 숨기고 이후 일상·관계·변신·battle·수렴·엔딩 매핑을 코드·대본·22개 dev 프리셋에 연결했다.
+- 동일 배경 ID는 애니메이션하지 않고 변경 ID만 420ms crossfade한다. 감소 모션은 즉시 전환한다.
+- 타이틀을 필수 마이크 설정 화면으로 교체했다. 입력 장치 선택, 실시간 RMS/peak/clipping dBFS, 900ms 적응형 보정, 테스트 통과 전 시작·이어하기 차단을 구현했다. 선택 장치 ID는 실제 PTT 녹음에도 유지한다.
+- battle `spell`에만 음량 판정을 적용했다. 너무 작거나 큰 첫 실패는 무료 재시도, 같은 턴 두 번째는 `failed-spell +0`으로 턴을 소비한다. 게임 진입 뒤 클릭·로컬 폴백은 유지한다.
+- 짧은 데스크톱 화면에서 시작 버튼이 첫 화면 아래로 밀리던 문제와 Vitest가 Vite build 훅으로 임시 에셋 폴더를 만들던 문제를 QA 중 발견해 수정했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 35 files, 138 tests. 재실행 뒤 임시 에셋 폴더 생성 0 |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| runtime 격리 | PASS | source 0, ZIP 0, runtime 27개·5,023,720B가 dist에 동일 복사, QA에서 STT Lab 0 |
+| 데스크톱 타이틀 | PASS | 1265×720에서 마이크 UI·비활성 시작/이어하기가 한 화면에 표시, overlay·console error·가로 overflow 0 |
+| 도윤 dev 프리뷰 | PASS | N0 `normal_tired`, battle p1 `magical_defend` 실파일 표시. 누락 주노·망령은 검은 presentation 유지 |
+| QA 모바일 | PASS | 390×844, 새 QA 배너·필수 마이크 화면·비활성 시작 버튼 표시, 가로 overflow·console error 0 |
+| 실제 마이크·battle 음량 수동 QA | 대기 | 브라우저 자동화에서 사용자 마이크 권한을 승인하거나 실제 음성을 수집하지 않음. 심사 PC에서 별도 수행 |
+
+### 현재 판정
+
+- 이번 확정 기능의 코드·문서·자동 QA는 통과했다.
+- 주노 runtime 승인, 망령 2장, 변신 컷 2장, 필수 BGM 3종, 생성·라이선스 증빙과 실제 마이크 저/정상/고음량 검증은 남아 있다.
+- 위 외부·현장 게이트 전에는 `M5 기능 구현 PASS / 최종 에셋·현장 QA 대기`로 보고한다.
+
+## M5 — 주노 runtime 통합·도윤 우측 상반신 구도
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `ASSET_VALIDATION` + `DOCS_UPDATE` + `DEMO_QA`
+- 상태: 주노 5표정 runtime 통합, 도윤 반응형 배치, 자동·Browser 장면 QA PASS. 권리·남은 외부 에셋 대기
+
+### 처리 내용
+
+- commit `6076466`의 과거 `docs/Asset/juno-reference-v2/`와 commit `6940236`의 현재 경로를 대조했다. delivery 5장과 source 10장이 `assets/source/juno/`로 `R100` 이동된 동일 파일임을 확인했다.
+- 자동 규격 보고서를 통과한 delivery 5장을 `assets/runtime/char/`에 source와 동일 바이트로 채택했다. 기존 `juno.neutral/happy/shy/upset/surprised` resolver를 그대로 사용했다.
+- 도윤에 `doyun-visual` presentation class를 부여했다. 일반 대화·컷씬·엔딩은 화면 오른쪽에서 확대하고 상단 기준 crop으로 상반신을 표시한다. battle·dev 프리뷰도 같은 좌우 방향을 유지한다.
+- 주노는 대화에서 중앙/왼쪽 보조 위치, battle에서는 도윤과 망령 사이의 작은 보조 위치로 배치했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 주노 asset TDD | PASS | runtime 부재 ENOENT RED → 5장 복사 → 8개 M5 asset 테스트 GREEN |
+| 주노 물리 계약 | PASS | 5/5 source/runtime hash 일치, 1200×2000, 8-bit indexed PNG + `tRNS`, 개별 800KB 이하 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 35 files, 139 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| runtime 격리 | PASS | 32개·5,896,191B가 dist에 동일 복사, 주노 5장 포함, source·ZIP 0 |
+| Browser N2 | PASS | `surprised` 투명 PNG와 도윤 우측 확대가 실제 `bg_hall_day` 위에 표시, 깨진 이미지 0 |
+| Browser battle p1 | PASS | `neutral` 주노, 망령 black fallback, 도윤 우측 상반신 구도 동시 표시 |
+| 모바일 | PASS | 390×844, 가로 overflow 0, 이미지 로드 실패 0 |
+| 콘솔 | PASS | error 0. 미제작 `gray_wraith.normal`의 계약된 `[ASSET_HANDOFF]` warning만 발생 |
+
+### 현재 판정
+
+- 주노 5표정은 `missing`에서 `ready`로 전환했다. 레퍼런스 권한과 생성 서비스 공개·해커톤 사용 허용 확인 전 `approved`는 아니다.
+- 도윤 우측 상반신 구도는 구현·시각 QA 통과. 장면별 반대 방향 전환은 승인되지 않아 추가하지 않았다.
+- 망령 2장, 변신 컷 2장, 필수 BGM 3종, 실제 마이크 QA는 계속 남는다.
+
+## M5 — 대사별 도윤 감정·캐릭터 배치·게임 UI 보정
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `SCENARIO_VALIDATION` + `ASSET_VALIDATION` + `DEMO_QA`
+- 상태: 기존 승인 에셋 안에서 구현·자동·Browser QA PASS. 누락 외부 에셋·권리·실제 마이크 게이트 유지
+
+### 처리 내용
+
+- dialogue 응답에서 버려지던 `intentId`를 클릭·로컬 매칭·LLM 판정부터 `GameView`까지 전달했다. `presentationDoyun`이 N2~N4의 실제 플레이어 태도를 기존 runtime 11종 표정으로 해석한다. 의도 판정이 불가능한 폴백은 장면 기본 표정을 유지한다.
+- 도윤을 더 확대·하향하고 화면 중심 쪽으로 옮겨 하반신 crop을 허용했다. 작은 주노는 도윤 쪽으로 붙여 데스크톱·모바일·battle·dev 프리뷰의 인물군 간격을 통일했다.
+- 사용자 지정 LobeHub `sanali209-pla_teplate-game-ui-design`과 frontend design 지침을 적용했다. 심사 콘솔·사원증 모티프, 앰버/시안 포인트, 5% 안전 영역, 14px 이상 보조 글자, 48px 이상 조작 영역, focus-visible, reduced-motion을 반영했다.
+- QA 빌드 검사에서 상단 배너가 화면 모서리에 붙고 dev 장면 선택기와 겹치는 문제를 발견했다. 배너를 안전 영역 안으로 옮기고 별도 offset으로 선택기를 분리했다.
+- 승인되지 않은 source 추가 도윤 스프라이트와 작가 소유 scenario JSON은 변경하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 도윤 감정 TDD | PASS | N2 첫 반응·후속, N3 망령 대응, N4 관계 대사별 4개 RED→GREEN cycle |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 35 files, 143 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 크기 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| Browser desktop | PASS | title·N2·N4-C·battle p1, 의미 있는 DOM·에셋 로드·framework overlay 없음 |
+| Browser mobile | PASS | 390×844 title·N2, 도윤 확대·하향 crop과 주노 접근 배치, 가로 overflow 0 |
+| Browser interaction | PASS | dev 장면 선택기 N2→N3 전환 뒤 URL·선택 상태·N3 DOM 확인 |
+| console | 조건부 PASS | error 0. 계약된 미제작 `gray_wraith.normal` `[ASSET_HANDOFF]` warning만 존재 |
+| QA 안전 영역 | PASS | banner 8px inset, banner/dev nav 비겹침, `noindex,nofollow`, 가로 overflow 0 |
+
+### 현재 판정
+
+- 요청된 도윤·주노 배치, N2~N4 응답 감정 매핑, UI 디자인 보정은 M5 기능 범위에서 통과했다.
+- 망령 2장, 변신 컷 2장, 필수 BGM 3종, 주노·도윤 권리 증빙, 실제 마이크 저·정상·고음량 검증은 계속 남는다.
+- 신규 source 도윤 스프라이트 활성화가 필요하면 논리 ID·장면 용도를 사용자가 별도 확정해야 한다.
+
+## M5 — T 키 PTT·진행 잠금·Worker 응답·화면 배치 수정
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA PASS. 공개 QA 실제 STT 활성화 결정 대기
+
+### 처리 내용
+
+- 게임 내 dialogue·변신 주문·battle PTT에 전역 `T` 홀드/릴리스와 `aria-keyshortcuts`를 추가했다. 입력·선택 컨트롤 편집 중에는 가로채지 않는다. battle PTT가 둘이면 현재 포커스 버튼을 우선한다.
+- 대사·응답·battle 결과·변신 결과·엔딩 페이지의 진행 버튼을 렌더 후 2초간 비활성화했다. 상태기가 준비 전·중복 진행을 함께 차단한다.
+- STT·대화 LLM·battle LLM Worker 응답의 Content-Type과 JSON 파싱을 중앙 경계에서 검사한다. Pages HTML fallback을 원문 파싱 예외 대신 서비스별 한국어 연결 오류로 바꿨다.
+- 상단 상태 헤더를 `vw` 기준 64px에서 `vh` 기준 21.6px으로 올렸다. 1280×720 본편에서 도윤 컨테이너 top을 -1.6px에서 70.4px으로 내려 머리 전체와 헤더 경계를 분리했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | HTML Worker 응답 RED→GREEN, T 홀드/릴리스 RED→GREEN, 2초 잠금 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 37 files, 150 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| Browser desktop | PASS | 1280×720 실제 title 마이크 통과→N0→N1. 헤더 top 21.6px, 도윤 top 70.4px, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844 도윤 top 203.4px, 머리 잘림·가로 overflow 0 |
+| 2초 진행 | PASS | 렌더 직후 `계속 · 2초 후` disabled, 2초 뒤 `계속` 활성·한 번 진행 |
+| T 키 UI | PASS | N1 PTT에서 `T` 입력이 녹음 경로를 호출했다. 짧은 입력은 영문 디코딩 오류 대신 한국어 재시도 안내와 현재 턴 클릭 폴백으로 전환됐다. 실제 외부 전사는 미실행 |
+
+### 현재 판정
+
+- 요청된 로컬 입력·진행·오류 표시·배치 수정은 통과했다.
+- DEC-041 공개 QA는 음성 Worker 비활성이다. 실제 Pages STT 활성화는 Cloudflare Worker 배포·Pages Origin·Secret·최종 공급자 결정 뒤 수행한다.
+
+## M5 — 공개 QA GPT STT Worker 활성화
+
+- 실행일: 2026-08-04
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: GPT STT Worker 실배포·합성 한국어 WAV 실호출·Pages 배포·공개 브라우저 쉘 PASS. 사용자 실제 발화 smoke 대기. Gemini 대화·전투는 Cloudflare egress 지역 제한 BLOCKED
+
+### 처리 내용
+
+- QA build가 명시적 HTTPS `VITE_WORKER_URL` 없이는 실패하도록 만들고 GitHub repository variable `QA_WORKER_URL`에 실제 Worker URL을 등록했다.
+- 공개 게임의 STT 공급자를 OpenAI `gpt-transcribe`로 고정했다. `?stt=gemini`도 무시하며 production `/transcribe/gemini`는 404를 반환한다. Gemini STT 비교는 로컬 전용 `wrangler.stt-lab.jsonc`로 격리했다.
+- Cloudflare `qa` Worker의 허용 Origin을 `https://2klips.github.io` 하나로 제한하고 기존 `.env.local`의 OpenAI·Gemini 키를 Secret으로 등록했다. 키 값은 로그·문서·커밋에 기록하지 않았다.
+
+### Worker 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 배포 | PASS | `nhn-voice-m5-qa-worker` 공개 `workers.dev` endpoint 생성 |
+| Secret | PASS | `OPENAI_API_KEY`, `GEMINI_API_KEY` 이름만 확인. 값 비노출 |
+| Origin | PASS | Pages Origin 200·정확한 ACAO, 임의/누락 Origin 403 |
+| GPT STT | PASS | 비개인 합성 한국어 WAV → `gpt-transcribe` 200, 원문과 동일 전사 |
+| Gemini STT 차단 | PASS | `/transcribe/gemini` 404, upstream 호출 없음 |
+| Gemini LLM | BLOCKED | 로컬 동일 Secret·payload 200, Cloudflare Worker는 Google `FAILED_PRECONDITION: User location is not supported for the API use.` 400 |
+| Pages workflow | PASS | run `30921607665`, commit `5e51abc`, check/test/build·artifact 경계·배포 성공 |
+| 공개 브라우저 | PASS | commit 배너, 마이크 선행 게이트, 장치 열거, `noindex,nofollow`, 이미지 실패 0, 가로 overflow 0, Console error/warning 0 |
+| 브라우저 실제 발화 | 대기 | 마이크 연결은 성공했으나 자동 QA 중 입력이 `-96 dBFS` 무음. 사용자가 테스트 문장을 말해 통과·게임 내 GPT 전사를 확인해야 함 |
+
+### 현재 판정
+
+- 공개 QA의 GPT STT 서버 경계와 Pages 배포는 활성화됐다. 사용자 실제 마이크로 타이틀 테스트 문장과 게임 내 GPT 전사를 각 1회 확인하는 smoke만 남는다.
+- Gemini LLM 실패 때 기존 클릭·로컬 폴백으로 ending까지 진행할 수 있다. 공급자 변경 또는 별도 backend 도입은 제품·운영 결정이므로 사용자 확정 전 수행하지 않는다.
+
+## M5 — 공개 QA 대화·전투 OpenAI 전환
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: QA Worker OpenAI 대화·전투 실호출과 Pages·Browser QA PASS. 사람 음성/다중 대화 품질 smoke 대기
+
+### 처리 내용
+
+- 사용자 결정 DEC-052에 따라 공개 QA `/judge/dialogue`, `/judge/battle`을 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`로 전환했다. `text.format` strict JSON Schema, `store: false`, 최대 출력 256 토큰을 적용했다.
+- Worker 내부에 OpenAI/Gemini structured LLM 어댑터를 추가했다. 로컬 M3 회귀 기본값은 Gemini로 유지하고 공개 `qa` 환경만 OpenAI로 고정했다. 공개 HTTP route, 클라이언트 zod 검증, intent·flag 화이트리스트, 안전 응답 검사, 클릭·로컬 완주 폴백은 바꾸지 않았다.
+- `/health`에 실제 LLM 공급자·설정 여부·모델을 추가했다. QA 배너에도 `OpenAI LLM 활성`을 표시했다.
+- QA Worker의 `GEMINI_API_KEY` Secret을 제거했다. 로컬 `.env.local`과 비교 Lab 설정은 변경하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | OpenAI 대화 502 RED→200 GREEN, battle 502 RED→200 GREEN, QA 배너 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 156 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| Wrangler dry-run | PASS | `env.qa` OpenAI binding 확인, 설정 경고 0 |
+| Worker deploy | PASS | version `26429c08-8976-48a4-a126-b27a733df679`, startup 19ms |
+| Worker health | PASS | `llmProvider=openai`, `llmConfigured=true`, `llmModel=gpt-5.6-luna`, `geminiConfigured=false` |
+| OpenAI 대화 실호출 | PASS | Pages Origin, `/judge/dialogue` 200, JSON 판정 반환 |
+| OpenAI 전투 실호출 | PASS | Pages Origin, `/judge/battle` 200, momentum·narration JSON 판정 반환 |
+| Secret 최소화 | PASS | QA Secret 이름 목록에 `OPENAI_API_KEY`만 존재. 값 비노출 |
+| Pages workflow | PASS | run `31002296462`, commit `4efc6a8`, check/test/build·artifact 경계·배포 성공 |
+| Browser desktop | PASS | 새 OpenAI 배너·commit, 마이크 선행 화면, title 확인. framework overlay·console warn/error 0 |
+| Browser mobile | PASS | 390×844, 가로 overflow 0, 새 배너·마이크 화면 표시. console warn/error 0 |
+| Browser interaction | PASS | `?debug=1` 장면 선택기에서 N2 주노 등장 선택, 선택 상태·도윤/주노 DOM·장면 메타 갱신 |
+
+### 현재 판정
+
+- 공개 QA 서버의 대화·전투 LLM 지역 제한은 OpenAI 전환으로 해소됐다. 배포 직후 첫 POST 한 번은 구버전 isolate 응답이었으나 cache-buster 재호출과 Secret 제거 뒤 health·대화·전투가 새 버전에서 반복 통과했다.
+- Pages 배너·commit 배포와 브라우저 렌더 확인까지 완료됐다. 사람 음성 STT와 여러 자유 발화의 말투·판정 품질은 별도 수동 QA로 남는다.
+
+## M5 비주얼 노벨 UI 전면 개편
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- `game-ui-design`의 가독성·safe zone·피드백 규칙을 적용해 대화창을 화면 하단의 일반적인 비주얼 노벨 구조로 개편했다. 주노는 좌측·청록, 도윤은 우측·분홍, 회색 망령은 좌측·보라, 정체불명 목소리는 중앙·금색으로 구분한다.
+- 내레이션은 중앙의 중립색 대화창만 표시하고 이름표를 렌더하지 않는다. 캐릭터 대사는 발화자 방향에 맞춰 대화창과 이름표 위치를 좌우로 전환한다.
+- 진행 버튼의 `2초 후`·초 단위 카운트다운 문구를 제거했다. 버튼 문구는 고정하고 2초 동안 실제 `disabled`, 이후 활성화한다.
+- 플레이 화면의 상단 테스트 단계·상태 헤더와 공개 QA 시각 배너를 제거했다. QA 여부와 commit은 `html[data-qa-preview][data-qa-commit]` 비가시 DOM 표식으로 확인한다. `?debug=1`에서만 우측 상단 `DEBUG` 장면 선택기를 표시한다.
+- 1280×720에서 시작 버튼이 화면 아래로 잘리던 레이아웃을 압축했다. 모바일은 기존 세로 스크롤과 48px 입력 크기를 유지한다.
+- 신규 외부 이미지·BGM·UI 에셋은 추가하지 않았다. 이번 개편에 따른 에셋 작업자 추가 요청 없음.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 발화자별 방향·색상·이름표 계약, QA commit 표식 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 157 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL 주입 조건의 game-only QA build 성공 |
+| Browser desktop | PASS | 1280×720, 시작 버튼 완전 노출, 가로·세로 overflow 0, 상단 상태·QA 배너 0 |
+| Browser mobile | PASS | 390×844, 가로 overflow 0, 마이크 연결 버튼 첫 화면 노출, 세로 스크롤 정상 |
+| Browser debug | PASS | 우측 상단 `DEBUG` 선택기만 표시, N2→N3 전환·URL·선택값 갱신 |
+| QA artifact | PASS | `data-qa-preview=true`, `noindex,nofollow`, 비밀 입력 UI 0, 타이틀 렌더 정상 |
+| Pages workflow | PASS | run `31004896656`, commit `93dae99`, check/test/build·artifact 경계·배포 성공 |
+| 공개 Pages | PASS | commit `93dae99`, 1280×720 overflow 0, 시작 버튼 완전 노출, 상단 상태·QA 배너·일반 화면 debug 선택기 0 |
+
+### 현재 판정
+
+- 요청된 UI 계약은 구현·검증됐다. 실제 마이크 권한과 사람 음성 STT는 브라우저 자동화에서 대신 승인하지 않았으므로 기존 수동 QA 항목으로 유지한다.
+- 공개 Pages 재배포와 브라우저 확인까지 완료됐다. Actions에 Node 20 폐기 예정 경고가 있으나 GitHub가 Node 24로 강제 실행해 현재 build·deploy에는 영향이 없다.
+
+## M5 주노 색·내레이션·음성 UI 후속 정리
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- 주노의 발화자 색을 청록에서 노란색 계열로 변경했다. 어두운 대화창 표면과 밝은 노란색 테두리·이름표를 함께 적용해 배경 위 대비를 유지한다.
+- `speaker: narration`인 독백·내레이션을 화면에서 `(…)` 형식으로 표시한다. 이미 괄호가 있는 문장은 중복으로 감싸지 않으며 원본 시나리오 JSON은 변경하지 않는다.
+- 고정된 STT·GPT 공급자 표기를 플레이 UI에서 제거했다. 공개 QA의 내부 공급자 계약은 OpenAI `gpt-transcribe`·`gpt-5.6-luna`로 유지한다.
+- 음성 인식이 끝난 뒤 최종 TRANSCRIPT를 화면에 표시하지 않고 `음성 입력 완료`·`응답 판정 중…` 상태만 표시한다. 실제 전사 문자열은 대화·전투 판정 내부 입력으로 계속 사용한다.
+- 신규 외부 이미지·BGM·UI 에셋은 추가하지 않았다. 이번 변경에 따른 에셋 작업자 추가 요청 없음.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 내레이션 괄호·중복 방지·캐릭터 원문 유지, 고정 공급자 컨트롤 숨김 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 159 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL·QA commit 주입 조건의 game-only QA build 성공 |
+| QA artifact | PASS | `GPT · 고정`, `최종 TRANSCRIPT`, `인식 완료 · final` 문자열 노출 0, `noindex,nofollow` 유지 |
+| Browser desktop | PASS | 1280×720, 주노 `#ffd84d`, 고정 공급자·최종 TRANSCRIPT 노출 0, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844, 주노 색 토큰 반영, 고정 공급자·최종 TRANSCRIPT 노출 0, 가로 overflow 0 |
+| Browser debug | PASS | N3 전환·URL·선택값 갱신, 발화자 색 반영, 일반 화면 debug 선택기 0 |
+| Pages workflow | PASS | run `31006360858`, commit `526a1fd`, check/test/build·artifact 경계·배포 성공 |
+| 공개 Pages | PASS | `data-qa-commit=526a1fd`, `data-qa-preview=true`, 주노 `#ffd84d`, 제거 대상 노출 0, 가로 overflow 0 |
+
+### 현재 판정
+
+- 사용자 요청 3건은 구현·검증됐다. STT·GPT 기능 및 공개 QA 공급자는 변경하지 않고 표시만 제거했다.
+- 실제 마이크 권한·사람 음성·전사 비노출 상태의 판정 진행은 브라우저 자동화로 대신할 수 없어 수동 QA로 유지한다.
+- 미제공 `gray_wraith.normal`은 기존 에셋 인계 항목이며 이번 변경과 무관하다.
+
+## M5 PTT 단일 표시와 음성 상태 영역 제거
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA`
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- 대화의 “마이크 버튼 또는 T 키를 누른 채 말하고, 놓으면 판정해.” 고정 안내문을 제거했다. 변신 주문의 동일 성격 안내문도 제거했다.
+- 본편 대화·변신 주문·전투에서 `음성 입력` 카드, 마이크 상태 배지, 하단 `음성 모드/실패 횟수` pill을 제거했다. 관련 미사용 view·CSS·턴 표시 helper도 함께 삭제했다.
+- 대화 PTT의 기본 문구는 `누르고 말하기`로 고정했다. 주문·전투는 행동 구분만 앞에 유지하고 노출된 `· T` 문구는 제거했다.
+- 포인터·Space/Enter·전역 `T` 홀드/릴리스 기능은 유지한다. 같은 버튼이 청취 중 `듣는 중… 놓으면 전송`, release 뒤 `판정 중…`으로 바뀌며 판정 중에는 disabled와 `aria-busy=true`를 적용한다.
+- STT 전사·LLM 판정·오류 notice·클릭/로컬 폴백·타이틀 마이크 테스트는 변경하지 않았다. 신규 에셋 요청 없음.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 별도 안내·상태 영역 없이 `누르고 말하기`만 표시하는 계약 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 37 files, 159 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL·QA commit 주입 조건의 game-only QA build 성공 |
+| QA artifact | PASS | 고정 안내·`음성 입력 완료`·`응답 판정 중`·caption/mic/input-status selector 노출 0, PTT 3상태 문구 포함 |
+| Browser desktop | PASS | 1280×720, `누르고 말하기`, 안내 0, 상태 영역 0, 공급자 UI 0, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844, 안내 0, 상태 영역 0, 가로 overflow 0 |
+| Browser interaction | PASS | `T` 입력에서 release 후 `판정 중…`, disabled, `aria-busy=true`; `aria-keyshortcuts="T Space Enter"` 유지 |
+| Browser console | 조건부 PASS | 앱 오류 0. 저장소 밖 하네스 origin 때문에 runtime 에셋 3종의 의도된 `[ASSET_HANDOFF]` 경고만 발생 |
+| Pages workflow | PASS | run `31009304184`, commit `d1cd516`, check/test/build·artifact 경계·배포 성공 |
+| 공개 Pages | PASS | `data-qa-commit=d1cd516`, `data-qa-preview=true`, 제거 대상 영역·문구 0, 가로 overflow 0, 공개 URL console error/warn 0 |
+
+### 현재 판정
+
+- 요청된 PTT 단일 표시 계약은 코드·자동·렌더·공개 Pages QA에서 통과했다.
+- 실제 사람 음성으로 STT·LLM까지 완료되는 공개 Pages smoke는 수동 QA로 남는다.
+
+## M5 PTT 키 표기·전달 상태·진행 잠금 단축
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA` + STT 모델 조사
+- 상태: 코드·자동·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- 대사 진행 잠금을 2초에서 1.5초로 단축했다. 대사·판정 응답·엔딩 모두 같은 `DelayedActionGate`를 사용한다.
+- 게임 내 대화·변신 주문·전투 PTT 버튼에 실제 전역 단축키 `(T)`를 표시했다. 포인터·Space/Enter·전역 T 동작과 `aria-keyshortcuts="T Space Enter"`는 유지한다.
+- release 뒤 처리 문구를 `판정 중…`에서 `목소리 전달 중…`으로 변경했다. 처리 중 `disabled`, `aria-busy=true` 계약은 유지한다.
+- 장면 selector는 일반 플레이 노출과 debug 헤더 이동 중 사용자 답이 없어 변경하지 않았다. 기존 `?debug=1` 우측 상단 selector만 유지한다.
+- 신규 외부 이미지·BGM·UI 에셋은 추가하지 않았다.
+
+### STT 모델 조사
+
+- 현재 공개 QA는 OpenAI 권장 파일 전사 모델 `gpt-transcribe`를 사용한다. Worker는 이미 `languages[]=ko`와 한국어·고유명사 prompt를 전달한다.
+- 정확도 우선 즉시 후보는 모델 교체보다 `keywords[]` 추가 후 한국어 발화 세트 CER/p50/p95 재측정이다.
+- `gpt-live-transcribe`는 저지연 live transcript 후보지만 Realtime WebSocket·오디오 스트리밍 전환이 필요해 현재 multipart Worker의 drop-in 교체가 아니다.
+- `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `whisper-1`은 API 대안이지만 최신 공식 가이드는 일반 파일 전사에 `gpt-transcribe`를 먼저 권장한다. 승인 없이 모델·Worker 경로를 변경하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | 1.5초·`누르고 말하기 (T)`·`목소리 전달 중…` 계약 RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 37 files, 159 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | Worker URL·QA commit 주입 조건의 game-only QA build 성공 |
+| Browser PTT | PASS | 1280×720, `(T)`·`aria-keyshortcuts` 표시, 별도 상태 영역 0, 가로 overflow 0 |
+| Browser interaction | PASS | T release 뒤 `목소리 전달 중…`, disabled, `aria-busy=true`, `aria-pressed=false` |
+| Browser advance gate | PASS | 즉시·1.0초 waiting/disabled, 1.7초 ready/enabled, 연타 적용 1회 |
+| Browser console | 조건부 PASS | 앱 예외·framework overlay 0. 저장소 밖 하네스 origin의 의도된 `[ASSET_HANDOFF]` 경고만 발생 |
+| 공개 Pages | PASS | Actions run `31011960612`, `data-qa-commit=27c18cc`, `data-qa-preview=true`, 새 PTT·전달 문구 번들 반영, 기존 `판정 중…` 0, 가로 overflow 0 |
+
+### 현재 판정
+
+- 확정된 UI 변경은 구현·자동·렌더 QA를 통과했다.
+- 실제 한국어 음성 정확도·지연은 동일 발화 세트로 `gpt-transcribe + keywords`와 `gpt-live-transcribe`를 별도 비교해야 한다.
+- 장면 selector 노출 범위와 STT 실험안은 사용자 결정 전 보류한다.
+
+## M5 debug STT 단일 모델 selector
+
+- 실행일: 2026-08-05
+- 작업 모드: `MILESTONE_IMPLEMENTATION` + `DEMO_QA` + OpenAI Realtime 실호출
+- 상태: 코드·자동·로컬/공개 Worker·Browser QA·Pages 재배포 PASS
+
+### 처리 내용
+
+- 일반 플레이 STT는 `gpt-transcribe`, 대화·전투 LLM은 `gpt-5.6-luna`로 유지했다. 일반 화면에는 모델 selector·전사 결과·지연을 표시하지 않는다.
+- `?debug=1` 우측 상단에 `gpt-transcribe`/`gpt-live-transcribe` 중 하나만 선택하는 STT selector를 추가했다. 같은 패널에 선택 모델·전사 결과·왕복/Worker/첫 delta 지연과 고정 LLM을 표시한다.
+- 파일 전사는 16kHz WAV multipart를 유지하고 live 전사는 24kHz 16-bit mono PCM을 Realtime transcription WebSocket `intent=transcription` 세션에 append·commit한다. 한국어·고유명사 힌트와 `delay=low`를 사용한다.
+- Worker는 모델 allowlist와 `ENABLE_OPENAI_STT_MODEL_SELECTOR` 환경 플래그를 모두 통과한 요청만 live 경로에 보낸다. API 키는 QA Secret에만 유지하고 클라이언트·문서·로그에 기록하지 않았다.
+- 공개 Cloudflare 홍콩 edge에서 Realtime handshake가 `unsupported_country_region_territory` 403으로 거부되는 문제를 재현했다. 한국 regional endpoint는 Realtime 미지원이라 사용하지 않고 QA Worker에 Placement Hint `aws:us-east-1`을 적용해 해결했다.
+- 신규 외부 이미지·BGM·UI 에셋은 필요하지 않다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TDD | PASS | debug 전용 모델 해석·16/24kHz·단일 model 필드·Worker 게이트·Realtime append/commit 5 tests RED→GREEN |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files, 164 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| `npm run build:qa` | PASS | game-only QA build 성공 |
+| 로컬 OpenAI 실호출 | PASS | 같은 한국어 WAV 정확 전사. `gpt-transcribe` 총 1.374초, live 총 3.513초·첫 delta 1.234초 |
+| 공개 QA Worker | PASS | version `9b6eac8d-94dc-42af-b182-27a0e2847d21`; health 모델/LLM 계약 200. 파일 전사 upstream 1621ms, live upstream 3275ms·첫 delta 765ms |
+| Worker 보안 경계 | PASS | 지원 외 모델 400, 비허용 Origin 403, Secret 값 diff 노출 0 |
+| Browser desktop | PASS | 1280×720, 일반 selector/결과 0, debug selector 2개 option·LLM 표기·query 전환, 가로 overflow 0 |
+| Browser mobile | PASS | 390×844 override, debug selector 표시, 가로 overflow 0 |
+| Browser console | PASS | 공개 Pages error/warn 0 |
+| Pages workflow | PASS | run `31017761407`, commit `534efb5`, source 검증·QA artifact 경계·배포 성공 |
+| 공개 Pages | PASS | `data-qa-commit=534efb5`, `data-qa-preview=true`, 일반/debug 표시 경계 정상 |
+
+### 현재 판정
+
+- 요청된 두 STT 모델의 debug 단일 선택 비교와 공개 QA 실호출이 동작한다.
+- 측정값은 깨끗한 동일 WAV 1건 결과다. 실제 마이크·억양·배경 소음별 정확도와 p50/p95는 작업자 수동 QA가 남는다.
+- M6 production에서 debug selector를 유지할지는 DEC-021과 함께 별도 확정해야 한다.

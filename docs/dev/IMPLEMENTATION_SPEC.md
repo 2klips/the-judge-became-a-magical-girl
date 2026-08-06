@@ -21,7 +21,7 @@
 
 - 실제 이미지·BGM·SFX를 요구하지 않는다.
 - CSS 단색·그라데이션 배경과 하단 미연시 대화창만 사용한다.
-- 하단 이름표에 `주노`를 표시하고, 대화 본문·마이크 상태·실시간 transcript를 표시한다.
+- 하단 이름표에 `주노`와 대화 본문을 표시한다. `[확정, DEC-054·055]` M5 본편은 transcript·별도 마이크 상태 영역 없이 PTT 버튼만 표시한다.
 - Asset 경로를 임시 파일명으로 만들지 않는다. 누락 요청·404 없이 실행한다.
 
 ### 대화 계약
@@ -38,7 +38,7 @@
 
 - M1은 같은 화면을 클릭·고정 응답으로 실행한다.
 - M2는 Web Speech 기반 PTT, `ko-KR`, interim transcript, 로컬 intent 판정을 연결해 UI·폴백·상태 경계를 검증한다. Web Speech transcript는 M3 이후 최종 권위가 아니다.
-- M3는 버튼 release까지 녹음한 동일 WAV를 Cloudflare Workers의 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 어댑터 하나에 보내고, 검증된 최종 transcript를 화면에 먼저 표시한 뒤 LLM 자유대화를 호출한다.
+- M3는 버튼 release까지 녹음한 동일 WAV를 Cloudflare Workers의 OpenAI `gpt-transcribe` 또는 Gemini audio transcription 어댑터 하나에 보내고, 검증된 최종 transcript로 LLM 자유대화를 호출한다. `[확정, DEC-054·055]` M5 본편 UI에는 transcript와 별도 음성 상태 영역을 표시하지 않는다.
 - `[확정, DEC-028]` MVP-1까지 GPT/Gemini STT를 개발·QA 설정으로 전환할 수 있어야 한다. 일반 플레이 한 턴에서 두 공급자를 동시에 호출하지 않는다. 로컬 Whisper는 게임 경로에 연결하지 않는다.
 - 마이크 거부·STT 실패·LLM 지연·오프라인에서도 클릭·로컬 고정 응답으로 대화를 계속하고 테스트 종료 지점까지 도달한다.
 
@@ -108,12 +108,15 @@ interface BattleState {
 한 턴의 고정 순서:
 
 ```text
-PTT release → 선택된 STT 전사 → 최종 transcript 선표시 → 정규화
+PTT release → 선택된 STT 전사 → PTT 버튼을 처리 중 상태로 잠금 → 정규화
 → 로컬 intent 판정 → 미매칭이면 LLM 판정
 → 판정 검증/클램프 → 응답 연출 → 상태 적용 → 턴 증가 → 분기 평가
 ```
 
-STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSON에 공급자 ID를 저장하지 않는다. 비교 Lab만 같은 WAV의 A/B 동시 비교를 허용한다.
+- `[확정, DEC-050]` 게임 내 PTT는 포인터·포커스된 Space/Enter와 전역 `T` 홀드/릴리스를 지원한다. 입력·선택 컨트롤 편집 중에는 전역 `T`를 가로채지 않는다.
+- `[확정, DEC-056]` 대사·판정 응답·엔딩의 다음 페이지 진행 버튼은 화면 렌더 후 1.5초 동안 비활성화하고, 준비 뒤 한 번만 진행한다.
+
+`[확정, DEC-051·054·055·057]` 일반 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않으며 일반 게임 UI에는 `STT`, `GPT · 고정`, 최종 transcript, 별도 음성 입력 상태 영역을 표시하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. M5 작업자 QA의 `?debug=1`에서만 `gpt-transcribe`/`gpt-live-transcribe` 단일 선택기와 선택 모델·전사 결과·왕복/Worker/첫 delta 지연을 표시한다. 파일 전사는 16kHz WAV multipart, live 전사는 24kHz PCM Realtime append·commit 경로를 사용하며 한 발화에 하나만 호출한다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
 
 분기 우선순위:
 
@@ -134,7 +137,7 @@ STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSO
 - `minMatch` 이상: 표준 연출, momentum 50.
 - 최대 시도 미달: `failLines`로 자동 구제, 페널티 없이 momentum 50.
 - 클릭 모드·마이크 불능: “주문 외우기”로 표준 결과.
-- `[확정, DEC-016]` 주문 결과 적용 뒤 엔진이 `transform.cast` → `transform.complete`와 `bgm_transform`을 고정 재생한다. 현 `cutscene` JSON 스키마를 유지하고, 에셋 누락·불량이면 CSS placeholder로 진행한다.
+- `[확정, DEC-016·040]` 주문 결과 적용 뒤 엔진이 `transform.cast` → `transform.complete`와 `bgm_transform`을 고정 재생한다. 현 `cutscene` JSON 스키마를 유지하고, 컷 누락·불량이면 검은 presentation, BGM 누락·불량이면 무음으로 진행한다.
 
 ### Battle
 
@@ -151,6 +154,7 @@ STT 공급자 전환은 조립·QA 설정이다. `GameState`나 시나리오 JSO
 
 - 챕터3 최종 분기가 ending 노드를 선택한다.
 - 기본 lines 뒤 해당 등급의 `gradeVariants`가 있으면 추가한다.
+- `[확정, DEC-039]` GOOD/NORMAL/BAD는 문장별 `계속` 페이지로 표시한다. GOOD line 0~4/5/6+에서 회복 책상→밝은 복도→검은빛 복도로 전환하고 마지막 페이지에만 재시작을 노출한다.
 - GOOD/NORMAL/BAD는 MVP 필수. HIDDEN은 목표 범위지만 MVP 컷 1순위다.
 
 ## 5. 판정 포트 `[제안]`
@@ -214,6 +218,7 @@ interface SaveRepository {
 | LLM 타임아웃/오류 | 4초 후 1회 재시도 | 실패 카운트 증가 |
 | 재시도도 실패 | `fallbackReplies` + 중립 판정 | 3연속이면 로컬 모드 |
 | 마이크 미지원/권한 거부 | 클릭 모드 | 설정 변경 후 명시적 재시도만 |
+| Worker가 HTML·비 JSON 응답 반환 | 서비스별 한국어 연결 오류 | 원문 HTML·`Unexpected token '<'` 미노출, 기존 클릭·로컬 폴백 |
 | 시나리오 검증 실패 | 진단 화면, 게임 시작 차단 | 자동 수정 없음 |
 | 저장 데이터 검증 실패 | 손상 스냅샷 무시, 새 게임 제공 | 원인 로그 |
 
@@ -242,7 +247,7 @@ LLM 로컬 모드는 런타임 어댑터 상태다. 제품 `GameState`에 새 �
 | `ui/*` | 렌더·사용자 이벤트 전달 | 상태 규칙 |
 | `audio/*` | BGM/SFX 재생 | 분기 규칙 |
 | `data/loader.ts` | fetch, zod, 참조 무결성 | 자동 JSON 수정 |
-| `worker/` | Origin 검증, GPT/Gemini STT 공급자 라우팅, Gemini LLM 호출, 요청·응답 제한 | 게임 상태·시나리오 소유 |
+| `worker/` | Origin 검증, GPT/Gemini STT 라우팅, OpenAI/Gemini LLM 어댑터, 요청·응답 제한 | 게임 상태·시나리오 소유 |
 
 ```text
 main(composition root)
@@ -257,9 +262,15 @@ main(composition root)
 ## 9. 자산 해석
 
 - 시나리오의 `scene.bg`, `scene.bgm`은 확장자 없는 논리 ID다.
-- 장면별 배경·표시 인물·표정·음악·컷 사용처는 [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)를 따른다. `ASSET_MANIFEST.md`는 파일명과 제작·QA 상태만 소유한다.
+- 장면별 배경·표시 인물·표정·음악·컷 사용처는 [SCENE_ASSET_MAPPING.md](../assets/SCENE_ASSET_MAPPING.md)를 따른다. [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md)는 파일명과 제작·QA 상태만 소유한다.
 - `[제안]` 에셋 매니페스트가 논리 ID를 실제 파일명과 연결한다.
 - `[제안]` 확장자·폴더 결합은 중앙 resolver 한 곳에서 수행한다.
-- `[확정, DEC-019]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 CSS placeholder 순으로 강등한다.
-- `[확정, DEC-031]` resolver는 실패한 논리 ID·기대 경로를 진단하되 외부 파일을 자동 이동·변환·rename하지 않는다.
+- `[확정, DEC-019·040]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 검은 presentation 순으로 강등한다.
+- `[확정, DEC-034]` resolver는 실패한 논리 ID·기대 경로를 진단한다. 외부 원본은 자동 이동·변환·rename하지 않고, 채택 파일의 runtime 복사본만 계약명으로 정규화하며 원본명→계약명을 기록한다.
+- `[확정, DEC-036·039]` node line, 변신 stage, battle phase/p3 spell, ending line의 세부 배경은 scenario 스키마를 늘리지 않고 presentation 고정 cue resolver가 해석한다.
+- `[확정]` 타이틀은 마이크 연결·입력 장치 선택·실시간 dBFS 테스트를 통과해야 새 게임/이어하기를 허용한다. 시작 뒤 STT 실패는 기존 클릭·로컬 폴백으로 완주한다.
+- `[확정]` battle의 `spell` 입력만 보정된 dBFS 범위를 검사한다. 너무 작거나 큰 첫 실패는 턴을 보존하고, 같은 턴 두 번째 실패는 `failed-spell` `+0`으로 턴을 소비한다. `freeform`에는 음량 게이트를 적용하지 않는다.
+- `[확정]` 동일 배경 논리 ID는 재렌더만 하고 애니메이션하지 않는다. 논리 ID 변경에만 420ms crossfade를 적용한다.
+- `[확정, DEC-038]` `?debug=1&scene=<장면ID>`는 저장·FSM과 격리된 장면 프리뷰다. 정상 URL에는 선택기·프리뷰가 없다.
+- `[확정, DEC-053·054·055·056·057]` 본편 대화 UI는 화자별 색과 화면 방향을 갖는 하단 미연시 프레임이다. 주노는 yellow·좌측, 회색 망령은 violet·좌측, 도윤은 rose·우측, 익명 voice는 amber·중앙, 내레이션은 중립색·중앙이다. 내레이션은 이름표 없이 본문을 `(…)`로 표시한다. 진행 버튼은 문구를 바꾸지 않고 렌더 후 1.5초 동안 disabled다. 일반 화면 상단에는 상태·QA 표식을 렌더하지 않고 고정 공급자·최종 transcript·음성 안내/상태 영역도 표시하지 않는다. `?debug=1` 우측 상단만 장면/STT 선택기와 STT 측정 결과를 표시한다. `누르고 말하기` 계열 PTT 버튼에 `(T)`를 표시하고 같은 버튼이 청취·`목소리 전달 중…` 상태를 전달한다.
 - `[제안]` 누락 에셋은 로더 진단에 포함하되 M1~M4 더미 placeholder 허용 여부는 마일스톤 계약을 따른다.

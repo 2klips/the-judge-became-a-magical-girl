@@ -12,9 +12,17 @@ const backgrounds = {
     logicalId: "bg_title",
     primaryPath: "assets/bg/bg_title.webp",
   },
+  bg_office_wide: {
+    logicalId: "bg_office_wide",
+    primaryPath: "assets/bg/bg_office_wide.webp",
+  },
   bg_hall_day: {
     logicalId: "bg_hall_day",
     primaryPath: "assets/bg/bg_hall_day.webp",
+  },
+  bg_hall_time_stop: {
+    logicalId: "bg_hall_time_stop",
+    primaryPath: "assets/bg/bg_hall_time_stop.webp",
   },
   bg_lounge_day: {
     logicalId: "bg_lounge_day",
@@ -34,6 +42,46 @@ const backgrounds = {
     logicalId: "bg_hall_void",
     primaryPath: "assets/bg/bg_hall_void.webp",
   },
+  bg_hall_good: {
+    logicalId: "bg_hall_good",
+    primaryPath: "assets/bg/bg_hall_good.webp",
+  },
+  bg_hall_normal: {
+    logicalId: "bg_hall_normal",
+    primaryPath: "assets/bg/bg_hall_normal.webp",
+  },
+  bg_hall_bad: {
+    logicalId: "bg_hall_bad",
+    primaryPath: "assets/bg/bg_hall_bad.webp",
+  },
+  bg_desk_closeup: {
+    logicalId: "bg_desk_closeup",
+    primaryPath: "assets/bg/bg_desk_closeup.webp",
+  },
+  bg_battle_wide: {
+    logicalId: "bg_battle_wide",
+    primaryPath: "assets/bg/bg_battle_wide.webp",
+  },
+  bg_battle_core: {
+    logicalId: "bg_battle_core",
+    primaryPath: "assets/bg/bg_battle_core.webp",
+  },
+  bg_mind_archive: {
+    logicalId: "bg_mind_archive",
+    primaryPath: "assets/bg/bg_mind_archive.webp",
+  },
+  bg_corridor_day: {
+    logicalId: "bg_corridor_day",
+    primaryPath: "assets/bg/bg_corridor_day.webp",
+  },
+  bg_corridor_blacklight: {
+    logicalId: "bg_corridor_blacklight",
+    primaryPath: "assets/bg/bg_corridor_blacklight.webp",
+  },
+  bg_transform_space: {
+    logicalId: "bg_transform_space",
+    primaryPath: "assets/bg/bg_transform_space.webp",
+  },
 } as const satisfies Record<string, BackgroundAssetContract>;
 
 const imagePaths = {
@@ -44,9 +92,20 @@ const imagePaths = {
   "juno.surprised": "assets/char/char_juno_surprised.png",
   "gray_wraith.normal": "assets/char/char_gray_wraith_normal.png",
   "gray_wraith.weakened": "assets/char/char_gray_wraith_weakened.png",
+  "doyun.normal": "assets/char/char_doyun_normal.png",
+  "doyun.normal_tired": "assets/char/char_doyun_normal_tired.png",
+  "doyun.normal_startled": "assets/char/char_doyun_normal_startled.png",
+  "doyun.normal_smile": "assets/char/char_doyun_normal_smile.png",
+  "doyun.normal_shy": "assets/char/char_doyun_normal_shy.png",
+  "doyun.normal_empty": "assets/char/char_doyun_normal_empty.png",
   "doyun.magical": "assets/char/char_doyun_magical.png",
+  "doyun.magical_defend": "assets/char/char_doyun_magical_defend.png",
+  "doyun.magical_attack": "assets/char/char_doyun_magical_attack.png",
+  "doyun.magical_finish": "assets/char/char_doyun_magical_finish.png",
+  "doyun.magical_pose": "assets/char/char_doyun_magical_pose.png",
   "transform.cast": "assets/cut/cut_transform_01.webp",
   "transform.complete": "assets/cut/cut_transform_02.webp",
+  "ending.black_magical_girl": "assets/cut/cut_black_magical_girl_01.webp",
 } as const;
 
 const bgmPaths = {
@@ -98,9 +157,6 @@ export function assetUrl(relativePath: string): string {
 
 export const corePreloadAssets = [
   { logicalId: "bg_title", path: backgrounds.bg_title.primaryPath },
-  { logicalId: "bg_hall_day", path: backgrounds.bg_hall_day.primaryPath },
-  { logicalId: "juno.neutral", path: imagePaths["juno.neutral"] },
-  { logicalId: "juno.surprised", path: imagePaths["juno.surprised"] },
 ] as const;
 
 export function preloadCoreAssets(): void {

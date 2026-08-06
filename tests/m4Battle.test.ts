@@ -30,7 +30,7 @@ const battle: BattleContract = {
 };
 
 describe("M4 3페이즈 언령 배틀", () => {
-  it("완창 +25, 성공 +15, 불발 0, 자유 대응 -5..10, guard +3을 적용한다", () => {
+  it("완창 +25, 성공 +15, 내용·음량 불발 0, 자유 대응 -5..10, guard +3을 적용한다", () => {
     expect(
       applyBattleAction(battle, createBattleState(20), {
         kind: "spell",
@@ -47,6 +47,12 @@ describe("M4 3페이즈 언령 배틀", () => {
       applyBattleAction(battle, createBattleState(20), {
         kind: "spell",
         transcript: "불발",
+      }).momentum,
+    ).toBe(20);
+    expect(
+      applyBattleAction(battle, createBattleState(20), {
+        kind: "failed-spell",
+        reason: "too-quiet",
       }).momentum,
     ).toBe(20);
     expect(

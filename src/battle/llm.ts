@@ -5,6 +5,7 @@ import {
   type BattleJudgementResult,
 } from "../judge/schema";
 import type { LlmDebugMode } from "../judge/llm";
+import { readWorkerJson } from "../network/workerResponse";
 
 export interface BattleJudgeContext {
   phase: BattlePhase;
@@ -18,6 +19,21 @@ export interface BattleLlmPort {
   ): Promise<BattleJudgementResult>;
 }
 
+export interface BattleLlmFailureTracker {
+  getFailureCount(): number;
+  recordFailure(): { forcedLocalMode: boolean };
+  recordSuccess(): unknown;
+}
+
+export type BattleLlmOutcome =
+  | { kind: "judged"; judgement: BattleJudgementResult }
+  | {
+      kind: "fallback";
+      reason: "disabled" | "failure";
+      forcedLocalMode: boolean;
+      error?: unknown;
+    };
+
 interface WorkerBattleLlmOptions {
   workerUrl: string;
   fetcher?: (request: Request) => Promise<Response>;
@@ -29,6 +45,37 @@ interface RetryOptions {
 }
 
 const WorkerErrorSchema = z.object({ error: z.string().min(1) });
+
+export async function judgeBattleWithFailureGate(
+  port: BattleLlmPort,
+  context: BattleJudgeContext,
+  signal: AbortSignal,
+  tracker: BattleLlmFailureTracker,
+): Promise<BattleLlmOutcome> {
+  if (tracker.getFailureCount() >= 3) {
+    return {
+      kind: "fallback",
+      reason: "disabled",
+      forcedLocalMode: true,
+    };
+  }
+
+  try {
+    const judgement = await port.judgeBattle(context, signal);
+    if (signal.aborted) throw abortError(signal.reason);
+    tracker.recordSuccess();
+    return { kind: "judged", judgement };
+  } catch (error) {
+    if (signal.aborted) throw error;
+    const failure = tracker.recordFailure();
+    return {
+      kind: "fallback",
+      reason: "failure",
+      forcedLocalMode: failure.forcedLocalMode,
+      error,
+    };
+  }
+}
 
 export function createWorkerBattleLlmPort(
   options: WorkerBattleLlmOptions,
@@ -48,7 +95,7 @@ export function createWorkerBattleLlmPort(
           }),
         }),
       );
-      const body: unknown = await response.json();
+      const body = await readWorkerJson(response, "전투 LLM Worker");
       if (!response.ok) {
         const parsed = WorkerErrorSchema.safeParse(body);
         throw new Error(

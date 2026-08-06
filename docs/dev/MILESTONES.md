@@ -309,14 +309,17 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 - M4 통과.
 - 실제 `scenario.json`, `characters.json`, 플래그 사전.
 - 스타일 앵커 승인, 필수 에셋 생성·라이선스 확인.
-- [ASSET_MANIFEST.md](ASSET_MANIFEST.md) 필수 항목 파일명 확정.
-- [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md)의 장면별 배경·인물·표정·음악 매핑 확정.
+- [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md) 필수 항목 파일명 확정.
+- [SCENE_ASSET_MAPPING.md](../assets/SCENE_ASSET_MAPPING.md)의 장면별 배경·인물·표정·음악 매핑 확정.
 
 ### 구현 범위
 
 - 대화 8~10, 컷씬 2, battle 1, GOOD/NORMAL/BAD 본편 통합.
 - NPC 표정 5종, 적 2상태, 플레이어/변신 컷, 필수 배경·BGM.
 - N1 주노 미노출, N3 복수 인물, N4→N5 표정 연속성, battle phase별 인물 상태를 장면 매핑대로 적용.
+- 타이틀 마이크 장치 선택·dBFS 테스트 통과 전 시작/이어하기 차단. 게임 진입 뒤 클릭·로컬 폴백 유지.
+- battle 주문 음량은 보정 범위로 판정. 첫 음량 실패는 무료 재시도, 같은 턴 두 번째는 `+0`으로 턴 소비.
+- 같은 배경 ID는 전환 없음. 다른 ID만 420ms crossfade, 감소 모션은 즉시 전환.
 - CSS 타이핑·페이드·셰이크·플래시, Canvas 2D 파티클 1모듈.
 - BGM 크로스페이드, Web Audio SFX 약 5종.
 - 기본 에셋 프리로드 + 나머지 지연 로드.
@@ -330,11 +333,11 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 ### 변경 예상 파일
 
-`public/scenario/*`, `public/assets/**/*`, `src/ui/*`, `src/audio/*`, `src/engine/*`, CSS, 에셋 로딩 테스트, `SCENE_ASSET_MAPPING.md`, `ASSET_MANIFEST.md`, `AI_PRODUCTION_LOG.md`.
+`public/scenario/*`, `assets/runtime/**/*`, `src/ui/*`, `src/audio/*`, `src/input/*`, `src/engine/*`, CSS, 에셋 로딩 테스트, `docs/assets/*`.
 
 ### 완료 조건
 
-- 실제 본편이 음성·클릭·오프라인 각 경로로 완주.
+- 마이크 테스트를 통과한 뒤 실제 본편이 음성·게임 내 클릭·오프라인 각 경로로 완주.
 - GOOD/NORMAL/BAD 도달. 포함 시 HIDDEN도 도달.
 - JSON 참조와 파일명이 일치, 필수 에셋 누락 없음.
 - 모든 M5 node/phase의 화면 인물·표정·BGM이 장면별 에셋 매핑과 일치.
@@ -355,7 +358,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 ### 실패 시 롤백 또는 폴백
 
-- 누락·불량 에셋은 승인 placeholder로 대체하고 manifest에 상태 기록.
+- `[확정, DEC-040]` 누락·불량 외부 이미지·컷은 검은 presentation, BGM은 무음으로 대체하고 manifest의 `missing` 상태와 재요청 기록을 유지한다.
 - 선택 BGM/컷/HIDDEN부터 제거. 필수 완주 경로는 유지.
 - 실제 시나리오 오류 시 마지막 검증 통과 버전으로 복귀.
 
@@ -372,7 +375,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 ### 선행조건
 
 - M5 통과.
-- `[확정, DEC-028]` GPT/Gemini 중 production STT 공급자 사용자 선택 완료.
+- `[충족, DEC-051]` production STT 공급자는 OpenAI `gpt-transcribe`로 사용자 선택 완료.
 - GitHub 저장소·Pages base/Origin, Workers 배포 계정과 키 정책 확정.
 - 현장 Chrome·마이크·네트워크 조건 확보.
 

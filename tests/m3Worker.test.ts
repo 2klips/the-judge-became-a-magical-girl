@@ -52,6 +52,26 @@ describe("M3 Worker 경계", () => {
     expect(upstream).not.toHaveBeenCalled();
   });
 
+  it("production Worker는 Gemini STT 경로를 upstream 전에 거부한다", async () => {
+    const upstream = vi.fn();
+    const worker = createWorker(upstream);
+    const form = new FormData();
+    form.append("audio", new File(["wav"], "speech.wav", { type: "audio/wav" }));
+
+    const response = await worker.fetch(
+      new Request("http://worker.local/transcribe/gemini", {
+        method: "POST",
+        headers: { Origin: LOCAL_ORIGIN },
+        body: form,
+      }),
+      env(),
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "비활성화된 STT 공급자입니다." });
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
   it("잘못된 클라이언트 JSON은 400, 공급자 JSON은 502로 분리한다", async () => {
     const upstream = vi.fn(async () =>
       Response.json({
@@ -130,6 +150,107 @@ describe("M3 Worker 경계", () => {
       thinkingConfig: { thinkingLevel: "minimal" },
     });
   });
+
+  it("공개 QA에서는 OpenAI Responses structured output을 대화 판정으로 중계한다", async () => {
+    let upstream: Request | undefined;
+    const worker = createWorker(async (request) => {
+      upstream = request;
+      return Response.json({
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            content: [
+              {
+                type: "output_text",
+                text: JSON.stringify({
+                  intentId: "ask_conditions",
+                  affinityDelta: 0,
+                  emotion: "neutral",
+                  flags: [],
+                  reply: "좋아, 조건부터 확인하자!",
+                }),
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    const response = await worker.fetch(
+      dialogueRequest(),
+      env({ LLM_PROVIDER: "openai", OPENAI_LLM_MODEL: "gpt-5.6-luna" }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      intentId: "ask_conditions",
+      reply: "좋아, 조건부터 확인하자!",
+    });
+    expect(upstream?.url).toBe("https://api.openai.com/v1/responses");
+    expect(upstream?.headers.get("Authorization")).toBe("Bearer test-openai-key");
+    const body = (await upstream?.json()) as {
+      model?: string;
+      instructions?: string;
+      input?: string;
+      reasoning?: { effort?: string };
+      max_output_tokens?: number;
+      store?: boolean;
+      text?: {
+        format?: {
+          type?: string;
+          name?: string;
+          strict?: boolean;
+          schema?: unknown;
+        };
+      };
+    };
+    expect(body).toMatchObject({
+      model: "gpt-5.6-luna",
+      reasoning: { effort: "low" },
+      max_output_tokens: 256,
+      store: false,
+      text: {
+        format: {
+          type: "json_schema",
+          name: "dialogue_judgement",
+          strict: true,
+        },
+      },
+    });
+    expect(body.instructions).toContain("reply는 intent 예시를 반복하지 말고");
+    expect(body.input).toContain("근로 조건부터 알고 싶어");
+    expect(body.text?.format?.schema).toBeTruthy();
+  });
+
+  it("OpenAI LLM 상태와 모델을 health에 노출하고 refusal 본문은 브라우저에 숨긴다", async () => {
+    const worker = createWorker(async () =>
+      Response.json({
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            content: [{ type: "refusal", refusal: "internal refusal detail" }],
+          },
+        ],
+      }),
+    );
+    const qaEnv = env({ LLM_PROVIDER: "openai", OPENAI_LLM_MODEL: "gpt-5.6-luna" });
+
+    const health = await worker.fetch(
+      new Request("http://worker.local/health", { headers: { Origin: LOCAL_ORIGIN } }),
+      qaEnv,
+    );
+    await expect(health.json()).resolves.toMatchObject({
+      llmProvider: "openai",
+      llmConfigured: true,
+      llmModel: "gpt-5.6-luna",
+    });
+
+    const refused = await worker.fetch(dialogueRequest(), qaEnv);
+    expect(refused.status).toBe(502);
+    expect(JSON.stringify(await refused.json())).not.toContain("internal refusal detail");
+  });
 });
 
 function dialogueRequest(): Request {
@@ -162,13 +283,15 @@ function dialogueRequest(): Request {
   });
 }
 
-function env(): Env {
+function env(overrides: Record<string, string> = {}): Env {
   return {
     OPENAI_API_KEY: "test-openai-key",
     GEMINI_API_KEY: "test-gemini-key",
     ALLOWED_ORIGINS: "http://127.0.0.1:5173,http://localhost:5173",
     OPENAI_TRANSCRIBE_MODEL: "gpt-transcribe",
     GEMINI_TRANSCRIBE_MODEL: "gemini-2.5-flash",
+    LLM_PROVIDER: "gemini",
     GEMINI_LLM_MODEL: "gemini-3.1-flash-lite",
-  };
+    ...overrides,
+  } as Env;
 }

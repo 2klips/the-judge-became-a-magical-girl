@@ -15,31 +15,216 @@ import {
   resolveCharacterAsset,
   resolveImageAsset,
 } from "../assets/catalog";
+import { resolvePresentationBackground } from "../assets/presentationBackground";
+import { resolveDoyunVisual } from "../assets/presentationDoyun";
 import type { BattleGrade, BattleState } from "../battle/state";
+import {
+  M5_SCENE_PREVIEWS,
+  type DevScenePreview,
+} from "../dev/scenePreview";
 import { ClickInputPort } from "../input/click";
+import {
+  meterPercent,
+  MicrophoneCalibrationAccumulator,
+  type AudioLevelMetrics,
+  type MicrophoneCalibration,
+} from "../input/audioLevel";
 import type {
+  MicrophoneConnection,
+  MicrophoneInputDevice,
+} from "../input/microphoneSetup";
+import type {
+  OpenAiSttModel,
   RecordedVoiceResult,
-  SttProviderId,
+  TranscriptionObservation,
 } from "../input/transcription";
-import { sttProviderLabel } from "../input/transcription";
-import { afterTranscriptVisible } from "../engine/dialogueTurn";
+import { formatVoiceInputError } from "../input/transcription";
+import {
+  PushToTalkShortcutController,
+  type PushToTalkShortcutBinding,
+} from "../input/keyboardPtt";
 import type { GameState, InputMode } from "../state";
-import { CaptionsView } from "./captions";
-import { MicIndicatorView } from "./micIndicator";
 import { applySceneEffect, type SceneEffect } from "./effects";
+import { DIALOGUE_ADVANCE_DELAY_MS, DelayedActionGate } from "./advanceGate";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
+
+export const VOICE_TITLE_SUBTITLE =
+  "마이크를 누른 채 말하고 놓아, 정체불명의 목소리와 호흡을 맞춰 보자.";
+
+export interface DialogueIdentity {
+  speaker: string;
+  brand: string;
+}
+
+export interface DialoguePresentation {
+  readonly side: "left" | "right" | "center";
+  readonly tone: "juno" | "doyun" | "wraith" | "voice" | "narration";
+  readonly showName: boolean;
+}
+
+export function resolveDialoguePresentation(speakerId: string): DialoguePresentation {
+  switch (speakerId) {
+    case "juno":
+      return { side: "left", tone: "juno", showName: true };
+    case "doyun":
+      return { side: "right", tone: "doyun", showName: true };
+    case "gray_wraith":
+      return { side: "left", tone: "wraith", showName: true };
+    case "narration":
+      return { side: "center", tone: "narration", showName: false };
+    default:
+      return { side: "center", tone: "voice", showName: true };
+  }
+}
+
+export function formatDialogueText(text: string, speakerId: string): string {
+  if (speakerId !== "narration") return text;
+  const normalized = text.trim();
+  return normalized.startsWith("(") && normalized.endsWith(")")
+    ? normalized
+    : `(${normalized})`;
+}
+
+export function resolveSttModelControlVisibility(
+  debugEnabled: boolean,
+): "hidden" | "select" {
+  return debugEnabled ? "select" : "hidden";
+}
+
+export interface VoiceInputPresentation {
+  readonly buttonLabel: "누르고 말하기 (T)";
+  readonly showInstruction: false;
+  readonly showStatusRegion: false;
+}
+
+export const VOICE_PROCESSING_LABEL = "목소리 전달 중…";
+
+export function resolveVoiceInputPresentation(): VoiceInputPresentation {
+  return {
+    buttonLabel: "누르고 말하기 (T)",
+    showInstruction: false,
+    showStatusRegion: false,
+  };
+}
+
+export interface MissingAssetPresentation {
+  readonly className: "asset-black-placeholder";
+  readonly ariaLabel: string;
+  readonly preservesInteractiveUi: true;
+}
+
+export function resolveMissingAssetPresentation(
+  label: string,
+): MissingAssetPresentation {
+  return {
+    className: "asset-black-placeholder",
+    ariaLabel: `${label} 에셋 준비 중`,
+    preservesInteractiveUi: true,
+  };
+}
+
+export function resolveSceneBrand(nodeId: string): string {
+  return nodeId === "n0_review" || nodeId === "n1_first_voice"
+    ? "VOICE // LINK"
+    : "JUNO // LINK";
+}
+
+export function resolveDialogueIdentity(
+  nodeId: string,
+  characterName: string,
+): DialogueIdentity {
+  return nodeId === "n1_first_voice"
+    ? { speaker: "정체불명의 목소리", brand: resolveSceneBrand(nodeId) }
+    : { speaker: characterName, brand: resolveSceneBrand(nodeId) };
+}
+
+export type BackgroundTransition = "initial" | "same" | "change";
+
+export function resolveBackgroundTransition(
+  previousBackgroundId: string | null,
+  nextBackgroundId: string,
+): BackgroundTransition {
+  if (previousBackgroundId === null) return "initial";
+  return previousBackgroundId === nextBackgroundId ? "same" : "change";
+}
+
+export function resolveEndingLines(
+  node: EndingNode,
+  battleGrade: GameState["battleGrade"],
+): EndingNode["lines"] {
+  if (!battleGrade) return node.lines;
+  const variant = node.gradeVariants?.[battleGrade];
+  return variant ? [...node.lines, ...variant] : node.lines;
+}
+
+export interface EndingPage {
+  readonly line: EndingNode["lines"][number];
+  readonly lineIndex: number;
+  readonly total: number;
+  readonly sceneId: string;
+  readonly isLast: boolean;
+}
+
+export function resolveEndingPages(
+  node: EndingNode,
+  battleGrade: GameState["battleGrade"],
+): readonly EndingPage[] {
+  const lines = resolveEndingLines(node, battleGrade);
+  return lines.map((line, lineIndex) => ({
+    line,
+    lineIndex,
+    total: lines.length,
+    sceneId: resolvePresentationBackground({
+      kind: "ending",
+      endingId: node.endingId,
+      baseBackground: node.scene.bg,
+      lineIndex,
+    }),
+    isLast: lineIndex === lines.length - 1,
+  }));
+}
+
+export interface EndingVisual {
+  readonly characterId: "juno";
+  readonly emotion: Emotion;
+}
+
+export function resolveEndingVisual(
+  endingId: string,
+  lineIndex: number,
+): EndingVisual | null {
+  if (endingId === "good") {
+    if (lineIndex >= 6) return null;
+    return {
+      characterId: "juno",
+      emotion: lineIndex === 5 ? "surprised" : "happy",
+    };
+  }
+  if (endingId === "normal") {
+    return { characterId: "juno", emotion: "neutral" };
+  }
+  if (endingId === "bad") {
+    return { characterId: "juno", emotion: "upset" };
+  }
+  return null;
+}
 
 interface TitleOptions {
   hasSave: boolean;
   warning: string | null;
-  onNewGame: (inputMode: InputMode) => void;
-  onResume: () => void;
+  microphoneSupported: boolean;
+  connectMicrophone(
+    deviceId: string | undefined,
+    onLevel: (metrics: AudioLevelMetrics) => void,
+  ): Promise<MicrophoneConnection>;
+  disconnectMicrophone(): Promise<void>;
+  onNewGame: (calibration: MicrophoneCalibration) => void;
+  onResume: (calibration: MicrophoneCalibration) => void;
 }
 
 export interface DialogueInputOptions {
   speechSupported: boolean;
-  sttProvider: SttProviderId;
   notice?: string;
   forceClickForTurn?: boolean;
   startCapture(): Promise<void>;
@@ -49,12 +234,12 @@ export interface DialogueInputOptions {
   onTurnFailed(message: string): void;
   onUnavailable(message: string): void;
   onModeChange(inputMode: InputMode): void;
-  onProviderChange(provider: SttProviderId): void;
 }
 
 interface LineViewOptions {
   nodeId: string;
   sceneId: string;
+  lineIndex: number;
   speaker: string;
   speakerId?: string;
   emotion?: Emotion;
@@ -67,7 +252,6 @@ interface LineViewOptions {
 
 interface SharedVoiceOptions {
   speechSupported: boolean;
-  sttProvider: SttProviderId;
   notice?: string;
   startCapture(): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
@@ -75,7 +259,11 @@ interface SharedVoiceOptions {
   onTurnFailed(message: string): void;
   onUnavailable(message: string): void;
   onModeChange(inputMode: InputMode): void;
-  onProviderChange(provider: SttProviderId): void;
+}
+
+interface DebugSttOptions {
+  readonly model: OpenAiSttModel;
+  readonly onModelChange: (model: OpenAiSttModel) => void;
 }
 
 export interface IncantationInputOptions extends SharedVoiceOptions {
@@ -85,7 +273,11 @@ export interface IncantationInputOptions extends SharedVoiceOptions {
 }
 
 export interface BattleInputOptions extends SharedVoiceOptions {
-  onTranscript(action: "spell" | "freeform", transcript: string): Promise<void>;
+  onTranscript(
+    action: "spell" | "freeform",
+    transcript: string,
+    audioLevel?: AudioLevelMetrics,
+  ): Promise<void>;
   onClickSpell(): void;
   onClickResponse(text: string, momentumDelta: number): void;
   onGuard(): void;
@@ -108,19 +300,123 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || target.matches("input, textarea, select"))
+  );
+}
+
+type PttButtonState = "idle" | "listening" | "processing";
+
+function setPttButtonState(button: HTMLButtonElement, state: PttButtonState): void {
+  const idleLabel = button.dataset.idleLabel ?? "누르고 말하기 (T)";
+  button.dataset.voiceState = state;
+  button.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
+  button.disabled = state === "processing";
+  if (state === "processing") {
+    button.setAttribute("aria-busy", "true");
+    button.textContent = VOICE_PROCESSING_LABEL;
+    return;
+  }
+  button.removeAttribute("aria-busy");
+  button.textContent = state === "listening" ? "듣는 중… 놓으면 전송" : idleLabel;
+}
+
 export class GameView {
   private readonly debugEnabled: boolean;
+  private readonly keyboardPtt = new PushToTalkShortcutController();
+  private readonly keyboardPttBindings = new WeakMap<
+    HTMLButtonElement,
+    PushToTalkShortcutBinding
+  >();
+  private currentBackgroundId: string | null = null;
+  private debugSttModel: OpenAiSttModel;
+  private latestTranscription: TranscriptionObservation | null = null;
 
   constructor(
     private readonly root: HTMLElement,
-    private readonly speechSupported: boolean,
+    private readonly debugSttOptions: DebugSttOptions,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
+    this.debugSttModel = debugSttOptions.model;
+    window.addEventListener("keydown", (event) => {
+      if (event.ctrlKey || event.altKey || event.metaKey || isEditableKeyboardTarget(event.target)) {
+        return;
+      }
+      const target = this.resolveKeyboardPttTarget();
+      if (target && this.keyboardPtt.keyDown(event.key, event.repeat, target.binding)) {
+        target.button.focus({ preventScroll: true });
+        event.preventDefault();
+      }
+    });
+    window.addEventListener("keyup", (event) => {
+      if (this.keyboardPtt.keyUp(event.key)) event.preventDefault();
+    });
   }
 
   renderLoading(): void {
     const shell = this.createShell("bg_title");
     shell.append(element("p", "loading", "게임 데이터를 검증하는 중…"));
+    this.commit(shell);
+  }
+
+  renderDevScenePreview(
+    preview: DevScenePreview,
+    onPlayBgm?: () => void,
+  ): void {
+    const shell = this.createShell(preview.backgroundId);
+    shell.classList.add("dev-scene-preview", `dev-layout-${preview.layout}`);
+    shell.dataset.previewId = preview.id;
+
+    if (preview.showVoiceOrb) {
+      shell.append(element("div", "first-voice-orb"));
+    }
+    if (preview.visuals.length > 0) {
+      const stage = element("section", "dev-preview-stage");
+      stage.setAttribute("aria-label", "장면 에셋 프리뷰");
+      for (const visual of preview.visuals) {
+        const figure = this.createAssetVisual(
+          visual.logicalId,
+          visual.label,
+          `asset-visual dev-preview-visual dev-role-${visual.role}${visual.role === "player" ? " doyun-visual" : ""}`,
+        );
+        figure.dataset.logicalId = visual.logicalId;
+        stage.append(figure);
+      }
+      shell.append(stage);
+    }
+
+    const card = element("section", "dev-preview-card");
+    card.append(
+      element("p", "eyebrow", "M5 SCENE PREVIEW · SAVE/FSM ISOLATED"),
+      element("h1", "dev-preview-title", preview.label),
+      element("p", "dev-preview-meta", `scene=${preview.id}`),
+      element("p", "dev-preview-meta", `node=${preview.nodeId} · beat=${preview.beat}`),
+      element("p", "dev-preview-meta", `background=${preview.backgroundId}`),
+      element("p", "dev-preview-meta", `bgm=${preview.bgmId ?? "none"}`),
+    );
+    if (preview.bgmId && onPlayBgm) {
+      const play = element("button", "secondary-button compact", "BGM 테스트");
+      play.type = "button";
+      play.addEventListener("click", onPlayBgm);
+      card.append(play);
+    }
+    shell.append(card);
+    this.commit(shell);
+  }
+
+  renderDevSceneError(requestedId: string): void {
+    const shell = this.createShell("bg_title");
+    shell.classList.add("dev-scene-preview");
+    const card = element("section", "dev-preview-card");
+    card.append(
+      element("p", "eyebrow", "M5 SCENE PREVIEW"),
+      element("h1", "dev-preview-title", "장면 ID를 찾을 수 없습니다"),
+      element("p", "dev-preview-meta", `scene=${requestedId}`),
+      element("p", "dev-preview-meta", "상단 장면 선택기에서 유효한 장면을 선택하세요."),
+    );
+    shell.append(card);
     this.commit(shell);
   }
 
@@ -130,61 +426,210 @@ export class GameView {
 
     const titleBlock = element("section", "title-block");
     titleBlock.append(
-      element("p", "eyebrow", "VOICE VISUAL NOVEL · M5"),
+      element("p", "eyebrow", "VOICE VISUAL NOVEL · INPUT CHECK"),
       element("h1", "game-title", "심사역은 마법소녀가 되었다"),
-      element(
-        "p",
-        "title-subtitle",
-        this.speechSupported
-          ? "마이크를 누른 채 말하고 놓아, 주노와 목소리로 호흡을 맞춰 보자."
-          : "음성 인식을 지원하지 않는 환경이야. 클릭으로 끝까지 진행할 수 있어.",
-      ),
+      element("p", "title-subtitle", "마이크가 연결되어야 플레이 가능해요"),
     );
+
+    const setup = element("section", "microphone-setup");
+    setup.dataset.state = options.microphoneSupported ? "waiting" : "unsupported";
+    const setupHeader = element("div", "microphone-setup-header");
+    setupHeader.append(
+      element("span", "microphone-step", "01 / INPUT"),
+      element("h2", "microphone-title", "마이크 테스트"),
+      element("p", "microphone-copy", "마이크를 연결하고 평소 목소리로 한 문장을 말해 주세요."),
+    );
+    const deviceLabel = element("label", "microphone-device");
+    deviceLabel.append(element("span", undefined, "입력 장치"));
+    const deviceSelect = element("select", "microphone-device-select");
+    deviceSelect.disabled = true;
+    const defaultDevice = element("option", undefined, "연결 후 장치를 선택할 수 있어요");
+    defaultDevice.value = "";
+    deviceSelect.append(defaultDevice);
+    deviceLabel.append(deviceSelect);
+
+    const meter = element("div", "microphone-meter");
+    meter.setAttribute("role", "meter");
+    meter.setAttribute("aria-label", "마이크 입력 레벨");
+    meter.setAttribute("aria-valuemin", "0");
+    meter.setAttribute("aria-valuemax", "100");
+    meter.setAttribute("aria-valuenow", "0");
+    const meterFill = element("div", "microphone-meter-fill");
+    meter.append(meterFill);
+    const readout = element("div", "microphone-readout");
+    const dbOutput = element("output", "microphone-db", "-∞ dBFS");
+    const progressOutput = element("span", "microphone-progress", "테스트 대기");
+    readout.append(dbOutput, progressOutput);
+    const status = element(
+      "p",
+      "microphone-status",
+      options.microphoneSupported
+        ? "연결을 누르면 브라우저가 마이크 권한을 요청해요."
+        : "이 환경에서는 마이크 테스트를 사용할 수 없어 게임을 시작할 수 없어요.",
+    );
+    status.setAttribute("aria-live", "polite");
+    const testPrompt = element("p", "microphone-test-prompt", "테스트 문장 · “심사를 시작합니다.”");
+    const connectButton = element(
+      "button",
+      "secondary-button microphone-connect",
+      "마이크 연결",
+    );
+    connectButton.type = "button";
+    connectButton.disabled = !options.microphoneSupported;
+    setup.append(setupHeader, deviceLabel, meter, readout, testPrompt, status, connectButton);
 
     const actions = element("div", "title-actions");
-    const startButton = element("button", "primary-button", "새 게임");
+    const startButton = element("button", "primary-button", "시작");
     startButton.type = "button";
-    startButton.addEventListener(
-      "click",
-      () => options.onNewGame(this.speechSupported ? "voice" : "click"),
-      { once: true },
-    );
+    startButton.disabled = true;
     actions.append(startButton);
 
-    if (this.speechSupported) {
-      const clickStartButton = element(
-        "button",
-        "secondary-button",
-        "클릭으로 시작",
-      );
-      clickStartButton.type = "button";
-      clickStartButton.addEventListener(
-        "click",
-        () => options.onNewGame("click"),
-        { once: true },
-      );
-      actions.append(clickStartButton);
-    }
-
+    let resumeButton: HTMLButtonElement | null = null;
     if (options.hasSave) {
-      const resumeButton = element("button", "secondary-button", "이어하기");
+      resumeButton = element("button", "secondary-button", "이어하기");
       resumeButton.type = "button";
-      resumeButton.addEventListener("click", options.onResume, { once: true });
+      resumeButton.disabled = true;
       actions.append(resumeButton);
     }
-    titleBlock.append(actions);
+    titleBlock.append(setup, actions);
 
     if (options.warning) {
       titleBlock.append(element("p", "warning-message", options.warning));
     }
 
-    shell.append(titleBlock, this.inputStatus());
+    let accumulator = new MicrophoneCalibrationAccumulator();
+    let calibration: MicrophoneCalibration | null = null;
+    let lastReadingAt = performance.now();
+    let connectionSequence = 0;
+
+    const setDevices = (
+      devices: readonly MicrophoneInputDevice[],
+      selectedDeviceId: string,
+    ): void => {
+      deviceSelect.replaceChildren();
+      for (const device of devices) {
+        const option = element("option", undefined, device.label);
+        option.value = device.deviceId;
+        option.selected = device.deviceId === selectedDeviceId;
+        deviceSelect.append(option);
+      }
+      deviceSelect.disabled = devices.length < 2;
+    };
+    const updateLevel = (metrics: AudioLevelMetrics): void => {
+      if (!this.root.contains(shell)) return;
+      const now = performance.now();
+      const state = accumulator.add(metrics, Math.min(100, Math.max(16, now - lastReadingAt)));
+      lastReadingAt = now;
+      const percent = meterPercent(metrics.rmsDbfs);
+      meter.style.setProperty("--microphone-level", `${percent}%`);
+      meter.setAttribute("aria-valuenow", String(percent));
+      dbOutput.textContent = `${metrics.rmsDbfs.toFixed(1)} dBFS`;
+      setup.dataset.state = state;
+      if (state === "too-quiet") {
+        status.textContent = "입력 신호가 너무 작아요. 마이크를 가까이 두고 말해 주세요.";
+        progressOutput.textContent = "신호 부족";
+      } else if (state === "too-loud") {
+        status.textContent = "입력이 너무 커서 소리가 깨져요. 거리를 벌리거나 입력 볼륨을 낮춰 주세요.";
+        progressOutput.textContent = "입력 과다";
+      } else if (state === "sampling") {
+        status.textContent = "목소리를 확인하고 있어요. 테스트 문장을 끝까지 말해 주세요.";
+        progressOutput.textContent = `${Math.round(accumulator.progress * 100)}%`;
+      } else if (state === "passed") {
+        const measured = accumulator.calibration();
+        calibration = measured
+          ? { ...measured, inputDeviceId: deviceSelect.value || undefined }
+          : null;
+        status.textContent = "마이크 테스트 완료. 이제 게임을 시작할 수 있어요.";
+        progressOutput.textContent = "READY";
+        startButton.disabled = calibration === null;
+        if (resumeButton) resumeButton.disabled = calibration === null;
+        connectButton.textContent = "다시 테스트";
+      }
+    };
+    const connect = async (deviceId?: string): Promise<void> => {
+      const sequence = ++connectionSequence;
+      accumulator = new MicrophoneCalibrationAccumulator();
+      calibration = null;
+      startButton.disabled = true;
+      if (resumeButton) resumeButton.disabled = true;
+      connectButton.disabled = true;
+      deviceSelect.disabled = true;
+      setup.dataset.state = "connecting";
+      status.textContent = "마이크 권한과 입력 장치를 확인하고 있어요…";
+      progressOutput.textContent = "CONNECTING";
+      lastReadingAt = performance.now();
+      try {
+        const connection = await options.connectMicrophone(deviceId, updateLevel);
+        if (sequence !== connectionSequence || !this.root.contains(shell)) return;
+        setDevices(connection.devices, connection.selectedDeviceId);
+        if (accumulator.state === "passed") {
+          const measured = accumulator.calibration();
+          calibration = measured
+            ? { ...measured, inputDeviceId: connection.selectedDeviceId || undefined }
+            : null;
+          connectButton.textContent = "다시 테스트";
+        } else {
+          connectButton.textContent = "테스트 초기화";
+          status.textContent = "연결 완료. 테스트 문장을 평소 목소리로 말해 주세요.";
+          progressOutput.textContent = "LISTENING";
+          setup.dataset.state = "listening";
+        }
+      } catch (error) {
+        if (sequence !== connectionSequence || !this.root.contains(shell)) return;
+        setup.dataset.state = "error";
+        status.textContent = microphoneSetupErrorMessage(error);
+        progressOutput.textContent = "BLOCKED";
+      } finally {
+        if (sequence === connectionSequence) connectButton.disabled = false;
+      }
+    };
+
+    connectButton.addEventListener("click", () => void connect(deviceSelect.value || undefined));
+    deviceSelect.addEventListener("change", () => void connect(deviceSelect.value || undefined));
+    startButton.addEventListener("click", () => {
+      const acceptedCalibration = calibration;
+      if (!acceptedCalibration) return;
+      startButton.disabled = true;
+      void options
+        .disconnectMicrophone()
+        .finally(() => options.onNewGame(acceptedCalibration));
+    });
+    resumeButton?.addEventListener("click", () => {
+      const acceptedCalibration = calibration;
+      if (!acceptedCalibration) return;
+      resumeButton!.disabled = true;
+      void options
+        .disconnectMicrophone()
+        .finally(() => options.onResume(acceptedCalibration));
+    });
+
+    shell.append(titleBlock);
     this.commit(shell);
   }
 
   renderLine(options: LineViewOptions): void {
-    const shell = this.createShell(options.sceneId);
-    shell.append(this.topStatus(options.state, options.progress));
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: options.nodeId,
+        baseBackground: options.sceneId,
+        lineIndex: options.lineIndex,
+      }),
+    );
+    const doyunVisual = resolveDoyunVisual({
+      kind: "node",
+      nodeId: options.nodeId,
+      lineIndex: options.lineIndex,
+    });
+    if (doyunVisual) {
+      shell.append(
+        this.createAssetVisual(
+          doyunVisual,
+          "한도윤",
+          "character-visual scene-player-visual doyun-visual",
+        ),
+      );
+    }
 
     if (options.nodeId === "n5_transform") {
       shell.append(
@@ -213,16 +658,18 @@ export class GameView {
       );
     }
 
-    const panel = this.dialoguePanel(options.speaker, options.text);
-    const button = element("button", "primary-button compact", options.continueLabel);
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
-    panel.append(button);
-    shell.append(
-      panel,
-      this.inputStatus(options.state),
-      this.debugPanel(options.state),
+    const panel = this.dialoguePanel(
+      options.speaker,
+      options.text,
+      options.speakerId ?? "narration",
     );
+    const button = this.delayedAdvanceButton(
+      "primary-button compact",
+      options.continueLabel,
+      options.onContinue,
+    );
+    panel.append(button);
+    shell.append(panel);
     this.commit(shell);
   }
 
@@ -232,21 +679,33 @@ export class GameView {
     options: IncantationInputOptions,
   ): void {
     const gate = node.incantationGate;
-    const shell = this.createShell(node.scene.bg);
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: node.nodeId,
+        baseBackground: node.scene.bg,
+        stage: "incantation",
+      }),
+    );
     shell.classList.add("incantation-screen");
-    shell.append(this.topStatus(state, `변신 주문 ${options.attempt}/${gate.maxAttempts}`));
+    shell.append(
+      this.createAssetVisual(
+        resolveDoyunVisual({ kind: "node", nodeId: node.nodeId, stage: "incantation" }) ??
+          "doyun.normal_shy",
+        "한도윤",
+        "character-visual scene-player-visual incantation-player-visual doyun-visual",
+      ),
+    );
     const card = element("section", "incantation-card");
     card.append(
       element("p", "eyebrow", "INCANTATION GATE"),
       element("p", "incantation-copy", gate.displayText),
-      element(
-        "p",
-        "incantation-guide",
-        state.inputMode === "voice"
-          ? "마이크를 누른 채 주문을 읽고, 다 읽은 뒤 버튼을 놓아."
-          : "클릭 주문은 표준 변신으로 안전하게 진행돼.",
-      ),
     );
+    if (state.inputMode !== "voice") {
+      card.append(
+        element("p", "incantation-guide", "클릭 주문은 표준 변신으로 안전하게 진행돼."),
+      );
+    }
     if (options.notice) card.append(element("p", "input-notice", options.notice));
     const inputArea = element("section", "incantation-input");
     const fallback = element("button", "secondary-button", "주문 외우기 · 표준 변신");
@@ -254,22 +713,18 @@ export class GameView {
     fallback.addEventListener("click", options.onFallback, { once: true });
 
     if (state.inputMode === "voice" && options.speechSupported) {
-      const captions = new CaptionsView();
-      const indicator = new MicIndicatorView();
       const controls = element("div", "voice-controls");
-      const ptt = element("button", "ptt-button", "누르고 주문 읽기");
+      const ptt = element("button", "ptt-button", "누르고 주문 읽기 (T)");
       ptt.type = "button";
       ptt.setAttribute("aria-pressed", "false");
-      const provider = this.providerControl(options);
-      controls.append(indicator.element, ptt, provider, fallback);
-      inputArea.append(captions.element, controls);
-      this.bindHoldToTalk(ptt, captions, indicator, options, async (transcript) => {
-        await options.onTranscript(transcript);
+      controls.append(ptt);
+      controls.append(fallback);
+      inputArea.append(controls);
+      this.bindHoldToTalk(ptt, options, async (transcript) => {
+        await options.onTranscript(transcript.text);
       });
       const utilities = element("div", "input-utilities");
       this.appendDebugTranscript(utilities, async (transcript) => {
-        captions.showFinal(transcript);
-        await nextPaint();
         await options.onTranscript(transcript);
       });
       inputArea.append(utilities);
@@ -283,7 +738,7 @@ export class GameView {
       }
     }
     card.append(inputArea);
-    shell.append(card, this.inputStatus(state), this.debugPanel(state));
+    shell.append(card);
     this.commit(shell);
   }
 
@@ -296,6 +751,14 @@ export class GameView {
   }): void {
     const shell = this.createShell(options.sceneId);
     applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
+    shell.append(
+      this.createAssetVisual(
+        resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", stage: "transformation" }) ??
+          "doyun.magical_pose",
+        "마법소녀 도윤",
+        "character-visual transformation-player-visual doyun-visual",
+      ),
+    );
     const cutStage = element("section", "transform-cut-stage");
     cutStage.setAttribute("aria-label", "변신 연출");
     cutStage.append(
@@ -321,11 +784,13 @@ export class GameView {
           : "표준 변신 · MOMENTUM 50";
     card.append(element("p", "eyebrow", "TRANSFORMATION"), element("h2", "ending-title", title));
     options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
-    const button = element("button", "primary-button", "언령 배틀 시작");
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
+    const button = this.delayedAdvanceButton(
+      "primary-button",
+      "언령 배틀 시작",
+      options.onContinue,
+    );
     card.append(button);
-    shell.append(card, this.inputStatus(options.state), this.debugPanel(options.state));
+    shell.append(card);
     this.commit(shell);
   }
 
@@ -336,14 +801,15 @@ export class GameView {
     state: GameState,
     options: BattleInputOptions,
   ): void {
-    const shell = this.createShell(node.scene.bg);
-    shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
-    shell.append(
-      this.topStatus(
-        state,
-        `전투 ${battleState.phaseIndex + 1}/3 · 턴 ${battleState.phaseTurn + 1}/${phase.maxTurns}`,
-      ),
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "battle",
+        phaseId: phase.phaseId,
+        beat: "prompt",
+        baseBackground: node.scene.bg,
+      }),
     );
+    shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
     const arena = element("section", "battle-arena");
     const visualStage = element("section", "battle-visual-stage");
     visualStage.setAttribute("aria-label", "전투 인물");
@@ -354,9 +820,9 @@ export class GameView {
         "asset-visual battle-character enemy-visual",
       ),
       this.createAssetVisual(
-        "doyun.magical",
+        resolveDoyunVisual({ kind: "battle", phaseId: phase.phaseId }) ?? "doyun.magical",
         "마법소녀 도윤",
-        "asset-visual battle-character player-visual",
+        "asset-visual battle-character player-visual doyun-visual",
       ),
       this.createCharacterVisual(
         "juno",
@@ -386,24 +852,21 @@ export class GameView {
       element("p", "battle-spell", phase.spell.displayText),
     );
     if (options.notice) command.append(element("p", "input-notice", options.notice));
-    const captions = new CaptionsView();
-    command.append(captions.element);
 
     if (state.inputMode === "voice" && options.speechSupported) {
-      const indicator = new MicIndicatorView();
       const controls = element("div", "battle-actions");
-      const spell = element("button", "ptt-button", "주문 · 누르고 말하기");
-      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기");
+      const spell = element("button", "ptt-button", "주문 · 누르고 말하기 (T)");
+      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 (T)");
       const guard = element("button", "secondary-button", "버티기 +3");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
-      controls.append(indicator.element, spell, freeform, guard, this.providerControl(options));
+      controls.append(spell, freeform, guard);
       command.append(controls);
-      this.bindHoldToTalk(spell, captions, indicator, options, (transcript) =>
-        options.onTranscript("spell", transcript),
+      this.bindHoldToTalk(spell, options, (transcript) =>
+        options.onTranscript("spell", transcript.text, transcript.audioLevel),
       );
-      this.bindHoldToTalk(freeform, captions, indicator, options, (transcript) =>
-        options.onTranscript("freeform", transcript),
+      this.bindHoldToTalk(freeform, options, (transcript) =>
+        options.onTranscript("freeform", transcript.text, transcript.audioLevel),
       );
       const clickMode = element("button", "secondary-button compact-input", "클릭으로 전환");
       clickMode.type = "button";
@@ -439,18 +902,17 @@ export class GameView {
     }
     const utilities = element("div", "input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
-      captions.showFinal(transcript);
-      await nextPaint();
       await options.onTranscript("spell", transcript);
     });
     command.append(utilities, this.battleDebugControls(options, battleState));
     arena.append(command);
-    shell.append(arena, this.inputStatus(state), this.debugPanel(state));
+    shell.append(arena);
     this.commit(shell);
   }
 
   renderBattleReply(options: {
     sceneId: string;
+    phaseId: string;
     enemyName: string;
     actionLabel: string;
     reply: string;
@@ -465,14 +927,13 @@ export class GameView {
     const shell = this.createShell(options.sceneId);
     shell.classList.add("battle-screen");
     applySceneEffect(shell, options.effect);
-    shell.append(
-      this.topStatus(
-        options.state,
-        options.completed ? `전투 종료 · ${options.grade} 등급` : `전투 ${options.battleState.phaseIndex + 1}/3`,
-      ),
-    );
     const card = element("section", "battle-result-card");
     card.append(
+      this.createAssetVisual(
+        resolveDoyunVisual({ kind: "battle", phaseId: options.phaseId }) ?? "doyun.magical",
+        "마법소녀 도윤",
+        "asset-visual battle-reply-player doyun-visual",
+      ),
       this.createAssetVisual(
         `gray_wraith.${options.battleState.enemyState}`,
         options.enemyName,
@@ -488,18 +949,18 @@ export class GameView {
     card.append(
       element("p", "player-line", `도윤 · ${options.actionLabel}`),
       createGauge("MOMENTUM", options.battleState.momentum, 20, 100),
-      this.dialoguePanel(options.enemyName, options.reply),
+      this.dialoguePanel(options.enemyName, options.reply, "gray_wraith"),
     );
-    if (options.narration) card.append(element("p", "ending-line", options.narration));
-    const button = element(
-      "button",
+    if (options.narration) {
+      card.append(element("p", "ending-line", formatDialogueText(options.narration, "narration")));
+    }
+    const button = this.delayedAdvanceButton(
       "primary-button",
       options.completed ? `${options.grade} 등급으로 수렴` : "다음 행동",
+      options.onContinue,
     );
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
     card.append(button);
-    shell.append(card, this.inputStatus(options.state), this.debugPanel(options.state));
+    shell.append(card);
     this.commit(shell);
   }
 
@@ -510,8 +971,14 @@ export class GameView {
     onSelect: (intentId: string) => void,
     inputOptions: DialogueInputOptions,
   ): void {
-    const shell = this.createShell(node.scene.bg);
-    shell.append(this.topStatus(state, `대화 ${state.nodeTurn + 1}/${node.maxTurns}`));
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: node.nodeId,
+        baseBackground: node.scene.bg,
+      }),
+    );
+    const identity = resolveDialogueIdentity(node.nodeId, character.name);
     this.appendDialogueVisuals(
       shell,
       node.nodeId,
@@ -519,7 +986,11 @@ export class GameView {
       node.npc.startEmotion,
     );
 
-    const panel = this.dialoguePanel(character.name, node.opening);
+    const panel = this.dialoguePanel(
+      identity.speaker,
+      node.opening,
+      node.nodeId === "n1_first_voice" ? "voice" : character.id,
+    );
     const inputArea = element("section", "dialogue-input");
     inputArea.dataset.inputMode = state.inputMode;
     panel.append(inputArea);
@@ -540,7 +1011,7 @@ export class GameView {
       );
     }
 
-    shell.append(panel, this.inputStatus(state), this.debugPanel(state));
+    shell.append(panel);
     this.commit(shell);
   }
 
@@ -549,6 +1020,7 @@ export class GameView {
     sceneId: string;
     characterId: string;
     emotion: Emotion;
+    intentId?: string;
     speaker: string;
     selectedLabel: string;
     reply: string;
@@ -556,32 +1028,37 @@ export class GameView {
     advanced: boolean;
     onContinue: () => void;
   }): void {
-    const shell = this.createShell(options.sceneId);
-    shell.append(this.topStatus(options.state, `누적 ${options.state.totalTurn}턴`));
+    const shell = this.createShell(
+      resolvePresentationBackground({
+        kind: "node",
+        nodeId: options.nodeId,
+        baseBackground: options.sceneId,
+      }),
+    );
+    const identity = resolveDialogueIdentity(options.nodeId, options.speaker);
     this.appendDialogueVisuals(
       shell,
       options.nodeId,
-      { id: options.characterId, name: options.speaker },
+      { id: options.characterId, name: identity.speaker },
       options.emotion,
+      options.intentId,
     );
-    const panel = this.dialoguePanel(options.speaker, options.reply);
+    const panel = this.dialoguePanel(
+      identity.speaker,
+      options.reply,
+      options.nodeId === "n1_first_voice" ? "voice" : options.characterId,
+    );
     panel.insertBefore(
       element("p", "player-line", `도윤 · ${options.selectedLabel}`),
       panel.firstChild,
     );
-    const button = element(
-      "button",
+    const button = this.delayedAdvanceButton(
       "primary-button compact",
       options.advanced ? "다음 장면" : "계속 대화",
+      options.onContinue,
     );
-    button.type = "button";
-    button.addEventListener("click", options.onContinue, { once: true });
     panel.append(button);
-    shell.append(
-      panel,
-      this.inputStatus(options.state),
-      this.debugPanel(options.state),
-    );
+    shell.append(panel);
     this.commit(shell);
   }
 
@@ -591,48 +1068,78 @@ export class GameView {
     state: GameState,
     onNewGame: () => void,
   ): void {
-    const shell = this.createShell(node.scene.bg);
-    shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
-    const characterLine = node.lines.find(
-      (line) => line.speaker !== "narration",
-    );
-    if (characterLine) {
-      shell.append(
-        this.createCharacterVisual(
-          characterLine.speaker,
-          characterLine.emotion ?? "neutral",
-          characterNames.get(characterLine.speaker) ?? characterLine.speaker,
-          "character-visual ending-character",
-        ),
+    const pages = resolveEndingPages(node, state.battleGrade);
+    let pageIndex = 0;
+
+    const renderPage = (): void => {
+      const page = pages[pageIndex];
+      if (!page) return;
+      const shell = this.createShell(page.sceneId);
+      shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
+      const doyunVisual = resolveDoyunVisual({
+        kind: "ending",
+        endingId: node.endingId,
+        lineIndex: page.lineIndex,
+      });
+      if (doyunVisual) {
+        shell.append(
+          this.createAssetVisual(
+            doyunVisual,
+            "한도윤",
+            "character-visual ending-player-visual doyun-visual",
+          ),
+        );
+      }
+      const visual = resolveEndingVisual(node.endingId, page.lineIndex);
+      if (visual) {
+        shell.append(
+          this.createCharacterVisual(
+            visual.characterId,
+            visual.emotion,
+            characterNames.get(visual.characterId) ?? visual.characterId,
+            "character-visual ending-character",
+          ),
+        );
+      }
+
+      const card = element("section", "ending-card");
+      card.append(
+        element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
+        element("h2", "ending-title", pages[0]?.line.text ?? "엔딩"),
+        element("p", "ending-progress", `${page.lineIndex + 1}/${page.total}`),
       );
-    }
-    const card = element("section", "ending-card");
-    card.append(
-      element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
-      element("h2", "ending-title", node.lines[0]?.text ?? "엔딩"),
-    );
+      if (page.lineIndex > 0) {
+        const speaker =
+          page.line.speaker === "narration"
+            ? ""
+            : `${characterNames.get(page.line.speaker) ?? page.line.speaker} · `;
+        const lineText = formatDialogueText(page.line.text, page.line.speaker);
+        card.append(element("p", "ending-line", `${speaker}${lineText}`));
+      }
 
-    for (const line of node.lines.slice(1)) {
-      const speaker =
-        line.speaker === "narration"
-          ? ""
-          : `${characterNames.get(line.speaker) ?? line.speaker} · `;
-      card.append(element("p", "ending-line", `${speaker}${line.text}`));
-    }
+      const button = page.isLast
+        ? element("button", "primary-button", "처음부터")
+        : this.delayedAdvanceButton("primary-button", "계속", () => {
+            pageIndex += 1;
+            renderPage();
+          });
+      button.type = "button";
+      if (page.isLast) {
+        card.append(
+          element(
+            "p",
+            "ending-summary",
+            `호감도 ${state.affinity} · 플래그 ${[...state.flags].join(", ") || "없음"}`,
+          ),
+        );
+        button.addEventListener("click", onNewGame, { once: true });
+      }
+      card.append(button);
+      shell.append(card);
+      this.commit(shell);
+    };
 
-    card.append(
-      element(
-        "p",
-        "ending-summary",
-        `호감도 ${state.affinity} · 플래그 ${[...state.flags].join(", ") || "없음"}`,
-      ),
-    );
-    const restart = element("button", "primary-button", "처음부터");
-    restart.type = "button";
-    restart.addEventListener("click", onNewGame, { once: true });
-    card.append(restart);
-    shell.append(card, this.debugPanel(state));
-    this.commit(shell);
+    renderPage();
   }
 
   renderError(error: unknown): void {
@@ -660,7 +1167,12 @@ export class GameView {
   private createShell(sceneId: string): HTMLElement {
     const shell = element("main", "game-shell");
     shell.dataset.scene = sceneId;
-    this.appendBackground(shell, sceneId);
+    const transition = resolveBackgroundTransition(this.currentBackgroundId, sceneId);
+    shell.dataset.backgroundTransition = transition;
+    if (transition === "change" && this.currentBackgroundId) {
+      this.appendBackground(shell, this.currentBackgroundId, "leaving");
+    }
+    this.appendBackground(shell, sceneId, transition === "change" ? "entering" : "static");
     shell.append(
       element("div", "ambient ambient-one"),
       element("div", "ambient ambient-two"),
@@ -669,7 +1181,11 @@ export class GameView {
     return shell;
   }
 
-  private appendBackground(shell: HTMLElement, sceneId: string): void {
+  private appendBackground(
+    shell: HTMLElement,
+    sceneId: string,
+    transitionRole: "static" | "entering" | "leaving",
+  ): void {
     const contract = resolveBackgroundAsset(sceneId);
     if (!contract) {
       shell.classList.add("scene-asset-placeholder");
@@ -687,6 +1203,7 @@ export class GameView {
       }
 
       const image = element("img", "scene-background");
+      image.classList.add(`scene-background-${transitionRole}`);
       image.alt = "";
       image.setAttribute("aria-hidden", "true");
       image.decoding = "async";
@@ -735,7 +1252,18 @@ export class GameView {
     nodeId: string,
     character: Pick<Character, "id" | "name">,
     emotion: Emotion,
+    intentId?: string,
   ): void {
+    const doyunVisual = resolveDoyunVisual({ kind: "node", nodeId, intentId });
+    if (doyunVisual) {
+      shell.append(
+        this.createAssetVisual(
+          doyunVisual,
+          "한도윤",
+          "character-visual scene-player-visual dialogue-player-visual doyun-visual",
+        ),
+      );
+    }
     if (nodeId === "n1_first_voice") {
       shell.append(element("div", "first-voice-orb"));
       return;
@@ -772,10 +1300,12 @@ export class GameView {
   ): HTMLElement {
     const figure = element("figure", className);
     const showPlaceholder = (): void => {
-      figure.replaceChildren(
-        element("div", "asset-placeholder-card", `${label} · 준비 중`),
-      );
-      figure.classList.add("is-placeholder");
+      const presentation = resolveMissingAssetPresentation(label);
+      const placeholder = element("div", presentation.className);
+      placeholder.setAttribute("role", "img");
+      placeholder.setAttribute("aria-label", presentation.ariaLabel);
+      figure.replaceChildren(placeholder);
+      figure.classList.add("is-placeholder", "is-black-placeholder");
     };
 
     if (!resolvedPath || isAssetPathUnavailable(resolvedPath)) {
@@ -799,66 +1329,96 @@ export class GameView {
     return figure;
   }
 
-  private topStatus(state: GameState, progress: string): HTMLElement {
-    const status = element("header", "top-status");
-    status.append(
-      element("span", "brand-mark", "JUNO // LINK"),
-      element("span", "status-chip", `호감도 ${state.affinity}`),
-      element("span", "status-chip", progress),
+  private dialoguePanel(speaker: string, text: string, speakerId: string): HTMLElement {
+    const presentation = resolveDialoguePresentation(speakerId);
+    const panel = element(
+      "section",
+      `dialogue-panel dialogue-side-${presentation.side} dialogue-tone-${presentation.tone}`,
     );
-    return status;
-  }
-
-  private dialoguePanel(speaker: string, text: string): HTMLElement {
-    const panel = element("section", "dialogue-panel");
+    panel.dataset.speaker = speakerId;
     panel.setAttribute("aria-live", "polite");
-    panel.append(
-      element("div", "nameplate", speaker),
-      element("p", "dialogue-text", text),
-    );
+    if (presentation.showName) panel.append(element("div", "nameplate", speaker));
+    panel.append(element("p", "dialogue-text", formatDialogueText(text, speakerId)));
     return panel;
   }
 
-  private inputStatus(state?: GameState): HTMLElement {
-    const status = element("div", "input-status");
-    const mode = state?.inputMode ?? (this.speechSupported ? "voice" : "click");
-    status.append(
-      element("span", "input-dot"),
-      element("span", undefined, mode === "voice" ? "음성 모드" : "클릭 모드"),
-      element("span", "input-divider", "·"),
-      element(
-        "span",
-        "muted",
-        state
-          ? `STT 실패 ${state.sttFailCount}/5 · LLM 실패 ${state.llmFailCount}/3`
-          : "STT 우선 · 클릭 폴백",
-      ),
-    );
-    return status;
-  }
-
-  private debugPanel(state: GameState): HTMLElement {
-    if (!this.debugEnabled) {
-      return element("div", "debug-panel hidden");
-    }
-    const panel = element("details", "debug-panel") as HTMLDetailsElement;
-    panel.open = true;
-    panel.append(element("summary", undefined, "M5 상태"));
-    const output = element("pre");
-    output.textContent = JSON.stringify(
-      {
-        ...state,
-        flags: [...state.flags],
+  private delayedAdvanceButton(
+    className: string,
+    label: string,
+    onContinue: () => void,
+  ): HTMLButtonElement {
+    const button = element("button", className, label);
+    button.type = "button";
+    button.disabled = true;
+    button.dataset.advanceState = "waiting";
+    const gate = new DelayedActionGate({
+      delayMs: DIALOGUE_ADVANCE_DELAY_MS,
+      onReadyChange: (ready) => {
+        button.disabled = !ready;
+        button.dataset.advanceState = ready ? "ready" : "waiting";
       },
-      null,
-      2,
-    );
-    panel.append(output);
-    return panel;
+      onAction: onContinue,
+    });
+    button.addEventListener("click", () => gate.trigger());
+    gate.arm();
+    return button;
   }
 
   private commit(shell: HTMLElement): void {
+    this.keyboardPtt.cancel();
+    if (this.debugEnabled) {
+      shell.append(this.devSceneNavigator());
+    }
     this.root.replaceChildren(shell);
+    this.currentBackgroundId = shell.dataset.scene ?? null;
+  }
+
+  private devSceneNavigator(): HTMLElement {
+    const nav = element("aside", "dev-scene-nav");
+    nav.setAttribute("aria-label", "M5 장면 선택기");
+    const label = element("label", undefined, "DEBUG");
+    const select = element("select");
+    select.name = "devScene";
+    const game = element("option", undefined, "실제 플레이");
+    game.value = "";
+    select.append(game);
+    for (const preview of M5_SCENE_PREVIEWS) {
+      const option = element("option", undefined, preview.label);
+      option.value = preview.id;
+      select.append(option);
+    }
+    select.value = new URLSearchParams(window.location.search).get("scene") ?? "";
+    select.addEventListener("change", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("debug", "1");
+      if (select.value) url.searchParams.set("scene", select.value);
+      else url.searchParams.delete("scene");
+      window.location.assign(url);
+    });
+    label.append(select);
+    const sttLabel = element("label", "debug-stt-selector", "STT");
+    const sttSelect = element("select");
+    sttSelect.name = "debugSttModel";
+    for (const model of ["gpt-transcribe", "gpt-live-transcribe"] as const) {
+      const option = element("option", undefined, model);
+      option.value = model;
+      option.selected = model === this.debugSttModel;
+      sttSelect.append(option);
+    }
+    sttSelect.addEventListener("change", () => {
+      const model: OpenAiSttModel =
+        sttSelect.value === "gpt-live-transcribe"
+          ? "gpt-live-transcribe"
+          : "gpt-transcribe";
+      this.debugSttModel = model;
+      this.latestTranscription = null;
+      this.debugSttOptions.onModelChange(model);
+    });
+    sttLabel.append(sttSelect);
+    const models = element("div", "debug-model-summary");
+    models.append(sttLabel, element("span", undefined, "LLM · gpt-5.6-luna"));
+    nav.append(label, models, this.debugTranscriptionResult());
+    return nav;
   }
 
   private renderClickInput(
@@ -910,18 +1470,16 @@ export class GameView {
   ): void {
     container.replaceChildren();
     container.dataset.inputMode = "voice";
+    const presentation = resolveVoiceInputPresentation();
     if (options.notice) {
       container.append(element("p", "input-notice", options.notice));
     }
-    container.append(
-      element("p", "prompt-label", "마이크를 누른 채 말하고, 놓으면 판정해."),
-    );
-    const captions = new CaptionsView();
-    const indicator = new MicIndicatorView();
     const controls = element("div", "voice-controls");
-    const ptt = element("button", "ptt-button", "누르고 말하기");
+    const ptt = element("button", "ptt-button", presentation.buttonLabel);
     ptt.type = "button";
     ptt.setAttribute("aria-pressed", "false");
+    ptt.setAttribute("aria-keyshortcuts", "T Space Enter");
+    ptt.dataset.idleLabel = presentation.buttonLabel;
     const clickButton = element(
       "button",
       "secondary-button compact-input",
@@ -932,22 +1490,9 @@ export class GameView {
       options.cancel();
       options.onModeChange("click");
     });
-    const provider = element("label", "provider-control");
-    provider.append(element("span", undefined, "STT"));
-    const providerSelect = element("select", "provider-select");
-    for (const id of ["openai", "gemini"] as const) {
-      const option = element("option", undefined, sttProviderLabel(id));
-      option.value = id;
-      option.selected = id === options.sttProvider;
-      providerSelect.append(option);
-    }
-    providerSelect.addEventListener("change", () => {
-      options.cancel();
-      options.onProviderChange(providerSelect.value === "gemini" ? "gemini" : "openai");
-    });
-    provider.append(providerSelect);
-    controls.append(indicator.element, ptt, provider, clickButton);
-    container.append(captions.element, controls);
+    controls.append(ptt);
+    controls.append(clickButton);
+    container.append(controls);
 
     let capturing = false;
     const showClickFallback = (message: string): void => {
@@ -965,17 +1510,12 @@ export class GameView {
         return;
       }
       capturing = true;
-      ptt.setAttribute("aria-pressed", "true");
-      ptt.textContent = "듣는 중… 놓아서 전송";
-      indicator.setState("listening");
-      captions.showMessage("녹음 중 · 버튼을 떼면 종료");
+      setPttButtonState(ptt, "listening");
       try {
         await options.startCapture();
       } catch (error) {
         capturing = false;
-        ptt.setAttribute("aria-pressed", "false");
-        ptt.textContent = "누르고 말하기";
-        indicator.setState("error", "microphone");
+        setPttButtonState(ptt, "idle");
         options.onUnavailable(microphoneErrorMessage(error));
       }
     };
@@ -984,13 +1524,10 @@ export class GameView {
         return;
       }
       capturing = false;
-      indicator.setState("processing");
-      captions.showMessage(`${sttProviderLabel(options.sttProvider)} 전사 중…`);
+      setPttButtonState(ptt, "processing");
       const result = await options.finishCapture();
       if (!this.root.contains(container)) return;
-      ptt.setAttribute("aria-pressed", "false");
-      ptt.textContent = "누르고 말하기";
-      await this.handleVoiceResult(result, captions, indicator, options, showClickFallback);
+      await this.handleVoiceResult(result, ptt, options, showClickFallback);
     };
 
     ptt.addEventListener("pointerdown", (event) => {
@@ -1012,21 +1549,17 @@ export class GameView {
         void stopCapture();
       }
     });
+    this.registerKeyboardPtt(ptt, beginCapture, stopCapture);
 
     const utilities = element("div", "input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
       options.cancel();
-      indicator.setState("processing", "debug transcript");
-      const handled = await afterTranscriptVisible(
-        transcript,
-        async (visibleTranscript) => {
-          captions.showFinal(visibleTranscript);
-          await nextPaint();
-        },
-        () => options.onTranscript(transcript),
-      );
+      setPttButtonState(ptt, "processing");
+      const handled = await options.onTranscript(transcript);
       if (!handled && this.root.contains(container)) {
         showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
+      } else if (this.root.contains(ptt)) {
+        setPttButtonState(ptt, "idle");
       }
     });
     container.append(utilities);
@@ -1034,106 +1567,70 @@ export class GameView {
 
   private async handleVoiceResult(
     result: RecordedVoiceResult,
-    captions: CaptionsView,
-    indicator: MicIndicatorView,
+    button: HTMLButtonElement,
     options: DialogueInputOptions,
     showClickFallback: (message: string) => void,
   ): Promise<void> {
     if (result.kind === "transcript") {
-      indicator.setState("processing", "전사 확인");
-      const handled = await afterTranscriptVisible(
-        result.transcript,
-        async (transcript) => {
-          captions.showFinal(transcript);
-          await nextPaint();
-        },
-        () => options.onTranscript(result.transcript),
-      );
-      if (!handled && this.root.contains(captions.element)) {
+      this.rememberTranscription(result.observation);
+      const handled = await options.onTranscript(result.transcript);
+      if (!handled && this.root.contains(button)) {
         showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
+      } else if (this.root.contains(button)) {
+        setPttButtonState(button, "idle");
       }
       return;
     }
     if (result.kind === "error") {
-      captions.showMessage(result.error.message);
-      indicator.setState("error", "STT");
-      options.onTurnFailed(result.error.message);
+      const message = formatVoiceInputError(result.error);
+      setPttButtonState(button, "idle");
+      options.onTurnFailed(message);
+      return;
     }
-  }
-
-  private providerControl(options: SharedVoiceOptions): HTMLLabelElement {
-    const provider = element("label", "provider-control");
-    provider.append(element("span", undefined, "STT"));
-    const select = element("select", "provider-select");
-    for (const id of ["openai", "gemini"] as const) {
-      const option = element("option", undefined, sttProviderLabel(id));
-      option.value = id;
-      option.selected = id === options.sttProvider;
-      select.append(option);
-    }
-    select.addEventListener("change", () => {
-      options.cancel();
-      options.onProviderChange(select.value === "gemini" ? "gemini" : "openai");
-    });
-    provider.append(select);
-    return provider;
+    setPttButtonState(button, "idle");
   }
 
   private bindHoldToTalk(
     button: HTMLButtonElement,
-    captions: CaptionsView,
-    indicator: MicIndicatorView,
     options: SharedVoiceOptions,
-    onTranscript: (transcript: string) => void | Promise<void>,
+    onTranscript: (transcript: {
+      readonly text: string;
+      readonly audioLevel: AudioLevelMetrics;
+    }) => void | Promise<void>,
   ): void {
     let capturing = false;
+    button.setAttribute("aria-keyshortcuts", "T Space Enter");
+    button.dataset.idleLabel = button.textContent ?? "누르고 말하기 (T)";
     const begin = async (): Promise<void> => {
       if (capturing) return;
       capturing = true;
-      button.setAttribute("aria-pressed", "true");
-      const label = button.textContent ?? "누르고 말하기";
-      button.dataset.idleLabel = label;
-      button.textContent = "듣는 중… 놓아서 전송";
-      indicator.setState("listening");
-      captions.showMessage("녹음 중 · 버튼을 떼면 종료");
+      setPttButtonState(button, "listening");
       try {
         await options.startCapture();
       } catch (error) {
         capturing = false;
-        button.setAttribute("aria-pressed", "false");
-        button.textContent = button.dataset.idleLabel ?? "누르고 말하기";
-        indicator.setState("error", "microphone");
+        setPttButtonState(button, "idle");
         options.onUnavailable(microphoneErrorMessage(error));
       }
     };
     const finish = async (): Promise<void> => {
       if (!capturing) return;
       capturing = false;
-      indicator.setState("processing");
-      captions.showMessage(`${sttProviderLabel(options.sttProvider)} 전사 중…`);
+      setPttButtonState(button, "processing");
       const result = await options.finishCapture();
-      button.setAttribute("aria-pressed", "false");
-      button.textContent = button.dataset.idleLabel ?? "누르고 말하기";
       if (result.kind === "error") {
-        captions.showMessage(result.error.message);
-        indicator.setState("error", "STT");
-        options.onTurnFailed(result.error.message);
+        const message = formatVoiceInputError(result.error);
+        setPttButtonState(button, "idle");
+        options.onTurnFailed(message);
         return;
       }
       if (result.kind === "cancelled") {
-        captions.showMessage("입력이 취소됐어.");
-        indicator.setState("idle");
+        setPttButtonState(button, "idle");
         return;
       }
-      indicator.setState("processing", "전사 확인");
-      await afterTranscriptVisible(
-        result.transcript,
-        async (transcript) => {
-          captions.showFinal(transcript);
-          await nextPaint();
-        },
-        () => onTranscript(result.transcript),
-      );
+      this.rememberTranscription(result.observation);
+      await onTranscript({ text: result.transcript, audioLevel: result.audioLevel });
+      if (button.isConnected) setPttButtonState(button, "idle");
     };
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
@@ -1154,13 +1651,67 @@ export class GameView {
         void finish();
       }
     });
+    this.registerKeyboardPtt(button, begin, finish);
+  }
+
+  private rememberTranscription(observation: TranscriptionObservation): void {
+    if (!this.debugEnabled) return;
+    this.latestTranscription = observation;
+  }
+
+  private debugTranscriptionResult(): HTMLElement {
+    const result = element("section", "debug-stt-result");
+    result.setAttribute("aria-live", "polite");
+    if (!this.latestTranscription) {
+      result.append(element("span", undefined, "인식 결과 대기 중"));
+      return result;
+    }
+    const observation = this.latestTranscription;
+    const timings = [`왕복 ${observation.roundTripMs}ms`];
+    if (observation.upstreamMs !== undefined) {
+      timings.push(`Worker ${observation.upstreamMs}ms`);
+    }
+    if (observation.firstDeltaMs !== undefined) {
+      timings.push(`첫 delta ${observation.firstDeltaMs}ms`);
+    }
+    result.append(
+      element("strong", undefined, observation.model),
+      element("span", undefined, timings.join(" · ")),
+      element("p", undefined, observation.text),
+    );
+    return result;
+  }
+
+  private registerKeyboardPtt(
+    button: HTMLButtonElement,
+    begin: () => void | Promise<void>,
+    finish: () => void | Promise<void>,
+  ): void {
+    this.keyboardPttBindings.set(button, { begin, finish });
+  }
+
+  private resolveKeyboardPttTarget(): {
+    button: HTMLButtonElement;
+    binding: PushToTalkShortcutBinding;
+  } | null {
+    const focused = document.activeElement;
+    if (focused instanceof HTMLButtonElement && this.root.contains(focused)) {
+      const binding = this.keyboardPttBindings.get(focused);
+      if (binding && !focused.disabled) return { button: focused, binding };
+    }
+
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>(".ptt-button")) {
+      const binding = this.keyboardPttBindings.get(button);
+      if (binding && !button.disabled) return { button, binding };
+    }
+    return null;
   }
 
   private battleDebugControls(
     options: BattleInputOptions,
     battleState: BattleState,
   ): HTMLElement {
-    if (!this.debugEnabled) return element("div", "debug-panel hidden");
+    if (!this.debugEnabled) return element("div", "hidden");
     const panel = element("section", "battle-debug");
     const momentum = element("input");
     momentum.type = "number";
@@ -1213,13 +1764,26 @@ export class GameView {
   }
 }
 
-function nextPaint(): Promise<void> {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-}
-
 function microphoneErrorMessage(error: unknown): string {
   if (error instanceof DOMException && error.name === "NotAllowedError") {
     return "마이크 권한이 거부됐어. 클릭 모드로 계속할게.";
   }
   return "마이크 녹음을 시작할 수 없어. 클릭 모드로 계속할게.";
+}
+
+function microphoneSetupErrorMessage(error: unknown): string {
+  if (error instanceof DOMException) {
+    if (error.name === "NotAllowedError") {
+      return "마이크 권한이 차단됐어요. 브라우저 주소창의 권한 설정에서 마이크를 허용해 주세요.";
+    }
+    if (error.name === "NotFoundError") {
+      return "연결된 마이크를 찾지 못했어요. 입력 장치를 연결한 뒤 다시 시도해 주세요.";
+    }
+    if (error.name === "OverconstrainedError") {
+      return "선택한 입력 장치를 사용할 수 없어요. 다른 마이크를 선택해 주세요.";
+    }
+  }
+  return error instanceof Error
+    ? `마이크 테스트를 시작하지 못했어요: ${error.message}`
+    : "마이크 테스트를 시작하지 못했어요. 장치 연결과 브라우저 권한을 확인해 주세요.";
 }

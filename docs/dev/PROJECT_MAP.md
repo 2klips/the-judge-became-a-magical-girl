@@ -14,15 +14,16 @@
 | 등장인물, 감정선, 고정 대사, 자유 대화 방향, N0~N8·엔딩 연출 | [심사역은 마법소녀가 되었다 완성대본 v2](../심사역은_마법소녀가_되었다_완성대본_v2.md) | 스토리·캐릭터 구현의 현재 기준. 런타임 필드는 별첨1을 따름 |
 | 시나리오 노드와 `characters.json` 작성 계약 | [별첨1. 스토리/시나리오 작가 가이드라인](../별첨1_스토리_작가_가이드라인.md) | 스키마를 복제하지 않고 런타임 책임만 정의 |
 | 이미지·오디오·UI 에셋 규격과 네이밍 | [별첨2. Asset 제작 가이드라인](../별첨2_에셋_제작_가이드라인.md) | 제작 상태와 참조 추적 |
-| 장면별 배경·인물·표정·음악·컷 사용처 | [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md) | 외부 제작자 인계와 런타임 scene/node/phase 연결 계약 |
+| 장면별 배경·인물·표정·음악·컷 사용처 | [SCENE_ASSET_MAPPING.md](../assets/SCENE_ASSET_MAPPING.md) | 외부 제작자 인계와 런타임 scene/node/phase 연결 계약 |
 | Codex 영구 행동 규칙 | [AGENTS.md](../../AGENTS.md) | 구현마다 적용 |
 | 구현 아키텍처 계약 | [IMPLEMENTATION_SPEC.md](IMPLEMENTATION_SPEC.md) | 모듈 경계·실행 순서·포트 정의 |
 | 단계별 작업 경계 | [MILESTONES.md](MILESTONES.md) | M1~M6 완료·검증 게이트 |
 | 품질과 시연 절차 | [QA_AND_DEMO.md](QA_AND_DEMO.md) | 재현 가능한 테스트 목록 |
 | 결정과 열린 쟁점 | [DECISIONS.md](DECISIONS.md) | 기준 문서 빈칸·변경 이력 |
 | 보안과 배포 | [SECURITY_AND_DEPLOYMENT.md](SECURITY_AND_DEPLOYMENT.md) | 비밀·Workers·Pages 운영 계약 |
-| 에셋 추적 | [ASSET_MANIFEST.md](ASSET_MANIFEST.md) | 논리 ID→실파일→QA 상태 |
-| AI 제작 증빙 | [AI_PRODUCTION_LOG.md](AI_PRODUCTION_LOG.md) | 입력·생성·사람 검수 기록 |
+| 에셋 추적 | [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md) | 논리 ID→실파일→QA 상태 |
+| 에셋 출처 | [PROVENANCE.md](../assets/PROVENANCE.md) | Git 이력·납품 경로·확인/미확인 출처 |
+| AI 제작 증빙 | [AI_PRODUCTION_LOG.md](../assets/AI_PRODUCTION_LOG.md) | 입력·생성·사람 검수 기록 |
 | 마일스톤 실행 이력 | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) | 작업·테스트·오류 수정·잔여 위험 기록 |
 
 [팀 전달용 완료 메시지](../팀전달용_대본디벨롭_완료메시지.md)는 제작 상태·검토 요청을 설명하는 인계 문서다. 스토리 내용의 단일 진실 공급원은 완성대본 v2다.
@@ -49,9 +50,9 @@ Codex 행동 충돌 시 사용자 지시 → 루트 `AGENTS.md` → 작업 템�
 |---|---|---|---|
 | 엔진·UI·SFX | Codex | `src/`, 테스트, 빌드 설정 | 메인 기획서, 구현 명세, 마일스톤 |
 | 시나리오 | 작가/Claude | `public/scenario/*.json` | 별첨1, 로더 검증 결과 |
-| 캐릭터 | GPT Image + 사람 검수 | `public/assets/char/` | 별첨2, 장면별 에셋 매핑, 에셋 매니페스트 |
-| 배경 | 미드저니 + 사람 검수 | `public/assets/bg/` | 별첨2, 장면별 에셋 매핑, 에셋 매니페스트 |
-| BGM | Suno + 사람 검수 | `public/assets/bgm/` | 별첨2, 장면별 에셋 매핑, 에셋 매니페스트 |
+| 캐릭터 | 외부 작업자 + 사람 검수 | `assets/source/*` → `assets/runtime/char/` | 별첨2, 장면별 에셋 매핑, 에셋 매니페스트, 출처 기록 |
+| 배경 | 외부 작업자 + 사람 검수 | `assets/source/background/` → `assets/runtime/bg/` | 별첨2, 장면별 에셋 매핑, 에셋 매니페스트, 출처 기록 |
+| BGM | 외부 작업자 + 사람 검수 | `assets/source/` → `assets/runtime/bgm/` | 별첨2, 장면별 에셋 매핑, 에셋 매니페스트, 출처 기록 |
 | LLM 프록시 | Codex | `worker/` | 보안·배포 문서 |
 | Git 저장소 초기 게시 | Codex + 저장소 관리자 | `.gitignore`, Git metadata, GitHub remote | M1, 보안·배포, 결정 기록 |
 | 배포 | Codex + 저장소 관리자 | `.github/workflows/`, Pages/Workers 설정 | 보안·배포, QA |
@@ -66,7 +67,7 @@ Codex 행동 충돌 시 사용자 지시 → 루트 `AGENTS.md` → 작업 템�
 | 주노 음성 자유대화 MVP-1 | 완성대본 v2 §1 주노, N2, §3~§6 + `IMPLEMENTATION_SPEC.md` §1.1 + `MILESTONES.md` MVP-1 절 + `QA_AND_DEMO.md` QJ 계열 |
 | 변신·전투 | 메인 §4~§5 + 별첨1 §4.2~§4.3 |
 | LLM·Workers | 메인 §8.3, §9, §11 + `SECURITY_AND_DEPLOYMENT.md` |
-| 에셋 제작·통합 | 별첨2 + `SCENE_ASSET_MAPPING.md` + `ASSET_MANIFEST.md` |
+| 에셋 제작·통합 | 별첨2 + `../assets/SCENE_ASSET_MAPPING.md` + `../assets/ASSET_MANIFEST.md` + `../assets/PROVENANCE.md` |
 | Git 초기화·GitHub 최초 push | M1 + `SECURITY_AND_DEPLOYMENT.md` §7~§8 + `DECISIONS.md` DEC-022·DEC-025 |
 | 배포·현장 준비 | `SECURITY_AND_DEPLOYMENT.md`, `QA_AND_DEMO.md`, M6 |
 | 기능 제안 | [DECISIONS.md](DECISIONS.md), [기능 제안 템플릿](../../prompts/FEATURE_PROPOSAL_TEMPLATE.md) |
@@ -79,5 +80,5 @@ Codex 행동 충돌 시 사용자 지시 → 루트 `AGENTS.md` → 작업 템�
 - 마일스톤 범위·완료 기준 변경: `MILESTONES.md` 한 곳에서 갱신.
 - 테스트 절차 변경: `QA_AND_DEMO.md` 한 곳에서 갱신.
 - 마일스톤 수행 결과·오류 수정: `IMPLEMENTATION_LOG.md`에 누적.
-- 에셋 상태 변경: `ASSET_MANIFEST.md`; 제작 증빙은 `AI_PRODUCTION_LOG.md`.
-- 장면별 배경·인물·표정·음악 사용처 변경: `SCENE_ASSET_MAPPING.md`; 논리 ID·파일명·상태 변경은 `ASSET_MANIFEST.md`와 함께 갱신.
+- 에셋 상태 변경: `docs/assets/ASSET_MANIFEST.md`; 제작 증빙은 `docs/assets/AI_PRODUCTION_LOG.md`, 확인 가능한 출처는 `docs/assets/PROVENANCE.md`.
+- 장면별 배경·인물·표정·음악 사용처 변경: `docs/assets/SCENE_ASSET_MAPPING.md`; 논리 ID·파일명·상태 변경은 manifest와 함께 갱신.

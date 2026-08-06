@@ -7,10 +7,33 @@
   "vars": {
     "ALLOWED_ORIGINS": "http://127.0.0.1:5173,http://localhost:5173",
     "OPENAI_TRANSCRIBE_MODEL": "gpt-transcribe",
+    "ENABLE_OPENAI_STT_MODEL_SELECTOR": "true",
     "GEMINI_TRANSCRIBE_MODEL": "gemini-2.5-flash",
+    "LLM_PROVIDER": "gemini",
     "GEMINI_LLM_MODEL": "gemini-3.1-flash-lite"
   },
   "secrets": {
     "required": ["OPENAI_API_KEY", "GEMINI_API_KEY"]
+  },
+  "env": {
+    "qa": {
+      "name": "nhn-voice-m5-qa-worker",
+      "workers_dev": true,
+      "placement": {
+        "region": "aws:us-east-1"
+      },
+      "vars": {
+        "ALLOWED_ORIGINS": "https://2klips.github.io",
+        "OPENAI_TRANSCRIBE_MODEL": "gpt-transcribe",
+        "ENABLE_OPENAI_STT_MODEL_SELECTOR": "true",
+        "GEMINI_TRANSCRIBE_MODEL": "gemini-2.5-flash",
+        "LLM_PROVIDER": "openai",
+        "OPENAI_LLM_MODEL": "gpt-5.6-luna",
+        "GEMINI_LLM_MODEL": "gemini-3.1-flash-lite"
+      },
+      "secrets": {
+        "required": ["OPENAI_API_KEY"]
+      }
+    }
   }
 }

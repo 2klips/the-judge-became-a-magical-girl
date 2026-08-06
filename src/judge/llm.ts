@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Character, DialogueNode } from "../data/schema";
+import { readWorkerJson } from "../network/workerResponse";
 import {
   parseDialogueJudgementForNode,
   type DialogueJudgementResult,
@@ -73,7 +74,7 @@ export function createWorkerLlmPort(options: WorkerLlmOptions): LlmPort {
           }),
         }),
       );
-      const body: unknown = await response.json();
+      const body = await readWorkerJson(response, "LLM Worker");
       if (!response.ok) {
         const parsed = WorkerErrorSchema.safeParse(body);
         throw new Error(parsed.success ? parsed.data.error : `LLM 요청 실패 (${response.status})`);

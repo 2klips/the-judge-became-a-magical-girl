@@ -1,0 +1,77 @@
+name: Deploy temporary QA Pages
+
+on:
+  push:
+    branches:
+      - codex/m5-asset-handoff-docs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VITE_WORKER_URL: ${{ vars.QA_WORKER_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate source
+        run: |
+          npm run check
+          npm test
+
+      - name: Validate QA Worker URL
+        shell: bash
+        run: |
+          test -n "$VITE_WORKER_URL"
+          [[ "$VITE_WORKER_URL" == https://*.workers.dev ]]
+
+      - name: Build QA preview
+        env:
+          VITE_QA_COMMIT: ${{ github.sha }}
+        run: npm run build:qa
+
+      - name: Verify QA artifact boundary
+        shell: bash
+        run: |
+          test -f dist/index.html
+          test ! -e dist/stt-lab.html
+          ! find dist -type f \( -name '*.wasm' -o -name '*transformers*' \) -print -quit | grep -q .
+          grep -q 'noindex,nofollow' dist/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

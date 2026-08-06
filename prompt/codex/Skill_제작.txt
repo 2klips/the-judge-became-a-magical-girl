@@ -1,0 +1,140 @@
+Use `$skill-creator`.
+
+# 작업 모드
+
+NHN AI 게임 해커톤 프로젝트 전용 Codex Skill을 제작한다.
+
+
+# 생성 위치
+
+C:\Users\axz14\.codex\skills\nhn-voice-vn-workflow
+
+Skill 이름:
+
+nhn-voice-vn-workflow
+
+
+# 목표
+
+다음 요청에서 자동으로 사용할 프로젝트 전용 Skill을 만든다:
+
+- 음성 미연시 기획 추가 또는 확장
+- 신규 기능 타당성 분석
+- 바이브 코딩 개발 문서 생성·갱신
+- M1~M6 마일스톤 구현
+- 시나리오 JSON 작성·검증
+- 에셋 manifest와 파일명 검증
+- STT·LLM·오프라인 폴백 검토
+- 해커톤 데모 QA와 제출 감사
+
+
+# 기준 문서
+
+Skill 제작 전에 다음 문서를 UTF-8로 읽는다:
+
+- C:\Users\axz14\Desktop\Project\NHN_hackathon\docs\음성_미연시_기획서_v2_A안확정.md
+- C:\Users\axz14\Desktop\Project\NHN_hackathon\docs\별첨1_스토리_작가_가이드라인.md
+- C:\Users\axz14\Desktop\Project\NHN_hackathon\docs\별첨2_에셋_제작_가이드라인.md
+
+저장소에 AGENTS.md와 docs/dev/ 문서가 생성돼 있다면 함께 읽는다.
+
+
+# Skill 설계 원칙
+
+- `SKILL.md`는 프로젝트 전체 기획서를 복제하지 않는다.
+- 프로젝트의 현재 기준 문서를 먼저 읽도록 라우팅한다.
+- 핵심 절차와 판단 규칙만 `SKILL.md`에 둔다.
+- 상세 스키마와 템플릿은 `references/`로 분리한다.
+- 반복적이고 결정적인 검증만 `scripts/`로 분리한다.
+- README, 설치 가이드, 변경 이력 같은 불필요한 파일을 만들지 않는다.
+- SKILL.md는 500줄 미만으로 유지한다.
+- 명령형 문장으로 작성한다.
+- planning 요청에서는 코드를 수정하지 않는다.
+- implementation 요청에서만 관련 로컬 파일을 수정한다.
+- 기준 문서 변경이 필요하면 임의 수정하지 않고 변경 제안으로 분리한다.
+
+
+# 권장 구조
+
+nhn-voice-vn-workflow/
+├─ SKILL.md
+├─ agents/
+│  └─ openai.yaml
+├─ references/
+│  ├─ task-modes.md
+│  ├─ feature-evaluation.md
+│  ├─ milestone-contracts.md
+│  ├─ scenario-validation.md
+│  └─ asset-validation.md
+└─ scripts/
+   ├─ validate-scenario.mjs
+   └─ validate-assets.mjs
+
+스크립트는 현재 저장소와 실제 데이터 구조를 확인한 뒤
+유효하게 작성할 수 있을 때만 생성한다.
+아직 검증 대상 파일이 없다면 빈 placeholder를 만들지 않는다.
+
+
+# Skill 작업 모드
+
+SKILL.md에서 요청을 다음으로 분류한다:
+
+1. PLAN_EXPANSION
+2. FEATURE_EVALUATION
+3. DOCS_UPDATE
+4. MILESTONE_IMPLEMENTATION
+5. SCENARIO_VALIDATION
+6. ASSET_VALIDATION
+7. DEMO_QA
+
+각 모드에 대해 명시한다:
+
+- 필수로 읽을 문서
+- 수정 허용 범위
+- 산출물
+- 검증 방법
+- 종료 조건
+
+
+# 반드시 보호할 프로젝트 계약
+
+- A안 아키텍처
+- STT 중심 상호작용
+- 클릭·오프라인 완주
+- 상태는 판정 결과로만 변경
+- 화이트리스트 밖 플래그 생성 금지
+- affinity와 momentum 클램프
+- 대화와 전투의 턴 상한
+- 변신 이벤트는 실패로 진행을 막지 않음
+- 전투는 패배가 아닌 S/A/B 등급
+- JSON next 참조 무결성
+- 모든 intent의 clickLabel과 offlineReply
+- 캐릭터 대사 80자 이하
+- 에셋 파일명 계약
+- 총 에셋 30MB 이하
+- GitHub Pages 정적 배포
+- API 키 클라이언트 노출 금지
+
+
+# 생성 절차
+
+1. `skill-creator`의 `init_skill.py`로 초기화한다.
+2. 필요한 리소스만 생성한다.
+3. `SKILL.md`와 references를 작성한다.
+4. agents/openai.yaml이 SKILL.md와 일치하는지 확인한다.
+5. `quick_validate.py`를 실행한다.
+6. 검증 오류를 수정하고 다시 실행한다.
+7. 실제 프로젝트 요청 예시 3개로 정적 검토한다.
+8. 이 작업에서는 subagent를 사용하지 않는다.
+
+
+# 최종 보고
+
+- Skill 위치
+- 생성 파일
+- trigger description
+- 지원 작업 모드
+- 기준 문서 읽기 규칙
+- 검증 명령과 결과
+- 생성하지 않은 선택 리소스와 이유
+- 실제 사용 예시 5개

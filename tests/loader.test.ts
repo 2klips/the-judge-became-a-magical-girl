@@ -116,4 +116,26 @@ describe("시나리오 zod·참조 검증", () => {
       );
     }
   });
+
+  it("ending의 전투 등급별 추가 대사를 검증해 보존한다", () => {
+    const input = rawFixture();
+    const scenario = structuredClone(input.scenario) as Array<Record<string, unknown>>;
+    const ending = scenario.find((node) => node.type === "ending");
+    if (!ending) throw new Error("ending fixture가 없습니다.");
+    ending.gradeVariants = {
+      S: [{ speaker: "juno", text: "완벽한 호흡이었어!", emotion: "happy" }],
+      B: [{ speaker: "juno", text: "끝까지 버틴 것도 멋진 승리야." }],
+    };
+
+    const data = validateGameData({ ...input, scenario });
+    const parsedEnding = data.scenario.find((node) => node.nodeId === ending.nodeId);
+
+    expect(parsedEnding).toMatchObject({
+      type: "ending",
+      gradeVariants: {
+        S: [{ text: "완벽한 호흡이었어!" }],
+        B: [{ text: "끝까지 버틴 것도 멋진 승리야." }],
+      },
+    });
+  });
 });

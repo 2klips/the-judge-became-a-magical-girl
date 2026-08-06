@@ -57,7 +57,7 @@
 4. 상태·분기·판정 로직을 외부 API와 분리한다.
 5. 자동 테스트와 오류 진단을 함께 작성한다.
 6. docs/dev/DECISIONS.md는 새 결정이 생긴 경우만 갱신한다.
-7. docs/dev/AI_PRODUCTION_LOG.md에 이번 AI 작업 기록을 추가한다.
+7. docs/assets/AI_PRODUCTION_LOG.md에 이번 AI 작업 기록을 추가한다.
 8. 마일스톤에 Git/GitHub 게시가 포함되면 자동·수동 검증 통과 뒤 staging 범위와 비밀정보를 확인하고 commit·push한다.
 
 # 완료 검증

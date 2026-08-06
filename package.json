@@ -10,12 +10,14 @@
     "dev:m3:worker": "wrangler dev --config wrangler.jsonc --env-file .env.local --local --ip 127.0.0.1 --port 8787 --log-level warn",
     "dev:stt-lab": "node scripts/dev-stt-lab.mjs",
     "dev:stt-lab:ui": "vite --host 127.0.0.1 --port 5173",
-    "dev:stt-lab:worker": "npm run dev:m3:worker",
+    "dev:stt-lab:worker": "wrangler dev --config wrangler.stt-lab.jsonc --env-file .env.local --local --ip 127.0.0.1 --port 8787 --log-level warn",
     "worker:types": "wrangler types worker-configuration.d.ts --config wrangler.jsonc --include-runtime false",
+    "worker:deploy:qa": "wrangler deploy --config wrangler.jsonc --env qa",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "vite build",
+    "build:qa": "vite build --mode qa",
     "preview": "vite preview"
   },
   "dependencies": {
