@@ -945,3 +945,27 @@
 | `npm test` | PASS | 38 files·166 tests |
 | `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
 | 사람 청감·합성·권리 | 대기 | BGM 3회 루프·대사 마스킹·PTT duck, 망령 장면 합성, 생성 당시 권리 증빙 필요 |
+
+## M5 연출 폴리시 WP1-2·WP1-4 — 선호 BGM·weakened 파생 폴백
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)` + `SCENARIO_VALIDATION` + `ASSET_VALIDATION`
+- 상태: 코드·자동 검증 PASS, 브라우저 장면·청각 QA 대기
+
+### 처리 내용
+
+- DEC-059에 따라 `n3_wraith_choice`, `n5_transform`을 `bgm_crisis`로, `ch3_gray_answer`와 3엔딩을 `bgm_ending`으로 정렬했다. N4는 필드 없이 crisis를 이어받는다.
+- 22개 dev 프리뷰 중 위기 6개와 수렴·엔딩 6개의 BGM 표시를 같은 계약으로 정렬했다.
+- DEC-060에 따라 `gray_wraith.weakened` 물리 파일이 없으면 normal + CSS 파생, normal도 실패하면 검은 presentation으로 강등한다.
+- 납품된 `attack/hit/death`는 신규 논리 ID로 등록하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| targeted tests | PASS | loader·asset·dev preview 3 files·23 tests |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·168 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| 시나리오 범위 | PASS | `scene.bgm` 6개 외 대사·분기·스키마 변경 없음 |
+| 사람 장면·청각 QA | 대기 | weakened 파생 합성, N3 crisis crossfade, N5 one-shot, 수렴·3엔딩 ending곡 확인 필요 |

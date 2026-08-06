@@ -23,7 +23,7 @@
 | `juno.upset` | `char_juno_upset.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격 PASS |
 | `juno.surprised` | `char_juno_surprised.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격·N2 합성 PASS |
 | `gray_wraith.normal` | `char_gray_wraith_normal.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·모델 미확인 | 미확인 | battle `enemy.id` + state | source/runtime 동일 바이트·413,056B·자동 규격 PASS. 사람 합성·권리 QA 대기 |
-| `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | 미제작 | 미확인 | battle `enemy.id` + state | 대기 |
+| `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | 미제작 | 미확인 | battle `enemy.id` + state | DEC-060 normal + CSS 파생 → black 폴백 구현. 정식 실파일 제작 대기 |
 | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N0 3~4번째, N2 거절·냉담, N3 철수, N4 거리 유지 | 자동 규격·응답 매핑·배치 QA PASS |
 | `doyun.normal_startled` | `char_doyun_normal_startled.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N0 마지막·N1·N2 도입, N3 도입·타인 보호 | 자동 규격·응답 매핑·배치 QA PASS |
 | `doyun.normal` | `char_doyun_normal.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N2 현실 확인·정체 질문, N3 해결 탐색, N4 행동 집중·협력 | 자동 규격·응답 매핑·배치 QA PASS |

@@ -14,6 +14,7 @@ import {
   resolveBackgroundAsset,
   resolveCharacterAsset,
   resolveImageAsset,
+  resolveImageAssetFallback,
 } from "../assets/catalog";
 import { resolvePresentationBackground } from "../assets/presentationBackground";
 import { resolveDoyunVisual } from "../assets/presentationDoyun";
@@ -1299,6 +1300,7 @@ export class GameView {
     resolvedPath = resolveImageAsset(logicalId),
   ): HTMLElement {
     const figure = element("figure", className);
+    const fallback = resolveImageAssetFallback(logicalId);
     const showPlaceholder = (): void => {
       const presentation = resolveMissingAssetPresentation(label);
       const placeholder = element("div", presentation.className);
@@ -1308,24 +1310,41 @@ export class GameView {
       figure.classList.add("is-placeholder", "is-black-placeholder");
     };
 
-    if (!resolvedPath || isAssetPathUnavailable(resolvedPath)) {
-      showPlaceholder();
-      return figure;
-    }
+    const mountImage = (path: string, isFallback: boolean): void => {
+      const image = element("img", "asset-image");
+      image.alt = label;
+      image.decoding = "async";
+      image.src = assetUrl(path);
+      image.addEventListener(
+        "error",
+        () => {
+          image.remove();
+          reportAssetLoadFailure(logicalId, path);
+          if (
+            !isFallback &&
+            fallback &&
+            !isAssetPathUnavailable(fallback.path)
+          ) {
+            mountImage(fallback.path, true);
+            return;
+          }
+          showPlaceholder();
+        },
+        { once: true },
+      );
+      if (isFallback && fallback) {
+        figure.classList.add("is-derived-asset", fallback.className);
+      }
+      figure.replaceChildren(image);
+    };
 
-    const image = element("img", "asset-image");
-    image.alt = label;
-    image.decoding = "async";
-    image.src = assetUrl(resolvedPath);
-    image.addEventListener(
-      "error",
-      () => {
-        reportAssetLoadFailure(logicalId, resolvedPath);
-        showPlaceholder();
-      },
-      { once: true },
-    );
-    figure.append(image);
+    if (resolvedPath && !isAssetPathUnavailable(resolvedPath)) {
+      mountImage(resolvedPath, false);
+    } else if (fallback && !isAssetPathUnavailable(fallback.path)) {
+      mountImage(fallback.path, true);
+    } else {
+      showPlaceholder();
+    }
     return figure;
   }
 

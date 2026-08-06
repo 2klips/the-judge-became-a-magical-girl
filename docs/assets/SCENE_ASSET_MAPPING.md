@@ -186,6 +186,8 @@
 - `[구현]` 물리 파일은 기본 핵심분만 preload하고 나머지는 장면 진입 시 지연 로드한다. 실패는 `physical → 지정 파생 → 검은 presentation`으로 강등하며 `[ASSET_HANDOFF]`를 경로별 한 번 기록한다. BGM 실패는 무음으로 계속한다.
 - `[구현·자동 QA PASS]` BGM 5곡을 `assets/runtime/bgm/`에 source와 동일 바이트로 채택했다. 규격·용량은 통과했으며 3회 루프·대사 마스킹·PTT duck·3엔딩 사람 청감 QA와 권리 확인은 대기한다.
 - `[구현·자동 QA PASS]` 회색 망령 `normal`을 납품본과 동일 바이트로 `assets/runtime/char/`에 채택했다. `weakened` 실파일은 계속 missing이며 제작 요청을 유지한다.
+- `[구현, DEC-059]` N3~N5 도입은 `bgm_crisis`, 수렴~GOOD/NORMAL/BAD는 `bgm_ending`을 사용한다. 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백과 무음 완주를 유지한다.
+- `[구현, DEC-060]` `gray_wraith.weakened` 실파일이 없으면 `normal` + CSS 균열 빛 파생으로 표시하고, normal도 실패하면 검은 presentation으로 강등한다. `attack/hit/death`는 미등록 상태다.
 - `[구현]` 도윤 11종을 `assets/runtime/char/`에 계약명으로 배치하고 N0 세 번째 대사부터 N5·battle·수렴·3엔딩에 연결했다. 원본은 `assets/source/doyun/delivery/`에 보존한다.
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
@@ -244,7 +246,7 @@
 | AR-02 | `OPEN` | 스타일 앵커와 사람 시각 검수 미완료 | 캐릭터·배경 화풍 불일치 가능 | 팀 스타일 앵커 승인 후 본생산 |
 | AR-03 | `PASS` | N1 정체 마스킹과 `bg_hall_time_stop`→N2 실제 주노 공개 전환 구현 | 회귀 시 주노 등장 연출·대본 모순 | unit + Browser N2 실제 PNG 합성 QA PASS |
 | AR-04 | `구현·QA 대기` | N3~N5 복수 인물과 N4→N5 표정 연속성 구현, 실에셋 사람 검증 전 | 관계 감정선과 망령 위협 약화 가능 | 장면별 인물·표정 수동 QA |
-| AR-05 | `normal ready·weakened 대기` | `gray_wraith.normal` 실파일 채택, `weakened` 실파일 누락 | momentum 65 전이는 파생 또는 검은 폴백. weakened 최종 합성 검증 불가 | normal 장면 합성 QA, weakened 납품 뒤 상태 전환 재검사 |
+| AR-05 | `파생 폴백 구현·실파일 대기` | `gray_wraith.normal` 실파일 채택, `weakened`는 normal + CSS 파생 후 black 폴백 | momentum 65 전이는 표시 가능하나 정식 weakened 최종 합성 검증 불가 | 파생 상태 전환 QA, weakened 납품 뒤 물리 우선순위 재검사 |
 | AR-06 | `부분 PASS` | battle 주노 보조 위치와 도윤 우측 상반신 구도 구현 | 페이즈 전환 전체 플레이에서 위치가 튈 수 있음 | p1 dev 합성 PASS. p1→p2→p3 실제 전환 수동 QA 유지 |
 | AR-07 | `runtime ready·청각 QA 대기` | `bgm_transform` 실음원과 one-shot 훅은 연결됐으나 사람 청각 검증 전 | 징글 반복·타이밍 오류 가능 | N5 재시도·결과 재렌더·battle 진입 청각 QA |
 | AR-08 | `부분 해소·비차단` | `bgm_crisis`, `bgm_ending` runtime 채택. 검은 마법소녀 컷만 미제작/미연결 | 음악 연출은 검사 가능, GOOD 후속 시각 밀도 감소 | 장면 BGM 연결·청각 QA. 컷은 문서 지정 폴백 사용 |

@@ -1921,6 +1921,26 @@ html[data-qa-preview="true"] .dev-scene-nav {
   }
 }
 
+.asset-derived-wraith-weakened .asset-image {
+  filter:
+    saturate(0.48)
+    brightness(1.18)
+    drop-shadow(0 0 30px rgba(255, 232, 160, 0.58));
+}
+
+.asset-derived-wraith-weakened::after {
+  content: "";
+  position: absolute;
+  inset: 16% 20% 28%;
+  pointer-events: none;
+  background:
+    linear-gradient(68deg, transparent 44%, rgba(255, 241, 183, 0.72) 47%, transparent 50%),
+    linear-gradient(112deg, transparent 50%, rgba(171, 244, 255, 0.62) 53%, transparent 56%);
+  mix-blend-mode: screen;
+  filter: blur(1px);
+  opacity: 0.72;
+}
+
 /* M5 visual-novel UI pass — DEC-053 */
 :root {
   --vn-ink: #f8f5f2;

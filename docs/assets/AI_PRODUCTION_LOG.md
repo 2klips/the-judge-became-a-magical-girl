@@ -38,6 +38,8 @@
 
 | 2026-08-06 | M5 BGM 5곡·회색 망령 normal runtime 채택 | 외부 생성: Suno·Codex 내장 OpenAI 이미지 생성 도구, 통합·검수: Codex | `assets/source/bgm/delivery/`, `docs/gray-wraith-action-v2/delivery/`, 제작·검증 증빙 | BGM 5곡과 `char_gray_wraith_normal.png`를 계약 파일명 그대로 `assets/runtime/`에 동일 바이트로 채택 | source/runtime SHA-256 일치, BGM 48kHz stereo·128kbps·각 3MB 이하, 망령 1200×2000 투명 PNG·800KB 이하, runtime 11,511,198B 확인. `check`, 38 files·166 tests, build PASS. 사람 청각·장면 합성·라이선스는 대기 | `ready`; `approved` 아님. weakened·변신 컷은 미생성 유지 | 미측정 | `assets/runtime/bgm/`, `assets/runtime/char/char_gray_wraith_normal.png`, `ASSET_MANIFEST.md`, `PROVENANCE.md` |
 
+| 2026-08-06 | M5 선호 BGM 장면 정렬·weakened 파생 폴백 | Codex | `M5_PRESENTATION_POLISH_DIRECTIVE.md`, BGM runtime 5곡, 장면 매핑, 회색 망령 normal·weakened 계약 | scenario 6개 BGM 값과 12개 dev 프리뷰 정렬, weakened `physical → normal+CSS → black` resolver·UI·테스트 | 작가 소유 JSON은 `scene.bgm`만 변경. `attack/hit/death` 미등록 확인. targeted 23 tests, `check`, 38 files·168 tests, build PASS | 사용. 정식 weakened 실파일과 사람 시청각 QA는 대기 | 미측정 | `public/scenario/scenario.json`, `src/assets/catalog.ts`, `src/dev/scenePreview.ts`, `src/ui/gameView.ts`, `src/styles.css`, DEC-059·060 |
+
 ## 기록 규칙
 
 - 프롬프트 전문이 길면 별도 파일/도구 대화 ID를 참조하고 입력 자료 핵심만 적는다.

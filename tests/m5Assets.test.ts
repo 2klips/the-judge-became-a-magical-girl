@@ -10,6 +10,7 @@ import {
   resolveBgmAsset,
   resolveCharacterAsset,
   resolveImageAsset,
+  resolveImageAssetFallback,
 } from "../src/assets/catalog";
 
 const confirmedBackgrounds = [
@@ -51,6 +52,14 @@ const runtimeJuno = [
   "char_juno_shy.png",
   "char_juno_upset.png",
   "char_juno_surprised.png",
+] as const;
+
+const runtimeBgm = [
+  "bgm_daily.mp3",
+  "bgm_battle.mp3",
+  "bgm_transform.mp3",
+  "bgm_crisis.mp3",
+  "bgm_ending.mp3",
 ] as const;
 
 const runtimeDiskPath = (assetPath: string): string =>
@@ -171,6 +180,10 @@ describe("M5 에셋 계약", () => {
     expect(resolveImageAsset("gray_wraith.weakened")).toBe(
       "assets/char/char_gray_wraith_weakened.png",
     );
+    expect(resolveImageAssetFallback("gray_wraith.weakened")).toEqual({
+      path: "assets/char/char_gray_wraith_normal.png",
+      className: "asset-derived-wraith-weakened",
+    });
     expect(resolveImageAsset("doyun.normal_tired")).toBe(
       "assets/char/char_doyun_normal_tired.png",
     );
@@ -203,6 +216,38 @@ describe("M5 에셋 계약", () => {
         filename,
         resolve("assets", "source", "juno", "delivery"),
       );
+    }
+  });
+
+  it("회색 망령 normal은 납품 source와 같은 1200×2000 투명 PNG다", () => {
+    expectTransparentCharacterAsset(
+      "char_gray_wraith_normal.png",
+      resolve("docs", "gray-wraith-action-v2", "delivery", "char"),
+    );
+  });
+
+  it("BGM runtime 5곡은 납품 source와 같은 파일이며 각각 3MB 이하다", () => {
+    for (const filename of runtimeBgm) {
+      const runtimePath = resolve("assets", "runtime", "bgm", filename);
+      const sourcePath = resolve("assets", "source", "bgm", "delivery", filename);
+      expect(readFileSync(runtimePath).equals(readFileSync(sourcePath)), filename).toBe(true);
+      expect(statSync(runtimePath).size, filename).toBeLessThanOrEqual(3 * 1024 * 1024);
+    }
+  });
+
+  it("위기·수렴·엔딩 노드가 납품된 선호 BGM을 참조한다", () => {
+    const scenario = JSON.parse(
+      readFileSync(resolve("public", "scenario", "scenario.json"), "utf8"),
+    ) as Array<{ nodeId: string; scene: { bgm?: string } }>;
+    const bgmByNode = new Map(
+      scenario.map((node) => [node.nodeId, node.scene.bgm]),
+    );
+
+    expect(bgmByNode.get("n3_wraith_choice")).toBe("bgm_crisis");
+    expect(bgmByNode.get("n5_transform")).toBe("bgm_crisis");
+    expect(bgmByNode.get("ch3_gray_answer")).toBe("bgm_ending");
+    for (const nodeId of ["ending_good", "ending_normal", "ending_bad"]) {
+      expect(bgmByNode.get(nodeId), nodeId).toBe("bgm_ending");
     }
   });
 
