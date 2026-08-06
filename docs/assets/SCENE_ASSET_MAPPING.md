@@ -193,6 +193,7 @@
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
 - `[구현·QA PASS, DEC-049]` N2~N4 응답 `intentId`별 도윤 표정 resolver를 적용했다. 도윤은 더 크게·낮게·왼쪽으로, 주노는 도윤 쪽으로 보정했으며 desktop N2/N4/battle과 390×844 N2에서 crop·겹침·가로 overflow를 확인했다.
+- `[구현·자동 QA PASS]` WP6 전수 매트릭스에서 N5 주문 게이트의 주노 누락 A형 1건을 수정했다. 직전 N4의 `GameState.npcEmotion`을 주문 게이트까지 유지한다. B형 1건(`n2_juno_intro.npc.startEmotion`)은 작가 JSON을 수정하지 않고 `CHARACTER_IMAGE_DIALOGUE_AUDIT.md`에 분리했다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
 - `[구현]` 타이틀에서 마이크 연결·장치 선택·실시간 dBFS 테스트를 통과해야 시작·이어하기가 열린다. 게임 진입 뒤 STT 실패 시 클릭 폴백은 유지한다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.

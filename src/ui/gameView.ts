@@ -191,6 +191,17 @@ export interface EndingVisual {
   readonly emotion: Emotion;
 }
 
+export interface IncantationCompanionVisual {
+  readonly characterId: "juno";
+  readonly emotion: Emotion;
+}
+
+export function resolveIncantationCompanionVisual(
+  state: Pick<GameState, "npcEmotion">,
+): IncantationCompanionVisual {
+  return { characterId: "juno", emotion: state.npcEmotion };
+}
+
 export function resolveEndingVisual(
   endingId: string,
   lineIndex: number,
@@ -695,6 +706,15 @@ export class GameView {
           "doyun.normal_shy",
         "한도윤",
         "character-visual scene-player-visual incantation-player-visual doyun-visual",
+      ),
+    );
+    const companion = resolveIncantationCompanionVisual(state);
+    shell.append(
+      this.createCharacterVisual(
+        companion.characterId,
+        companion.emotion,
+        "주노",
+        "character-visual cutscene-character incantation-juno-visual has-companion",
       ),
     );
     const card = element("section", "incantation-card");

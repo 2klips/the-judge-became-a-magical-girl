@@ -992,3 +992,27 @@
 | `npm test` | PASS | 38 files·171 tests |
 | `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
 | 사람 청감 | 대기 | 헤드폰·노트북 스피커의 대사 명료도, 3회 loop, PTT duck 복귀 필요 |
+
+## M5 연출 폴리시 WP6 — 캐릭터 이미지-대화 정합 전수 점검
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)` + `ASSET_VALIDATION`
+- 상태: 코드·문서 매트릭스 완료, 브라우저 최종 합성 QA 대기
+
+### 처리 내용
+
+- `scenario.json` 14개 노드의 모든 라인·intent, battle p1~p3 행동·65 전이, GOOD/NORMAL/BAD 모든 라인을 계약과 실제 resolver에 대조했다.
+- A형 1건: N5 주문 게이트에서 사라지던 주노를 직전 N4 `npcEmotion`으로 유지하도록 수정했다.
+- B형 1건: `n2_juno_intro.npc.startEmotion=happy`는 대본의 `surprised → happy`와 어긋나지만 작가 JSON이므로 수정하지 않았다.
+- C형은 기존 요청 3종(`gray_wraith.weakened`, 변신 컷 2장)뿐이며 신규 표정 논리 ID 제안은 없다.
+- 전체 결과는 `docs/assets/CHARACTER_IMAGE_DIALOGUE_AUDIT.md`에 고정했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 14개 노드 전수 매트릭스 | PASS | N0~N5, battle, 수렴, 3엔딩 전 라인·비트 기록 |
+| A형 코드 수정 | PASS | N5 gate 주노 표정 연속성 resolver·unit test 추가 |
+| 작가 JSON 보호 | PASS | `public/scenario/scenario.json` 변경 없음 |
+| 신규 C형 | PASS | 신규 제안 0건; 기존 미납품 3종 문서 연결 |
+| 22개 프리뷰·N4-A/B/C 실플레이 | 대기 | WP3/WP4 최종 레이아웃 완료 뒤 브라우저 전수 QA |

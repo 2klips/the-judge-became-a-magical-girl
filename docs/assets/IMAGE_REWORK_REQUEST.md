@@ -41,7 +41,7 @@
 | 회색 망령 delivery 권리 증빙 | 제작 도구·작업 ID·자동 규격은 납품 문서로 확인 완료. 생성 서비스 플랜·앵커 권한·공개 배포 허용 확인 필요 | `docs/gray-wraith-action-v2/delivery/PRODUCTION_EVIDENCE.md`, DEC-034 절차 |
 | (참고) 망령 액션 3종 수신 확인 | `attack`/`hit`/`death`는 수신 완료. 런타임 논리 ID로는 미등록 상태이며 등록 여부는 개발 결정(지시서 §6-2) 대기. **재제작 불필요** | gray-wraith-action-v2 delivery |
 
-## 5. WP6 정합 점검 추가분 (후속 에이전트가 채운다)
+## 5. WP6 정합 점검 추가분
 
 연출 폴리시 지시서 WP6(장면별 캐릭터 이미지-대화 정합 점검)에서 **기존 이미지 세트로 표현 불가(C형)** 판정이 나온 항목을 아래 표에 추가한다.
 
@@ -53,4 +53,8 @@
 
 | 논리 ID | 파일명 | 요청 내용 (장면·감정·구도) | 사용 장면·대사 위치 | 임시 대체 | 근거 (대본·매핑 문서 위치) |
 |---|---|---|---|---|---|
-| _(점검 후 추가)_ | | | | | |
+| `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 망령의 안개가 갈라지고 내부 게임 캐릭터의 빛이 비치는 약화 상태 | battle p1~p3, momentum 65 이상 | `gray_wraith.normal` + CSS 채도·빛·균열 파생 | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §4, 본 문서 §1 |
+| `transform.cast` | `cut_transform_01.webp` | 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간 | N5 주문 성공 직후 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
+| `transform.complete` | `cut_transform_02.webp` | 변신을 마친 도윤과 곁의 주노가 한 장면으로 읽히는 완료 컷 | N5 완전·표준·구제 결과 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
+
+전수 점검 결과, 위 기존 미납품 3종 외에 도윤·주노 신규 표정 논리 ID가 필요한 C형은 발견되지 않았다. 전체 매트릭스와 B형 1건은 [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](CHARACTER_IMAGE_DIALOGUE_AUDIT.md)에 기록했다.

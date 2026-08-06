@@ -7,6 +7,7 @@ import {
   resolveEndingLines,
   resolveEndingPages,
   resolveEndingVisual,
+  resolveIncantationCompanionVisual,
   resolveMissingAssetPresentation,
   resolveSceneBrand,
   resolveSttModelControlVisibility,
@@ -158,5 +159,20 @@ describe("M5 장면 표시 계약", () => {
     expect(resolveEndingVisual("good", 6)).toBeNull();
     expect(resolveEndingVisual("normal", 0)?.emotion).toBe("neutral");
     expect(resolveEndingVisual("bad", 0)?.emotion).toBe("upset");
+  });
+
+  it("N5 주문 게이트에서 직전 N4의 주노 표정을 유지한다", () => {
+    expect(resolveIncantationCompanionVisual({ npcEmotion: "happy" })).toEqual({
+      characterId: "juno",
+      emotion: "happy",
+    });
+    expect(resolveIncantationCompanionVisual({ npcEmotion: "shy" })).toEqual({
+      characterId: "juno",
+      emotion: "shy",
+    });
+    expect(resolveIncantationCompanionVisual({ npcEmotion: "neutral" })).toEqual({
+      characterId: "juno",
+      emotion: "neutral",
+    });
   });
 });
