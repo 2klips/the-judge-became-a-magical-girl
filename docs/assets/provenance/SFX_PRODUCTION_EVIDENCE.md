@@ -8,6 +8,8 @@
 - 생성 당시 플랜: 사용자 확인값 Pro, 브라우저 계정 화면 별도 보존 권장
 - 모델/버전: v5.5 — Suno Sounds 화면 표시값
 - 생성 시작 전 잔여 크레딧: 2,350 — 화면 표시값
+- 파일럿 생성 후 잔여 크레딧: 2,336 — 화면 표시값
+- 파일럿 사용 크레딧: 14 — Sounds 결과 14개 생성
 - 후처리: FFmpeg/FFprobe 8.1.1 예정
 - runtime 연결: 없음
 
@@ -15,6 +17,38 @@
 
 | 그룹 | 후보명 | 작업 ID 또는 URL | 원본 SHA-256 | 상태 |
 |---|---|---|---|---|
+| 시간 정지 | `raw_time_stop_a.wav` | [0443f68d](https://suno.com/song/0443f68d-b953-4725-8bd8-b5c8d6a8efbb) | `47A4DA631AF7292B5DD54C95CBA991337808E7115A3A515F6BE166526421CA6D` | 청취 선택 대기 |
+| 시간 정지 | `raw_time_stop_b.wav` | [e54d0669](https://suno.com/song/e54d0669-0786-425a-8302-2507e2b3dbc6) | `5098A20005364A0FBD647143472C5001D92B202DE29BE4FA9526287145EAE805` | 청취 선택 대기 |
+| 시간 정지 | `raw_time_stop_c.wav` | [73d7dd62](https://suno.com/song/73d7dd62-082a-458d-b6e7-fba72afd07d9) | `AC14B1785A99B48C491F92D34CB4002D028F00E450348C79D77964B158793444` | 청취 선택 대기 |
+| 시간 정지 | 생성 여분 D | [092eb4bf](https://suno.com/song/092eb4bf-70c5-41f3-8b4d-edaff91b7b9a) | 다운로드 없음 | 2개 단위 생성 여분 |
+| 주문 시작 | `raw_cast_a.wav` | [704f7aba](https://suno.com/song/704f7aba-5b96-4147-9539-d371217839ba) | `F86B8983A9097844D80DDCB46C8AD2890E807804CB4557232BD81611433AC281` | 청취 선택 대기 |
+| 주문 시작 | `raw_cast_b.wav` | [e42bfb86](https://suno.com/song/e42bfb86-10e8-475d-8f80-b30a9ba55d24) | `AD922DEDE652F7E6D6B95E665C59DDDF58A7049FB104E75EF4033624CA94AF6D` | 청취 선택 대기 |
+| 주문 시작 | `raw_cast_c.wav` | [38317cf4](https://suno.com/song/38317cf4-a4b0-487f-bf66-8bda7574fffa) | `4BBA3AB4D8929F379B1E4EF8564DF9CE2CE5779B06A77D541E65CFFEC4C92794` | 청취 선택 대기 |
+| 주문 시작 | 생성 여분 D | [4859b8df](https://suno.com/song/4859b8df-6e3e-45de-acf3-692fbc1a860b) | 다운로드 없음 | 2개 단위 생성 여분 |
+| 일반 타격 | `raw_impact_a.wav` | [518a044e](https://suno.com/song/518a044e-4d69-4c9f-a013-f9b1cf21b95e) | `86A73E0735CC6FAABA614687ABBEA3AC636274045DD2A241EBC33C18BDA1A5AC` | 청취 선택 대기 |
+| 일반 타격 | `raw_impact_b.wav` | [c46120fb](https://suno.com/song/c46120fb-8f5f-42ce-8f64-92bf923e5f9b) | `00C72B1E7C72508EBFFFF9F65F50ECCCFC685812074A086F1F6CCBBEDF880DB5` | 청취 선택 대기 |
+| 일반 타격 | `raw_impact_c.wav` | [b39dedeb](https://suno.com/song/b39dedeb-3246-4195-9f8a-282bc333d0c7) | `D70B81D23FF3E1DE5D084B31EF5064AA94386ED16A1EEFF9AB4813CFED4C13FC` | 청취 선택 대기 |
+| 일반 타격 | `raw_impact_d.wav` | [281826a8](https://suno.com/song/281826a8-de98-4da1-b1f4-b95d3f26315b) | `4E149333838DC0AB9DE301F6B7EC56918DD93F2641252875CDED2464EB7B579E` | 청취 선택 대기 |
+| 일반 타격 | `raw_impact_e.wav` | [25f32c0b](https://suno.com/song/25f32c0b-0116-4ae3-acbf-96a43a27b0ea) | `6EFDBF6638741C414B50C1F75BC18DB1301971E3C7515D3E997439AC66938A96` | 청취 선택 대기 |
+| 일반 타격 | 생성 여분 F | [b84feafb](https://suno.com/song/b84feafb-4f14-48c9-995c-5ea7fcc034fd) | 다운로드 없음 | 2개 단위 생성 여분 |
+
+## 파일럿 원본 규격
+
+Suno Pro WAV 원본은 모두 48kHz, stereo, 16-bit PCM이다. 아래 peak는 FFmpeg `volumedetect`의 sample peak이며 최종 True Peak 검사가 아니다.
+
+| 후보 | 길이 | 크기 | sample peak |
+|---|---:|---:|---:|
+| `raw_time_stop_a.wav` | 11.36초 | 2,181,292 bytes | -3.1 dB |
+| `raw_time_stop_b.wav` | 13.32초 | 2,557,612 bytes | -2.4 dB |
+| `raw_time_stop_c.wav` | 8.12초 | 1,559,212 bytes | -2.4 dB |
+| `raw_cast_a.wav` | 2.52초 | 484,012 bytes | -3.3 dB |
+| `raw_cast_b.wav` | 3.00초 | 576,172 bytes | -6.8 dB |
+| `raw_cast_c.wav` | 2.68초 | 514,732 bytes | -5.5 dB |
+| `raw_impact_a.wav` | 2.00초 | 384,172 bytes | -7.6 dB |
+| `raw_impact_b.wav` | 2.00초 | 384,172 bytes | -2.6 dB |
+| `raw_impact_c.wav` | 2.00초 | 384,172 bytes | -4.7 dB |
+| `raw_impact_d.wav` | 2.00초 | 384,172 bytes | -2.5 dB |
+| `raw_impact_e.wav` | 2.00초 | 384,172 bytes | -2.6 dB |
 
 ## 최종 납품 기록
 
