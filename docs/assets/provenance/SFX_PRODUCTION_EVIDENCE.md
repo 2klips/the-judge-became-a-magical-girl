@@ -61,6 +61,20 @@ Suno Pro WAV 원본은 모두 48kHz, stereo, 16-bit PCM이다. 아래 peak는 FF
 
 일반 타격 A–E는 사용자 검수에서 모두 폐기했다. 개선 생성폼과 미제작 효과음 폼은 [SFX_SUNO_GENERATION_FORMS.md](SFX_SUNO_GENERATION_FORMS.md)에 기록한다.
 
+## 추가 다운로드본 사용자 선택
+
+사용자 선택일은 2026-08-06이다. 아래 5개만 선택 원본으로 별도 복사했으며, 아직 트림·음량 정규화·runtime 연결을 하지 않았다. `방어막 신버전`은 `Magical Shield Activation` 원본을 뜻하며 이전 `Magical Shield Deployment` 원본은 미반영이다.
+
+| 계약명 예정 | 다운로드 원본 구분 | 보존 경로 | 원본 SHA-256 | 상태 |
+|---|---|---|---|---|
+| `sfx_transform_complete.wav` | 변신 완료 (`Magical-girl Transformation Completion`) | `assets/source/sfx/delivery/sfx_transform_complete.wav` | `CCF478921EF8B3BE124FC3A0F21568850378D624ACCD93D46E97A224F1F1E318` | 사용자 선택·source 인계, 후처리·runtime 대기 |
+| `sfx_critical.wav` | 치명타 (`Critical Magical Hit`) | `assets/source/sfx/delivery/sfx_critical.wav` | `BB5880185585B1FB2AE2BEDA50D8EDBE0AED9B2CE4AD7B1AB89859D31420ECA2` | 사용자 선택·source 인계, 후처리·runtime 대기 |
+| `sfx_barrier.wav` | 방어막 신버전 (`Magical Shield Activation`) | `assets/source/sfx/delivery/sfx_barrier.wav` | `52BCF2011D5815AE4B0D06534113CA2B7BACBB0D47400347B48CF2265ACE70F9` | 사용자 선택·source 인계, 후처리·runtime 대기 |
+| `sfx_star_attack.wav` | 별빛 공격 (`Magical Wand Attack`) | `assets/source/sfx/delivery/sfx_star_attack.wav` | `C4DE29A13BA813D76724D0DC0464813E4410D00C580AD68A838FED52999AD6FE` | 사용자 선택·source 인계, 후처리·runtime 대기 |
+| `sfx_juno_appear.wav` | 주노 등장 (`Cute Character Pop-out From A CRT Monitor`) | `assets/source/sfx/delivery/sfx_juno_appear.wav` | `C2A0B50743E1FC9C99D86F5A818438ED361AAB494A875EB16777F3CBABEE70EF` | 사용자 선택·source 인계, 후처리·runtime 대기 |
+
+같이 확인한 다운로드본 중 회색 침식, 방어막 구버전(`Magical Shield Deployment`), 일반 타격(`Magical Combat Contact Hit`), 최종 빔 충전(`Magical Beam Charging`)은 사용자 미반영 대상으로 분류했다. 해당 4개는 저장소 source 인계에 포함하지 않았고 runtime에도 연결하지 않는다.
+
 ## 최종 납품 기록
 
 | 최종 파일 | 선택 후보 | 길이 | 채널 | True Peak | 최종 SHA-256 | 사용자 승인 |
