@@ -919,3 +919,29 @@
 - 요청된 두 STT 모델의 debug 단일 선택 비교와 공개 QA 실호출이 동작한다.
 - 측정값은 깨끗한 동일 WAV 1건 결과다. 실제 마이크·억양·배경 소음별 정확도와 p50/p95는 작업자 수동 QA가 남는다.
 - M6 production에서 debug selector를 유지할지는 DEC-021과 함께 별도 확정해야 한다.
+
+## M5 연출 폴리시 WP1-1·WP1-4 — BGM·회색 망령 runtime 채택
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)` + `ASSET_VALIDATION`
+- 상태: 자동 규격·동일 바이트·build PASS, 사람 시청각·권리 QA 대기
+
+### 처리 내용
+
+- `assets/source/bgm/delivery/`의 BGM 5곡을 같은 파일명으로 `assets/runtime/bgm/`에 복사했다.
+- `docs/gray-wraith-action-v2/delivery/char/char_gray_wraith_normal.png`를 같은 파일명으로 `assets/runtime/char/`에 복사했다.
+- source/runtime SHA-256 동일성을 확인하고 manifest를 `ready`로 갱신했다. 라이선스 확인 전 `approved`로 올리지 않았다.
+- `gray_wraith.weakened`와 변신 컷 2장은 누락 상태와 제작 요청을 유지했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| BGM 동일 바이트 | PASS | 5/5 source/runtime SHA-256 일치 |
+| 망령 동일 바이트 | PASS | SHA-256 `508F119B…08756839` 일치 |
+| 물리 규격·용량 | PASS | BGM 각 3MB 이하, 망령 1200×2000 투명 PNG·413,056B |
+| runtime 총합 | PASS | 38 files·11,511,198B, 30MB 이하 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·166 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| 사람 청감·합성·권리 | 대기 | BGM 3회 루프·대사 마스킹·PTT duck, 망령 장면 합성, 생성 당시 권리 증빙 필요 |

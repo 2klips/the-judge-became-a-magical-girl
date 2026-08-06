@@ -9,9 +9,9 @@
 - `ready`: 파일 존재·기본 규격 통과.
 - `approved`: 사람 QA·라이선스 확인까지 완료.
 
-`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 배경·도윤·주노는 자동 규격과 장면 합성 검사를 통과했지만 생성 증빙·라이선스와 일부 교체 요청이 남아 `ready`이며 `approved`는 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
+`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 normal 1장, BGM 5곡이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`이며, 생성 증빙·라이선스와 사람 시청각 QA가 남은 항목은 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 32개 파일, 총 `5,896,191 bytes`다.
+현재 `assets/runtime/`은 38개 파일, 총 `11,511,198 bytes`다.
 
 ## 이미지
 
@@ -22,7 +22,7 @@
 | `juno.shy` | `char_juno_shy.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격 PASS |
 | `juno.upset` | `char_juno_upset.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격 PASS |
 | `juno.surprised` | `char_juno_surprised.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | 미확인 | 동일 | source/runtime 동일 바이트·자동 규격·N2 합성 PASS |
-| `gray_wraith.normal` | `char_gray_wraith_normal.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | 미제작 | 미확인 | battle `enemy.id` + state | 대기 |
+| `gray_wraith.normal` | `char_gray_wraith_normal.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·모델 미확인 | 미확인 | battle `enemy.id` + state | source/runtime 동일 바이트·413,056B·자동 규격 PASS. 사람 합성·권리 QA 대기 |
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | missing | 미제작 | 미확인 | battle `enemy.id` + state | 대기 |
 | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N0 3~4번째, N2 거절·냉담, N3 철수, N4 거리 유지 | 자동 규격·응답 매핑·배치 QA PASS |
 | `doyun.normal_startled` | `char_doyun_normal_startled.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N0 마지막·N1·N2 도입, N3 도입·타인 보호 | 자동 규격·응답 매핑·배치 QA PASS |
@@ -117,11 +117,11 @@
 
 | 논리 ID | 파일명 | 종류 | 규격 | 용량 상한 | 우선순위 | 상태 | 생성 도구 | 라이선스 | 시나리오 참조 위치 | QA |
 |---|---|---|---|---:|---|---|---|---|---|---|
-| `bgm_daily` | `bgm_daily.mp3` | BGM | MP3 128kbps, 60~90초 loop | 3MB | 필수 | missing | 미정 | 미확인 | N0~N2, 수렴·엔딩 폴백 | instrumental·loop 대기 |
-| `bgm_battle` | `bgm_battle.mp3` | BGM | MP3 128kbps, 60~90초 loop | 3MB | 필수 | missing | 미정 | 미확인 | battle p1~p3, crisis 폴백 | instrumental·loop 대기 |
-| `bgm_transform` | `bgm_transform.mp3` | 징글 | MP3 128kbps, 10~20초 one-shot | 3MB | 필수 | missing | 미정 | 미확인 | N5 변신 결과, DEC-016·032 | 무보컬·비loop 검수 대기 |
-| `bgm_crisis` | `bgm_crisis.mp3` | BGM | MP3 128kbps, 30~60초 loop | 3MB | 컷 가능 | planned | 미정 | 미확인 | N3~N5 선호; 없으면 `bgm_battle` | 제작 보류 가능 |
-| `bgm_ending` | `bgm_ending.mp3` | BGM | MP3 128kbps, 약 60초 loop/tail | 3MB | 컷 가능 | planned | 미정 | 미확인 | 수렴~엔딩 선호; 없으면 `bgm_daily` | 제작 보류 가능 |
+| `bgm_daily` | `bgm_daily.mp3` | BGM | MP3 128kbps, 60~90초 loop | 3MB | 필수 | ready | Suno + FFmpeg 8.1.1 | 미확인 | N0~N2, 수렴·엔딩 폴백 | source/runtime 동일 바이트·48kHz stereo·128kbps·1,457,051B PASS. 3회 루프·대사 마스킹 QA 대기 |
+| `bgm_battle` | `bgm_battle.mp3` | BGM | MP3 128kbps, 60~90초 loop | 3MB | 필수 | ready | Suno + FFmpeg 8.1.1 | 미확인 | battle p1~p3, crisis 폴백 | source/runtime 동일 바이트·48kHz stereo·128kbps·1,275,234B PASS. 3회 루프·대사 마스킹 QA 대기 |
+| `bgm_transform` | `bgm_transform.mp3` | 징글 | MP3 128kbps, 10~20초 one-shot | 3MB | 필수 | ready | Suno + FFmpeg 8.1.1 | 미확인 | N5 변신 결과, DEC-016·032 | source/runtime 동일 바이트·19.45초·341,944B PASS. 무보컬·중복 재생 청감 QA 대기 |
+| `bgm_crisis` | `bgm_crisis.mp3` | BGM | MP3 128kbps, 30~60초 loop | 3MB | 컷 가능 | ready | Suno + FFmpeg 8.1.1 | 미확인 | N3~N5 선호; 없으면 `bgm_battle` | source/runtime 동일 바이트·57.59초·1,014,559B PASS. 3회 루프 QA 대기 |
+| `bgm_ending` | `bgm_ending.mp3` | BGM | MP3 128kbps, 약 60초 loop/tail | 3MB | 컷 가능 | ready | Suno + FFmpeg 8.1.1 | 미확인 | 수렴~엔딩 선호; 없으면 `bgm_daily` | source/runtime 동일 바이트·63.14초·1,113,163B PASS. 3엔딩 청감 QA 대기 |
 
 ## 코드 생성 UI·SFX
 

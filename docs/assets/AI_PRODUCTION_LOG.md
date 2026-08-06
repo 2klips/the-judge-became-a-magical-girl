@@ -36,6 +36,8 @@
 | 2026-08-04 | 주노 과거 경로 확인·5표정 runtime 통합·도윤 우측 확대 | Codex, in-app Browser | 사용자 도윤 우측 상반신 구도 결정, commit `6076466`의 `docs/Asset/juno-reference-v2/`, commit `6940236`의 `R100` 이동 이력 | 주노 delivery 5장을 source와 동일 바이트로 runtime 채택, 물리 계약 테스트 추가, 도윤 전용 우측 확대·상단 crop CSS와 dev/battle 배치 적용 | 주노 5장 1200×2000 투명 PNG·개별 800KB 이하·hash 일치 PASS. N2/battle 실배경 합성, 데스크톱·390×844, 가로 overflow 0, console error 0. 망령 누락 경고만 예상대로 발생 | 주노·도윤 `ready`; 주노 레퍼런스·서비스 권리 확인 전 `approved` 금지 | N/A | `assets/runtime/char/char_juno_*.png`, `src/styles.css`, `src/ui/gameView.ts`, `tests/m5Assets.test.ts`, DEC-047·048 |
 | 2026-08-06 | BGM 5종 구간 편집·source 인계와 효과음 제작 준비 | Suno, FFmpeg 8.1.1, Codex | 사용자 승인 Suno 생성폼·MP3 6곡, 최종 추천 A, M5 장면·BGM·현재 Web Audio SFX 계약 | BGM 5종 구간 절단·음량 정규화·MP3 인코딩, 장면 인계·해시 증빙, Suno Sounds 원샷 효과음 P0/P1 사양 작성 | 48kHz stereo·128kbps·개별 3MB 이하·약 -17 LUFS 자동 검사. 효과음은 문서만 작성하고 파일 생성·runtime 연결 없음. 루프 청각 QA·생성 당시 플랜/곡 ID 보완 대기 | BGM source 납품, runtime 보류; SFX 제작 대기 | N/A | `assets/source/bgm/delivery/`, `docs/assets/provenance/BGM_*`, `docs/assets/provenance/SFX_PRODUCTION_PLAN.md` |
 
+| 2026-08-06 | M5 BGM 5곡·회색 망령 normal runtime 채택 | 외부 생성: Suno·Codex 내장 OpenAI 이미지 생성 도구, 통합·검수: Codex | `assets/source/bgm/delivery/`, `docs/gray-wraith-action-v2/delivery/`, 제작·검증 증빙 | BGM 5곡과 `char_gray_wraith_normal.png`를 계약 파일명 그대로 `assets/runtime/`에 동일 바이트로 채택 | source/runtime SHA-256 일치, BGM 48kHz stereo·128kbps·각 3MB 이하, 망령 1200×2000 투명 PNG·800KB 이하, runtime 11,511,198B 확인. `check`, 38 files·166 tests, build PASS. 사람 청각·장면 합성·라이선스는 대기 | `ready`; `approved` 아님. weakened·변신 컷은 미생성 유지 | 미측정 | `assets/runtime/bgm/`, `assets/runtime/char/char_gray_wraith_normal.png`, `ASSET_MANIFEST.md`, `PROVENANCE.md` |
+
 ## 기록 규칙
 
 - 프롬프트 전문이 길면 별도 파일/도구 대화 ID를 참조하고 입력 자료 핵심만 적는다.

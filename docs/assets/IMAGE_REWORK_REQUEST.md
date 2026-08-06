@@ -38,7 +38,7 @@
 |---|---|---|
 | 17번째 배경 식별 | 인계 문서는 과거 17종을 언급했으나 실납품은 16장. 누락 1장의 파일명·용도 확인 필요 | SCENE_ASSET_MAPPING AR-13 |
 | 도윤 세트 증빙 | 도윤 11종의 생성 도구·라이선스 증빙 미확인 → `approved` 승격 차단 중 | SCENE_ASSET_MAPPING AR-11 |
-| 회색 망령 delivery 증빙 | `docs/gray-wraith-action-v2/delivery/` 납품분의 제작 증빙·라이선스 확인 | DEC-034 절차 |
+| 회색 망령 delivery 권리 증빙 | 제작 도구·작업 ID·자동 규격은 납품 문서로 확인 완료. 생성 서비스 플랜·앵커 권한·공개 배포 허용 확인 필요 | `docs/gray-wraith-action-v2/delivery/PRODUCTION_EVIDENCE.md`, DEC-034 절차 |
 | (참고) 망령 액션 3종 수신 확인 | `attack`/`hit`/`death`는 수신 완료. 런타임 논리 ID로는 미등록 상태이며 등록 여부는 개발 결정(지시서 §6-2) 대기. **재제작 불필요** | gray-wraith-action-v2 delivery |
 
 ## 5. WP6 정합 점검 추가분 (후속 에이전트가 채운다)
