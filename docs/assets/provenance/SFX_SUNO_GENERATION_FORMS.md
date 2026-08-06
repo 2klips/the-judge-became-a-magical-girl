@@ -51,14 +51,14 @@ Single isolated magical-girl transformation completion sound effect: a bright cr
 
 - 계약명: `sfx_barrier.wav`
 - 사용 장면: B3, 투명한 보호막이 도윤 주위로 빠르게 펼쳐지고 고정되는 컷
-- 의도: 폭발음이 아니라 ‘팽창 → 막 형성 → 잠금’이 한 번에 읽히는 보호음이다.
+- 의도: LoL 소환사 주문 Barrier처럼 즉시 발동과 보호 상태가 명확히 읽히는 구조를 참고하되, 원본 음원·고유 음색은 복제하거나 재사용하지 않는다. 밝고 단단한 활성화음 뒤에 팽창과 짧은 보호막 공명을 붙인다.
 - 생성: 2회, 후보 4개
-- 목표 사용 길이: 0.8–1.2초
+- 목표 사용 길이: 0.8–1.1초
 
 **사운드 설명**
 
 ```text
-Single isolated magical shield deployment sound effect: a translucent bubble rapidly expands around the heroine, soft energy pulse, glassy membrane tension, then a crisp crystalline lock. Protective, bright and controlled, medium impact. No explosion, weapon hit, voice, music, bass boom, repetition, or long tail.
+Single isolated magical shield activation sound effect with the fast, decisive readability of a competitive-game defensive spell, using original sound design: immediate bright protective snap, compact white-pink energy surge expanding around the heroine, dense magical membrane resonance, short confident decay. Strong and clearly defensive on laptop speakers. No copied game audio, glass breaking, explosion, weapon hit, voice, music, deep bass boom, repetition, or long ambience.
 ```
 
 ### 4. 일반 타격 — 개선폼
@@ -95,14 +95,14 @@ Single isolated close-range magical strike: one hard compact impact with a crisp
 
 - 계약명: `sfx_star_attack.wav`
 - 사용 장면: B3, 완드를 휘둘러 별 모양 투사체를 발사하는 공격 컷
-- 의도: 휘두름과 발사가 하나의 짧은 동작으로 연결되어야 한다. 일반 타격음보다 공격의 출발을 설명한다.
+- 의도: 기존의 빠른 완드 휘두름은 유지한다. 발사부의 둔탁한 에너지 버스트는 제거하고, 작고 귀여운 별 모양 투사체가 가볍게 출발하는 고음 비보컬 `뿅`으로 바꾼다.
 - 생성: 2회, 후보 4개
-- 목표 사용 길이: 0.7–1.0초
+- 목표 사용 길이: 0.65–0.9초
 
 **사운드 설명**
 
 ```text
-Single isolated magical wand attack sound effect: a fast wand-swing whoosh immediately connects to a bright star-shaped energy burst, sparkling particles scatter and stop, agile and heroic with a clear two-part motion. No huge explosion, gunshot, voice, music, bass boom, repeated attacks, or long reverb.
+Single isolated magical wand attack sound effect: keep a fast clean wand-swing whoosh, then launch one tiny cute star-shaped projectile with a high-pitched springy electronic pyong, bubbly twinkle and light sparkling trail. The projectile must sound bright, playful, weightless and non-vocal, never blunt. No dull thud, heavy energy burst, bass punch, explosion, gunshot, human voice, music, repeated shots, or long reverb.
 ```
 
 ### 6. 치명타
@@ -122,20 +122,34 @@ Single isolated critical magical hit: razor-sharp crystalline transient, firm en
 ### 7. 최종 빔
 
 - 계약명: `sfx_final_beam.wav`
-- 사용 장면: B3 전투 마무리, 충전 후 빔이 발사되어 회색 결정을 깨는 연속 컷
-- 의도: 짧은 충전·발사·파괴가 한 파일 안에서 읽히는 전투 피니셔다. 영화 예고편 규모의 과도한 저음은 배제한다.
+- 사용 장면: B3 전투 마무리, 짧게 충전한 빔이 발사되어 회색 결정에 닿기 직전까지의 연속 컷
+- 의도: 충전·발사·집중된 에너지 코어만 담당한다. 결정 파괴음을 별도 파일로 분리해 파쇄음 누락을 막고 정확한 프레임에 겹칠 공간을 남긴다.
 - 생성: 2회, 후보 4개
-- 목표 사용 길이: 1.6–2.4초
+- 목표 사용 길이: 1.2–1.8초
 
 **사운드 설명**
 
 ```text
-Single isolated final magical beam sequence for a game: very short rising charge, focused beam launch, sustained energy core for a moment, gray crystal shatters at impact, compact sparkling release. Powerful but clean and below cinematic-trailer scale. No voice, chant, music, huge bass boom, repeated shots, or long rumble.
+Single isolated final magical beam sound effect: near-instant rising charge, focused pink-white beam launch, brilliant sustained energy core, then a clean impact handoff with no destruction layer. Powerful, precise and readable, compact game scale. No crystal breaking, explosion, debris, voice, chant, music, huge bass boom, repeated shots, long charge, or rumble.
+```
+
+### 8. 최종 결정 파괴
+
+- 계약명: `sfx_final_crystal_break.wav`
+- 사용 장면: B3, 최종 빔이 회색 결정에 닿아 결정이 깨지는 정확한 프레임
+- 의도: 한 번의 큰 균열과 여러 밝은 파편을 별도 레이어로 확보해 빔 위에서도 파괴음을 보장한다. 결정이 깨지는 프레임에서 `sfx_final_beam.wav` 끝부분에 겹쳐 사용한다.
+- 생성: 2회, 후보 4개. 파쇄 트랜지언트가 약하면 같은 폼으로 1회 추가
+- 목표 사용 길이: 0.6–0.9초
+
+**사운드 설명**
+
+```text
+Single isolated large magic-crystal destruction sound effect: immediate razor-sharp primary crack through one large gray crystal, bright layered crystalline fracture, many hard shards bursting outward, then a very short fine-fragment scatter. The main break must be loud and unmistakable over combat audio. No lead-in whoosh, beam, bottle or wine-glass clink, stone collapse, explosion, voice, music, repeated breaks, or long reverb.
 ```
 
 ## P1 — 장면 완성도용 추가 제작
 
-### 8. 마이크 준비
+### 9. 마이크 준비
 
 - 계약명: `sfx_mic_ready.wav`
 - 사용 장면: 음성 입력·마이크 버튼이 준비 상태로 바뀌는 UI
@@ -149,21 +163,21 @@ Single isolated final magical beam sequence for a game: very short rising charge
 Single isolated UI microphone-ready cue: one soft digital activation ping with a tiny clean air pulse, calm, precise and unobtrusive, clearly audible on laptop speakers. Extremely short and dry. No voice, recording-beep imitation, melody, music, alarm, bass, echo, or repeated notes.
 ```
 
-### 9. 주노 등장
+### 10. 주노 등장
 
 - 계약명: `sfx_juno_appear.wav`
-- 사용 장면: N3, 주노가 작은 빛과 함께 나타나는 첫 프레임
-- 의도: 친근함과 신비감을 주되 천사 합창이나 음악성 있는 징글은 피한다.
-- 생성: 1회, 후보 2개
-- 목표 사용 길이: 0.6–0.9초
+- 사용 장면: N3, 작은 주노가 모니터 화면에서 바깥으로 튀어나오는 첫 프레임
+- 의도: 짧은 CRT 래스터·데이터 소리 직후 비보컬 전자 `뺩!`을 붙인다. 공중에서 나타나는 마법음보다 모니터 출력감과 빠른 코믹 타이밍을 우선한다.
+- 생성: 2회, 후보 4개
+- 목표 사용 길이: 0.35–0.55초
 
 **사운드 설명**
 
 ```text
-Single isolated magical character-appearance sound effect: a small warm air bloom, delicate glass shimmer and one gentle star glint, friendly and mysterious, compact visual-novel scale. No voice, angel choir, melody, music bed, comedy pop, impact boom, repeated sparkle, or long reverb.
+Single isolated cute character pop-out sound effect from a CRT monitor: tiny raster-data zip, then one short springy electronic "bbyap!" pop, followed by a microscopic pixel sparkle. Fast, cheeky and clearly electronic, like a small mascot popping through the screen. The "bbyap" is a non-vocal synthesized pop, not speech. No human voice, mouth sound, spoken word, choir, harp, melody, heavy impact, long glitch, repetition, or reverb.
 ```
 
-### 10. 수렴·복구
+### 11. 수렴·복구
 
 - 계약명: `sfx_convergence.wav`
 - 사용 장면: 전투 종료 뒤 흩어진 마력이 수렴하고 사무실이 정상으로 돌아오는 컷
@@ -177,7 +191,7 @@ Single isolated magical character-appearance sound effect: a small warm air bloo
 Single isolated magical convergence sound effect: scattered light particles fold inward, a soft reverse shimmer closes, then late-night office room tone settles back into place. Relief after battle, quiet and clean. No voice, melody, music, explosion, bass boom, repeated pulses, or long ambient tail.
 ```
 
-### 11. 검은빛 흡수
+### 12. 검은빛 흡수
 
 - 계약명: `sfx_blacklight_absorb.wav`
 - 사용 장면: 회색 마력이나 빛 조각이 검은빛 안으로 빨려 들어가는 컷
@@ -191,7 +205,7 @@ Single isolated magical convergence sound effect: scattered light particles fold
 Single isolated dark-magical absorption sound effect: a controlled inward suction pulls bright particles into black light, low airy vacuum, muted glass resonance and a short sealed ending. Unsettling but not horror. No voice, scream, music, huge bass drop, explosion, heartbeat, repetition, or long drone.
 ```
 
-### 12. 알 수 없는 사용자
+### 13. 알 수 없는 사용자
 
 - 계약명: `sfx_unknown_user.wav`
 - 사용 장면: 시스템이 정체불명의 사용자·심사 대상을 감지하는 UI 알림
@@ -205,7 +219,7 @@ Single isolated dark-magical absorption sound effect: a controlled inward suctio
 Single isolated unknown-user system cue: a brief office-terminal notification becomes subtly corrupted, clean digital chirp, tiny data glitch and unresolved glass tick. Suspicious, compact and readable. No voice, spoken ID, melody, music, alarm siren, harsh static, repeated beeps, or long tail.
 ```
 
-### 13. 회색 판정 도장
+### 14. 회색 판정 도장
 
 - 계약명: `sfx_gray_stamp.wav`
 - 사용 장면: 회색 판정 또는 심사 결과가 문서에 찍히는 순간
