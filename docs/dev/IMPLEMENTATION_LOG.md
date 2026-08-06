@@ -1040,3 +1040,30 @@
 | 전투 presentation unit | PASS | p1/p2/p3 도윤·주노·phase index 계약 추가 |
 | 게임 로직 변경 | PASS | `src/battle/`, judge, branch, scenario JSON 변경 없음 |
 | 브라우저 합성 | 대기 | WP4-2 액션 연출 결합 뒤 1280×720·390×844 확인 |
+
+## M5 연출 폴리시 WP4-2/3 — 행동·페이즈·정화 연출
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 브라우저 모션·청각 QA 대기
+
+### 처리 내용
+
+- battle→battle 렌더에서는 `<main>`과 `battle-stage` DOM을 유지하고 배경·인물·대화·입력 하위 상태만 갱신한다.
+- 게이지 fill을 이전 momentum으로 먼저 렌더한 뒤 2프레임 뒤 현재 값으로 이동시켜 260ms transition을 복구했다.
+- 주문 성공은 도윤 발광→망령 hit→망령 위치 파티클, 실패는 도윤 미세 흔들림, 버티기는 방어막, 자유 대응은 축소 시퀀스로 분리했다.
+- momentum 65 상·하향에서 망령 weakened/recover를 800ms로 전이한다. 실파일이 없으면 DEC-060 CSS 파생을 유지한다.
+- 페이즈 전환에 주노 callout·인물 crossfade를 추가하고, 완료 시 대량 파티클·정화광·세계관식 S/A/B 문구를 같은 무대에서 표시한다.
+- 버티기 행동 순간에만 `doyun.magical_defend`, 나머지는 phase pose를 쓰는 DEC-063을 기록했다.
+- particle burst에 origin·count 옵션을 추가해 변신 기본 연출은 유지하고 battle 타격점만 망령 쪽으로 옮겼다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·174 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| battle 로직 회귀 | PASS | `src/battle/`, momentum·phase·grade 산식 변경 없음 |
+| reduced-motion | PASS(코드) | 신규 animation 비활성 CSS, 파티클 기존 matchMedia gate 유지 |
+| 실제 모션·SFX 순서 | 대기 | WP2 cue 연결 뒤 브라우저/헤드폰 QA |

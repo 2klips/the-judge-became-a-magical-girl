@@ -45,8 +45,8 @@ import {
   type PushToTalkShortcutBinding,
 } from "../input/keyboardPtt";
 import type { GameState, InputMode } from "../state";
-import { applySceneEffect, type SceneEffect } from "./effects";
 import { DIALOGUE_ADVANCE_DELAY_MS, DelayedActionGate } from "./advanceGate";
+import { applySceneEffect } from "./effects";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
 
@@ -128,6 +128,80 @@ export function resolveBattleStagePresentation(
     doyunLogicalId:
       resolveDoyunVisual({ kind: "battle", phaseId }) ?? "doyun.magical_finish",
     junoEmotion: phaseIndex === 1 ? "happy" : "neutral",
+  };
+}
+
+export type BattlePresentationAction =
+  | "spell"
+  | "failed-spell"
+  | "guard"
+  | "freeform"
+  | "debug";
+
+export interface BattleActionPresentation {
+  readonly className: string;
+  readonly doyunLogicalId: string;
+  readonly particles: boolean;
+  readonly guardBarrier: boolean;
+  readonly wraithTransition: "none" | "weaken" | "recover";
+  readonly phaseCallout: string | null;
+  readonly gradeLabel: string | null;
+}
+
+export function resolveBattleActionPresentation(options: {
+  readonly phaseId: string;
+  readonly action: BattlePresentationAction;
+  readonly delta: number;
+  readonly previousEnemyState: BattleState["enemyState"];
+  readonly enemyState: BattleState["enemyState"];
+  readonly phaseChanged: boolean;
+  readonly completed: boolean;
+  readonly grade: BattleGrade | null;
+}): BattleActionPresentation {
+  const phase = resolveBattleStagePresentation(options.phaseId);
+  const success = options.delta > 0;
+  const spellSuccess = options.action === "spell" && options.delta >= 15;
+  const className =
+    options.action === "guard"
+      ? "battle-action-guard"
+      : options.action === "failed-spell" || (options.action === "spell" && !success)
+        ? "battle-action-failed"
+        : spellSuccess
+          ? "battle-action-spell-success"
+          : options.action === "freeform" && success
+            ? "battle-action-freeform-success"
+            : options.action === "freeform"
+              ? "battle-action-freeform-failed"
+              : "battle-action-debug";
+  const wraithTransition =
+    options.previousEnemyState === options.enemyState
+      ? "none"
+      : options.enemyState === "weakened"
+        ? "weaken"
+        : "recover";
+  const phaseCallout = options.phaseChanged
+    ? options.phaseId === "p1_defend"
+      ? "좋아! 중심을 정확히 노려!"
+      : options.phaseId === "p2_attack"
+        ? "……도윤. 이번에는 네 대답을 듣고 싶어."
+        : null
+    : null;
+  const gradeLabel = options.completed
+    ? options.grade === "S"
+      ? "완전한 언령"
+      : options.grade === "A"
+        ? "빛을 되찾은 언령"
+        : "끝까지 닿은 목소리"
+    : null;
+  return {
+    className,
+    doyunLogicalId:
+      options.action === "guard" ? "doyun.magical_defend" : phase.doyunLogicalId,
+    particles: spellSuccess || options.completed,
+    guardBarrier: options.action === "guard",
+    wraithTransition,
+    phaseCallout,
+    gradeLabel,
   };
 }
 
@@ -930,21 +1004,42 @@ export class GameView {
     actionLabel: string;
     reply: string;
     narration?: string;
+    action: BattlePresentationAction;
+    previousMomentum: number;
+    previousEnemyState: BattleState["enemyState"];
+    phaseChanged: boolean;
     battleState: BattleState;
     state: GameState;
     completed: boolean;
     grade: BattleGrade | null;
-    effect: SceneEffect;
     onContinue(): void;
   }): void {
     const shell = this.createShell(options.sceneId);
     shell.classList.add("battle-screen", `enemy-${options.battleState.enemyState}`);
-    applySceneEffect(shell, options.effect);
+    const delta = options.battleState.momentum - options.previousMomentum;
+    const actionPresentation = resolveBattleActionPresentation({
+      phaseId: options.phaseId,
+      action: options.action,
+      delta,
+      previousEnemyState: options.previousEnemyState,
+      enemyState: options.battleState.enemyState,
+      phaseChanged: options.phaseChanged,
+      completed: options.completed,
+      grade: options.grade,
+    });
+    shell.classList.add(actionPresentation.className);
+    if (actionPresentation.wraithTransition !== "none") {
+      shell.classList.add(`battle-wraith-${actionPresentation.wraithTransition}`);
+    }
+    if (options.phaseChanged) shell.classList.add("battle-phase-change");
+    if (options.completed) shell.classList.add("battle-purification");
     const stage = this.createBattleStage(
       options.phaseId,
       options.enemyName,
       options.reply,
       options.battleState,
+      options.previousMomentum,
+      actionPresentation.doyunLogicalId,
     );
     stage.classList.add("battle-stage-result");
     const dialogue = stage.querySelector<HTMLElement>(".battle-dialogue");
@@ -957,6 +1052,32 @@ export class GameView {
       result.append(
         element("p", "battle-result-narration", formatDialogueText(options.narration, "narration")),
       );
+    }
+    if (actionPresentation.phaseCallout) {
+      const callout = element("p", "battle-phase-callout");
+      callout.append(
+        element("strong", undefined, "주노"),
+        document.createTextNode(` ${actionPresentation.phaseCallout}`),
+      );
+      result.append(callout);
+    }
+    if (actionPresentation.guardBarrier) {
+      stage.append(element("div", "battle-guard-barrier"));
+    }
+    if (actionPresentation.gradeLabel) {
+      const grade = element("section", "battle-grade-reveal");
+      grade.append(
+        element("span", "battle-grade-mark", options.grade ?? "B"),
+        element("strong", undefined, actionPresentation.gradeLabel),
+      );
+      stage.append(grade);
+    }
+    if (actionPresentation.particles) {
+      mountParticleBurst(stage, {
+        count: options.completed ? 84 : 48,
+        originXRatio: options.completed ? 0.5 : 0.3,
+        originYRatio: 0.44,
+      });
     }
     const button = this.delayedAdvanceButton(
       "primary-button",
@@ -1240,6 +1361,8 @@ export class GameView {
     enemyName: string,
     dialogueText: string,
     battleState: BattleState,
+    previousMomentum?: number,
+    doyunLogicalId?: string,
   ): HTMLElement {
     const presentation = resolveBattleStagePresentation(phaseId);
     const stage = element("section", "battle-stage");
@@ -1262,7 +1385,7 @@ export class GameView {
     hud.append(
       element("span", "battle-phase-label", `언령 ${presentation.phaseIndex + 1}`),
       phaseDots,
-      createGauge("기세", battleState.momentum, 20, 100),
+      createGauge("기세", battleState.momentum, 20, 100, previousMomentum),
     );
 
     const visualStage = element("section", "battle-character-stage");
@@ -1274,7 +1397,7 @@ export class GameView {
         "asset-visual battle-stage-character battle-stage-wraith enemy-visual",
       ),
       this.createAssetVisual(
-        presentation.doyunLogicalId,
+        doyunLogicalId ?? presentation.doyunLogicalId,
         "마법소녀 도윤",
         "asset-visual battle-stage-character battle-stage-doyun doyun-visual",
       ),
@@ -1446,6 +1569,37 @@ export class GameView {
 
   private commit(shell: HTMLElement): void {
     this.keyboardPtt.cancel();
+    const currentShell = this.root.firstElementChild;
+    if (
+      currentShell instanceof HTMLElement &&
+      currentShell.classList.contains("battle-screen") &&
+      shell.classList.contains("battle-screen")
+    ) {
+      const currentStage = currentShell.querySelector<HTMLElement>(":scope > .battle-stage");
+      const nextStage = shell.querySelector<HTMLElement>(":scope > .battle-stage");
+      if (currentStage && nextStage) {
+        currentShell.className = shell.className;
+        for (const key of Object.keys(currentShell.dataset)) {
+          delete currentShell.dataset[key];
+        }
+        Object.assign(currentShell.dataset, shell.dataset);
+        for (const child of [...currentShell.children]) {
+          if (child !== currentStage) child.remove();
+        }
+        for (const child of [...shell.children]) {
+          if (child !== nextStage) currentShell.insertBefore(child, currentStage);
+        }
+        currentStage.className = nextStage.className;
+        for (const key of Object.keys(currentStage.dataset)) {
+          delete currentStage.dataset[key];
+        }
+        Object.assign(currentStage.dataset, nextStage.dataset);
+        currentStage.replaceChildren(...nextStage.childNodes);
+        if (this.debugEnabled) currentShell.append(this.devSceneNavigator());
+        this.currentBackgroundId = currentShell.dataset.scene ?? null;
+        return;
+      }
+    }
     if (this.debugEnabled) {
       shell.append(this.devSceneNavigator());
     }

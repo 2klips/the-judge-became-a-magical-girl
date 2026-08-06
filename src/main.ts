@@ -277,11 +277,21 @@ async function bootstrap(): Promise<void> {
           actionLabel,
           reply,
           narration,
+          action:
+            action.kind === "failed-spell"
+              ? "failed-spell"
+              : action.kind === "guard"
+                ? "guard"
+                : action.kind === "freeform"
+                  ? "freeform"
+                  : "spell",
+          previousMomentum: before.momentum,
+          previousEnemyState: before.enemyState,
+          phaseChanged: result.battleState.phaseIndex !== before.phaseIndex,
           battleState: result.battleState,
           state: engine.getState(),
           completed: result.completed,
           grade: result.grade,
-          effect: delta > 0 ? "flash" : delta < 0 ? "shake" : "none",
           onContinue: () => renderCurrent(),
         });
       };
@@ -339,11 +349,14 @@ async function bootstrap(): Promise<void> {
             actionLabel: transcript,
             reply: delta >= 25 ? "『그 주문은… 완전했어.』" : delta >= 15 ? "『빛이 내 안개를 가른다…!』" : "『흐린 목소리로는 닿지 않는다.』",
             narration: `주문 결과 momentum ${delta >= 0 ? "+" : ""}${delta}`,
+            action: delta > 0 ? "spell" : "failed-spell",
+            previousMomentum: before.momentum,
+            previousEnemyState: before.enemyState,
+            phaseChanged: result.battleState.phaseIndex !== before.phaseIndex,
             battleState: result.battleState,
             state: engine.getState(),
             completed: result.completed,
             grade: result.grade,
-            effect: delta > 0 ? "flash" : "none",
             onContinue: () => renderCurrent(),
           });
           return;
@@ -456,11 +469,14 @@ async function bootstrap(): Promise<void> {
             enemyName: node.enemy.name,
             actionLabel: `DEBUG ${grade}`,
             reply: `『${grade} 등급 결과를 재현했다.』`,
+            action: "debug",
+            previousMomentum: battleState.momentum,
+            previousEnemyState: battleState.enemyState,
+            phaseChanged: false,
             battleState: finalBattleState,
             state: engine.getState(),
             completed: true,
             grade,
-            effect: "flash",
             onContinue: () => renderCurrent(),
           });
         },

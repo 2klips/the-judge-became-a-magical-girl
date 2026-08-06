@@ -5,6 +5,7 @@ import {
   resolveDialogueIdentity,
   resolveDialoguePresentation,
   resolveBattleStagePresentation,
+  resolveBattleActionPresentation,
   resolveEndingLines,
   resolveEndingPages,
   resolveEndingVisual,
@@ -193,6 +194,60 @@ describe("M5 장면 표시 계약", () => {
       phaseIndex: 2,
       doyunLogicalId: "doyun.magical_finish",
       junoEmotion: "neutral",
+    });
+  });
+
+  it("전투 행동·약화·페이즈·등급 연출을 수치 변경과 분리해 결정한다", () => {
+    expect(
+      resolveBattleActionPresentation({
+        phaseId: "p2_attack",
+        action: "spell",
+        delta: 25,
+        previousEnemyState: "normal",
+        enemyState: "weakened",
+        phaseChanged: true,
+        completed: false,
+        grade: null,
+      }),
+    ).toMatchObject({
+      className: "battle-action-spell-success",
+      doyunLogicalId: "doyun.magical_attack",
+      particles: true,
+      wraithTransition: "weaken",
+      phaseCallout: "……도윤. 이번에는 네 대답을 듣고 싶어.",
+    });
+    expect(
+      resolveBattleActionPresentation({
+        phaseId: "p3_answer",
+        action: "guard",
+        delta: 3,
+        previousEnemyState: "weakened",
+        enemyState: "weakened",
+        phaseChanged: false,
+        completed: true,
+        grade: "A",
+      }),
+    ).toMatchObject({
+      className: "battle-action-guard",
+      doyunLogicalId: "doyun.magical_defend",
+      guardBarrier: true,
+      gradeLabel: "빛을 되찾은 언령",
+    });
+    expect(
+      resolveBattleActionPresentation({
+        phaseId: "p1_defend",
+        action: "failed-spell",
+        delta: 0,
+        previousEnemyState: "weakened",
+        enemyState: "normal",
+        phaseChanged: false,
+        completed: false,
+        grade: null,
+      }),
+    ).toMatchObject({
+      className: "battle-action-failed",
+      particles: false,
+      wraithTransition: "recover",
     });
   });
 });

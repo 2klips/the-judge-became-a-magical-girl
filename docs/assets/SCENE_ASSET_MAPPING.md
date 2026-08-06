@@ -195,6 +195,7 @@
 - `[구현·QA PASS, DEC-049]` N2~N4 응답 `intentId`별 도윤 표정 resolver를 적용했다. 도윤은 더 크게·낮게·왼쪽으로, 주노는 도윤 쪽으로 보정했으며 desktop N2/N4/battle과 390×844 N2에서 crop·겹침·가로 overflow를 확인했다.
 - `[구현·자동 QA PASS]` WP6 전수 매트릭스에서 N5 주문 게이트의 주노 누락 A형 1건을 수정했다. 직전 N4의 `GameState.npcEmotion`을 주문 게이트까지 유지한다. B형 1건(`n2_juno_intro.npc.startEmotion`)은 작가 JSON을 수정하지 않고 `CHARACTER_IMAGE_DIALOGUE_AUDIT.md`에 분리했다.
 - `[구현·자동 QA PASS]` battle 명령·결과 렌더를 같은 `battle-stage` 구조로 통합했다. p1~p3에서 망령 좌측 대형 전신·도윤 우측 상반신·주노 보조 위치와 상단 기세 HUD를 공유하며, 과거 썸네일 그리드/결과 float 카드는 사용하지 않는다.
+- `[구현·자동 QA PASS, DEC-063]` battle stage DOM을 행동 결과에서도 유지하고 내부 상태만 갱신한다. 이전→현재 기세 fill, 주문/실패/버티기/자유 대응 CSS 시퀀스, 65 약화·회복 800ms 전이, phase callout, S/A/B 정화 문구를 presentation 계층에 연결했다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
 - `[구현]` 타이틀에서 마이크 연결·장치 선택·실시간 dBFS 테스트를 통과해야 시작·이어하기가 열린다. 게임 진입 뒤 STT 실패 시 클릭 폴백은 유지한다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.

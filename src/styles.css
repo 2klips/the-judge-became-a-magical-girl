@@ -2712,3 +2712,194 @@ html[data-qa-preview="true"] .dev-scene-nav {
     bottom: 90px;
   }
 }
+
+.battle-action-spell-success .battle-stage-doyun {
+  animation: battle-cast-pop 280ms ease-out both;
+}
+
+.battle-action-spell-success .battle-stage-wraith,
+.battle-action-freeform-success .battle-stage-wraith {
+  animation: battle-wraith-hit 360ms ease-out 220ms both;
+}
+
+.battle-action-failed .battle-stage-doyun,
+.battle-action-freeform-failed .battle-stage-doyun {
+  animation: battle-cast-fizzle 360ms ease-out both;
+}
+
+.battle-action-freeform-success .battle-stage-doyun {
+  animation: battle-voice-resolve 260ms ease-out both;
+}
+
+.battle-guard-barrier {
+  position: absolute;
+  z-index: 5;
+  right: clamp(17%, 22vw, 28%);
+  bottom: clamp(160px, 24vh, 270px);
+  width: min(31vw, 390px);
+  aspect-ratio: 1;
+  border: 3px solid rgba(190, 242, 255, 0.82);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(190, 242, 255, 0.22), transparent 68%);
+  box-shadow:
+    inset 0 0 38px rgba(190, 242, 255, 0.3),
+    0 0 46px rgba(108, 214, 255, 0.4);
+  animation: battle-guard-pulse 620ms ease-out both;
+}
+
+.battle-wraith-weaken .battle-stage-wraith {
+  animation: battle-wraith-weaken 800ms ease-in-out both;
+}
+
+.battle-wraith-recover .battle-stage-wraith {
+  animation: battle-wraith-recover 800ms ease-in-out both;
+}
+
+.battle-phase-change .battle-stage-doyun,
+.battle-phase-change .battle-stage-juno {
+  animation: battle-phase-crossfade 420ms ease-out both;
+}
+
+.battle-phase-callout {
+  max-width: 620px;
+  margin: 0 auto 0 0;
+  padding: 9px 14px;
+  border-left: 4px solid var(--vn-juno);
+  color: #fff4bd;
+  background: rgba(55, 43, 8, 0.78);
+  line-height: 1.45;
+}
+
+.battle-grade-reveal {
+  position: absolute;
+  z-index: 18;
+  top: 23%;
+  left: 50%;
+  display: grid;
+  min-width: min(480px, 80vw);
+  padding: 22px 34px;
+  place-items: center;
+  border-block: 2px solid rgba(255, 242, 166, 0.82);
+  color: #fff7cd;
+  background: rgba(12, 13, 28, 0.78);
+  box-shadow: 0 0 64px rgba(255, 216, 77, 0.28);
+  transform: translateX(-50%);
+  animation: battle-grade-reveal 760ms ease-out both;
+  backdrop-filter: blur(8px);
+}
+
+.battle-grade-mark {
+  color: #ffd84d;
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.battle-grade-reveal strong {
+  margin-top: 8px;
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: clamp(1.2rem, 2.6vw, 1.8rem);
+}
+
+.battle-purification::before {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.72), rgba(255, 232, 150, 0.18) 38%, transparent 72%);
+  animation: battle-purification-light 1.1s ease-out both;
+}
+
+@keyframes battle-cast-pop {
+  0% { filter: brightness(1); transform: translateY(0) scale(1); }
+  45% { filter: brightness(1.7) drop-shadow(0 0 34px rgba(255, 233, 145, 0.9)); transform: translateY(-5px) scale(1.025); }
+  100% { filter: brightness(1); transform: translateY(0) scale(1); }
+}
+
+@keyframes battle-wraith-hit {
+  0% { filter: brightness(1); transform: translateX(0); }
+  40% { filter: brightness(2.2) saturate(0.35); transform: translateX(-12px); }
+  100% { filter: brightness(1); transform: translateX(0); }
+}
+
+@keyframes battle-cast-fizzle {
+  0%, 100% { filter: brightness(1); transform: translateX(0); }
+  35% { filter: brightness(0.74) saturate(0.6); transform: translateX(-4px); }
+  65% { transform: translateX(4px); }
+}
+
+@keyframes battle-voice-resolve {
+  0%, 100% { filter: brightness(1); transform: translateY(0); }
+  50% { filter: brightness(1.28); transform: translateY(-3px); }
+}
+
+@keyframes battle-guard-pulse {
+  0% { opacity: 0; transform: scale(0.72); }
+  35% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 0; transform: scale(1.14); }
+}
+
+@keyframes battle-wraith-weaken {
+  0% { filter: saturate(1) brightness(1); opacity: 0.9; transform: scale(1); }
+  52% { filter: saturate(0.25) brightness(1.55); opacity: 0.82; transform: scale(0.97); }
+  100% { filter: saturate(0.48) brightness(1.18); opacity: 0.72; transform: scale(0.98); }
+}
+
+@keyframes battle-wraith-recover {
+  0% { filter: saturate(0.48) brightness(1.18); opacity: 0.72; transform: scale(0.98); }
+  100% { filter: saturate(1) brightness(1); opacity: 0.9; transform: scale(1); }
+}
+
+@keyframes battle-phase-crossfade {
+  from { opacity: 0.25; filter: brightness(1.4); }
+  to { opacity: 1; filter: brightness(1); }
+}
+
+@keyframes battle-grade-reveal {
+  from { opacity: 0; transform: translate(-50%, 18px) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes battle-purification-light {
+  0% { opacity: 0; }
+  45% { opacity: 1; }
+  100% { opacity: 0.18; }
+}
+
+@media (max-width: 760px) {
+  .battle-guard-barrier {
+    right: 4%;
+    bottom: 39vh;
+    width: 58vw;
+  }
+
+  .battle-grade-reveal {
+    top: 18%;
+    min-width: calc(100vw - 36px);
+  }
+
+  .battle-phase-callout {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-action-spell-success .battle-stage-doyun,
+  .battle-action-spell-success .battle-stage-wraith,
+  .battle-action-freeform-success .battle-stage-wraith,
+  .battle-action-failed .battle-stage-doyun,
+  .battle-action-freeform-failed .battle-stage-doyun,
+  .battle-action-freeform-success .battle-stage-doyun,
+  .battle-guard-barrier,
+  .battle-wraith-weaken .battle-stage-wraith,
+  .battle-wraith-recover .battle-stage-wraith,
+  .battle-phase-change .battle-stage-doyun,
+  .battle-phase-change .battle-stage-juno,
+  .battle-grade-reveal,
+  .battle-purification::before {
+    animation: none !important;
+  }
+}
