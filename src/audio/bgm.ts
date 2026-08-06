@@ -28,6 +28,58 @@ export interface AutoplayGestureTarget {
 
 export const BGM_DEFAULT_VOLUME = 0.62;
 export const BGM_DUCK_MULTIPLIER = 0.18;
+export const BGM_PREFERENCES_STORAGE_KEY = "judge-magical-girl:bgm-preferences";
+
+export interface BgmPreferences {
+  readonly volume: number;
+  readonly muted: boolean;
+}
+
+export interface BgmPreferenceStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+}
+
+export function normalizeBgmVolume(value: number): number {
+  if (!Number.isFinite(value)) return BGM_DEFAULT_VOLUME;
+  return Math.min(1, Math.max(0, value));
+}
+
+export function loadBgmPreferences(
+  storage: Pick<BgmPreferenceStorage, "getItem">,
+): BgmPreferences {
+  try {
+    const raw = storage.getItem(BGM_PREFERENCES_STORAGE_KEY);
+    if (!raw) return { volume: BGM_DEFAULT_VOLUME, muted: false };
+    const parsed = JSON.parse(raw) as { volume?: unknown; muted?: unknown };
+    return {
+      volume:
+        typeof parsed.volume === "number"
+          ? normalizeBgmVolume(parsed.volume)
+          : BGM_DEFAULT_VOLUME,
+      muted: parsed.muted === true,
+    };
+  } catch {
+    return { volume: BGM_DEFAULT_VOLUME, muted: false };
+  }
+}
+
+export function saveBgmPreferences(
+  storage: Pick<BgmPreferenceStorage, "setItem">,
+  preferences: BgmPreferences,
+): void {
+  try {
+    storage.setItem(
+      BGM_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        volume: normalizeBgmVolume(preferences.volume),
+        muted: preferences.muted,
+      }),
+    );
+  } catch {
+    // 저장소 차단은 재생을 막지 않는다.
+  }
+}
 
 export class BgmController {
   private current: { id: string; channel: AudioChannel } | null = null;
@@ -35,6 +87,8 @@ export class BgmController {
   private ducked = false;
   private pendingAutoplay: { id: string; loop: boolean } | null = null;
   private autoplayListenerAttached = false;
+  private volume = BGM_DEFAULT_VOLUME;
+  private muted = false;
 
   constructor(
     private readonly createAudio: AudioFactory = () => new Audio(),
@@ -106,6 +160,24 @@ export class BgmController {
     if (this.current) this.current.channel.volume = this.targetVolume();
   }
 
+  setVolume(volume: number): void {
+    this.volume = normalizeBgmVolume(volume);
+    if (this.current) this.current.channel.volume = this.targetVolume();
+  }
+
+  getVolume(): number {
+    return this.volume;
+  }
+
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+    if (this.current) this.current.channel.volume = this.targetVolume();
+  }
+
+  isMuted(): boolean {
+    return this.muted;
+  }
+
   private crossfade(previous: AudioChannel | null, next: AudioChannel): void {
     if (this.fadeTimer) clearInterval(this.fadeTimer);
     const steps = 12;
@@ -124,7 +196,8 @@ export class BgmController {
   }
 
   private targetVolume(): number {
-    return BGM_DEFAULT_VOLUME * (this.ducked ? BGM_DUCK_MULTIPLIER : 1);
+    if (this.muted) return 0;
+    return this.volume * (this.ducked ? BGM_DUCK_MULTIPLIER : 1);
   }
 
   private readonly retryAutoplay = (): void => {

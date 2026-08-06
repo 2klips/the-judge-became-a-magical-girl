@@ -321,7 +321,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 - battle 주문 음량은 보정 범위로 판정. 첫 음량 실패는 무료 재시도, 같은 턴 두 번째는 `+0`으로 턴 소비.
 - 같은 배경 ID는 전환 없음. 다른 ID만 420ms crossfade, 감소 모션은 즉시 전환.
 - CSS 타이핑·페이드·셰이크·플래시, Canvas 2D 파티클 1모듈.
-- BGM 크로스페이드, Web Audio SFX 약 5종.
+- BGM 크로스페이드, 플레이 중 볼륨·음소거 HUD와 설정 저장, Web Audio SFX 약 5종.
 - 기본 에셋 프리로드 + 나머지 지연 로드.
 - 실제 수치·키워드·엔딩 도달 밸런스 QA.
 - HIDDEN은 일정 여유와 승인 시만 포함.
@@ -342,7 +342,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 - JSON 참조와 파일명이 일치, 필수 에셋 누락 없음.
 - 모든 M5 node/phase의 화면 인물·표정·BGM이 장면별 에셋 매핑과 일치.
 - 총 에셋 30MB 이하, 목표 환경 첫 화면 3초 이내.
-- 표정 전환·배경 합성·BGM 루프/크로스페이드 QA 통과.
+- 표정 전환·배경 합성·BGM 루프/크로스페이드·볼륨/음소거/새로고침 복구 QA 통과.
 
 ### 자동 검증
 
@@ -375,7 +375,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 ### 선행조건
 
 - M5 통과.
-- `[충족, DEC-051]` production STT 공급자는 OpenAI `gpt-transcribe`로 사용자 선택 완료.
+- `[충족, DEC-066]` production 기본 음성 모델은 OpenAI `gpt-realtime-2.1-mini`로 사용자 선택 완료.
 - GitHub 저장소·Pages base/Origin, Workers 배포 계정과 키 정책 확정.
 - 현장 Chrome·마이크·네트워크 조건 확보.
 
@@ -385,7 +385,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 - 프로덕션에서 debug 접근 정책 확정·적용.
 - GitHub Actions 빌드→Pages 배포.
 - Workers production Origin·쿼터·예비 키 운영.
-- 선택된 STT 공급자 하나만 production 라우트에 활성화하고 비선택 STT 라우트·전용 Secret·비교 Lab 번들을 제거.
+- production 일반 음성은 `/voice/realtime`의 `gpt-realtime-2.1-mini`만 사용하고, 비교 STT selector·route의 production 노출 정책을 확정한다. 비교 Lab 번들은 제거한다.
 - 전체 회귀, 현장 리허설, 제출 영상 녹화.
 - AI 제작 로그·에셋 라이선스·비밀 검사 마감.
 
@@ -402,7 +402,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 - Pages HTTPS URL에서 Chrome smoke test 통과.
 - production Workers는 허용 Origin만 응답.
-- production 일반 플레이에서 선택된 STT 공급자만 호출되고 비선택 공급자 요청은 0건.
+- production 일반 플레이에서 `/voice/realtime`만 턴당 1회 호출되고 `gpt-transcribe`·`gpt-live-transcribe`·Gemini 요청은 0건.
 - 정상/마이크 거부/네트워크 오프라인 현장 절차 각 1회 성공.
 - 제출 영상에 타이틀→음성 인식→변신→전투→엔딩이 담김.
 - 비밀·미승인 에셋·깨진 링크 없음.

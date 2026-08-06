@@ -39,6 +39,7 @@ import type {
   RecordedVoiceResult,
   TranscriptionObservation,
 } from "../input/transcription";
+import { OpenAiSttModelSchema } from "../input/transcription";
 import { formatVoiceInputError } from "../input/transcription";
 import {
   PushToTalkShortcutController,
@@ -367,7 +368,10 @@ export interface DialogueInputOptions {
   startCapture(): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
-  onTranscript(transcript: string): Promise<boolean>;
+  onTranscript(
+    transcript: string,
+    observation?: TranscriptionObservation,
+  ): Promise<boolean>;
   onTurnFailed(message: string): void;
   onUnavailable(message: string): void;
   onModeChange(inputMode: InputMode): void;
@@ -402,9 +406,19 @@ interface DebugSttOptions {
   readonly onModelChange: (model: OpenAiSttModel) => void;
 }
 
+interface AudioControlOptions {
+  readonly getVolume: () => number;
+  readonly isMuted: () => boolean;
+  readonly onVolumeChange: (volume: number) => void;
+  readonly onMutedChange: (muted: boolean) => void;
+}
+
 export interface IncantationInputOptions extends SharedVoiceOptions {
   attempt: number;
-  onTranscript(transcript: string): Promise<void>;
+  onTranscript(
+    transcript: string,
+    observation?: TranscriptionObservation,
+  ): Promise<void>;
   onFallback(): void;
 }
 
@@ -413,6 +427,7 @@ export interface BattleInputOptions extends SharedVoiceOptions {
     action: "spell" | "freeform",
     transcript: string,
     audioLevel?: AudioLevelMetrics,
+    observation?: TranscriptionObservation,
   ): Promise<void>;
   onClickSpell(): void;
   onClickResponse(text: string, momentumDelta: number): void;
@@ -480,6 +495,7 @@ export class GameView {
   constructor(
     private readonly root: HTMLElement,
     private readonly debugSttOptions: DebugSttOptions,
+    private readonly audioControlOptions: AudioControlOptions,
     private readonly onAdvance?: () => void,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
@@ -885,7 +901,7 @@ export class GameView {
       controls.append(fallback);
       inputArea.append(controls);
       this.bindHoldToTalk(ptt, options, async (transcript) => {
-        await options.onTranscript(transcript.text);
+        await options.onTranscript(transcript.text, transcript.observation);
       });
       const utilities = element("div", "input-utilities");
       this.appendDebugTranscript(utilities, async (transcript) => {
@@ -1000,10 +1016,20 @@ export class GameView {
       controls.append(spell, freeform, guard);
       command.append(controls);
       this.bindHoldToTalk(spell, options, (transcript) =>
-        options.onTranscript("spell", transcript.text, transcript.audioLevel),
+        options.onTranscript(
+          "spell",
+          transcript.text,
+          transcript.audioLevel,
+          transcript.observation,
+        ),
       );
       this.bindHoldToTalk(freeform, options, (transcript) =>
-        options.onTranscript("freeform", transcript.text, transcript.audioLevel),
+        options.onTranscript(
+          "freeform",
+          transcript.text,
+          transcript.audioLevel,
+          transcript.observation,
+        ),
       );
       const clickMode = element("button", "secondary-button compact-input", "클릭으로 전환");
       clickMode.type = "button";
@@ -1341,6 +1367,7 @@ export class GameView {
 
   private createShell(sceneId: string, presentationContext = sceneId): HTMLElement {
     const shell = element("main", "game-shell");
+    if (this.debugEnabled) shell.classList.add("debug-enabled");
     shell.dataset.scene = sceneId;
     shell.dataset.presentationContext = presentationContext;
     if (isActBoundaryTransition(this.currentPresentationContext, presentationContext)) {
@@ -1748,6 +1775,7 @@ export class GameView {
     this.activeTypewriter?.cancel();
     this.activeTypewriter = null;
     this.applySpriteContinuity(shell);
+    shell.append(this.audioControlPanel());
     const currentShell = this.root.firstElementChild;
     if (
       currentShell instanceof HTMLElement &&
@@ -1791,6 +1819,46 @@ export class GameView {
     this.activateTypewriter(shell);
   }
 
+  private audioControlPanel(): HTMLElement {
+    const panel = element("aside", "bgm-controls");
+    panel.setAttribute("aria-label", "배경 음악 설정");
+    const mute = element("button", "bgm-mute-button");
+    mute.type = "button";
+    const slider = element("input", "bgm-volume-slider");
+    slider.type = "range";
+    slider.min = "0";
+    slider.max = "100";
+    slider.step = "1";
+    slider.value = String(Math.round(this.audioControlOptions.getVolume() * 100));
+    slider.setAttribute("aria-label", "BGM 볼륨");
+    const output = element("output", "bgm-volume-output");
+    let muted = this.audioControlOptions.isMuted();
+    const update = (): void => {
+      const percent = Math.round(Number(slider.value));
+      output.value = `${percent}%`;
+      output.textContent = `${percent}%`;
+      mute.textContent = muted ? "BGM 음소거" : "BGM 켬";
+      mute.dataset.muted = String(muted);
+      mute.setAttribute("aria-pressed", String(muted));
+      mute.setAttribute(
+        "aria-label",
+        muted ? "BGM 음소거 해제" : "BGM 음소거",
+      );
+    };
+    mute.addEventListener("click", () => {
+      muted = !muted;
+      this.audioControlOptions.onMutedChange(muted);
+      update();
+    });
+    slider.addEventListener("input", () => {
+      this.audioControlOptions.onVolumeChange(Number(slider.value) / 100);
+      update();
+    });
+    update();
+    panel.append(mute, slider, output);
+    return panel;
+  }
+
   private devSceneNavigator(): HTMLElement {
     const nav = element("aside", "dev-scene-nav");
     nav.setAttribute("aria-label", "M5 장면 선택기");
@@ -1814,27 +1882,40 @@ export class GameView {
       window.location.assign(url);
     });
     label.append(select);
-    const sttLabel = element("label", "debug-stt-selector", "STT");
+    const sttLabel = element("label", "debug-stt-selector", "VOICE");
     const sttSelect = element("select");
     sttSelect.name = "debugSttModel";
-    for (const model of ["gpt-transcribe", "gpt-live-transcribe"] as const) {
+    for (const model of [
+      "gpt-realtime-2.1-mini",
+      "gpt-transcribe",
+      "gpt-live-transcribe",
+    ] as const) {
       const option = element("option", undefined, model);
       option.value = model;
       option.selected = model === this.debugSttModel;
       sttSelect.append(option);
     }
     sttSelect.addEventListener("change", () => {
-      const model: OpenAiSttModel =
-        sttSelect.value === "gpt-live-transcribe"
-          ? "gpt-live-transcribe"
-          : "gpt-transcribe";
+      const parsed = OpenAiSttModelSchema.safeParse(sttSelect.value);
+      const model: OpenAiSttModel = parsed.success
+        ? parsed.data
+        : "gpt-realtime-2.1-mini";
       this.debugSttModel = model;
       this.latestTranscription = null;
       this.debugSttOptions.onModelChange(model);
     });
     sttLabel.append(sttSelect);
     const models = element("div", "debug-model-summary");
-    models.append(sttLabel, element("span", undefined, "LLM · gpt-5.6-luna"));
+    models.append(
+      sttLabel,
+      element(
+        "span",
+        undefined,
+        this.debugSttModel === "gpt-realtime-2.1-mini"
+          ? "직접 음성 판정"
+          : "전사 후 gpt-5.6-luna 판정",
+      ),
+    );
     nav.append(label, models, this.debugTranscriptionResult());
     return nav;
   }
@@ -1991,7 +2072,7 @@ export class GameView {
   ): Promise<void> {
     if (result.kind === "transcript") {
       this.rememberTranscription(result.observation);
-      const handled = await options.onTranscript(result.transcript);
+      const handled = await options.onTranscript(result.transcript, result.observation);
       if (!handled && this.root.contains(button)) {
         showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
       } else if (this.root.contains(button)) {
@@ -2014,6 +2095,7 @@ export class GameView {
     onTranscript: (transcript: {
       readonly text: string;
       readonly audioLevel: AudioLevelMetrics;
+      readonly observation: TranscriptionObservation;
     }) => void | Promise<void>,
   ): void {
     let capturing = false;
@@ -2047,7 +2129,11 @@ export class GameView {
         return;
       }
       this.rememberTranscription(result.observation);
-      await onTranscript({ text: result.transcript, audioLevel: result.audioLevel });
+      await onTranscript({
+        text: result.transcript,
+        audioLevel: result.audioLevel,
+        observation: result.observation,
+      });
       if (button.isConnected) setPttButtonState(button, "idle");
     };
     button.addEventListener("pointerdown", (event) => {

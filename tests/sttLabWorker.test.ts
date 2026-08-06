@@ -84,6 +84,7 @@ function env(overrides: Partial<SttLabEnv>): SttLabEnv {
     OPENAI_API_KEY: "test-openai-key",
     GEMINI_API_KEY: "test-gemini-key",
     OPENAI_TRANSCRIBE_MODEL: "gpt-transcribe",
+    OPENAI_REALTIME_MODEL: "gpt-realtime-2.1-mini",
     ENABLE_OPENAI_STT_MODEL_SELECTOR: "true",
     GEMINI_TRANSCRIBE_MODEL: "gemini-2.5-flash",
     LLM_PROVIDER: "gemini",

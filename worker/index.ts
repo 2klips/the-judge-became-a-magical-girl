@@ -7,6 +7,7 @@ import {
 
 const DEFAULT_OPENAI_MODEL = "gpt-transcribe";
 const OPENAI_LIVE_TRANSCRIBE_MODEL = "gpt-live-transcribe";
+const DEFAULT_OPENAI_REALTIME_MODEL = "gpt-realtime-2.1-mini";
 const OPENAI_REALTIME_TRANSCRIPTION_URL =
   "https://api.openai.com/v1/realtime?intent=transcription";
 const DEFAULT_OPENAI_LLM_MODEL = "gpt-5.6-luna";
@@ -99,6 +100,7 @@ const DialogueRequestSchema = z
       .max(6),
   })
   .strict();
+const DialogueVoiceContextSchema = DialogueRequestSchema.omit({ transcript: true });
 const BattleRequestSchema = z
   .object({
     transcript: z.string().trim().min(1).max(1_000),
@@ -106,6 +108,8 @@ const BattleRequestSchema = z
     llmContext: z.string().min(1).max(2_000),
   })
   .strict();
+const BattleVoiceContextSchema = BattleRequestSchema.omit({ transcript: true });
+const RealtimeVoiceModeSchema = z.enum(["transcript", "dialogue", "battle"]);
 
 export type UpstreamFetch = (request: Request) => Promise<Response>;
 
@@ -157,6 +161,41 @@ interface StructuredLlmRequest {
   maxOutputTokens: number;
 }
 
+type RealtimeVoiceRequest =
+  | { readonly mode: "transcript"; readonly audio: File }
+  | {
+      readonly mode: "dialogue";
+      readonly audio: File;
+      readonly context: z.infer<typeof DialogueVoiceContextSchema>;
+    }
+  | {
+      readonly mode: "battle";
+      readonly audio: File;
+      readonly context: z.infer<typeof BattleVoiceContextSchema>;
+    };
+
+type RealtimeVoiceResponse =
+  | {
+      readonly mode: "transcript";
+      readonly model: string;
+      readonly text: string;
+      readonly metrics: TranscriptionMetrics;
+    }
+  | {
+      readonly mode: "dialogue";
+      readonly model: string;
+      readonly text: string;
+      readonly judgement: z.infer<typeof DialogueJudgementSchema>;
+      readonly metrics: TranscriptionMetrics;
+    }
+  | {
+      readonly mode: "battle";
+      readonly model: string;
+      readonly text: string;
+      readonly judgement: z.infer<typeof BattleJudgementSchema>;
+      readonly metrics: TranscriptionMetrics;
+    };
+
 export function createWorker(
   upstreamFetch: UpstreamFetch = fetch,
   {
@@ -183,6 +222,8 @@ export function createWorker(
             openaiConfigured: Boolean(env.OPENAI_API_KEY),
             geminiConfigured: enableGeminiStt && Boolean(env.GEMINI_API_KEY),
             openaiModel: env.OPENAI_TRANSCRIBE_MODEL || DEFAULT_OPENAI_MODEL,
+            realtimeVoiceModel:
+              env.OPENAI_REALTIME_MODEL || DEFAULT_OPENAI_REALTIME_MODEL,
             openaiSelectableModels:
               env.ENABLE_OPENAI_STT_MODEL_SELECTOR === "true"
                 ? OpenAiSttModelSchema.options
@@ -216,6 +257,12 @@ export function createWorker(
           result = await transcribeWithGemini((await readAudio(request)).audio, env, upstreamFetch);
         } else if (pathname === "/transcribe/gemini") {
           throw new WorkerError(404, "비활성화된 STT 공급자입니다.");
+        } else if (pathname === "/voice/realtime") {
+          result = await judgeVoiceWithOpenAiRealtime(
+            await readRealtimeVoiceRequest(request),
+            env,
+            upstreamFetch,
+          );
         } else if (pathname === "/judge/dialogue") {
           result = await judgeDialogue(await readDialogueRequest(request), env, upstreamFetch);
         } else if (pathname === "/judge/battle") {
@@ -272,6 +319,62 @@ async function readAudio(request: Request): Promise<AudioRequest> {
     audio,
     ...(typeof requestedModel === "string" ? { requestedModel } : {}),
   };
+}
+
+async function readRealtimeVoiceRequest(request: Request): Promise<RealtimeVoiceRequest> {
+  requireContentType(request, "multipart/form-data");
+  rejectOversizedContentLength(request, MAX_AUDIO_BYTES + MAX_JSON_BYTES + 64 * 1024);
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    throw new WorkerError(400, "multipart 요청 형식이 올바르지 않습니다.");
+  }
+  const audio = form.get("audio");
+  if (!(audio instanceof File) || audio.size === 0) {
+    throw new WorkerError(400, "WAV 오디오 파일이 필요합니다.");
+  }
+  if (audio.type !== "audio/wav") {
+    throw new WorkerError(415, "audio/wav 형식만 지원합니다.");
+  }
+  if (audio.size > MAX_AUDIO_BYTES) {
+    throw new WorkerError(413, "오디오 파일이 14MB 제한을 초과했습니다.");
+  }
+  const modeValue = form.get("mode");
+  if (modeValue instanceof File) {
+    throw new WorkerError(400, "Realtime 음성 모드 형식이 올바르지 않습니다.");
+  }
+  const mode = RealtimeVoiceModeSchema.safeParse(modeValue);
+  if (!mode.success) {
+    throw new WorkerError(400, "지원하지 않는 Realtime 음성 모드입니다.");
+  }
+  if (mode.data === "transcript") return { mode: "transcript", audio };
+
+  const contextValue = form.get("context");
+  if (typeof contextValue !== "string") {
+    throw new WorkerError(400, "Realtime 음성 판정 context가 필요합니다.");
+  }
+  if (new TextEncoder().encode(contextValue).byteLength > MAX_JSON_BYTES) {
+    throw new WorkerError(413, "JSON 요청이 32KB 제한을 초과했습니다.");
+  }
+  let context: unknown;
+  try {
+    context = JSON.parse(contextValue);
+  } catch {
+    throw new WorkerError(400, "Realtime 음성 판정 context 형식이 올바르지 않습니다.");
+  }
+  if (mode.data === "dialogue") {
+    const parsed = DialogueVoiceContextSchema.safeParse(context);
+    if (!parsed.success) {
+      throw new WorkerError(400, "대화 음성 판정 context 형식이 올바르지 않습니다.");
+    }
+    return { mode: "dialogue", audio, context: parsed.data };
+  }
+  const parsed = BattleVoiceContextSchema.safeParse(context);
+  if (!parsed.success) {
+    throw new WorkerError(400, "전투 음성 판정 context 형식이 올바르지 않습니다.");
+  }
+  return { mode: "battle", audio, context: parsed.data };
 }
 
 async function readDialogueRequest(request: Request): Promise<z.infer<typeof DialogueRequestSchema>> {
@@ -491,6 +594,345 @@ async function transcribeWithOpenAiRealtime(
   });
 }
 
+async function judgeVoiceWithOpenAiRealtime(
+  input: RealtimeVoiceRequest,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+): Promise<RealtimeVoiceResponse> {
+  const pcm = await extractPcm16MonoWav(input.audio, REALTIME_PCM_SAMPLE_RATE);
+  const model = env.OPENAI_REALTIME_MODEL || DEFAULT_OPENAI_REALTIME_MODEL;
+  if (model !== DEFAULT_OPENAI_REALTIME_MODEL) {
+    throw new WorkerError(500, "지원하지 않는 Realtime 음성 모델 설정입니다.");
+  }
+  const response = await upstreamFetch(
+    new Request(
+      `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          Upgrade: "websocket",
+        },
+      },
+    ),
+  );
+  const socket = (
+    response as Response & { readonly webSocket?: WorkerWebSocket | null }
+  ).webSocket;
+  if (!socket || response.status !== 101) {
+    const diagnostic = await response.text().catch(() => "");
+    console.warn(
+      "OpenAI Realtime voice handshake failed",
+      response.status,
+      diagnostic.slice(0, 240),
+    );
+    throw new WorkerError(502, `OpenAI Realtime 음성 연결 실패 (${response.status})`);
+  }
+  socket.accept();
+  const startedAt = performance.now();
+  const requestConfig = realtimeVoiceRequestConfig(input);
+
+  return new Promise<RealtimeVoiceResponse>((resolve, reject) => {
+    let firstDeltaMs: number | undefined;
+    let settled = false;
+    const timer = setTimeout(
+      () => fail(new WorkerError(504, "OpenAI Realtime 음성 응답 시간이 초과되었습니다.")),
+      REALTIME_TIMEOUT_MS,
+    );
+    const cleanup = (): void => {
+      clearTimeout(timer);
+      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("error", onError);
+      socket.removeEventListener("close", onClose);
+    };
+    const fail = (error: Error): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      try {
+        socket.close(1011, "voice judgement failed");
+      } catch {
+        // 연결이 이미 닫힌 경우 무시한다.
+      }
+      reject(error);
+    };
+    const complete = (argumentsJson: string): void => {
+      if (settled) return;
+      let argumentsValue: unknown;
+      try {
+        argumentsValue = JSON.parse(argumentsJson);
+      } catch {
+        fail(new WorkerError(502, "OpenAI Realtime 음성 판정 형식이 올바르지 않습니다."));
+        return;
+      }
+      let result: RealtimeVoiceResponse;
+      try {
+        result = parseRealtimeVoiceResult(
+          input,
+          model,
+          argumentsValue,
+          {
+            upstreamMs: elapsedMs(startedAt),
+            ...(firstDeltaMs === undefined ? {} : { firstDeltaMs }),
+          },
+        );
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          console.warn(
+            "OpenAI Realtime voice schema rejection",
+            error.issues
+              .map((issue) => `${issue.path.join(".")}:${issue.code}`)
+              .join(","),
+          );
+        }
+        fail(
+          error instanceof WorkerError
+            ? error
+            : new WorkerError(502, "OpenAI Realtime 음성 판정 형식이 올바르지 않습니다."),
+        );
+        return;
+      }
+      settled = true;
+      cleanup();
+      try {
+        socket.close(1000, "voice judgement complete");
+      } catch {
+        // 연결이 이미 닫힌 경우 무시한다.
+      }
+      resolve(result);
+    };
+    const onMessage = (event: MessageEvent): void => {
+      if (typeof event.data !== "string") return;
+      let payload: unknown;
+      try {
+        payload = JSON.parse(event.data);
+      } catch {
+        fail(new WorkerError(502, "OpenAI Realtime 음성 응답 형식이 올바르지 않습니다."));
+        return;
+      }
+      if (!payload || typeof payload !== "object") return;
+      const realtimeEvent = payload as {
+        type?: string;
+        response?: {
+          status?: string;
+          output?: Array<{
+            type?: string;
+            name?: string;
+            arguments?: string;
+          }>;
+        };
+        error?: { type?: string; code?: string; message?: string };
+      };
+      if (realtimeEvent.type === "response.function_call_arguments.delta") {
+        if (firstDeltaMs === undefined) firstDeltaMs = elapsedMs(startedAt);
+        return;
+      }
+      if (realtimeEvent.type === "response.done") {
+        if (realtimeEvent.response?.status !== "completed") {
+          fail(new WorkerError(502, "OpenAI Realtime 음성 판정이 완료되지 않았습니다."));
+          return;
+        }
+        const call = realtimeEvent.response.output?.find(
+          (item) =>
+            item.type === "function_call" && item.name === requestConfig.tool.name,
+        );
+        if (!call?.arguments) {
+          fail(new WorkerError(502, "OpenAI Realtime 음성 판정 본문이 없습니다."));
+          return;
+        }
+        complete(call.arguments);
+        return;
+      }
+      if (realtimeEvent.type === "error") {
+        console.warn(
+          "OpenAI Realtime voice event error",
+          realtimeEvent.error?.type ?? "unknown_type",
+          realtimeEvent.error?.code ?? "unknown_code",
+          (realtimeEvent.error?.message ?? "unknown_message").slice(0, 240),
+        );
+        fail(new WorkerError(502, "OpenAI Realtime 음성 호출에 실패했습니다."));
+      }
+    };
+    const onError = (): void =>
+      fail(new WorkerError(502, "OpenAI Realtime 음성 연결 오류가 발생했습니다."));
+    const onClose = (): void =>
+      fail(new WorkerError(502, "OpenAI Realtime 음성 연결이 일찍 종료되었습니다."));
+
+    socket.addEventListener("message", onMessage);
+    socket.addEventListener("error", onError);
+    socket.addEventListener("close", onClose);
+
+    try {
+      socket.send(
+        JSON.stringify({
+          type: "session.update",
+          session: {
+            type: "realtime",
+            model,
+            output_modalities: ["text"],
+            instructions: requestConfig.instructions,
+            reasoning: { effort: "low" },
+            max_output_tokens: 256,
+            audio: {
+              input: {
+                format: { type: "audio/pcm", rate: REALTIME_PCM_SAMPLE_RATE },
+                turn_detection: null,
+              },
+            },
+            tools: [requestConfig.tool],
+            tool_choice: "required",
+          },
+        }),
+      );
+      for (let offset = 0; offset < pcm.length; offset += REALTIME_PCM_CHUNK_BYTES) {
+        socket.send(
+          JSON.stringify({
+            type: "input_audio_buffer.append",
+            audio: bytesToBase64(pcm.subarray(offset, offset + REALTIME_PCM_CHUNK_BYTES)),
+          }),
+        );
+      }
+      socket.send(JSON.stringify({ type: "input_audio_buffer.commit" }));
+      socket.send(JSON.stringify({ type: "response.create" }));
+    } catch {
+      fail(new WorkerError(502, "OpenAI Realtime 음성 전송에 실패했습니다."));
+    }
+  });
+}
+
+interface RealtimeVoiceTool {
+  readonly type: "function";
+  readonly name: string;
+  readonly description: string;
+  readonly parameters: Record<string, unknown>;
+}
+
+function realtimeVoiceRequestConfig(input: RealtimeVoiceRequest): {
+  readonly instructions: string;
+  readonly tool: RealtimeVoiceTool;
+} {
+  const transcriptProperty = {
+    type: "string",
+    minLength: 1,
+    maxLength: 1_000,
+    description: "사용자의 한국어 발화를 들린 그대로 전사한 문장",
+  };
+  if (input.mode === "transcript") {
+    return {
+      instructions: [
+        "사용자의 한국어 음성을 정확히 듣고 제공된 함수만 호출한다.",
+        "고유명사: 주노, 심사역, 마법소녀, 언령, 투자심사.",
+        "추측해 내용을 추가하지 말고 들린 발화를 transcript에 기록한다.",
+      ].join("\n"),
+      tool: {
+        type: "function",
+        name: "submit_transcript",
+        description: "정확히 들은 사용자 발화를 제출한다.",
+        parameters: {
+          type: "object",
+          properties: { transcript: transcriptProperty },
+          required: ["transcript"],
+          additionalProperties: false,
+        },
+      },
+    };
+  }
+  if (input.mode === "dialogue") {
+    const judgementSchema = dialogueJudgementJsonSchema(input.context);
+    return {
+      instructions: [
+        "사용자의 한국어 음성을 직접 듣고 정확한 전사와 대화 판정을 한 번에 수행한다.",
+        dialogueSystemInstruction(input.context),
+        `현재 목표와 문맥: ${JSON.stringify({
+          objective: input.context.objective,
+          context: input.context.llmContext,
+          recentTurns: input.context.recentTurns,
+          intents: input.context.intents,
+          allowedFlags: input.context.allowedFlags,
+          sampleLines: input.context.persona.sampleLines,
+        })}`,
+      ].join("\n"),
+      tool: {
+        type: "function",
+        name: "submit_dialogue_judgement",
+        description: "사용자 발화 전사와 검증 가능한 대화 판정을 제출한다.",
+        parameters: {
+          ...judgementSchema,
+          properties: {
+            transcript: transcriptProperty,
+            ...(judgementSchema.properties as Record<string, unknown>),
+          },
+          required: [
+            "transcript",
+            ...((judgementSchema.required as string[] | undefined) ?? []),
+          ],
+        },
+      },
+    };
+  }
+  const judgementSchema = battleJudgementJsonSchema();
+  return {
+    instructions: [
+      "사용자의 한국어 음성을 직접 듣고 정확한 전사와 언령 배틀 판정을 한 번에 수행한다.",
+      battleSystemInstruction(),
+      `현재 적과 문맥: ${JSON.stringify(input.context)}`,
+    ].join("\n"),
+    tool: {
+      type: "function",
+      name: "submit_battle_judgement",
+      description: "사용자 발화 전사와 검증 가능한 전투 판정을 제출한다.",
+      parameters: {
+        ...judgementSchema,
+        properties: {
+          transcript: transcriptProperty,
+          ...(judgementSchema.properties as Record<string, unknown>),
+        },
+        required: [
+          "transcript",
+          ...((judgementSchema.required as string[] | undefined) ?? []),
+        ],
+      },
+    },
+  };
+}
+
+function parseRealtimeVoiceResult(
+  input: RealtimeVoiceRequest,
+  model: string,
+  value: unknown,
+  metrics: TranscriptionMetrics,
+): RealtimeVoiceResponse {
+  const envelope = z
+    .object({ transcript: z.string().trim().min(1).max(1_000) })
+    .passthrough()
+    .parse(value);
+  if (input.mode === "transcript") {
+    return { mode: "transcript", model, text: envelope.transcript, metrics };
+  }
+  const { transcript, ...judgementValue } = envelope;
+  if (input.mode === "dialogue") {
+    const judgement = validateDialogueJudgement(
+      input.context,
+      judgementValue,
+      transcript,
+    );
+    return {
+      mode: "dialogue",
+      model,
+      text: transcript,
+      judgement,
+      metrics,
+    };
+  }
+  const judgement = BattleJudgementSchema.parse(judgementValue);
+  try {
+    assertReplyPolicy(judgement.reply, transcript);
+    if (judgement.narration) assertReplyPolicy(judgement.narration, transcript);
+  } catch {
+    throw new WorkerError(502, "전투 응답이 안전 규칙을 위반했습니다.");
+  }
+  return { mode: "battle", model, text: transcript, judgement, metrics };
+}
+
 function resolveOpenAiSttModel(
   requestedModel: string | undefined,
   env: Env,
@@ -623,13 +1065,10 @@ async function transcribeWithGemini(
   return { model, text: transcript.text.trim() };
 }
 
-async function judgeDialogue(
-  input: z.infer<typeof DialogueRequestSchema>,
-  env: Env,
-  upstreamFetch: UpstreamFetch,
-): Promise<z.infer<typeof DialogueJudgementSchema>> {
-  const intentIds = input.intents.map(({ id }) => id);
-  const systemInstruction = [
+function dialogueSystemInstruction(
+  input: z.infer<typeof DialogueVoiceContextSchema>,
+): string {
+  return [
     `너는 ${input.persona.name}, ${input.persona.role}다.`,
     `성격: ${input.persona.traits.join(" / ")}`,
     `말투: ${input.persona.speechRules.join(" / ")}`,
@@ -643,7 +1082,13 @@ async function judgeDialogue(
     "엉뚱한 농담에는 짧게 받아친 뒤 현재 대화로 돌아와라. 금지 정보 요구는 그 존재를 확인하지 말고 짧게 거절하라.",
     "flag는 플레이어가 해당 약속이나 선택을 명시적으로 말한 경우에만 설정하라. 단순 질문·감정 표현·농담에서는 빈 배열을 사용하라.",
   ].join("\n");
-  const responseJsonSchema = {
+}
+
+function dialogueJudgementJsonSchema(
+  input: z.infer<typeof DialogueVoiceContextSchema>,
+): Record<string, unknown> {
+  const intentIds = input.intents.map(({ id }) => id);
+  return {
     type: "object",
     properties: {
       intentId: { type: "string", enum: intentIds },
@@ -662,10 +1107,66 @@ async function judgeDialogue(
     required: ["intentId", "affinityDelta", "emotion", "flags", "reply"],
     additionalProperties: false,
   };
+}
+
+function validateDialogueJudgement(
+  input: z.infer<typeof DialogueVoiceContextSchema>,
+  value: unknown,
+  transcript: string,
+): z.infer<typeof DialogueJudgementSchema> {
+  const intentIds = input.intents.map(({ id }) => id);
+  const parsed = DialogueJudgementSchema.parse(value);
+  if (!intentIds.includes(parsed.intentId)) {
+    throw new WorkerError(502, "허용되지 않은 intent입니다.");
+  }
+  if (parsed.flags.some((flag) => !input.allowedFlags.includes(flag))) {
+    throw new WorkerError(502, "허용되지 않은 flag입니다.");
+  }
+  try {
+    assertReplyPolicy(parsed.reply, transcript);
+  } catch {
+    throw new WorkerError(502, "주노 응답이 안전 규칙을 위반했습니다.");
+  }
+  return parsed;
+}
+
+function battleSystemInstruction(): string {
+  return [
+    "너는 언령 배틀의 적과 나레이션을 판정한다.",
+    "플레이어 발화가 현재 적의 약점을 얼마나 정확히 찌르는지 평가하라.",
+    "momentumDelta는 반드시 -5에서 +10 사이 정수다.",
+    "reply와 narration은 각각 80자 이내로 작성하라.",
+    "플레이어가 말하지 않은 감정을 단정하지 마라.",
+    "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
+  ].join("\n");
+}
+
+function battleJudgementJsonSchema(): Record<string, unknown> {
+  return {
+    type: "object",
+    properties: {
+      reply: { type: "string", maxLength: 80 },
+      intent: {
+        type: "string",
+        enum: ["persuade", "taunt", "encourage", "other"],
+      },
+      momentumDelta: { type: "integer", minimum: -5, maximum: 10 },
+      narration: { type: "string", maxLength: 80 },
+    },
+    required: ["reply", "intent", "momentumDelta"],
+    additionalProperties: false,
+  };
+}
+
+async function judgeDialogue(
+  input: z.infer<typeof DialogueRequestSchema>,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+): Promise<z.infer<typeof DialogueJudgementSchema>> {
   const response = await callStructuredLlm(
     {
       label: "대화 LLM",
-      systemInstruction,
+      systemInstruction: dialogueSystemInstruction(input),
       input: JSON.stringify({
         objective: input.objective,
         context: input.llmContext,
@@ -676,23 +1177,13 @@ async function judgeDialogue(
         sampleLines: input.persona.sampleLines,
       }),
       schemaName: "dialogue_judgement",
-      responseJsonSchema,
+      responseJsonSchema: dialogueJudgementJsonSchema(input),
       maxOutputTokens: 256,
     },
     env,
     upstreamFetch,
   );
-  const parsed = DialogueJudgementSchema.parse(response);
-  if (!intentIds.includes(parsed.intentId)) throw new WorkerError(502, "허용되지 않은 intent입니다.");
-  if (parsed.flags.some((flag) => !input.allowedFlags.includes(flag))) {
-    throw new WorkerError(502, "허용되지 않은 flag입니다.");
-  }
-  try {
-    assertReplyPolicy(parsed.reply, input.transcript);
-  } catch {
-    throw new WorkerError(502, "주노 응답이 안전 규칙을 위반했습니다.");
-  }
-  return parsed;
+  return validateDialogueJudgement(input, response, input.transcript);
 }
 
 async function judgeBattle(
@@ -703,34 +1194,14 @@ async function judgeBattle(
   const response = await callStructuredLlm(
     {
       label: "전투 LLM",
-      systemInstruction: [
-        "너는 언령 배틀의 적과 나레이션을 판정한다.",
-        "플레이어 발화가 현재 적의 약점을 얼마나 정확히 찌르는지 평가하라.",
-        "momentumDelta는 반드시 -5에서 +10 사이 정수다.",
-        "reply와 narration은 각각 80자 이내로 작성하라.",
-        "플레이어가 말하지 않은 감정을 단정하지 마라.",
-        "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
-      ].join("\n"),
+      systemInstruction: battleSystemInstruction(),
       input: JSON.stringify({
         enemyPrompt: input.enemyPrompt,
         context: input.llmContext,
         player: input.transcript,
       }),
       schemaName: "battle_judgement",
-      responseJsonSchema: {
-        type: "object",
-        properties: {
-          reply: { type: "string", maxLength: 80 },
-          intent: {
-            type: "string",
-            enum: ["persuade", "taunt", "encourage", "other"],
-          },
-          momentumDelta: { type: "integer", minimum: -5, maximum: 10 },
-          narration: { type: "string", maxLength: 80 },
-        },
-        required: ["reply", "intent", "momentumDelta"],
-        additionalProperties: false,
-      },
+      responseJsonSchema: battleJudgementJsonSchema(),
       maxOutputTokens: 256,
     },
     env,

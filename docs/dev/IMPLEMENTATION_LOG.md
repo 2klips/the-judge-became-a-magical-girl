@@ -1196,3 +1196,35 @@
 - `gray_wraith.weakened`, 변신 컷 2장, 선택 GOOD 검은 마법소녀 컷 납품 뒤 사람 합성 QA.
 - N2 첫 표정 `happy`를 대본의 `surprised → happy`로 바꿀지는 사용자 승인 전까지 변경하지 않는다.
 - `[미결정]` 최신 QA Pages 배포가 반복 timeout된다. 기존 공개본을 일시 중단할 수 있는 Pages site 재생성 여부를 사용자에게 확인한다.
+
+## M5 음성 기본 모델 Realtime 전환·BGM 사용자 제어
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 공개 QA 배포·다중 화자 실측 대기
+
+### 구현 내용
+
+- 일반 플레이 기본 음성을 OpenAI `gpt-realtime-2.1-mini`로 변경했다. PTT 종료 뒤 24kHz mono WAV를 Worker `/voice/realtime`에 한 번 보내고, Worker 서버 측 Realtime WebSocket이 transcript와 대화·전투 판정을 필수 function call로 함께 반환한다.
+- 변신·전투 주문은 같은 모델의 transcript-only mode를 사용하고 기존 키워드·dBFS 게이트를 유지한다. 대화 로컬 intent가 일치하면 로컬 결과를 우선한다.
+- `gpt-transcribe`·`gpt-live-transcribe`는 `?debug=1`의 단일 모델 비교용으로 유지했다. 일반 UI에는 모델명·transcript 원문을 노출하지 않는다.
+- 모델·prompt·function schema·reasoning effort·출력 상한은 Worker가 고정한다. Worker와 클라이언트가 응답을 zod·intent/flag whitelist·delta clamp로 다시 검증하며, 실패 시 기존 클릭·로컬 완주 경로를 유지한다.
+- 현재 미연시 glass/rose HUD로 BGM 음소거 버튼, 0~100 슬라이더, 현재 퍼센트를 추가했다. 사용자 볼륨·음소거는 전용 `localStorage` 키에 저장하며 PTT duck과 합성된다.
+- 브라우저 QA에서 debug selector가 BGM HUD를 덮어 음소거 클릭을 막는 문제를 발견했다. 데스크톱 debug에서는 HUD를 좌상단, 모바일 debug에서는 selector 아래 safe area로 분리했다. 1280×720·390×844 모두 overflow 0, selector 비겹침, 28%·음소거 새로고침 복구, 접근성 이름·상태, 콘솔 오류 0을 확인했다.
+- 로컬 실제 OpenAI smoke에서 transcript-only upstream 약 1.33초, 대화 전사+판정 upstream 약 1.95초를 확인했다. 한 번의 schema reject 뒤 안전한 502가 반환됐고 재호출은 정상 통과했다. 발화 원문·함수 인수는 로그에 남기지 않는다.
+
+### 자동 검증
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| targeted Vitest | PASS | Realtime request/WebSocket/schema, 모델 sample rate, BGM 저장·mute·duck |
+| `npm test` | PASS | 41 files·187 tests |
+| `npm run build` | PASS | production build 성공, 기존 transformers chunk 경고만 유지 |
+| Browser UI | PASS | 1280×720·390×844, 볼륨·mute·reload·debug 모델 selector·overflow·console |
+
+### 남은 수동 게이트
+
+- 공개 QA Worker 재배포 뒤 Pages Origin에서 Realtime 대화·전투 실제 발화와 지역 403 부재 확인.
+- 사람 3명 이상·조용한 환경/현장 소음에서 정확도, p50/p95, schema reject율 측정.
+- 헤드폰·노트북에서 0/28/62/100% 청감과 PTT duck 복귀 확인. 키보드 실제 조작은 추가 접근성 QA에서 확인.

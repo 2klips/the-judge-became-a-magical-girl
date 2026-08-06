@@ -7,6 +7,7 @@
   "vars": {
     "ALLOWED_ORIGINS": "http://127.0.0.1:5173,http://localhost:5173",
     "OPENAI_TRANSCRIBE_MODEL": "gpt-transcribe",
+    "OPENAI_REALTIME_MODEL": "gpt-realtime-2.1-mini",
     "ENABLE_OPENAI_STT_MODEL_SELECTOR": "true",
     "GEMINI_TRANSCRIBE_MODEL": "gemini-2.5-flash",
     "LLM_PROVIDER": "gemini",
@@ -25,6 +26,7 @@
       "vars": {
         "ALLOWED_ORIGINS": "https://2klips.github.io",
         "OPENAI_TRANSCRIBE_MODEL": "gpt-transcribe",
+        "OPENAI_REALTIME_MODEL": "gpt-realtime-2.1-mini",
         "ENABLE_OPENAI_STT_MODEL_SELECTOR": "true",
         "GEMINI_TRANSCRIBE_MODEL": "gemini-2.5-flash",
         "LLM_PROVIDER": "openai",

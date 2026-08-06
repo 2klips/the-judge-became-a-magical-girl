@@ -1481,6 +1481,91 @@ button {
   }
 }
 
+/* Persistent BGM controls — compact visual-novel HUD */
+.bgm-controls {
+  position: fixed;
+  z-index: 46;
+  top: max(18px, calc(env(safe-area-inset-top) + 2vh));
+  right: max(22px, calc(env(safe-area-inset-right) + 4vw));
+  display: grid;
+  grid-template-columns: auto minmax(92px, 148px) 48px;
+  gap: 10px;
+  align-items: center;
+  min-height: 48px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  color: var(--vn-ink);
+  background: rgba(13, 14, 27, 0.88);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(14px);
+}
+
+.game-shell.debug-enabled .bgm-controls {
+  top: max(18px, calc(env(safe-area-inset-top) + 2vh));
+  right: auto;
+  left: max(22px, calc(env(safe-area-inset-left) + 4vw));
+}
+
+.bgm-mute-button {
+  min-width: 92px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--vn-doyun) 52%, transparent);
+  border-radius: 8px;
+  color: var(--vn-ink);
+  background: rgba(43, 17, 34, 0.88);
+  font: 800 0.875rem/1 Pretendard, "Noto Sans KR", sans-serif;
+  cursor: pointer;
+}
+
+.bgm-mute-button[data-muted="true"] {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--vn-muted);
+  background: rgba(30, 31, 46, 0.92);
+}
+
+.bgm-volume-slider {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--vn-doyun);
+  cursor: pointer;
+}
+
+.bgm-volume-output {
+  color: var(--vn-muted);
+  font: 800 0.875rem/1 Pretendard, "Noto Sans KR", sans-serif;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bgm-mute-button:hover,
+.bgm-mute-button:focus-visible {
+  border-color: var(--vn-focus);
+  box-shadow: 0 0 0 2px rgba(255, 241, 166, 0.16);
+}
+
+@media (max-width: 760px) {
+  .bgm-controls {
+    top: max(12px, calc(env(safe-area-inset-top) + 1vh));
+    right: max(12px, calc(env(safe-area-inset-right) + 3vw));
+    grid-template-columns: auto 82px 42px;
+    gap: 7px;
+    padding: 5px 7px;
+  }
+
+  .game-shell.debug-enabled .bgm-controls {
+    top: max(230px, calc(env(safe-area-inset-top) + 27vh));
+    right: max(12px, calc(env(safe-area-inset-right) + 3vw));
+    left: auto;
+  }
+
+  .bgm-mute-button {
+    min-width: 82px;
+    padding: 0 8px;
+  }
+}
+
 /* M5 act transitions and entrances — DEC-062 */
 .incantation-copy {
   white-space: pre-line;

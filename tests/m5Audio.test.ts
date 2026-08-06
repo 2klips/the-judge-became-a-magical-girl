@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BGM_DEFAULT_VOLUME,
   BGM_DUCK_MULTIPLIER,
+  BGM_PREFERENCES_STORAGE_KEY,
   BgmController,
+  loadBgmPreferences,
+  saveBgmPreferences,
   type AudioChannel,
   type AutoplayGestureTarget,
 } from "../src/audio/bgm";
@@ -143,5 +146,43 @@ describe("M5 BGM 제어", () => {
     expect(createAudio).toHaveBeenCalledOnce();
     expect(channel.play).toHaveBeenCalledOnce();
     expect(channel.loop).toBe(false);
+  });
+
+  it("사용자 볼륨·음소거를 현재 채널과 PTT duck에 함께 적용한다", async () => {
+    vi.useFakeTimers();
+    const channel = fakeChannel();
+    const controller = new BgmController(() => channel, 600, null);
+
+    await controller.play("bgm_daily");
+    await vi.advanceTimersByTimeAsync(600);
+    controller.setVolume(0.4);
+    expect(channel.volume).toBe(0.4);
+
+    controller.setDucked(true);
+    expect(channel.volume).toBe(0.4 * BGM_DUCK_MULTIPLIER);
+
+    controller.setMuted(true);
+    expect(channel.volume).toBe(0);
+    expect(controller.isMuted()).toBe(true);
+
+    controller.setMuted(false);
+    expect(channel.volume).toBe(0.4 * BGM_DUCK_MULTIPLIER);
+  });
+
+  it("BGM 설정을 안전하게 저장·복구하고 손상값은 기본값으로 강등한다", () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+
+    saveBgmPreferences(storage, { volume: 0.37, muted: true });
+    expect(loadBgmPreferences(storage)).toEqual({ volume: 0.37, muted: true });
+
+    values.set(BGM_PREFERENCES_STORAGE_KEY, "{broken");
+    expect(loadBgmPreferences(storage)).toEqual({
+      volume: BGM_DEFAULT_VOLUME,
+      muted: false,
+    });
   });
 });

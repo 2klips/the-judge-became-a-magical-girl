@@ -6,7 +6,11 @@ import {
   judgeBattleWithFailureGate,
 } from "./battle/llm";
 import type { BattleAction, BattleGrade, BattleState } from "./battle/state";
-import { BgmController } from "./audio/bgm";
+import {
+  BgmController,
+  loadBgmPreferences,
+  saveBgmPreferences,
+} from "./audio/bgm";
 import { SfxPlayer } from "./audio/sfx";
 import { preloadCoreAssets } from "./assets/catalog";
 import { resolvePresentationBackground } from "./assets/presentationBackground";
@@ -27,11 +31,14 @@ import {
 } from "./input/audioLevel";
 import { BrowserMicrophoneTester } from "./input/microphoneSetup";
 import {
+  createWorkerRealtimeVoicePort,
   createWorkerTranscriptionPort,
   RecordedVoiceTurnController,
   resolveOpenAiSttModel,
   sttSampleRate,
   type OpenAiSttModel,
+  type RealtimeVoiceRequest,
+  type TranscriptionObservation,
 } from "./input/transcription";
 import {
   createDebugLlmPort,
@@ -69,11 +76,30 @@ if (isQaPreview) {
   installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
 const sfx = new SfxPlayer();
+const bgm = new BgmController();
+const bgmPreferences = loadBgmPreferences(window.localStorage);
+bgm.setVolume(bgmPreferences.volume);
+bgm.setMuted(bgmPreferences.muted);
+const persistBgmPreferences = (): void =>
+  saveBgmPreferences(window.localStorage, {
+    volume: bgm.getVolume(),
+    muted: bgm.isMuted(),
+  });
 const view = new GameView(root, {
   model: selectedSttModel,
   onModelChange: (model) => handleDebugSttModelChange(model),
+}, {
+  getVolume: () => bgm.getVolume(),
+  isMuted: () => bgm.isMuted(),
+  onVolumeChange: (volume) => {
+    bgm.setVolume(volume);
+    persistBgmPreferences();
+  },
+  onMutedChange: (muted) => {
+    bgm.setMuted(muted);
+    persistBgmPreferences();
+  },
 }, () => sfx.play("advance"));
-const bgm = new BgmController();
 const microphoneTester = new BrowserMicrophoneTester();
 preloadCoreAssets();
 
@@ -120,7 +146,7 @@ async function bootstrap(): Promise<void> {
       updateSttModelQuery(model);
       if (activeVoice) {
         activeVoice.cancel();
-        renderCurrent(`${model} 음성 인식으로 전환했어.`);
+        renderCurrent(`${model} 음성 모델로 전환했어.`);
       }
     };
 
@@ -162,18 +188,26 @@ async function bootstrap(): Promise<void> {
       },
     });
 
-    const createVoiceTurn = (inputDeviceId?: string): RecordedVoiceTurnController =>
+    const createVoiceTurn = (
+      inputDeviceId: string | undefined,
+      realtimeRequest: RealtimeVoiceRequest,
+    ): RecordedVoiceTurnController =>
       new RecordedVoiceTurnController(
         new BrowserPttRecordingPort(
           () => beginBrowserRecording(inputDeviceId),
           decodeWithBrowserAudioContext,
           sttSampleRate(selectedSttModel),
         ),
-        createWorkerTranscriptionPort({
-          provider: "openai",
-          workerUrl,
-          ...(debugEnabled ? { model: selectedSttModel } : {}),
-        }),
+        selectedSttModel === "gpt-realtime-2.1-mini"
+          ? createWorkerRealtimeVoicePort({
+              request: realtimeRequest,
+              workerUrl,
+            })
+          : createWorkerTranscriptionPort({
+              provider: "openai",
+              workerUrl,
+              model: selectedSttModel,
+            }),
       );
 
     const showTransformationResult = (
@@ -210,7 +244,10 @@ async function bootstrap(): Promise<void> {
       notice?: string,
     ): void => {
       const state = engine.getState();
-      const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
+      const voice = createVoiceTurn(
+        microphoneCalibration?.inputDeviceId,
+        { mode: "transcript" },
+      );
       if (state.inputMode === "voice") activeVoice = voice;
       view.renderIncantation(node, state, {
         speechSupported: recordingSupported,
@@ -250,7 +287,16 @@ async function bootstrap(): Promise<void> {
       const battleState = engine.getBattleState();
       const phase = node.phases[battleState.phaseIndex];
       if (!phase) throw new Error("현재 battle phase를 찾을 수 없습니다.");
-      const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
+      const voice = createVoiceTurn(
+        microphoneCalibration?.inputDeviceId,
+        {
+          mode: "battle",
+          context: {
+            enemyPrompt: phase.enemyPrompt,
+            llmContext: phase.llmContext,
+          },
+        },
+      );
       if (state.inputMode === "voice") activeVoice = voice;
 
       const playBattleActionSfx = (
@@ -323,6 +369,7 @@ async function bootstrap(): Promise<void> {
         action: "spell" | "freeform",
         transcript: string,
         audioLevel?: AudioLevelMetrics,
+        observation?: TranscriptionObservation,
       ): Promise<void> => {
         if (action === "spell") {
           if (audioLevel && microphoneCalibration) {
@@ -388,6 +435,20 @@ async function bootstrap(): Promise<void> {
             grade: result.grade,
             onContinue: () => renderCurrent(),
           });
+          return;
+        }
+
+        if (observation?.analysis?.kind === "battle") {
+          engine.recordLlmSuccess();
+          applyAction(
+            {
+              kind: "freeform",
+              momentumDelta: observation.analysis.judgement.momentumDelta,
+            },
+            transcript,
+            observation.analysis.judgement.reply,
+            observation.analysis.judgement.narration,
+          );
           return;
         }
 
@@ -562,7 +623,32 @@ async function bootstrap(): Promise<void> {
           renderReply(result.clickLabel, result, intentId);
         };
 
-        const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
+        const voice = createVoiceTurn(
+          microphoneCalibration?.inputDeviceId,
+          {
+            mode: "dialogue",
+            context: {
+              objective: node.objective,
+              llmContext: node.llmContext,
+              persona: {
+                id: character.id,
+                name: character.name,
+                role: character.role,
+                traits: character.traits,
+                speechRules: character.speechRules,
+                taboos: character.taboos,
+                sampleLines: character.sampleLines,
+              },
+              intents: node.intents.map((intent) => ({
+                id: intent.id,
+                examples: intent.examples,
+                keywords: intent.keywords,
+              })),
+              allowedFlags: node.allowedFlags,
+              recentTurns: recentTurns.slice(-6),
+            },
+          },
+        );
         if (state.inputMode === "voice") activeVoice = voice;
 
         const applyFallback = (transcript: string, failureRecorded: boolean): boolean => {
@@ -575,11 +661,25 @@ async function bootstrap(): Promise<void> {
           return true;
         };
 
-        const handleTranscript = async (transcript: string): Promise<boolean> => {
+        const handleTranscript = async (
+          transcript: string,
+          observation?: TranscriptionObservation,
+        ): Promise<boolean> => {
           const local = engine.submitTranscript(transcript);
           if (local.kind === "matched") {
             rememberTurn(transcript, local.reply);
             renderReply(transcript, local, local.intentId);
+            return true;
+          }
+
+          if (observation?.analysis?.kind === "dialogue") {
+            engine.recordLlmSuccess();
+            const result = engine.submitLlmJudgement(
+              transcript,
+              observation.analysis.judgement,
+            );
+            rememberTurn(transcript, result.reply);
+            renderReply(transcript, result, result.intentId);
             return true;
           }
 

@@ -207,13 +207,13 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 | UI 프레임워크 | **없음 (Vanilla DOM + CSS)** | VN은 레이어 전환·타이핑·페이드가 전부. 프레임워크는 Codex 컨텍스트만 낭비. 연출은 CSS keyframes(페이드/셰이크/플래시) + Canvas 2D 파티클 1파일 |
 | 상태 관리 | 단일 `GameState` 객체 + 장면 FSM | 상태기계: `TITLE → PROLOGUE → DIALOGUE ⇄ CUTSCENE → BATTLE → ENDING`. 이벤트 버스 없이 직렬 루프 |
 | 시나리오 데이터 | JSON (`public/scenario/`) + **zod 런타임 검증** | 작가가 쓴 JSON의 오타·참조 오류를 로드 시점에 전부 잡아 에러 메시지로 출력 — 비개발자 작가 협업의 안전망 |
-| STT | **PTT 녹음 + Worker STT 공급자 어댑터** | 버튼 release까지 녹음한 동일 WAV를 OpenAI `gpt-transcribe` 또는 Gemini audio transcription에 전달. MVP-1까지 전환 가능하게 유지하고 한 턴에는 하나만 호출. Web Speech interim은 개발 보조이며 최종 transcript 권위가 아님. 로컬 Whisper는 DEC-028로 탈락 |
+| 음성 입력·판정 | **PTT + Worker 서버 측 OpenAI Realtime** | 버튼 release까지 녹음한 24kHz mono WAV를 Worker `/voice/realtime`에 한 번 전송. `gpt-realtime-2.1-mini`가 transcript와 대화·전투 판정을 한 function call로 반환한다. 변신·전투 주문은 transcript-only 결과를 기존 키워드·dBFS 판정에 사용. 비교 모델은 debug에서만 한 번에 하나씩 호출 |
 | 주문/키워드 판정 | 자체 모듈 (외부 의존 없음) | 정규화(공백·문장부호 제거) → 키워드 부분 포함 검사. 스트레치: 자모 분해 유사도 |
 | 마이크 테스트·음량 판정 | Web Audio `AnalyserNode` + PCM RMS/peak 분석 | 타이틀에서 입력 장치 선택·실시간 dBFS 미터·적응형 기준을 만들고, 전투 주문 녹음의 RMS·peak·clipping을 같은 기준으로 판정 |
-| LLM | **Gemini 2.5 Flash-Lite** | `responseMimeType: application/json` + `responseSchema`로 JSON 강제, `maxOutputTokens ≈ 256`, temperature 0.6, 클라이언트 타임아웃 4초 |
-| API 프록시 | **Cloudflare Workers** (wrangler 배포) | STT·LLM 키는 Workers Secret. 정확한 production Origin만 허용. MVP-1 비교 뒤 DEC-051에서 production STT를 OpenAI `gpt-transcribe`로 확정. 대화 LLM의 Gemini 결정과 STT 공급자 선택은 별도 계약 |
+| LLM | **OpenAI `gpt-realtime-2.1-mini`** | 음성을 직접 받아 전사+대화/전투 판정을 한 번에 수행. Worker가 필수 function tool, `reasoning.effort: low`, 출력 256 token을 고정하고 양 경계에서 zod·whitelist·clamp 검증 |
+| API 프록시 | **Cloudflare Workers** (wrangler 배포) | OpenAI 키는 Worker Secret. 브라우저는 OpenAI에 직접 연결하지 않는다. 정확한 Origin·WAV 14MB·문맥 32KB를 검증하고 서버 측 Realtime WebSocket을 생성 |
 | TTS | `speechSynthesis` | 스트레치. OS별 한국어 음성 품질 확인 필요 |
-| 오디오 | `<audio loop>` BGM 크로스페이드 + **Web Audio 신스 SFX** | SFX는 오실레이터 기반 코드 생성(Codex) — 100% AI 제작 원칙 충족 + 파일 용량 0 |
+| 오디오 | `<audio loop>` BGM 크로스페이드·볼륨/음소거 HUD + **Web Audio 신스 SFX** | BGM 설정은 장면과 독립적으로 저장하고 PTT duck과 합성. SFX는 오실레이터 기반 코드 생성 |
 | 저장 | `localStorage` 스냅샷 | 분기 이동마다 자동 저장, 새로고침 복구 전용 |
 | 배포 | **GitHub Actions → GitHub Pages** | main push 시 자동 빌드·배포. HTTPS 기본(마이크 권한 요건 충족) |
 | 디버그 | `?debug=1` 패널 | 상태 실시간 표시, 강제 분기 버튼, **텍스트 입력 모드**(마이크 없이 개발·비상 시연용) |
@@ -256,7 +256,7 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 
 ### 8.3 LLM 호출 계약 (대화 판정)
 
-- PTT release → 선택된 STT 공급자 전사 → 플레이어 최종 transcript 화면 표시 → 그다음 LLM 요청. transcript가 보이기 전에 LLM 응답 요청·렌더 금지.
+- PTT release → Worker `/voice/realtime` 1회 → `gpt-realtime-2.1-mini`가 transcript와 판정 function call 반환 → 로컬 intent 우선 확인 → 로컬 미매칭이면 검증된 Realtime 판정 적용. 일반 UI에는 transcript 원문을 표시하지 않는다.
 - 요청: 페르소나 시트 + 노드 `objective`/`llmContext` + 상태 요약(호감도 구간·플래그) + 최근 2~3턴 + 플레이어 발화
 - 응답(responseSchema 강제): `{ reply, intent(노드 정의 목록 | "freeform"), affinityDelta(-3~3), emotion, flags(allowedFlags 내) }`
 - 실패 사다리: 4초 타임아웃 → 1회 재시도 → `fallbackReplies` + 중립 판정 → 3연속 실패 시 로컬 모드
@@ -278,7 +278,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 
 ## 9. API 키 / 프록시 (v1 결론 유지 — 요약)
 
-외부 프록시(Cloudflare Workers 무료 티어) 채택. MVP-1까지 GPT/Gemini STT를 비교했고, DEC-051에서 공개 QA와 production 게임 STT를 OpenAI `gpt-transcribe`로 확정했다. production Worker는 Gemini STT route를 비활성화하고 로컬 비교 Lab에만 남긴다. 대화·전투 LLM용 Gemini Secret은 STT 선택과 분리한다. Origin·요청 제한·쿼터·로테이션은 공급자별로 적용한다.
+외부 프록시(Cloudflare Workers) 채택. DEC-066에서 공개 QA와 production 기본 음성 모델을 OpenAI `gpt-realtime-2.1-mini`로 확정했다. 브라우저는 키를 받지 않고 Worker가 서버 측 Realtime WebSocket을 연다. `gpt-transcribe`·`gpt-live-transcribe`는 debug 단일 모델 비교용, Gemini STT는 로컬 비교 Lab용으로만 남긴다. Origin·요청 제한·쿼터·로테이션은 Worker에서 적용한다.
 
 ---
 
@@ -297,7 +297,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 | 마이크 권한/소음/브라우저/네트워크/키·쿼터/LLM 이탈 | v1 §10 그대로 유지 (PTT, confidence 임계, Chromium 고지+기능 감지, 4초 타임아웃+3단 폴백, 프록시+상한+로테이션, responseSchema+화이트리스트) |
 | **타이틀 마이크 테스트 실패** | 새 게임·이어하기를 비활성화하고 권한·장치·입력 크기별 해결 문구를 표시. 테스트 통과 전 플레이 진입 금지 |
 | **브라우저별 입력 레벨 차이** | 절대 dB SPL로 표시하지 않고 dBFS로 명시. 시작 시 평소 목소리를 보정 기준으로 저장하고 RMS 허용 범위와 peak clipping을 함께 판정 |
-| **STT 공급자 정확도·지연 차이** | 로컬 Whisper는 탈락. GPT/Gemini 비교 뒤 DEC-051에서 GPT를 선택. 전사문 선표시·실발화 QA·쿼터·API 비용을 계속 기록하고 장애 시 클릭·로컬 폴백 |
+| **Realtime 음성 정확도·지연·형식 편차** | `gpt-realtime-2.1-mini` 실발화의 transcript·첫 delta·전체 지연·schema reject를 기록한다. Worker·클라이언트 이중 검증을 유지하고 실패 시 해당 턴 클릭·로컬 폴백. debug에서 파일/live 전사 모델과 비교 |
 | **주문 낭독 인식 실패 (변신·전투)** | 주문 전문 화면 표시(읽기 발화는 인식률 높음), 키워드 순서 무관·부분 포함의 관대한 채점, 2회 미달 시 무페널티 자동 진행 |
 | **전투에서 momentum 정체 → 지루함** | 버티기(+3 고정)로 최저 진행 보장, 페이즈 턴 상한으로 강제 전환, 바닥 클램프 20 |
 | **자유 대응에서 LLM 판정이 이상함** | 델타 클램프(-5~+10), momentum은 등급 산정에만 쓰여 오차가 서사를 망치지 않음. 전투 프롬프트에 채점 기준 명시 |
@@ -305,4 +305,4 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 | Codex 산출물 회귀 | TypeScript + 마일스톤별 실행 확인, 시나리오는 코드가 아닌 데이터라 재생성 영향 없음 |
 | 총체적 실패 | 완주 영상 사전 녹화 제출 (심사 형태에 영상 포함) |
 
-**확인 필요:** Gemini 2.5 Flash-Lite LLM 현재 단가·무료 한도 / OpenAI `gpt-transcribe`·Gemini audio transcription 단가·쿼터·p50/p95 지연 / ko-KR 인식 정확도·주문 낭독 인식률 다중 화자 실측 / Suno·미드저니·GPT Image 생성물의 해커톤 제출 규정상 허용 여부(대회 규정 + 각 툴 약관).
+**확인 필요:** OpenAI `gpt-realtime-2.1-mini` 단가·쿼터·p50/p95·schema reject율 / ko-KR 인식 정확도·주문 낭독 인식률 다중 화자 실측 / Suno·미드저니·GPT Image 생성물의 해커톤 제출 규정상 허용 여부(대회 규정 + 각 툴 약관).

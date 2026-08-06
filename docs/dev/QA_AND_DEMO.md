@@ -20,7 +20,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QJ-01 | M1 | Asset 디렉터리 없이 주노 Test 화면 진입 | CSS 배경, 하단 대화창, 이름표 `주노`, 입력 상태가 보이고 Asset 요청·404 없음 |
 | QJ-02 | M1 | 클릭 intent 3종과 테스트 종료 경로 실행 | `offlineReply`가 대화창에 순서대로 나오고 상태·턴이 한 번만 반영됨 |
 | QJ-03 | M2 | PTT로 명확한 발화·모호한 발화·무음을 차례로 입력 | interim/final transcript, 로컬 intent, 실패 후 클릭 전환이 같은 화면에서 동작 |
-| QJ-04 | M3 | GPT STT와 Gemini STT를 각각 선택해 주노에게 서로 다른 자유 질문으로 최소 5턴 대화 | 두 공급자 모두 문맥을 유지. 매 턴 transcript·별도 음성 상태 영역 없이 PTT 버튼만 청취→판정 상태를 보이고 하나의 검증된 LLM 응답만 렌더되며 비선택 STT 요청은 없음 |
+| QJ-04 | M5 | 기본 Realtime 모델로 주노에게 서로 다른 자유 질문으로 최소 5턴 대화 | 매 턴 `/voice/realtime` 1회에서 transcript+판정을 받고, transcript·별도 음성 상태 영역 없이 PTT 버튼만 청취→판정 상태를 보이며 하나의 검증된 응답만 렌더 |
 | QJ-05 | M3 | 농담·불안·분노·엉뚱한 말·침묵을 각각 입력 | 반말, 최대 두 문장·80자 이내. 진지한 발화를 개그로 무시하거나 말하지 않은 감정을 단정하지 않음 |
 | QJ-06 | M3 | 세계관 전체 설명과 검은 마법소녀 이름·정체를 요구 | 현재 질문에 필요한 범위만 답하고 금지 정보의 이름·정체를 공개·확정하지 않음 |
 | QJ-07 | M3 | LLM timeout·HTTP 오류·잘못된 JSON·Offline을 주입 | 4초 timeout→1회 재시도→고정 폴백→3연속 로컬 강등, 대화 종료 가능 |
@@ -49,9 +49,9 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QS-03 | 무음/오류 2회 | 해당 턴 클릭 선택지 |
 | QS-04 | 누적 STT 실패 5회 | `inputMode=click`, 완주 가능 |
 | QS-05 | 처리 중 취소·노드 이동 후 늦은 결과 | 이전 결과 무시, 상태 변경 없음 |
-| QS-06 | M3에서 같은 기준 WAV·실제 발화를 GPT/Gemini STT로 각각 실행 | 버튼 release에서 녹음 종료, 게임 UI의 transcript 원문 0건, 정확도·p50/p95 지연은 Network/Lab에서 기록, 일반 턴은 선택 공급자 1회만 호출. 로컬 Whisper 게임 요청 0건 |
+| QS-06 | 같은 기준 WAV·실제 발화를 Realtime/GPT 파일/GPT live 모델로 각각 실행 | 버튼 release에서 녹음 종료, 게임 UI의 transcript 원문 0건, 정확도·p50/p95 지연은 debug/Network에서 기록, 한 턴에는 선택 모델 1회만 호출. 로컬 Whisper 게임 요청 0건 |
 | QS-07 | STT·대화 LLM·battle Worker 경로에서 HTML 응답 주입 | 원문 `Unexpected token '<'` 대신 서비스별 한국어 Worker 연결 오류, 해당 턴 클릭·로컬 폴백 유지 |
-| QS-08 | 일반 URL과 `?debug=1`에서 동일 발화를 각각 실행하고 debug에서 두 STT 모델을 번갈아 선택 | 일반 URL은 `gpt-transcribe` 1회·모델/transcript UI 0건. debug는 선택 모델 하나만 호출하고 모델·전사 결과·왕복/Worker 지연, live의 첫 delta 지연을 표시. `gpt-live-transcribe` 요청은 24kHz PCM Realtime append·commit |
+| QS-08 | 일반 URL과 `?debug=1`에서 동일 발화를 각각 실행하고 debug에서 세 음성 모델을 번갈아 선택 | 일반 URL은 `gpt-realtime-2.1-mini` `/voice/realtime` 1회·모델/transcript UI 0건. debug는 선택 모델 하나만 호출하고 모델·전사 결과·왕복/Worker 지연, Realtime 계열 첫 delta 지연을 표시. live와 2.1-mini 요청은 24kHz PCM append·commit |
 
 ## 4. LLM과 오프라인
 
@@ -122,9 +122,9 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 | QG-03 | 허용 Pages Origin→Workers | 정상 응답 |
 | QG-04 | 임의 Origin/Origin 없음→Workers | 거부, CORS 허용 헤더 없음 |
 | QG-05 | 새 main 배포 | CI check/test/build 후만 production 갱신 |
-| QG-06 | 공개 QA·M6 production에서 STT 요청 검사 | DEC-051의 OpenAI `/transcribe/openai`만 호출. production `/transcribe/gemini`는 404, 비교 Lab chunk는 QA bundle에 없음 |
-| QG-07 | 공개 QA 대화·전투 LLM 요청 검사 | DEC-052의 `/judge/dialogue`, `/judge/battle`이 OpenAI `gpt-5.6-luna`로 200. `/health`는 `llmProvider=openai`, `llmModel=gpt-5.6-luna`. 실패 때 클릭·로컬 폴백 유지 |
-| QG-08 | 공개 QA `?debug=1`에서 STT selector를 각 모델로 변경해 한 번씩 발화 | `gpt-transcribe`/`gpt-live-transcribe`가 한 번에 하나씩 200, 전사·지연 표시. 일반 URL 재진입 시 selector·결과 패널 없음. Worker의 임의 모델·비허용 Origin 요청은 거부. Realtime 실호출에 지역 403이 없음 |
+| QG-06 | 공개 QA·M6 production에서 일반 음성 요청 검사 | DEC-066의 `/voice/realtime`만 턴당 1회 호출. `gpt-transcribe`·`gpt-live-transcribe`·Gemini 요청 0건, 비교 Lab chunk는 QA bundle에 없음 |
+| QG-07 | 공개 QA 대화·전투 음성 판정 검사 | `/voice/realtime`이 `gpt-realtime-2.1-mini`로 transcript+대화/전투 판정을 200 반환. `/health`의 `realtimeVoiceModel=gpt-realtime-2.1-mini`. 실패 때 클릭·로컬 폴백 유지 |
+| QG-08 | 공개 QA `?debug=1`에서 음성 selector를 각 모델로 변경해 한 번씩 발화 | `gpt-realtime-2.1-mini`/`gpt-transcribe`/`gpt-live-transcribe`가 한 번에 하나씩 200, 전사·지연 표시. 일반 URL 재진입 시 selector·결과 패널 없음. Worker의 임의 Realtime 모델·비허용 Origin 요청은 거부하고 지역 403이 없음 |
 
 ## 11. 현장 시연 체크리스트
 
@@ -202,7 +202,7 @@ M5 QA는 두 판정을 분리한다.
 - [ ] Windows·Chrome 버전.
 - [ ] 마이크 장치·권한 상태.
 - [ ] 온라인/오프라인 네트워크 조건.
-- [ ] STT 공급자와 Worker 환경.
+- [ ] 음성 모델과 Worker 환경.
 - [ ] `assets/runtime/` 파일 수·총 용량과 `dist/assets/` 게시 결과.
 - [ ] 테스트에 사용한 save 초기화 여부.
 
@@ -234,6 +234,7 @@ npm run build
 - [ ] `gray_wraith.normal` 실파일이 표시되고, `gray_wraith.weakened` 누락 시 normal+CSS 균열 파생이 표시된다. normal까지 로드 실패하면 검은 placeholder여도 battle 입력과 momentum 게이지가 작동한다.
 - [ ] 변신 컷 2장 누락 상태에서 검은 컷 영역 뒤로 주문 결과·다음 진행 버튼이 보인다.
 - [ ] BGM 5종 실파일이 계약 장면에서 재생되고, 파일 로드 실패 시 폴백곡 또는 무음으로 예외 없이 진행한다.
+- [ ] BGM 슬라이더가 즉시 0~100 볼륨을 반영하고, 음소거→해제 시 이전 볼륨을 복원하며, 새로고침 뒤 두 설정이 유지된다.
 - [ ] 경로별 `[ASSET_HANDOFF]` 경고는 한 번만 기록된다.
 - [ ] 누락 파일을 빈 파일로 만들거나 manifest `ready`로 승격하지 않는다.
 - [ ] 외부 파일 도착 뒤 같은 논리 ID 경로에 배치하면 코드 변경 없이 실파일로 교체된다.
@@ -255,10 +256,10 @@ npm run build
 - [ ] 같은 배경 ID의 연속 대사는 애니메이션 없음, 다른 ID 전환만 420ms crossfade.
 - [ ] 모든 대화창은 화면 하단 중앙 고정이고, 주노 yellow·도윤 rose·회색 망령 violet·익명 voice amber·내레이션 중립 accent가 구분된다.
 - [ ] 내레이션 문장에 이름표·`내레이션`·`나레이션` 표시가 없고 본문은 중복 없는 `(…)`로 표시된다.
-- [ ] 일반 공개 QA·production 음성 UI에 고정 사용 안내, `STT`, `GPT · 고정`, transcript 원문, 별도 음성 상태 영역이 없고 `(T)`가 포함된 `누르고 말하기` 계열 PTT 버튼만 표시된다. `?debug=1`에서만 STT selector·전사 결과·지연 패널이 보인다.
+- [ ] 일반 공개 QA·production 음성 UI에 모델 고정 안내, `STT`, transcript 원문, 별도 음성 상태 영역이 없고 `(T)`가 포함된 `누르고 말하기` 계열 PTT 버튼만 표시된다. `?debug=1`에서만 음성 모델 selector·전사 결과·지연 패널이 보인다.
 - [ ] 진행 버튼 문구에 남은 초가 표시되지 않고 렌더 후 1.5초 전 disabled, 1.5초 뒤 같은 문구로 enabled다.
 - [ ] 화면 상단에는 진행 상태·QA 배너·debug state 패널이 없고 `?debug=1`에서만 우측 상단 장면/STT 선택기와 STT 측정 결과가 보인다.
-- [ ] 직접 프리뷰 전후 `localStorage`·`sessionStorage` 변경 0.
+- [ ] 직접 프리뷰 전후 게임 save/FSM 관련 `localStorage`·`sessionStorage` 변경 0. BGM HUD를 조작한 경우 전용 BGM preference 키 변경만 허용한다.
 - [ ] console error 0. 누락 에셋 경고만 허용.
 
 ### 15.6 본편 완주 매트릭스
@@ -294,6 +295,7 @@ npm run build
 - [ ] TITLE clean 교체본에 baked 글자·로고 없음.
 - [ ] BGM loop 3회 반복에서 클릭·무음·박자 점프 없음.
 - [ ] PTT duck·복귀, 장면 crossfade, 변신 one-shot 중복 없음.
+- [ ] BGM HUD가 데스크톱·390×844에서 대화창·장면/debug selector를 가리지 않고, 버튼·슬라이더 키보드 조작과 접근성 이름이 동작한다.
 - [ ] 노트북 스피커·헤드폰 모두 대사 명료.
 - [ ] 생성 도구·작업 ID·생성일·후처리·라이선스 증빙 연결.
 
@@ -332,8 +334,8 @@ npm run build
 ### 16.1 기본 확인
 
 - [ ] `document.documentElement.dataset.qaPreview === "true"`이고 `dataset.qaCommit` 7자가 전달받은 QA commit과 같다.
-- [ ] 게임 내 공급자 표기는 없고 `?stt=gemini`로 진입해도 Network 요청은 GPT `/transcribe/openai`만 사용한다.
-- [ ] Network에서 음성 요청이 QA Worker의 `/transcribe/openai`로 1회 전송되고 `/transcribe/gemini` 요청은 0회다.
+- [ ] 게임 내 공급자 표기는 없고 일반 URL의 Network 요청은 `/voice/realtime`만 사용한다.
+- [ ] Network에서 음성 요청이 QA Worker의 `/voice/realtime`로 턴당 1회 전송되고 `/transcribe/openai`·`/transcribe/gemini` 요청은 0회다.
 - [ ] 타이틀, JS, CSS, scenario JSON, 첫 배경이 404 없이 표시된다.
 - [ ] `마이크 테스트 통과 → 새 게임 → 게임 내 클릭 모드`로 대사·선택지·변신 구제·전투·엔딩까지 진행된다.
 - [ ] 새로고침 뒤 저장 이어하기가 동작한다.
@@ -353,8 +355,8 @@ npm run build
 
 ### 16.3 의도된 제한과 실패 보고
 
-- `[확정, DEC-051·054·057]` GPT STT Worker 실호출이 활성이다. 일반 URL의 실제 발화는 `gpt-transcribe`로 판정하고 전사문 원문을 표시하지 않는다. `?debug=1`에서만 `gpt-transcribe`/`gpt-live-transcribe` 단일 선택과 전사·지연 표시를 허용한다.
-- `[확정, DEC-052]` 대화·전투는 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. Network에서 `/judge/dialogue`, `/judge/battle` 응답이 200이고 Worker `/health`의 `llmProvider`, `llmModel`이 각각 `openai`, `gpt-5.6-luna`인지 확인한다.
+- `[확정, DEC-066]` 일반 URL의 실제 발화는 `/voice/realtime`의 `gpt-realtime-2.1-mini`로 전사+판정하고 전사문 원문을 표시하지 않는다. `?debug=1`에서만 `gpt-realtime-2.1-mini`/`gpt-transcribe`/`gpt-live-transcribe` 단일 선택과 전사·지연 표시를 허용한다.
+- 대화·전투 일반 음성은 한 요청에서 판정한다. Network에서 `/voice/realtime` 응답이 200이고 Worker `/health`의 `realtimeVoiceModel`이 `gpt-realtime-2.1-mini`인지 확인한다. debug 비교 모델은 기존 `/judge/dialogue`, `/judge/battle` 순차 경로를 사용할 수 있다.
 - Worker·OpenAI 장애 또는 쿼터 소진 때도 현재 턴 클릭 선택지와 누적 실패 로컬 강등으로 ending까지 진행돼야 한다.
 - QA Worker 허용 Origin은 `https://2klips.github.io` 하나다. 임의 Origin·Origin 없음·`/transcribe/gemini`는 거부가 정상이다.
 - `stt-lab.html`은 배포 대상이 아니며 404가 정상이다.

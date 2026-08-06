@@ -10,13 +10,15 @@ const LOCAL_ORIGIN = "http://127.0.0.1:5173";
 
 describe("M5 debug STT 모델 비교", () => {
   it("debug에서만 허용 목록의 STT 모델 쿼리를 반영한다", () => {
-    expect(resolveOpenAiSttModel(new URLSearchParams(), false)).toBe("gpt-transcribe");
+    expect(resolveOpenAiSttModel(new URLSearchParams(), false)).toBe(
+      "gpt-realtime-2.1-mini",
+    );
     expect(
       resolveOpenAiSttModel(
         new URLSearchParams("sttModel=gpt-live-transcribe"),
         false,
       ),
-    ).toBe("gpt-transcribe");
+    ).toBe("gpt-realtime-2.1-mini");
     expect(
       resolveOpenAiSttModel(
         new URLSearchParams("sttModel=gpt-live-transcribe"),
@@ -25,12 +27,13 @@ describe("M5 debug STT 모델 비교", () => {
     ).toBe("gpt-live-transcribe");
     expect(
       resolveOpenAiSttModel(new URLSearchParams("sttModel=invalid"), true),
-    ).toBe("gpt-transcribe");
+    ).toBe("gpt-realtime-2.1-mini");
   });
 
   it("모델별 API 입력 샘플 레이트를 고정한다", () => {
     expect(sttSampleRate("gpt-transcribe")).toBe(16_000);
     expect(sttSampleRate("gpt-live-transcribe")).toBe(24_000);
+    expect(sttSampleRate("gpt-realtime-2.1-mini")).toBe(24_000);
   });
 
   it("선택 모델을 한 개만 전송하고 왕복·upstream 측정값을 보존한다", async () => {
@@ -239,6 +242,7 @@ function env(overrides: Record<string, string> = {}): Env {
     OPENAI_API_KEY: "test-openai-key",
     ALLOWED_ORIGINS: "http://127.0.0.1:5173,http://localhost:5173",
     OPENAI_TRANSCRIBE_MODEL: "gpt-transcribe",
+    OPENAI_REALTIME_MODEL: "gpt-realtime-2.1-mini",
     GEMINI_TRANSCRIBE_MODEL: "gemini-2.5-flash",
     LLM_PROVIDER: "openai",
     OPENAI_LLM_MODEL: "gpt-5.6-luna",

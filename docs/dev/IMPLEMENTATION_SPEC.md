@@ -108,15 +108,15 @@ interface BattleState {
 한 턴의 고정 순서:
 
 ```text
-PTT release → 선택된 STT 전사 → PTT 버튼을 처리 중 상태로 잠금 → 정규화
-→ 로컬 intent 판정 → 미매칭이면 LLM 판정
+PTT release → 기본 Realtime 음성 요청 1회에서 전사+판정 후보 생성 → PTT 버튼을 처리 중 상태로 잠금 → 정규화
+→ 로컬 intent 판정 → 로컬 미매칭이면 검증된 Realtime 판정 적용
 → 판정 검증/클램프 → 응답 연출 → 상태 적용 → 턴 증가 → 분기 평가
 ```
 
 - `[확정, DEC-050]` 게임 내 PTT는 포인터·포커스된 Space/Enter와 전역 `T` 홀드/릴리스를 지원한다. 입력·선택 컨트롤 편집 중에는 전역 `T`를 가로채지 않는다.
 - `[확정, DEC-056]` 대사·판정 응답·엔딩의 다음 페이지 진행 버튼은 화면 렌더 후 1.5초 동안 비활성화하고, 준비 뒤 한 번만 진행한다.
 
-`[확정, DEC-051·054·055·057]` 일반 공개 QA와 production 게임은 OpenAI `gpt-transcribe`로 고정한다. 공급자 ID를 `GameState`나 시나리오 JSON에 저장하지 않으며 일반 게임 UI에는 `STT`, `GPT · 고정`, 최종 transcript, 별도 음성 입력 상태 영역을 표시하지 않는다. Gemini STT 전환·동시 비교는 격리된 로컬 비교 Lab에서만 허용하고 production Worker route와 게임 UI에는 노출하지 않는다. M5 작업자 QA의 `?debug=1`에서만 `gpt-transcribe`/`gpt-live-transcribe` 단일 선택기와 선택 모델·전사 결과·왕복/Worker/첫 delta 지연을 표시한다. 파일 전사는 16kHz WAV multipart, live 전사는 24kHz PCM Realtime append·commit 경로를 사용하며 한 발화에 하나만 호출한다. `[확정, DEC-052]` 공개 QA 대화·전투 LLM은 OpenAI Responses API `gpt-5.6-luna`, `reasoning.effort: low`를 사용한다. 로컬 M3 회귀 기본값과 M6 production LLM 결정은 별도다.
+`[확정, DEC-054·055·057·066]` 일반 공개 QA와 production 게임의 기본 음성 모델은 OpenAI `gpt-realtime-2.1-mini`다. 브라우저는 24kHz mono WAV, mode, 검증된 최소 문맥을 Worker `/voice/realtime`에 multipart로 한 번 전송한다. Worker가 서버 측 Realtime WebSocket에 PCM append·commit 후 `response.create`를 보내고, transcript와 대화·전투 판정을 필수 function call로 한 번에 받는다. 모델·prompt·tool schema·reasoning·token 상한은 Worker가 고정한다. 로컬 intent 일치 시 Realtime 판정 후보는 버리고 로컬 판정을 우선하며, 미일치 때만 이중 zod 검증·whitelist·clamp를 통과한 판정을 중앙 상태 함수에 적용한다. 변신·전투 주문은 transcript-only mode와 기존 키워드·dBFS 판정을 유지한다. 일반 UI에는 모델명·`STT`·최종 transcript·별도 음성 상태 영역을 표시하지 않는다. `?debug=1`에서만 `gpt-realtime-2.1-mini`/`gpt-transcribe`/`gpt-live-transcribe` 중 한 모델과 전사·왕복/Worker/첫 delta 지연을 표시한다. 비교 모델은 기존 순차 판정 경로를 사용하고, 일반 턴에서 두 모델을 동시에 호출하지 않는다. Gemini STT는 격리된 로컬 비교 Lab에만 남긴다.
 
 분기 우선순위:
 
@@ -245,9 +245,9 @@ LLM 로컬 모드는 런타임 어댑터 상태다. 제품 `GameState`에 새 �
 | `input/*` | STT/클릭 어댑터 | 상태 직접 변경 |
 | `judge/*` | 정규화·로컬·LLM 검증 | 화면 렌더 |
 | `ui/*` | 렌더·사용자 이벤트 전달 | 상태 규칙 |
-| `audio/*` | BGM/SFX 재생 | 분기 규칙 |
+| `audio/*` | BGM/SFX 재생, BGM 사용자 볼륨·음소거·저장 | 분기 규칙 |
 | `data/loader.ts` | fetch, zod, 참조 무결성 | 자동 JSON 수정 |
-| `worker/` | Origin 검증, GPT/Gemini STT 라우팅, OpenAI/Gemini LLM 어댑터, 요청·응답 제한 | 게임 상태·시나리오 소유 |
+| `worker/` | Origin 검증, Realtime 직접 음성·비교 STT·OpenAI/Gemini LLM 어댑터, 요청·응답 제한 | 게임 상태·시나리오 소유 |
 
 ```text
 main(composition root)
@@ -258,6 +258,14 @@ main(composition root)
 ```
 
 도메인 모듈은 브라우저 전역 없이 단위 테스트 가능해야 한다. 상위 오케스트레이터가 포트를 주입한다.
+
+## 8.1 BGM 사용자 제어
+
+- `[확정, DEC-067]` 모든 장면에서 현재 미연시 HUD와 같은 glass/rose 스타일의 음소거 버튼·0~100 슬라이더를 제공한다.
+- `BgmController`의 내부 볼륨은 `0..1`로 clamp한다. mute는 재생 볼륨 0을 우선하지만 저장된 사용자 볼륨을 바꾸지 않는다.
+- PTT 중 duck은 `사용자 볼륨 × BGM_DUCK_MULTIPLIER`, mute 중에는 항상 0이다.
+- 사용자 설정만 전용 `localStorage` 키에 저장한다. 저장소 파싱·쓰기 실패는 기본 62%·음소거 해제로 안전 복구하며 게임 진행을 막지 않는다.
+- UI는 44px 이상 조작 영역, 키보드 range 입력, `aria-label`·`aria-pressed`·현재 퍼센트 출력을 제공하고 모바일 safe area와 debug selector를 가리지 않는다.
 
 ## 9. 자산 해석
 

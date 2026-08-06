@@ -1,14 +1,32 @@
 import { z } from "zod";
 import { readWorkerJson } from "../network/workerResponse";
+import {
+  BattleJudgementSchema,
+  DialogueJudgementSchema,
+  type BattleJudgementResult,
+  type DialogueJudgementResult,
+} from "../judge/schema";
 import type { AudioLevelMetrics } from "./audioLevel";
 import type { PttRecordingPort } from "./recording";
 
 export type SttProviderId = "openai" | "gemini";
 export const OpenAiSttModelSchema = z.enum([
+  "gpt-realtime-2.1-mini",
   "gpt-transcribe",
   "gpt-live-transcribe",
 ]);
 export type OpenAiSttModel = z.infer<typeof OpenAiSttModelSchema>;
+
+export type VoiceAnalysis =
+  | { readonly kind: "transcript" }
+  | {
+      readonly kind: "dialogue";
+      readonly judgement: DialogueJudgementResult;
+    }
+  | {
+      readonly kind: "battle";
+      readonly judgement: BattleJudgementResult;
+    };
 
 export interface TranscriptionObservation {
   readonly text: string;
@@ -16,6 +34,7 @@ export interface TranscriptionObservation {
   readonly roundTripMs: number;
   readonly upstreamMs?: number;
   readonly firstDeltaMs?: number;
+  readonly analysis?: VoiceAnalysis;
 }
 
 export interface TranscriptionPort {
@@ -41,6 +60,49 @@ interface WorkerTranscriptionOptions {
   timeoutMs?: number;
 }
 
+export type RealtimeVoiceRequest =
+  | { readonly mode: "transcript" }
+  | {
+      readonly mode: "dialogue";
+      readonly context: {
+        readonly objective: string;
+        readonly llmContext: string;
+        readonly persona: {
+          readonly id: string;
+          readonly name: string;
+          readonly role: string;
+          readonly traits: readonly string[];
+          readonly speechRules: readonly string[];
+          readonly taboos: readonly string[];
+          readonly sampleLines: readonly string[];
+        };
+        readonly intents: readonly {
+          readonly id: string;
+          readonly examples: readonly string[];
+          readonly keywords: readonly string[];
+        }[];
+        readonly allowedFlags: readonly string[];
+        readonly recentTurns: readonly {
+          readonly role: "player" | "juno";
+          readonly text: string;
+        }[];
+      };
+    }
+  | {
+      readonly mode: "battle";
+      readonly context: {
+        readonly enemyPrompt: string;
+        readonly llmContext: string;
+      };
+    };
+
+interface WorkerRealtimeVoiceOptions {
+  request: RealtimeVoiceRequest;
+  workerUrl: string;
+  fetcher?: (request: Request) => Promise<Response>;
+  timeoutMs?: number;
+}
+
 const WorkerTranscriptSchema = z
   .object({
     model: z.string().min(1),
@@ -55,6 +117,40 @@ const WorkerTranscriptSchema = z
   })
   .strict();
 const WorkerErrorSchema = z.object({ error: z.string().min(1) });
+const RealtimeVoiceMetricsSchema = z
+  .object({
+    upstreamMs: z.number().nonnegative(),
+    firstDeltaMs: z.number().nonnegative().optional(),
+  })
+  .strict();
+const RealtimeVoiceResponseSchema = z.discriminatedUnion("mode", [
+  z
+    .object({
+      mode: z.literal("transcript"),
+      model: z.literal("gpt-realtime-2.1-mini"),
+      text: z.string().trim().min(1),
+      metrics: RealtimeVoiceMetricsSchema,
+    })
+    .strict(),
+  z
+    .object({
+      mode: z.literal("dialogue"),
+      model: z.literal("gpt-realtime-2.1-mini"),
+      text: z.string().trim().min(1),
+      judgement: DialogueJudgementSchema,
+      metrics: RealtimeVoiceMetricsSchema,
+    })
+    .strict(),
+  z
+    .object({
+      mode: z.literal("battle"),
+      model: z.literal("gpt-realtime-2.1-mini"),
+      text: z.string().trim().min(1),
+      judgement: BattleJudgementSchema,
+      metrics: RealtimeVoiceMetricsSchema,
+    })
+    .strict(),
+]);
 
 export class RecordedVoiceTurnController {
   private requestId = 0;
@@ -150,6 +246,58 @@ export function createWorkerTranscriptionPort(
   };
 }
 
+export function createWorkerRealtimeVoicePort(
+  options: WorkerRealtimeVoiceOptions,
+): TranscriptionPort {
+  const fetcher = options.fetcher ?? fetch;
+  const timeoutMs = options.timeoutMs ?? 12_000;
+  return {
+    provider: "openai",
+    async transcribe(audio, signal) {
+      const startedAt = performance.now();
+      const form = new FormData();
+      form.append("audio", audio, "speech.wav");
+      form.append("mode", options.request.mode);
+      if ("context" in options.request) {
+        form.append("context", JSON.stringify(options.request.context));
+      }
+      const response = await fetchWithTimeout(
+        fetcher,
+        new Request(new URL("/voice/realtime", ensureTrailingSlash(options.workerUrl)), {
+          method: "POST",
+          body: form,
+        }),
+        signal,
+        timeoutMs,
+      );
+      const body = await readWorkerJson(response, "Realtime Voice Worker");
+      if (!response.ok) {
+        const parsed = WorkerErrorSchema.safeParse(body);
+        throw new Error(
+          parsed.success
+            ? parsed.data.error
+            : `Realtime 음성 요청 실패 (${response.status})`,
+        );
+      }
+      const result = RealtimeVoiceResponseSchema.parse(body);
+      const analysis: VoiceAnalysis =
+        result.mode === "dialogue"
+          ? { kind: "dialogue", judgement: result.judgement }
+          : result.mode === "battle"
+            ? { kind: "battle", judgement: result.judgement }
+            : { kind: "transcript" };
+      return {
+        text: result.text,
+        model: result.model,
+        roundTripMs: Math.max(0, Math.round(performance.now() - startedAt)),
+        upstreamMs: result.metrics.upstreamMs,
+        firstDeltaMs: result.metrics.firstDeltaMs,
+        analysis,
+      };
+    },
+  };
+}
+
 export function resolveSttProvider(
   params: URLSearchParams,
   lockedProvider?: SttProviderId,
@@ -162,13 +310,13 @@ export function resolveOpenAiSttModel(
   params: URLSearchParams,
   debugEnabled: boolean,
 ): OpenAiSttModel {
-  if (!debugEnabled) return "gpt-transcribe";
+  if (!debugEnabled) return "gpt-realtime-2.1-mini";
   const parsed = OpenAiSttModelSchema.safeParse(params.get("sttModel"));
-  return parsed.success ? parsed.data : "gpt-transcribe";
+  return parsed.success ? parsed.data : "gpt-realtime-2.1-mini";
 }
 
 export function sttSampleRate(model: OpenAiSttModel): 16_000 | 24_000 {
-  return model === "gpt-live-transcribe" ? 24_000 : 16_000;
+  return model === "gpt-transcribe" ? 16_000 : 24_000;
 }
 
 export function sttProviderLabel(provider: SttProviderId): string {
