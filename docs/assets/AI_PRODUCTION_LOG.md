@@ -40,6 +40,8 @@
 
 | 2026-08-06 | M5 선호 BGM 장면 정렬·weakened 파생 폴백 | Codex | `M5_PRESENTATION_POLISH_DIRECTIVE.md`, BGM runtime 5곡, 장면 매핑, 회색 망령 normal·weakened 계약 | scenario 6개 BGM 값과 12개 dev 프리뷰 정렬, weakened `physical → normal+CSS → black` resolver·UI·테스트 | 작가 소유 JSON은 `scene.bgm`만 변경. `attack/hit/death` 미등록 확인. targeted 23 tests, `check`, 38 files·168 tests, build PASS | 사용. 정식 weakened 실파일과 사람 시청각 QA는 대기 | 미측정 | `public/scenario/scenario.json`, `src/assets/catalog.ts`, `src/dev/scenePreview.ts`, `src/ui/gameView.ts`, `src/styles.css`, DEC-059·060 |
 
+| 2026-08-06 | M5 BGM controller 견고화 | Codex | runtime BGM 5곡, BGM 재생·duck·실패·autoplay·one-shot 계약 | 실패 경로 재요청 차단, autoplay pointerdown 재시도, 기본 음량 0.62·duck 0.18배, one-shot 중복 방지 | audio 5 tests, `check`, 38 files·171 tests, build PASS. 사람 청감은 대기 | 사용 | 미측정 | `src/audio/bgm.ts`, `tests/m5Audio.test.ts`, `M5_UI_BGM_REQUEST_MAPPING.md` |
+
 ## 기록 규칙
 
 - 프롬프트 전문이 길면 별도 파일/도구 대화 ID를 참조하고 입력 자료 핵심만 적는다.

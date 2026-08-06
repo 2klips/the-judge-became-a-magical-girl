@@ -78,6 +78,8 @@
 | battle p1~p3 | `bgm_battle` | phase 이동 때 재시작 금지, PTT duck |
 | 전투 후 수렴·엔딩 | `bgm_ending`, 없으면 `bgm_daily` | ending 진입 crossfade |
 
+`[구현]` 기본 BGM 음량은 `0.62`, PTT duck은 기본값의 `0.18배`다. 로드 실패 경로는 세션에서 다시 요청하지 않으며, 브라우저 autoplay 거부는 다음 `pointerdown`에서 최신 요청을 한 번 재시도한다. `bgm_transform` 동일 ID 재렌더는 중복 재생하지 않는다.
+
 ## 7. 청감 인수 기준
 
 다음 조건을 모두 확인한다.

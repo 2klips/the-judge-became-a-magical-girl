@@ -969,3 +969,26 @@
 | `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
 | 시나리오 범위 | PASS | `scene.bgm` 6개 외 대사·분기·스키마 변경 없음 |
 | 사람 장면·청각 QA | 대기 | weakened 파생 합성, N3 crisis crossfade, N5 one-shot, 수렴·3엔딩 ending곡 확인 필요 |
+
+## M5 연출 폴리시 WP1-3 — BGM controller 견고화
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 사람 청감 QA 대기
+
+### 처리 내용
+
+- 재생 실패로 catalog가 unavailable 처리한 BGM 경로는 같은 세션에서 새 `Audio()`를 만들지 않는다.
+- `NotAllowedError`는 오류로 승격하지 않고 다음 `pointerdown`에서 최신 요청을 한 번 재시도한다. 새 장면이 이미 재생되면 대기 요청을 취소한다.
+- 기본 음량을 `0.62`, PTT duck을 기본 음량의 `0.18배`로 분리했다.
+- 동일 `bgm_transform` one-shot 요청은 결과 재렌더에서 다시 만들거나 재생하지 않는다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| audio targeted tests | PASS | play rejection·error event·autoplay retry·duck·one-shot 5 tests |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·171 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| 사람 청감 | 대기 | 헤드폰·노트북 스피커의 대사 명료도, 3회 loop, PTT duck 복귀 필요 |

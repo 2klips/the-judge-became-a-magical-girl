@@ -188,6 +188,7 @@
 - `[구현·자동 QA PASS]` 회색 망령 `normal`을 납품본과 동일 바이트로 `assets/runtime/char/`에 채택했다. `weakened` 실파일은 계속 missing이며 제작 요청을 유지한다.
 - `[구현, DEC-059]` N3~N5 도입은 `bgm_crisis`, 수렴~GOOD/NORMAL/BAD는 `bgm_ending`을 사용한다. 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백과 무음 완주를 유지한다.
 - `[구현, DEC-060]` `gray_wraith.weakened` 실파일이 없으면 `normal` + CSS 균열 빛 파생으로 표시하고, normal도 실패하면 검은 presentation으로 강등한다. `attack/hit/death`는 미등록 상태다.
+- `[구현]` BGM controller는 기본 음량 `0.62`, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.
 - `[구현]` 도윤 11종을 `assets/runtime/char/`에 계약명으로 배치하고 N0 세 번째 대사부터 N5·battle·수렴·3엔딩에 연결했다. 원본은 `assets/source/doyun/delivery/`에 보존한다.
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
