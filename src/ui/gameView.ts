@@ -109,6 +109,28 @@ export function resolveVoiceInputPresentation(): VoiceInputPresentation {
   };
 }
 
+const BATTLE_PHASE_IDS = ["p1_defend", "p2_attack", "p3_answer"] as const;
+
+export interface BattleStagePresentation {
+  readonly phaseIndex: number;
+  readonly phaseTotal: 3;
+  readonly doyunLogicalId: string;
+  readonly junoEmotion: Emotion;
+}
+
+export function resolveBattleStagePresentation(
+  phaseId: string,
+): BattleStagePresentation {
+  const phaseIndex = Math.max(0, BATTLE_PHASE_IDS.indexOf(phaseId as (typeof BATTLE_PHASE_IDS)[number]));
+  return {
+    phaseIndex,
+    phaseTotal: 3,
+    doyunLogicalId:
+      resolveDoyunVisual({ kind: "battle", phaseId }) ?? "doyun.magical_finish",
+    junoEmotion: phaseIndex === 1 ? "happy" : "neutral",
+  };
+}
+
 export interface MissingAssetPresentation {
   readonly className: "asset-black-placeholder";
   readonly ariaLabel: string;
@@ -831,45 +853,15 @@ export class GameView {
       }),
     );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
-    const arena = element("section", "battle-arena");
-    const visualStage = element("section", "battle-visual-stage");
-    visualStage.setAttribute("aria-label", "전투 인물");
-    visualStage.append(
-      this.createAssetVisual(
-        `gray_wraith.${battleState.enemyState}`,
-        node.enemy.name,
-        "asset-visual battle-character enemy-visual",
-      ),
-      this.createAssetVisual(
-        resolveDoyunVisual({ kind: "battle", phaseId: phase.phaseId }) ?? "doyun.magical",
-        "마법소녀 도윤",
-        "asset-visual battle-character player-visual doyun-visual",
-      ),
-      this.createCharacterVisual(
-        "juno",
-        battleState.phaseIndex === 1 ? "happy" : "neutral",
-        "주노",
-        "asset-visual battle-character battle-juno-visual",
-      ),
+    const stage = this.createBattleStage(
+      phase.phaseId,
+      node.enemy.name,
+      phase.enemyPrompt,
+      battleState,
     );
-    const enemy = element("div", "enemy-card");
-    enemy.append(
-      element("p", "eyebrow", node.enemy.name),
-      element("p", "enemy-prompt", phase.enemyPrompt),
-      element(
-        "span",
-        "enemy-state",
-        battleState.enemyState === "weakened" ? "흔들림" : "정상",
-      ),
-    );
-    arena.append(
-      visualStage,
-      enemy,
-      createGauge("MOMENTUM", battleState.momentum, 20, 100),
-    );
-    const command = element("section", "battle-command");
+    const command = element("section", "battle-control-dock battle-command");
     command.append(
-      element("p", "prompt-label", "페이즈 주문"),
+      element("p", "battle-spell-label", "이번 언령"),
       element("p", "battle-spell", phase.spell.displayText),
     );
     if (options.notice) command.append(element("p", "input-notice", options.notice));
@@ -878,7 +870,7 @@ export class GameView {
       const controls = element("div", "battle-actions");
       const spell = element("button", "ptt-button", "주문 · 누르고 말하기 (T)");
       const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 (T)");
-      const guard = element("button", "secondary-button", "버티기 +3");
+      const guard = element("button", "secondary-button", "버티기");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       controls.append(spell, freeform, guard);
@@ -895,7 +887,7 @@ export class GameView {
       command.append(clickMode);
     } else {
       const choices = element("div", "choice-list battle-choice-list");
-      const spell = element("button", "primary-button", "주문 시전 · 성공 +15");
+      const spell = element("button", "primary-button", "주문을 외친다");
       spell.type = "button";
       spell.addEventListener("click", options.onClickSpell, { once: true });
       choices.append(spell);
@@ -909,7 +901,7 @@ export class GameView {
         );
         choices.append(button);
       });
-      const guard = element("button", "secondary-button", "버티기 +3");
+      const guard = element("button", "secondary-button", "버티기");
       guard.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       choices.append(guard);
@@ -926,8 +918,8 @@ export class GameView {
       await options.onTranscript("spell", transcript);
     });
     command.append(utilities, this.battleDebugControls(options, battleState));
-    arena.append(command);
-    shell.append(arena);
+    stage.append(command);
+    shell.append(stage);
     this.commit(shell);
   }
 
@@ -946,42 +938,34 @@ export class GameView {
     onContinue(): void;
   }): void {
     const shell = this.createShell(options.sceneId);
-    shell.classList.add("battle-screen");
+    shell.classList.add("battle-screen", `enemy-${options.battleState.enemyState}`);
     applySceneEffect(shell, options.effect);
-    const card = element("section", "battle-result-card");
-    card.append(
-      this.createAssetVisual(
-        resolveDoyunVisual({ kind: "battle", phaseId: options.phaseId }) ?? "doyun.magical",
-        "마법소녀 도윤",
-        "asset-visual battle-reply-player doyun-visual",
-      ),
-      this.createAssetVisual(
-        `gray_wraith.${options.battleState.enemyState}`,
-        options.enemyName,
-        "asset-visual battle-reply-character",
-      ),
-      this.createCharacterVisual(
-        "juno",
-        options.battleState.phaseIndex === 1 ? "happy" : "neutral",
-        "주노",
-        "asset-visual battle-reply-juno",
-      ),
+    const stage = this.createBattleStage(
+      options.phaseId,
+      options.enemyName,
+      options.reply,
+      options.battleState,
     );
-    card.append(
+    stage.classList.add("battle-stage-result");
+    const dialogue = stage.querySelector<HTMLElement>(".battle-dialogue");
+    dialogue?.insertBefore(
       element("p", "player-line", `도윤 · ${options.actionLabel}`),
-      createGauge("MOMENTUM", options.battleState.momentum, 20, 100),
-      this.dialoguePanel(options.enemyName, options.reply, "gray_wraith"),
+      dialogue.firstChild,
     );
+    const result = element("section", "battle-control-dock battle-result-controls");
     if (options.narration) {
-      card.append(element("p", "ending-line", formatDialogueText(options.narration, "narration")));
+      result.append(
+        element("p", "battle-result-narration", formatDialogueText(options.narration, "narration")),
+      );
     }
     const button = this.delayedAdvanceButton(
       "primary-button",
-      options.completed ? `${options.grade} 등급으로 수렴` : "다음 행동",
+      options.completed ? "계속" : "다음 행동",
       options.onContinue,
     );
-    card.append(button);
-    shell.append(card);
+    result.append(button);
+    stage.append(result);
+    shell.append(stage);
     this.commit(shell);
   }
 
@@ -1249,6 +1233,63 @@ export class GameView {
     };
 
     usePath(contract.primaryPath, false);
+  }
+
+  private createBattleStage(
+    phaseId: string,
+    enemyName: string,
+    dialogueText: string,
+    battleState: BattleState,
+  ): HTMLElement {
+    const presentation = resolveBattleStagePresentation(phaseId);
+    const stage = element("section", "battle-stage");
+    stage.dataset.phase = phaseId;
+    stage.dataset.enemyState = battleState.enemyState;
+
+    const phaseDots = element("div", "battle-phase-dots");
+    phaseDots.setAttribute(
+      "aria-label",
+      `언령 ${presentation.phaseIndex + 1}/${presentation.phaseTotal}`,
+    );
+    for (let index = 0; index < presentation.phaseTotal; index += 1) {
+      const dot = element("span", "battle-phase-dot");
+      dot.classList.toggle("is-active", index === presentation.phaseIndex);
+      dot.classList.toggle("is-complete", index < presentation.phaseIndex);
+      dot.setAttribute("aria-hidden", "true");
+      phaseDots.append(dot);
+    }
+    const hud = element("header", "battle-hud");
+    hud.append(
+      element("span", "battle-phase-label", `언령 ${presentation.phaseIndex + 1}`),
+      phaseDots,
+      createGauge("기세", battleState.momentum, 20, 100),
+    );
+
+    const visualStage = element("section", "battle-character-stage");
+    visualStage.setAttribute("aria-label", "언령 배틀 무대");
+    visualStage.append(
+      this.createAssetVisual(
+        `gray_wraith.${battleState.enemyState}`,
+        enemyName,
+        "asset-visual battle-stage-character battle-stage-wraith enemy-visual",
+      ),
+      this.createAssetVisual(
+        presentation.doyunLogicalId,
+        "마법소녀 도윤",
+        "asset-visual battle-stage-character battle-stage-doyun doyun-visual",
+      ),
+      this.createCharacterVisual(
+        "juno",
+        presentation.junoEmotion,
+        "주노",
+        "asset-visual battle-stage-character battle-stage-juno",
+      ),
+    );
+
+    const dialogue = this.dialoguePanel(enemyName, dialogueText, "gray_wraith");
+    dialogue.classList.add("battle-dialogue");
+    stage.append(hud, visualStage, dialogue);
+    return stage;
   }
 
   private createCharacterVisual(

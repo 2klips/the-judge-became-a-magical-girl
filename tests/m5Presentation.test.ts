@@ -4,6 +4,7 @@ import {
   formatDialogueText,
   resolveDialogueIdentity,
   resolveDialoguePresentation,
+  resolveBattleStagePresentation,
   resolveEndingLines,
   resolveEndingPages,
   resolveEndingVisual,
@@ -173,6 +174,25 @@ describe("M5 장면 표시 계약", () => {
     expect(resolveIncantationCompanionVisual({ npcEmotion: "neutral" })).toEqual({
       characterId: "juno",
       emotion: "neutral",
+    });
+  });
+
+  it("전투 명령·결과 화면이 같은 페이즈별 무대 인물 계약을 사용한다", () => {
+    expect(resolveBattleStagePresentation("p1_defend")).toEqual({
+      phaseIndex: 0,
+      phaseTotal: 3,
+      doyunLogicalId: "doyun.magical_defend",
+      junoEmotion: "neutral",
+    });
+    expect(resolveBattleStagePresentation("p2_attack")).toMatchObject({
+      phaseIndex: 1,
+      doyunLogicalId: "doyun.magical_attack",
+      junoEmotion: "happy",
+    });
+    expect(resolveBattleStagePresentation("p3_answer")).toMatchObject({
+      phaseIndex: 2,
+      doyunLogicalId: "doyun.magical_finish",
+      junoEmotion: "neutral",
     });
   });
 });

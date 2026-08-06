@@ -2409,3 +2409,306 @@ html[data-qa-preview="true"] .dev-scene-nav {
     width: min(330px, calc(100vw - 24px));
   }
 }
+
+/* M5 battle stage — directive WP4 */
+.game-shell.battle-screen {
+  min-height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.battle-stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.battle-hud {
+  position: absolute;
+  z-index: 8;
+  top: clamp(14px, 2.5vh, 28px);
+  right: clamp(18px, 4vw, 64px);
+  left: clamp(18px, 4vw, 64px);
+  display: grid;
+  grid-template-columns: auto auto minmax(220px, 430px);
+  gap: 16px;
+  align-items: center;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 14px;
+  background: rgba(10, 11, 24, 0.88);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.battle-phase-label {
+  color: #fff1a6;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.battle-phase-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.battle-phase-dot {
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.battle-phase-dot.is-complete {
+  background: #b79cff;
+}
+
+.battle-phase-dot.is-active {
+  background: #ffd84d;
+  box-shadow: 0 0 12px rgba(255, 216, 77, 0.82);
+}
+
+.battle-hud .gauge {
+  min-width: 0;
+}
+
+.battle-character-stage {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.battle-stage-character {
+  position: absolute;
+  bottom: 0;
+  margin: 0;
+}
+
+.battle-stage-wraith {
+  z-index: 1;
+  bottom: clamp(96px, 10vh, 132px);
+  left: clamp(-4%, 1vw, 4%);
+  width: min(48vw, 690px);
+  height: min(76vh, 760px);
+  opacity: 0.9;
+  transition: filter 800ms ease, opacity 800ms ease, transform 800ms ease;
+}
+
+.battle-stage-doyun {
+  z-index: 3;
+  right: clamp(-5%, 1vw, 3%);
+  bottom: -18vh;
+  width: min(62vw, 880px);
+  height: min(108vh, 1120px);
+}
+
+.battle-stage-juno {
+  z-index: 4;
+  right: clamp(29%, 33vw, 38%);
+  bottom: clamp(250px, 34vh, 390px);
+  width: min(16vw, 210px);
+  height: min(36vh, 380px);
+}
+
+.battle-dialogue.dialogue-panel {
+  position: absolute;
+  z-index: 6;
+  right: auto;
+  bottom: clamp(190px, 26vh, 245px);
+  left: clamp(18px, 5vw, 72px);
+  width: min(68vw, 920px);
+  min-height: 116px;
+  margin: 0;
+  padding-block: 26px 20px;
+}
+
+.battle-stage-result .battle-dialogue.dialogue-panel {
+  bottom: clamp(92px, 13vh, 126px);
+}
+
+.battle-control-dock {
+  position: absolute;
+  z-index: 9;
+  right: clamp(14px, 3vw, 46px);
+  bottom: clamp(12px, 2vh, 24px);
+  left: clamp(14px, 3vw, 46px);
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(460px, 1.8fr);
+  gap: 8px 18px;
+  align-items: center;
+  min-height: 154px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 216, 77, 0.42);
+  border-radius: 16px;
+  background: rgba(12, 13, 28, 0.94);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(14px);
+}
+
+.battle-spell-label {
+  align-self: end;
+  margin: 0;
+  color: #ffd84d;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.battle-control-dock .battle-spell {
+  align-self: start;
+  margin: 0;
+  font-size: clamp(1rem, 1.55vw, 1.24rem);
+  line-height: 1.45;
+}
+
+.battle-control-dock > :not(.battle-spell-label):not(.battle-spell) {
+  grid-column: 2;
+}
+
+.battle-control-dock .battle-actions,
+.battle-control-dock .battle-choice-list {
+  grid-row: 1 / span 2;
+  align-self: center;
+  margin: 0;
+}
+
+.battle-control-dock .battle-choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.battle-result-controls {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 64px;
+}
+
+.battle-result-controls .battle-result-narration {
+  margin: 0 auto 0 0;
+  color: var(--vn-muted);
+}
+
+.battle-result-controls .primary-button {
+  min-width: 180px;
+}
+
+.enemy-weakened .battle-stage-wraith {
+  opacity: 0.72;
+  transform: translateX(-1.5%) scale(0.98);
+}
+
+@media (max-width: 760px) {
+  .game-shell.battle-screen,
+  .battle-stage {
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .battle-hud {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    grid-template-columns: auto auto 1fr;
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .battle-phase-label {
+    font-size: 0.78rem;
+  }
+
+  .battle-hud .gauge-heading {
+    font-size: 0.7rem;
+  }
+
+  .battle-stage-wraith {
+    bottom: 32vh;
+    left: -20%;
+    width: 82vw;
+    height: 56vh;
+    opacity: 0.78;
+  }
+
+  .battle-stage-doyun {
+    right: -32%;
+    bottom: 28vh;
+    width: 104vw;
+    height: 68vh;
+    opacity: 0.84;
+  }
+
+  .battle-stage-juno {
+    right: 34%;
+    bottom: 49vh;
+    width: 36vw;
+    height: 30vh;
+  }
+
+  .battle-dialogue.dialogue-panel,
+  .battle-stage-result .battle-dialogue.dialogue-panel {
+    right: 10px;
+    bottom: 226px;
+    left: 10px;
+    width: auto;
+    min-height: 108px;
+    padding: 28px 16px 15px;
+  }
+
+  .battle-control-dock {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    min-height: 208px;
+    max-height: 212px;
+    padding: 10px;
+    overflow: hidden;
+  }
+
+  .battle-control-dock > :not(.battle-spell-label):not(.battle-spell) {
+    grid-column: 1;
+  }
+
+  .battle-control-dock .battle-spell {
+    max-height: 2.9em;
+    overflow: hidden;
+    font-size: 0.92rem;
+  }
+
+  .battle-control-dock .battle-actions,
+  .battle-control-dock .battle-choice-list {
+    grid-row: auto;
+    grid-column: 1;
+  }
+
+  .battle-control-dock .battle-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .battle-control-dock .battle-choice-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .battle-control-dock button {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .battle-result-controls {
+    display: flex;
+    min-height: 64px;
+    max-height: 76px;
+  }
+
+  .battle-stage-result .battle-dialogue.dialogue-panel {
+    bottom: 90px;
+  }
+}
