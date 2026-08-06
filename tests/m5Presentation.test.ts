@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { EndingNode } from "../src/data/schema";
 import {
   formatDialogueText,
+  isActBoundaryTransition,
   resolveDialogueIdentity,
   resolveDialoguePresentation,
   resolveBattleStagePresentation,
@@ -88,6 +89,15 @@ describe("M5 장면 표시 계약", () => {
     expect(typewriterDelayFor(",")).toBe(48);
     expect(typewriterDelayFor(".")).toBe(92);
     expect(typewriterDelayFor("…")).toBe(92);
+  });
+
+  it("암전은 지정된 네 막 경계에서만 실행한다", () => {
+    expect(isActBoundaryTransition("title", "n0_review")).toBe(true);
+    expect(isActBoundaryTransition("n5_transform_result", "battle_wraith")).toBe(true);
+    expect(isActBoundaryTransition("battle_wraith", "ch3_gray_answer")).toBe(true);
+    expect(isActBoundaryTransition("ch3_gray_answer", "ending_good")).toBe(true);
+    expect(isActBoundaryTransition("n2_juno_intro", "n2_juno_followup")).toBe(false);
+    expect(isActBoundaryTransition("battle_wraith", "battle_wraith")).toBe(false);
   });
 
   it("내레이션만 소괄호로 감싸고 이미 감싼 문장은 중복 처리하지 않는다", () => {

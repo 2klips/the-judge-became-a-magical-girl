@@ -263,6 +263,18 @@ export function resolveBackgroundTransition(
   return previousBackgroundId === nextBackgroundId ? "same" : "change";
 }
 
+export function isActBoundaryTransition(
+  previousContext: string | null,
+  nextContext: string,
+): boolean {
+  return (
+    (previousContext === "title" && nextContext === "n0_review") ||
+    (previousContext === "n5_transform_result" && nextContext === "battle_wraith") ||
+    (previousContext === "battle_wraith" && nextContext === "ch3_gray_answer") ||
+    (previousContext === "ch3_gray_answer" && nextContext.startsWith("ending_"))
+  );
+}
+
 export function resolveEndingLines(
   node: EndingNode,
   battleGrade: GameState["battleGrade"],
@@ -456,6 +468,8 @@ export class GameView {
     PushToTalkShortcutBinding
   >();
   private currentBackgroundId: string | null = null;
+  private currentPresentationContext: string | null = null;
+  private readonly enteredPresentationContexts = new Set<string>();
   private readonly spriteLogicalIds = new Map<SpriteSlot, string>();
   private activeTypewriter: {
     complete(): boolean;
@@ -493,7 +507,7 @@ export class GameView {
   }
 
   renderLoading(): void {
-    const shell = this.createShell("bg_title");
+    const shell = this.createShell("bg_title", "loading");
     shell.append(element("p", "loading", "게임 데이터를 검증하는 중…"));
     this.commit(shell);
   }
@@ -502,7 +516,7 @@ export class GameView {
     preview: DevScenePreview,
     onPlayBgm?: () => void,
   ): void {
-    const shell = this.createShell(preview.backgroundId);
+    const shell = this.createShell(preview.backgroundId, `dev:${preview.id}`);
     shell.classList.add("dev-scene-preview", `dev-layout-${preview.layout}`);
     shell.dataset.previewId = preview.id;
 
@@ -544,7 +558,7 @@ export class GameView {
   }
 
   renderDevSceneError(requestedId: string): void {
-    const shell = this.createShell("bg_title");
+    const shell = this.createShell("bg_title", "dev:error");
     shell.classList.add("dev-scene-preview");
     const card = element("section", "dev-preview-card");
     card.append(
@@ -558,7 +572,7 @@ export class GameView {
   }
 
   renderTitle(options: TitleOptions): void {
-    const shell = this.createShell("bg_title");
+    const shell = this.createShell("bg_title", "title");
     shell.classList.add("title-screen");
 
     const titleBlock = element("section", "title-block");
@@ -752,6 +766,7 @@ export class GameView {
         baseBackground: options.sceneId,
         lineIndex: options.lineIndex,
       }),
+      options.nodeId,
     );
     shell.dataset.activeSpeaker = options.speakerId ?? "narration";
     const doyunVisual = resolveDoyunVisual({
@@ -824,6 +839,7 @@ export class GameView {
         baseBackground: node.scene.bg,
         stage: "incantation",
       }),
+      node.nodeId,
     );
     shell.dataset.activeSpeaker = "juno";
     shell.classList.add("incantation-screen");
@@ -897,7 +913,7 @@ export class GameView {
     lines: readonly string[];
     onContinue(): void;
   }): void {
-    const shell = this.createShell(options.sceneId);
+    const shell = this.createShell(options.sceneId, "n5_transform_result");
     shell.dataset.activeSpeaker = "narration";
     applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
     shell.append(
@@ -957,6 +973,7 @@ export class GameView {
         beat: "prompt",
         baseBackground: node.scene.bg,
       }),
+      "battle_wraith",
     );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
     shell.dataset.activeSpeaker = "gray_wraith";
@@ -1047,7 +1064,7 @@ export class GameView {
     grade: BattleGrade | null;
     onContinue(): void;
   }): void {
-    const shell = this.createShell(options.sceneId);
+    const shell = this.createShell(options.sceneId, "battle_wraith");
     shell.classList.add("battle-screen", `enemy-${options.battleState.enemyState}`);
     shell.dataset.activeSpeaker = "gray_wraith";
     const delta = options.battleState.momentum - options.previousMomentum;
@@ -1137,6 +1154,7 @@ export class GameView {
         nodeId: node.nodeId,
         baseBackground: node.scene.bg,
       }),
+      node.nodeId,
     );
     shell.dataset.activeSpeaker = node.nodeId === "n1_first_voice" ? "voice" : character.id;
     const identity = resolveDialogueIdentity(node.nodeId, character.name);
@@ -1195,6 +1213,7 @@ export class GameView {
         nodeId: options.nodeId,
         baseBackground: options.sceneId,
       }),
+      options.nodeId,
     );
     shell.dataset.activeSpeaker =
       options.nodeId === "n1_first_voice" ? "voice" : options.characterId;
@@ -1237,7 +1256,7 @@ export class GameView {
     const renderPage = (): void => {
       const page = pages[pageIndex];
       if (!page) return;
-      const shell = this.createShell(page.sceneId);
+      const shell = this.createShell(page.sceneId, node.nodeId);
       shell.dataset.activeSpeaker = page.line.speaker;
       shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
       const doyunVisual = resolveDoyunVisual({
@@ -1307,7 +1326,7 @@ export class GameView {
   }
 
   renderError(error: unknown): void {
-    const shell = this.createShell("bg_hall_dark");
+    const shell = this.createShell("bg_hall_dark", "error");
     const panel = element("section", "error-panel");
     panel.append(
       element("p", "eyebrow", "DATA VALIDATION ERROR"),
@@ -1328,9 +1347,20 @@ export class GameView {
     this.commit(shell);
   }
 
-  private createShell(sceneId: string): HTMLElement {
+  private createShell(sceneId: string, presentationContext = sceneId): HTMLElement {
     const shell = element("main", "game-shell");
     shell.dataset.scene = sceneId;
+    shell.dataset.presentationContext = presentationContext;
+    if (isActBoundaryTransition(this.currentPresentationContext, presentationContext)) {
+      shell.classList.add("act-boundary-transition");
+    }
+    if (
+      presentationContext === "n2_juno_intro" &&
+      !this.enteredPresentationContexts.has(presentationContext)
+    ) {
+      shell.classList.add("juno-first-entrance");
+      this.enteredPresentationContexts.add(presentationContext);
+    }
     const transition = resolveBackgroundTransition(this.currentBackgroundId, sceneId);
     shell.dataset.backgroundTransition = transition;
     if (transition === "change" && this.currentBackgroundId) {
@@ -1385,6 +1415,11 @@ export class GameView {
         },
         { once: true },
       );
+      if (transitionRole === "leaving") {
+        const removeLeavingImage = (): void => image.remove();
+        image.addEventListener("animationend", removeLeavingImage, { once: true });
+        window.setTimeout(removeLeavingImage, 520);
+      }
       if (isFallback && contract.fallbackClass) {
         shell.classList.add(contract.fallbackClass);
       }
@@ -1746,6 +1781,8 @@ export class GameView {
         currentStage.replaceChildren(...nextStage.childNodes);
         if (this.debugEnabled) currentShell.append(this.devSceneNavigator());
         this.currentBackgroundId = currentShell.dataset.scene ?? null;
+        this.currentPresentationContext =
+          currentShell.dataset.presentationContext ?? null;
         this.activateTypewriter(currentShell);
         return;
       }
@@ -1755,6 +1792,7 @@ export class GameView {
     }
     this.root.replaceChildren(shell);
     this.currentBackgroundId = shell.dataset.scene ?? null;
+    this.currentPresentationContext = shell.dataset.presentationContext ?? null;
     this.activateTypewriter(shell);
   }
 

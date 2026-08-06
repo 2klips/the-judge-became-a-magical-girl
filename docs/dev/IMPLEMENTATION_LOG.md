@@ -1092,3 +1092,30 @@
 | presentation unit | PASS | 하단 중앙 5화자, sprite slot, 24/48/92ms 속도 계약 |
 | 1.5초 잠금 | 유지 | `DelayedActionGate` 수치 무변경, text/timer 이중 gate |
 | 브라우저 10턴·390×844 | 대기 | WP3-C 전환까지 결합 후 확인 |
+
+## M5 연출 폴리시 WP3-C·WP5-1/2/3 — 장면 전환·등장·effect 수명
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 브라우저 타이밍 QA 대기
+
+### 처리 내용
+
+- presentation context를 분리해 네 막 경계만 500ms 암전하도록 DEC-062를 적용했다.
+- 배경 논리 ID가 같으면 계속 무전환, 다르면 기존 420ms crossfade를 유지한다.
+- 떠나는 background image는 `animationend`에서 제거하고 reduced-motion/이벤트 누락 대비 520ms 안전 제거를 추가했다.
+- N2 첫 등장 주노에 400ms 낙하와 착지 빛 번짐을 한 세션 1회만 적용했다.
+- `applySceneEffect()`에 `fade`를 추가하고 자기 animation 종료 시 `effect-*` class를 제거한다.
+- N5 주문의 줄바꿈이 보이도록 `.incantation-copy { white-space: pre-line; }`을 적용했다.
+- 모든 신규 전환·등장 모션은 reduced-motion에서 비활성화된다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 39 files·179 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| act boundary unit | PASS | 지정 4경계 true, 일반 노드·battle 내부 false |
+| effect lifecycle unit | PASS | fade class 자기 animationend 제거, none 무동작 |
+| 브라우저 전환 | 대기 | 420/500ms 체감·N2 1회·reduced-motion 확인 |

@@ -1495,6 +1495,77 @@ button {
   }
 }
 
+/* M5 act transitions and entrances — DEC-062 */
+.incantation-copy {
+  white-space: pre-line;
+}
+
+.act-boundary-transition::after,
+.effect-fade::after {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: block;
+  content: "";
+  pointer-events: none;
+  background: #000;
+  animation: act-fade-from-black 500ms ease-out both;
+}
+
+.juno-first-entrance [data-sprite-slot="juno"] {
+  animation: juno-first-drop 400ms cubic-bezier(0.2, 0.8, 0.25, 1.08) both;
+}
+
+.juno-first-entrance::after {
+  position: absolute;
+  z-index: 1;
+  right: clamp(24%, 31vw, 38%);
+  bottom: clamp(210px, 30vh, 330px);
+  width: min(24vw, 310px);
+  aspect-ratio: 2.4;
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(255, 231, 112, 0.74), transparent 70%);
+  filter: blur(6px);
+  animation: juno-landing-glow 620ms ease-out both;
+}
+
+@keyframes act-fade-from-black {
+  0%, 26% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes juno-first-drop {
+  0% { opacity: 0; transform: translateY(-56px) scale(0.92); }
+  72% { opacity: 1; transform: translateY(5px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes juno-landing-glow {
+  0% { opacity: 0; transform: scale(0.35); }
+  45% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+
+@media (max-width: 760px) {
+  .juno-first-entrance::after {
+    right: 28%;
+    bottom: 43%;
+    width: 44vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .act-boundary-transition::after,
+  .effect-fade::after,
+  .juno-first-entrance [data-sprite-slot="juno"],
+  .juno-first-entrance::after {
+    display: none;
+    animation: none !important;
+  }
+}
+
 /* M5 standard visual-novel dialogue — DEC-061 */
 .dialogue-panel,
 .dialogue-side-left,
