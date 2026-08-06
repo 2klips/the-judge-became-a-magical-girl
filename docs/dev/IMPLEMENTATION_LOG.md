@@ -1067,3 +1067,28 @@
 | battle 로직 회귀 | PASS | `src/battle/`, momentum·phase·grade 산식 변경 없음 |
 | reduced-motion | PASS(코드) | 신규 animation 비활성 CSS, 파티클 기존 matchMedia gate 유지 |
 | 실제 모션·SFX 순서 | 대기 | WP2 cue 연결 뒤 브라우저/헤드폰 QA |
+
+## M5 연출 폴리시 WP3-A/B — 표준 미연시 대화창·타이프라이터
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 브라우저 연속 10턴·모바일 QA 대기
+
+### 처리 내용
+
+- 화자별 좌/우/중앙 대화창 이동을 폐기하고 전 화자를 하단 중앙 `min(920px, 92vw)`에 고정했다.
+- 주노 yellow·도윤 rose·망령 violet·voice amber는 이름표와 테두리 accent로 유지하고, 실제 화자 스프라이트만 밝게 강조한다.
+- 24ms/글자, 쉼표 48ms, 문장부호 92ms 타이프라이터를 추가했다. 대화창 클릭·Space·Enter는 현재 문장을 즉시 완성한다.
+- 텍스트 완성 및 기존 1.5초 타이머가 모두 끝나야 진행 버튼이 활성화되고, 준비되면 대화창 우하단에 `▼`가 나타난다.
+- reduced-motion은 본문을 즉시 완성하며 next indicator·sprite crossfade 애니메이션을 끈다.
+- 도윤/주노/망령 슬롯별 마지막 논리 ID를 기억해 동일 ID 재렌더 fade를 생략하고, 표정·상태 변경 시에만 180ms crossfade한다.
+- 타이프라이터 중 `aria-live=off`, 완성 시 전체 문장 `polite` 전환으로 글자 단위 스크린리더 낭독을 막았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TypeScript | PASS | `npm run check` 오류 0 |
+| presentation unit | PASS | 하단 중앙 5화자, sprite slot, 24/48/92ms 속도 계약 |
+| 1.5초 잠금 | 유지 | `DelayedActionGate` 수치 무변경, text/timer 이중 gate |
+| 브라우저 10턴·390×844 | 대기 | WP3-C 전환까지 결합 후 확인 |

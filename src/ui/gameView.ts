@@ -67,16 +67,33 @@ export interface DialoguePresentation {
 export function resolveDialoguePresentation(speakerId: string): DialoguePresentation {
   switch (speakerId) {
     case "juno":
-      return { side: "left", tone: "juno", showName: true };
+      return { side: "center", tone: "juno", showName: true };
     case "doyun":
-      return { side: "right", tone: "doyun", showName: true };
+      return { side: "center", tone: "doyun", showName: true };
     case "gray_wraith":
-      return { side: "left", tone: "wraith", showName: true };
+      return { side: "center", tone: "wraith", showName: true };
     case "narration":
       return { side: "center", tone: "narration", showName: false };
     default:
       return { side: "center", tone: "voice", showName: true };
   }
+}
+
+export type SpriteSlot = "doyun" | "juno" | "gray_wraith";
+
+export function resolveSpriteSlot(logicalId: string): SpriteSlot | null {
+  if (logicalId.startsWith("doyun.")) return "doyun";
+  if (logicalId.startsWith("juno.")) return "juno";
+  if (logicalId.startsWith("gray_wraith.")) return "gray_wraith";
+  return null;
+}
+
+export const TYPEWRITER_BASE_DELAY_MS = 24;
+
+export function typewriterDelayFor(character: string): number {
+  if (/[.!?。！？…]/u.test(character)) return 92;
+  if (/[,，]/u.test(character)) return 48;
+  return TYPEWRITER_BASE_DELAY_MS;
 }
 
 export function formatDialogueText(text: string, speakerId: string): string {
@@ -439,6 +456,11 @@ export class GameView {
     PushToTalkShortcutBinding
   >();
   private currentBackgroundId: string | null = null;
+  private readonly spriteLogicalIds = new Map<SpriteSlot, string>();
+  private activeTypewriter: {
+    complete(): boolean;
+    cancel(): void;
+  } | null = null;
   private debugSttModel: OpenAiSttModel;
   private latestTranscription: TranscriptionObservation | null = null;
 
@@ -450,6 +472,13 @@ export class GameView {
     this.debugSttModel = debugSttOptions.model;
     window.addEventListener("keydown", (event) => {
       if (event.ctrlKey || event.altKey || event.metaKey || isEditableKeyboardTarget(event.target)) {
+        return;
+      }
+      if (
+        (event.key === " " || event.key === "Enter") &&
+        this.activeTypewriter?.complete()
+      ) {
+        event.preventDefault();
         return;
       }
       const target = this.resolveKeyboardPttTarget();
@@ -724,6 +753,7 @@ export class GameView {
         lineIndex: options.lineIndex,
       }),
     );
+    shell.dataset.activeSpeaker = options.speakerId ?? "narration";
     const doyunVisual = resolveDoyunVisual({
       kind: "node",
       nodeId: options.nodeId,
@@ -795,6 +825,7 @@ export class GameView {
         stage: "incantation",
       }),
     );
+    shell.dataset.activeSpeaker = "juno";
     shell.classList.add("incantation-screen");
     shell.append(
       this.createAssetVisual(
@@ -867,6 +898,7 @@ export class GameView {
     onContinue(): void;
   }): void {
     const shell = this.createShell(options.sceneId);
+    shell.dataset.activeSpeaker = "narration";
     applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
     shell.append(
       this.createAssetVisual(
@@ -927,6 +959,7 @@ export class GameView {
       }),
     );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
+    shell.dataset.activeSpeaker = "gray_wraith";
     const stage = this.createBattleStage(
       phase.phaseId,
       node.enemy.name,
@@ -1016,6 +1049,7 @@ export class GameView {
   }): void {
     const shell = this.createShell(options.sceneId);
     shell.classList.add("battle-screen", `enemy-${options.battleState.enemyState}`);
+    shell.dataset.activeSpeaker = "gray_wraith";
     const delta = options.battleState.momentum - options.previousMomentum;
     const actionPresentation = resolveBattleActionPresentation({
       phaseId: options.phaseId,
@@ -1104,6 +1138,7 @@ export class GameView {
         baseBackground: node.scene.bg,
       }),
     );
+    shell.dataset.activeSpeaker = node.nodeId === "n1_first_voice" ? "voice" : character.id;
     const identity = resolveDialogueIdentity(node.nodeId, character.name);
     this.appendDialogueVisuals(
       shell,
@@ -1161,6 +1196,8 @@ export class GameView {
         baseBackground: options.sceneId,
       }),
     );
+    shell.dataset.activeSpeaker =
+      options.nodeId === "n1_first_voice" ? "voice" : options.characterId;
     const identity = resolveDialogueIdentity(options.nodeId, options.speaker);
     this.appendDialogueVisuals(
       shell,
@@ -1201,6 +1238,7 @@ export class GameView {
       const page = pages[pageIndex];
       if (!page) return;
       const shell = this.createShell(page.sceneId);
+      shell.dataset.activeSpeaker = page.line.speaker;
       shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
       const doyunVisual = resolveDoyunVisual({
         kind: "ending",
@@ -1484,6 +1522,9 @@ export class GameView {
     resolvedPath = resolveImageAsset(logicalId),
   ): HTMLElement {
     const figure = element("figure", className);
+    figure.dataset.logicalId = logicalId;
+    const spriteSlot = resolveSpriteSlot(logicalId);
+    if (spriteSlot) figure.dataset.spriteSlot = spriteSlot;
     const fallback = resolveImageAssetFallback(logicalId);
     const showPlaceholder = (): void => {
       const presentation = resolveMissingAssetPresentation(label);
@@ -1539,10 +1580,103 @@ export class GameView {
       `dialogue-panel dialogue-side-${presentation.side} dialogue-tone-${presentation.tone}`,
     );
     panel.dataset.speaker = speakerId;
-    panel.setAttribute("aria-live", "polite");
+    panel.setAttribute("aria-live", "off");
     if (presentation.showName) panel.append(element("div", "nameplate", speaker));
-    panel.append(element("p", "dialogue-text", formatDialogueText(text, speakerId)));
+    const dialogueText = element("p", "dialogue-text");
+    dialogueText.dataset.typewriterText = formatDialogueText(text, speakerId);
+    dialogueText.textContent = dialogueText.dataset.typewriterText;
+    panel.append(dialogueText);
     return panel;
+  }
+
+  private applySpriteContinuity(container: HTMLElement): void {
+    const nextSlots = new Set<SpriteSlot>();
+    for (const sprite of container.querySelectorAll<HTMLElement>("[data-sprite-slot]")) {
+      const slot = resolveSpriteSlot(sprite.dataset.logicalId ?? "");
+      const logicalId = sprite.dataset.logicalId;
+      if (!slot || !logicalId) continue;
+      nextSlots.add(slot);
+      sprite.classList.add(
+        this.spriteLogicalIds.get(slot) === logicalId ? "sprite-static" : "sprite-entering",
+      );
+      this.spriteLogicalIds.set(slot, logicalId);
+    }
+    for (const slot of [...this.spriteLogicalIds.keys()]) {
+      if (!nextSlots.has(slot)) this.spriteLogicalIds.delete(slot);
+    }
+  }
+
+  private activateTypewriter(container: HTMLElement): void {
+    const textNode = container.querySelector<HTMLElement>(".dialogue-text[data-typewriter-text]");
+    if (!textNode) return;
+    const panel = textNode.closest<HTMLElement>(".dialogue-panel");
+    const fullText = textNode.dataset.typewriterText ?? "";
+    const advanceButtons = [...container.querySelectorAll<HTMLButtonElement>("[data-timer-ready]")];
+    const setTextReady = (ready: boolean): void => {
+      for (const button of advanceButtons) {
+        button.dataset.textReady = String(ready);
+        if (ready) {
+          button.dispatchEvent(new Event("typewritercomplete"));
+        } else {
+          button.disabled = true;
+          button.dataset.advanceState = "waiting";
+        }
+      }
+    };
+    const revealImmediately =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (revealImmediately || fullText.length === 0) {
+      textNode.textContent = fullText;
+      panel?.setAttribute("aria-live", "polite");
+      setTextReady(true);
+      return;
+    }
+
+    const characters = Array.from(fullText);
+    let index = 0;
+    let timer = 0;
+    let completed = false;
+    textNode.textContent = "";
+    textNode.setAttribute("aria-hidden", "true");
+    setTextReady(false);
+
+    const complete = (): boolean => {
+      if (completed) return false;
+      completed = true;
+      window.clearTimeout(timer);
+      textNode.textContent = fullText;
+      textNode.removeAttribute("aria-hidden");
+      panel?.setAttribute("aria-live", "polite");
+      setTextReady(true);
+      return true;
+    };
+    const tick = (): void => {
+      if (completed) return;
+      index += 1;
+      textNode.textContent = characters.slice(0, index).join("");
+      if (index >= characters.length) {
+        complete();
+        return;
+      }
+      const character = characters[index - 1] ?? "";
+      timer = window.setTimeout(tick, typewriterDelayFor(character));
+    };
+    const controller = {
+      complete,
+      cancel: (): void => {
+        completed = true;
+        window.clearTimeout(timer);
+      },
+    };
+    this.activeTypewriter = controller;
+    panel?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("button, input, select, textarea, a")) {
+        return;
+      }
+      controller.complete();
+    });
+    timer = window.setTimeout(tick, TYPEWRITER_BASE_DELAY_MS);
   }
 
   private delayedAdvanceButton(
@@ -1554,21 +1688,36 @@ export class GameView {
     button.type = "button";
     button.disabled = true;
     button.dataset.advanceState = "waiting";
+    button.dataset.timerReady = "false";
+    button.dataset.textReady = "true";
+    const updateReady = (): void => {
+      const ready =
+        button.dataset.timerReady === "true" && button.dataset.textReady === "true";
+      button.disabled = !ready;
+      button.dataset.advanceState = ready ? "ready" : "waiting";
+    };
     const gate = new DelayedActionGate({
       delayMs: DIALOGUE_ADVANCE_DELAY_MS,
       onReadyChange: (ready) => {
-        button.disabled = !ready;
-        button.dataset.advanceState = ready ? "ready" : "waiting";
+        button.dataset.timerReady = String(ready);
+        updateReady();
       },
       onAction: onContinue,
     });
     button.addEventListener("click", () => gate.trigger());
+    button.addEventListener("typewritercomplete", () => {
+      button.dataset.textReady = "true";
+      updateReady();
+    });
     gate.arm();
     return button;
   }
 
   private commit(shell: HTMLElement): void {
     this.keyboardPtt.cancel();
+    this.activeTypewriter?.cancel();
+    this.activeTypewriter = null;
+    this.applySpriteContinuity(shell);
     const currentShell = this.root.firstElementChild;
     if (
       currentShell instanceof HTMLElement &&
@@ -1597,6 +1746,7 @@ export class GameView {
         currentStage.replaceChildren(...nextStage.childNodes);
         if (this.debugEnabled) currentShell.append(this.devSceneNavigator());
         this.currentBackgroundId = currentShell.dataset.scene ?? null;
+        this.activateTypewriter(currentShell);
         return;
       }
     }
@@ -1605,6 +1755,7 @@ export class GameView {
     }
     this.root.replaceChildren(shell);
     this.currentBackgroundId = shell.dataset.scene ?? null;
+    this.activateTypewriter(shell);
   }
 
   private devSceneNavigator(): HTMLElement {

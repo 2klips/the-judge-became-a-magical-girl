@@ -1495,6 +1495,132 @@ button {
   }
 }
 
+/* M5 standard visual-novel dialogue — DEC-061 */
+.dialogue-panel,
+.dialogue-side-left,
+.dialogue-side-right,
+.dialogue-side-center {
+  position: relative;
+  right: auto;
+  left: auto;
+  align-self: flex-end;
+  width: min(920px, 92vw);
+  min-height: 148px;
+  margin: auto auto clamp(22px, 4vh, 48px);
+  padding: 32px 34px 24px;
+  border-radius: 14px 14px 6px 6px;
+  transform: none;
+}
+
+.dialogue-panel::before {
+  right: auto;
+  left: 0;
+  width: 100%;
+}
+
+.dialogue-panel::after,
+.dialogue-side-left::after,
+.dialogue-side-right::after,
+.dialogue-side-center::after {
+  display: none;
+}
+
+.dialogue-panel .nameplate,
+.dialogue-side-left .nameplate,
+.dialogue-side-right .nameplate,
+.dialogue-side-center .nameplate {
+  top: -24px;
+  right: auto;
+  left: 18px;
+  min-width: 132px;
+  min-height: 44px;
+  transform: none;
+}
+
+.dialogue-panel:has(button[data-advance-state="ready"])::after {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  display: block;
+  color: var(--dialogue-accent);
+  content: "▼";
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 7px currentColor);
+  animation: vn-next-indicator 900ms ease-in-out infinite alternate;
+}
+
+.dialogue-text {
+  min-height: 3.25em;
+}
+
+.sprite-static .asset-image {
+  animation: none;
+}
+
+.sprite-entering .asset-image {
+  animation: sprite-crossfade-in 180ms ease-out both;
+}
+
+.game-shell[data-active-speaker]:not([data-active-speaker="narration"]) [data-sprite-slot] {
+  filter: brightness(0.72) saturate(0.86);
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.game-shell[data-active-speaker="doyun"] [data-sprite-slot="doyun"],
+.game-shell[data-active-speaker="juno"] [data-sprite-slot="juno"],
+.game-shell[data-active-speaker="gray_wraith"] [data-sprite-slot="gray_wraith"] {
+  filter: brightness(1) saturate(1);
+  transform: translateY(-3px);
+}
+
+.game-shell[data-active-speaker="voice"] [data-sprite-slot] {
+  filter: brightness(0.82) saturate(0.92);
+}
+
+.choice-list {
+  width: min(620px, 100%);
+  margin-inline: auto;
+}
+
+@keyframes vn-next-indicator {
+  from { opacity: 0.45; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(2px); }
+}
+
+@keyframes sprite-crossfade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  .dialogue-panel,
+  .dialogue-side-left,
+  .dialogue-side-right,
+  .dialogue-side-center {
+    right: auto;
+    left: auto;
+    width: calc(100vw - 24px);
+    min-height: 136px;
+    margin: auto auto 34px;
+    padding: 30px 17px 20px;
+  }
+
+  .dialogue-panel .nameplate,
+  .dialogue-side-left .nameplate,
+  .dialogue-side-right .nameplate,
+  .dialogue-side-center .nameplate {
+    right: auto;
+    left: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogue-panel:has(button[data-advance-state="ready"])::after,
+  .sprite-entering .asset-image {
+    animation: none !important;
+  }
+}
+
 /* M5 presentation pass: late-night judging desk + magical employee badge */
 :root {
   --text: #f7f8ff;

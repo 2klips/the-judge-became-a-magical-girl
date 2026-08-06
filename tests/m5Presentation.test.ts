@@ -11,9 +11,12 @@ import {
   resolveEndingVisual,
   resolveIncantationCompanionVisual,
   resolveMissingAssetPresentation,
+  resolveSpriteSlot,
   resolveSceneBrand,
   resolveSttModelControlVisibility,
   resolveVoiceInputPresentation,
+  TYPEWRITER_BASE_DELAY_MS,
+  typewriterDelayFor,
   VOICE_PROCESSING_LABEL,
   VOICE_TITLE_SUBTITLE,
 } from "../src/ui/gameView";
@@ -46,17 +49,17 @@ describe("M5 장면 표시 계약", () => {
 
   it("화자별 미연시 대화창 방향·색상과 무기명 내레이션을 고정한다", () => {
     expect(resolveDialoguePresentation("juno")).toEqual({
-      side: "left",
+      side: "center",
       tone: "juno",
       showName: true,
     });
     expect(resolveDialoguePresentation("doyun")).toEqual({
-      side: "right",
+      side: "center",
       tone: "doyun",
       showName: true,
     });
     expect(resolveDialoguePresentation("gray_wraith")).toEqual({
-      side: "left",
+      side: "center",
       tone: "wraith",
       showName: true,
     });
@@ -70,6 +73,21 @@ describe("M5 장면 표시 계약", () => {
       tone: "voice",
       showName: true,
     });
+  });
+
+  it("대화창 이동 대신 캐릭터 논리 ID를 고정 highlight 슬롯으로 분류한다", () => {
+    expect(resolveSpriteSlot("doyun.normal_smile")).toBe("doyun");
+    expect(resolveSpriteSlot("juno.happy")).toBe("juno");
+    expect(resolveSpriteSlot("gray_wraith.weakened")).toBe("gray_wraith");
+    expect(resolveSpriteSlot("transform.cast")).toBeNull();
+  });
+
+  it("타이프라이터는 24ms 기본 속도와 문장부호 휴지를 사용한다", () => {
+    expect(TYPEWRITER_BASE_DELAY_MS).toBe(24);
+    expect(typewriterDelayFor("가")).toBe(24);
+    expect(typewriterDelayFor(",")).toBe(48);
+    expect(typewriterDelayFor(".")).toBe(92);
+    expect(typewriterDelayFor("…")).toBe(92);
   });
 
   it("내레이션만 소괄호로 감싸고 이미 감싼 문장은 중복 처리하지 않는다", () => {
