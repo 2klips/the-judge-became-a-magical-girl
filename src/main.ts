@@ -5,7 +5,7 @@ import {
   createWorkerBattleLlmPort,
   judgeBattleWithFailureGate,
 } from "./battle/llm";
-import type { BattleAction, BattleGrade } from "./battle/state";
+import type { BattleAction, BattleGrade, BattleState } from "./battle/state";
 import { BgmController } from "./audio/bgm";
 import { SfxPlayer } from "./audio/sfx";
 import { preloadCoreAssets } from "./assets/catalog";
@@ -68,12 +68,12 @@ const workerUrl = resolveWorkerUrl({
 if (isQaPreview) {
   installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
+const sfx = new SfxPlayer();
 const view = new GameView(root, {
   model: selectedSttModel,
   onModelChange: (model) => handleDebugSttModelChange(model),
-});
+}, () => sfx.play("advance"));
 const bgm = new BgmController();
-const sfx = new SfxPlayer();
 const microphoneTester = new BrowserMicrophoneTester();
 preloadCoreAssets();
 
@@ -138,10 +138,12 @@ async function bootstrap(): Promise<void> {
     const voiceCapture = (voice: RecordedVoiceTurnController) => ({
       startCapture: async (): Promise<void> => {
         bgm.setDucked(true);
+        sfx.setSuppressed(true);
         try {
           await voice.press();
         } catch (error) {
           bgm.setDucked(false);
+          sfx.setSuppressed(false);
           throw error;
         }
       },
@@ -150,11 +152,13 @@ async function bootstrap(): Promise<void> {
           return await voice.release();
         } finally {
           bgm.setDucked(false);
+          sfx.setSuppressed(false);
         }
       },
       cancel: (): void => {
         voice.cancel();
         bgm.setDucked(false);
+        sfx.setSuppressed(false);
       },
     });
 
@@ -249,6 +253,25 @@ async function bootstrap(): Promise<void> {
       const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
       if (state.inputMode === "voice") activeVoice = voice;
 
+      const playBattleActionSfx = (
+        action: BattleAction,
+        delta: number,
+        before: BattleState,
+        after: BattleState,
+      ): void => {
+        if (action.kind === "guard") sfx.play("guard");
+        else if (action.kind === "failed-spell" || (action.kind === "spell" && delta === 0)) {
+          sfx.play("recognition_fail");
+        } else if (action.kind === "spell" || action.kind === "click-spell") {
+          sfx.play(delta >= 25 ? "critical" : "cast");
+        } else {
+          sfx.play(delta > 0 ? "impact" : "confirm");
+        }
+        if (before.enemyState === "normal" && after.enemyState === "weakened") {
+          sfx.play("wraith_shift");
+        }
+      };
+
       const applyAction = (
         action: BattleAction,
         actionLabel: string,
@@ -259,7 +282,7 @@ async function bootstrap(): Promise<void> {
         const before = engine.getBattleState();
         const result = engine.submitBattleAction(action);
         const delta = result.battleState.momentum - before.momentum;
-        sfx.play(delta === 0 ? "confirm" : "impact");
+        playBattleActionSfx(action, delta, before, result.battleState);
         view.renderBattleReply({
           sceneId: resolvePresentationBackground({
             kind: "battle",
@@ -277,11 +300,21 @@ async function bootstrap(): Promise<void> {
           actionLabel,
           reply,
           narration,
+          action:
+            action.kind === "failed-spell"
+              ? "failed-spell"
+              : action.kind === "guard"
+                ? "guard"
+                : action.kind === "freeform"
+                  ? "freeform"
+                  : "spell",
+          previousMomentum: before.momentum,
+          previousEnemyState: before.enemyState,
+          phaseChanged: result.battleState.phaseIndex !== before.phaseIndex,
           battleState: result.battleState,
           state: engine.getState(),
           completed: result.completed,
           grade: result.grade,
-          effect: delta > 0 ? "flash" : delta < 0 ? "shake" : "none",
           onContinue: () => renderCurrent(),
         });
       };
@@ -305,7 +338,7 @@ async function bootstrap(): Promise<void> {
                     ? "목소리가 너무 작아 주문이 닿지 않았어. 조금 더 크게"
                     : "목소리가 너무 커 주문이 깨졌어. 마이크와 거리를 두고";
                 renderCurrent(
-                  `${direction} 다시 외쳐 줘. 현재 ${audioLevel.rmsDbfs.toFixed(1)} dBFS · 재시도는 턴을 소모하지 않아.`,
+                  `${direction} 다시 외쳐 줘. 이번 재시도는 전투 진행을 소모하지 않아.`,
                 );
                 return;
               }
@@ -315,18 +348,21 @@ async function bootstrap(): Promise<void> {
                   : "『넘친 마력이 갈라져 주문이 흩어진다.』";
               applyAction(
                 { kind: "failed-spell", reason: levelResult },
-                `${transcript} · ${audioLevel.rmsDbfs.toFixed(1)} dBFS`,
+                transcript,
                 reply,
-                `음량 판정 ${levelResult === "too-quiet" ? "너무 작음" : "너무 큼"} · 주문 불발 +0`,
+                levelResult === "too-quiet"
+                  ? "목소리가 너무 작아 주문이 닿지 않았다."
+                  : "너무 큰 목소리에 주문의 모양이 흩어졌다.",
               );
               return;
             }
           }
           battleVolumeFailures.delete(`${phase.phaseId}:${battleState.phaseTurn}`);
           const before = engine.getBattleState();
-          const result = engine.submitBattleAction({ kind: "spell", transcript });
+          const action = { kind: "spell", transcript } as const;
+          const result = engine.submitBattleAction(action);
           const delta = result.battleState.momentum - before.momentum;
-          sfx.play(delta >= 25 ? "critical" : "impact");
+          playBattleActionSfx(action, delta, before, result.battleState);
           view.renderBattleReply({
             sceneId: resolvePresentationBackground({
               kind: "battle",
@@ -338,12 +374,18 @@ async function bootstrap(): Promise<void> {
             enemyName: node.enemy.name,
             actionLabel: transcript,
             reply: delta >= 25 ? "『그 주문은… 완전했어.』" : delta >= 15 ? "『빛이 내 안개를 가른다…!』" : "『흐린 목소리로는 닿지 않는다.』",
-            narration: `주문 결과 momentum ${delta >= 0 ? "+" : ""}${delta}`,
+            narration:
+              delta >= 15
+                ? "빛이 망령의 안개를 밀어냈다."
+                : "주문의 빛이 아직 망령에게 닿지 않았다.",
+            action: delta > 0 ? "spell" : "failed-spell",
+            previousMomentum: before.momentum,
+            previousEnemyState: before.enemyState,
+            phaseChanged: result.battleState.phaseIndex !== before.phaseIndex,
             battleState: result.battleState,
             state: engine.getState(),
             completed: result.completed,
             grade: result.grade,
-            effect: delta > 0 ? "flash" : "none",
             onContinue: () => renderCurrent(),
           });
           return;
@@ -389,8 +431,8 @@ async function bootstrap(): Promise<void> {
             transcript,
             "『말은 들었다. 하지만 아직 흔들리지는 않는다.』",
             outcome.reason === "disabled"
-              ? "로컬 판정 모드: 안전한 0점 폴백"
-              : "네트워크 판정 실패: 안전한 0점 폴백",
+              ? "목소리는 닿았지만 망령은 아직 흔들리지 않는다."
+              : "멀어진 목소리를 주노가 붙잡아 전투를 이어 간다.",
           );
         } catch (error) {
           if (!request.signal.aborted) throw error;
@@ -409,7 +451,7 @@ async function bootstrap(): Promise<void> {
             { kind: "click-spell" },
             phase.spell.displayText,
             "『빛이 내 안개를 가른다…!』",
-            "클릭 주문 성공 +15",
+            "주문의 빛이 망령의 안개를 갈랐다.",
           ),
         onClickResponse: (text, momentumDelta) =>
           applyAction(
@@ -434,7 +476,11 @@ async function bootstrap(): Promise<void> {
           renderCurrent();
         },
         onDebugMomentum: (momentum) => {
-          engine.setBattleMomentumForDebug(momentum);
+          const before = engine.getBattleState();
+          const after = engine.setBattleMomentumForDebug(momentum);
+          if (before.enemyState === "normal" && after.enemyState === "weakened") {
+            sfx.play("wraith_shift");
+          }
           renderCurrent(`debug momentum을 ${Math.min(100, Math.max(20, Math.trunc(momentum)))}로 설정했어.`);
         },
         onDebugGrade: (grade: BattleGrade) => {
@@ -456,11 +502,14 @@ async function bootstrap(): Promise<void> {
             enemyName: node.enemy.name,
             actionLabel: `DEBUG ${grade}`,
             reply: `『${grade} 등급 결과를 재현했다.』`,
+            action: "debug",
+            previousMomentum: battleState.momentum,
+            previousEnemyState: battleState.enemyState,
+            phaseChanged: false,
             battleState: finalBattleState,
             state: engine.getState(),
             completed: true,
             grade,
-            effect: "flash",
             onContinue: () => renderCurrent(),
           });
         },
@@ -630,6 +679,7 @@ async function bootstrap(): Promise<void> {
         return;
       }
 
+      sfx.play("ending");
       view.renderEnding(
         node,
         new Map([...characters].map(([id, character]) => [id, character.name])),
@@ -700,7 +750,6 @@ function renderCutscene(
       speakerId: line.speaker,
       emotion: line.emotion,
       text: line.text,
-      progress: `${nextIndex}/${node.lines.length}`,
       continueLabel: nextIndex === node.lines.length ? "다음 장면" : "계속",
       state: engine.getState(),
       onContinue: () => {

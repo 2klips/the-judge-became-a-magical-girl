@@ -10,7 +10,16 @@ interface Particle {
 
 const colors = ["#fff5a8", "#ff83c8", "#a68cff", "#ffffff"] as const;
 
-export function mountParticleBurst(container: HTMLElement): void {
+export interface ParticleBurstOptions {
+  readonly count?: number;
+  readonly originXRatio?: number;
+  readonly originYRatio?: number;
+}
+
+export function mountParticleBurst(
+  container: HTMLElement,
+  options: ParticleBurstOptions = {},
+): void {
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
   const canvas = document.createElement("canvas");
   canvas.className = "particle-canvas";
@@ -19,8 +28,9 @@ export function mountParticleBurst(container: HTMLElement): void {
   if (!context) return;
   container.append(canvas);
 
-  const particles: Particle[] = Array.from({ length: 48 }, (_, index) => {
-    const angle = (Math.PI * 2 * index) / 48;
+  const count = options.count ?? 48;
+  const particles: Particle[] = Array.from({ length: count }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / count;
     const speed = 1.4 + (index % 7) * 0.28;
     return {
       x: 0,
@@ -48,8 +58,8 @@ export function mountParticleBurst(container: HTMLElement): void {
     startedAt ||= time;
     const elapsed = time - startedAt;
     context.clearRect(0, 0, container.clientWidth, container.clientHeight);
-    const originX = container.clientWidth / 2;
-    const originY = container.clientHeight * 0.42;
+    const originX = container.clientWidth * (options.originXRatio ?? 0.5);
+    const originY = container.clientHeight * (options.originYRatio ?? 0.42);
     for (const particle of particles) {
       particle.x += particle.vx;
       particle.y += particle.vy;

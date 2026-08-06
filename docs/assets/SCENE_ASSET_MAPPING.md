@@ -109,12 +109,12 @@
 
 ### 3.5 효과음 source 인계
 
-`[확정, DEC-059]` 아래 5종은 사용자 채택 source WAV이며 아직 runtime에 연결하지 않았다. 통합 상세는 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)를 따른다.
+`[확정, DEC-065]` 아래 5종은 사용자 채택 source WAV이며 아직 runtime에 연결하지 않았다. 통합 상세는 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)를 따른다.
 
 | 계획 cue·파일명 | 장면 | 정확한 재생 시점 | 개발 주의 |
 |---|---|---|---|
 | `sfx.transform_complete` / `sfx_transform_complete.wav` | N5 `n5_transform` | 주문 판정 뒤 변신 결과 표시 순간, 결과 렌더당 1회 | perfect·standard·rescued 공통. `bgm_transform` 중첩 청감 QA |
-| `sfx.critical` / `sfx_critical.wav` | `battle_wraith` | spell 결과 `delta >= 25` 확정 순간 | N5 perfect에는 사용하지 않고 기존 battle critical oscillator 교체 후보로 사용 |
+| `sfx.critical` / `sfx_critical.wav` | `battle_wraith` | spell 결과 `delta >= 25` 확정 순간 | N5 perfect에는 사용하지 않고 기존 battle critical tone 교체 후보로 사용 |
 | `sfx.barrier` / `sfx_barrier.wav` | p1 `p1_defend` | 성공 방어 주문 뒤 방어막 visual 활성 순간 | `Magical Shield Activation` 신버전만 사용, 장면 행동당 1회 |
 | `sfx.star_attack` / `sfx_star_attack.wav` | p2 `p2_attack` | 성공 공격 주문 뒤 별 투사체 발사 순간 | 후속 충돌음이 아닌 귀여운 발사음으로 사용 |
 | `sfx.juno_appear` / `sfx_juno_appear.wav` | N2 `n2_juno_intro` | 주노가 모니터 밖으로 나타나는 첫 표시 순간 | 대사 rerender가 아니라 장면 진입당 1회 |
@@ -196,16 +196,27 @@
 - `[구현]` N4의 마지막 주노 표정은 `GameState.npcEmotion`으로 N5 도입까지 이어지고, N5의 명시 표정 대사에서만 전환한다.
 - `[구현]` `bgm_transform`은 주문 결과 뒤 one-shot으로 재생한다. N5 도입은 `bgm_battle` crisis 폴백을 유지하고, PTT 청취 중 현재 BGM을 duck한다.
 - `[구현]` 물리 파일은 기본 핵심분만 preload하고 나머지는 장면 진입 시 지연 로드한다. 실패는 `physical → 지정 파생 → 검은 presentation`으로 강등하며 `[ASSET_HANDOFF]`를 경로별 한 번 기록한다. BGM 실패는 무음으로 계속한다.
+- `[구현·자동 QA PASS]` BGM 5곡을 `assets/runtime/bgm/`에 source와 동일 바이트로 채택했다. 규격·용량은 통과했으며 3회 루프·대사 마스킹·PTT duck·3엔딩 사람 청감 QA와 권리 확인은 대기한다.
+- `[구현·자동 QA PASS]` 회색 망령 `normal`을 납품본과 동일 바이트로 `assets/runtime/char/`에 채택했다. `weakened` 실파일은 계속 missing이며 제작 요청을 유지한다.
+- `[구현, DEC-059]` N3~N5 도입은 `bgm_crisis`, 수렴~GOOD/NORMAL/BAD는 `bgm_ending`을 사용한다. 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백과 무음 완주를 유지한다.
+- `[구현, DEC-060]` `gray_wraith.weakened` 실파일이 없으면 `normal` + CSS 균열 빛 파생으로 표시하고, normal도 실패하면 검은 presentation으로 강등한다. `attack/hit/death`는 미등록 상태다.
+- `[구현]` BGM controller는 기본 음량 `0.62`, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.
 - `[구현]` 도윤 11종을 `assets/runtime/char/`에 계약명으로 배치하고 N0 세 번째 대사부터 N5·battle·수렴·3엔딩에 연결했다. 원본은 `assets/source/doyun/delivery/`에 보존한다.
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
 - `[구현·QA PASS, DEC-049]` N2~N4 응답 `intentId`별 도윤 표정 resolver를 적용했다. 도윤은 더 크게·낮게·왼쪽으로, 주노는 도윤 쪽으로 보정했으며 desktop N2/N4/battle과 390×844 N2에서 crop·겹침·가로 overflow를 확인했다.
+- `[구현·자동 QA PASS]` WP6 전수 매트릭스에서 N5 주문 게이트의 주노 누락 A형 1건을 수정했다. 직전 N4의 `GameState.npcEmotion`을 주문 게이트까지 유지한다. B형 1건(`n2_juno_intro.npc.startEmotion`)은 작가 JSON을 수정하지 않고 `CHARACTER_IMAGE_DIALOGUE_AUDIT.md`에 분리했다.
+- `[구현·자동 QA PASS]` battle 명령·결과 렌더를 같은 `battle-stage` 구조로 통합했다. p1~p3에서 망령 좌측 대형 전신·도윤 우측 상반신·주노 보조 위치와 상단 기세 HUD를 공유하며, 과거 썸네일 그리드/결과 float 카드는 사용하지 않는다.
+- `[구현·자동 QA PASS, DEC-063]` battle stage DOM을 행동 결과에서도 유지하고 내부 상태만 갱신한다. 이전→현재 기세 fill, 주문/실패/버티기/자유 대응 CSS 시퀀스, 65 약화·회복 800ms 전이, phase callout, S/A/B 정화 문구를 presentation 계층에 연결했다.
+- `[구현·자동 QA PASS, DEC-061]` 대화창은 전 화자 하단 중앙 고정이며 이름표 색·현재 화자 스프라이트 highlight로 방향을 표현한다. 동일 슬롯·동일 논리 ID는 재렌더 fade를 생략하고, 새 ID만 180ms crossfade한다.
+- `[구현·자동 QA PASS, DEC-062]` 타이틀→N0, 변신 결과→battle, battle 종료→수렴, 수렴→ending 네 경계만 500ms 암전을 사용한다. 배경 420ms crossfade와 같은 ID 무전환은 유지하며, 떠나는 background DOM은 animationend/520ms 안전 타이머로 제거한다. N2 주노 첫 렌더는 낙하·착지 빛 1회다.
+- `[구현·자동 QA PASS, DEC-064]` Web Audio SFX 9종을 다층 tone으로 연결했다. PTT 녹음 중 전 cue 억제, 같은 cue 40ms throttle, AudioContext 실패 무음 강등을 적용했다.
+- `[source ready·runtime 대기, DEC-065]` 선택 SFX 5종은 `assets/source/sfx/delivery/`에 보존했다. Web Audio 교체·신규 cue·중복 방지·PTT 격리는 개발자 후속 통합이다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
 - `[구현]` 타이틀에서 마이크 연결·장치 선택·실시간 dBFS 테스트를 통과해야 시작·이어하기가 열린다. 게임 진입 뒤 STT 실패 시 클릭 폴백은 유지한다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
 - `[구현·QA PASS, DEC-036~039]` 배경 원본 16장을 `1920×1080 WebP ≤500KB` runtime 파일로 변환하고 catalog·node line·변신 stage·battle phase/p3 spell·ending line 고정 전환을 연결했다. `?debug=1` 장면 선택기와 22개 비파괴 프리뷰가 16개 배경을 모두 검수한다.
-- `[대기]` `bgm_crisis`, `bgm_ending`, `ending.black_magical_girl`은 컷 가능이다. 승인 파일을 채택하기 전에는 현재 필수곡·narration·CSS 폴백을 사용한다.
-- `[source ready·runtime 대기, DEC-059]` 선택 SFX 5종은 `assets/source/sfx/delivery/`에 보존했다. Web Audio 교체·신규 cue·중복 방지·PTT 격리는 개발자 후속 통합이다.
+- `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 사람 청각·권리 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 계속 planned다.
 - `[대기]` 모든 필수 물리 에셋의 시각·청각·라이선스 QA는 외부 담당자 전달 후 진행한다.
 
 ## 7. 현재 M5에서 제작하지 않을 항목
@@ -215,7 +226,7 @@
 - 불완전 변신 전용 컷·스프라이트
 - HIDDEN 전용 신규 이미지·음악
 - UI 프레임, 평가표 이미지, 주문 글자 이미지
-- 선택 5종 외 추가 파일 SFX. 현재 결정음·시전음·일반 타격·인식 실패음은 Web Audio를 유지하고, source 5종은 개발자 통합 전까지 runtime 미연결
+- 선택 5종 외 추가 파일 SFX. 현재 9종 runtime cue는 Web Audio를 유지하고, source 5종은 개발자 통합 전까지 미연결
 
 ## 8. 제작자 제출 체크리스트
 
@@ -254,14 +265,14 @@
 
 | ID | 상태 | 위험 | 영향 | 담당·해결 게이트 |
 |---|---|---|---|---|
-| AR-01 | `부분 통합·에셋 대기` | 배경 16개·도윤 11개·주노 5개는 `ready`; 망령·변신 컷·필수 BGM은 아직 `missing` | 주노 포함 장면 QA 가능. 남은 black/silent 장면의 최종 합성·청각·제출 QA는 불가 | 나머지 외부 제작자 납품 → 자동 규격 검사 → manifest `ready` |
+| AR-01 | `부분 통합·에셋 대기` | 배경 16개·도윤 11개·주노 5개·망령 normal·BGM 5곡은 `ready`; 망령 weakened·변신 컷 2장은 `missing` | 망령 normal과 음악 포함 장면 QA 가능. weakened·변신 컷 최종 합성 및 권리·청각 제출 QA는 불가 | 누락 이미지 납품 → 자동 규격 검사 → manifest `ready`; 현 runtime 사람 QA |
 | AR-02 | `OPEN` | 스타일 앵커와 사람 시각 검수 미완료 | 캐릭터·배경 화풍 불일치 가능 | 팀 스타일 앵커 승인 후 본생산 |
 | AR-03 | `PASS` | N1 정체 마스킹과 `bg_hall_time_stop`→N2 실제 주노 공개 전환 구현 | 회귀 시 주노 등장 연출·대본 모순 | unit + Browser N2 실제 PNG 합성 QA PASS |
 | AR-04 | `구현·QA 대기` | N3~N5 복수 인물과 N4→N5 표정 연속성 구현, 실에셋 사람 검증 전 | 관계 감정선과 망령 위협 약화 가능 | 장면별 인물·표정 수동 QA |
-| AR-05 | `black 폴백 PASS·실파일 QA 대기` | `gray_wraith.normal/weakened` resolver와 누락 black presentation 구현 | 납품 전 검은 영역 노출. 최종 합성은 검증 불가 | 통합 뒤 요청 경로·404·상태 전환 검사 |
+| AR-05 | `파생 폴백 구현·실파일 대기` | `gray_wraith.normal` 실파일 채택, `weakened`는 normal + CSS 파생 후 black 폴백 | momentum 65 전이는 표시 가능하나 정식 weakened 최종 합성 검증 불가 | 파생 상태 전환 QA, weakened 납품 뒤 물리 우선순위 재검사 |
 | AR-06 | `부분 PASS` | battle 주노 보조 위치와 도윤 우측 상반신 구도 구현 | 페이즈 전환 전체 플레이에서 위치가 튈 수 있음 | p1 dev 합성 PASS. p1→p2→p3 실제 전환 수동 QA 유지 |
-| AR-07 | `구현·QA 대기` | `bgm_transform` 결과 뒤 one-shot 구현, 실음원 청각 검증 전 | 징글 반복·타이밍 오류 가능 | 통합 뒤 loop·진입 시점 청각 QA |
-| AR-08 | `OPEN·비차단` | `bgm_crisis`, `bgm_ending`, 검은 마법소녀 컷 미제작/미연결 | 연출 밀도 감소 | 일정 여유 시 제작·연결. 없으면 문서 지정 폴백 사용 |
+| AR-07 | `runtime ready·청각 QA 대기` | `bgm_transform` 실음원과 one-shot 훅은 연결됐으나 사람 청각 검증 전 | 징글 반복·타이밍 오류 가능 | N5 재시도·결과 재렌더·battle 진입 청각 QA |
+| AR-08 | `부분 해소·비차단` | `bgm_crisis`, `bgm_ending` runtime 채택. 검은 마법소녀 컷만 미제작/미연결 | 음악 연출은 검사 가능, GOOD 후속 시각 밀도 감소 | 장면 BGM 연결·청각 QA. 컷은 문서 지정 폴백 사용 |
 | AR-09 | `OPEN` | 생성물 라이선스·대회 제출 허용 확인 미완료 | `approved` 승격·제출 차단 | 제작 도구 플랜·약관·대회 규정 사람 확인 |
 | AR-10 | `부분 해소` | 현재 `assets/runtime/` 총합은 30MB 이하이나 목표 환경 첫 화면 3초 실측 전 | 현장 장비에서 초기 로딩 목표 초과 가능 | preload/lazy load 유지, 최종 에셋 통합 후 Chrome 성능 실측 |
 | AR-11 | `임시 통합·교체 대기` | 전달된 도윤 세트는 장면 표시를 지원하지만 생성 도구·라이선스가 미확인이고 `char_doyun_magical.png`은 정면 포즈다 | 제출 승인 차단, 전투 구도 약화 가능 | 현 runtime 사용. 증빙과 교체본 도착 후 같은 계약 경로에서 재검수 |
@@ -274,7 +285,7 @@
 ### 다음 단계 순서
 
 1. 제작자/사용자: 과거 17번째 배경 식별자와 생성·라이선스 증빙을 전달한다. clean TITLE은 현 임시본 교체용으로 요청 유지한다.
-2. 제작자: 망령 2상태, 변신 컷 2장, 필수 BGM 3곡을 계약명·규격으로 납품한다. 주노는 재제작하지 않고 권리 증빙만 보완한다.
+2. 제작자: 망령 weakened와 변신 컷 2장을 계약명·규격으로 납품하고, BGM·SFX·주노 생성·권리 증빙을 보완한다.
 3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지하고, `SFX_HANDOFF.md`의 선택 5종을 runtime cue로 통합한 뒤 중복·PTT 격리·로드 실패 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.
 5. 문서 담당: 자동 규격 통과분만 `ASSET_MANIFEST.md`를 `ready`로 갱신하고 제작 증빙을 `AI_PRODUCTION_LOG.md`에 연결한다.

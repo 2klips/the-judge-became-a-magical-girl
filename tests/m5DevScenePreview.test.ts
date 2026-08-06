@@ -59,4 +59,30 @@ describe("M5 dev 장면 프리뷰 계약", () => {
     expect(logicalIds("battle-p3-spell")).toContain("doyun.magical_finish");
     expect(logicalIds("ending-bad")).toContain("doyun.normal_empty");
   });
+
+  it("위기와 엔딩 프리셋은 납품된 선호 BGM을 사용한다", () => {
+    const bgm = (id: string): string | null | undefined =>
+      M5_SCENE_PREVIEWS.find((preview) => preview.id === id)?.bgmId;
+
+    for (const id of [
+      "n3-wraith",
+      "n4-team",
+      "n4-cooperate",
+      "n4-awkward",
+      "n5-intro",
+      "n5-incantation",
+    ]) {
+      expect(bgm(id), id).toBe("bgm_crisis");
+    }
+    for (const id of [
+      "convergence",
+      "ending-good",
+      "ending-good-corridor",
+      "ending-good-blacklight",
+      "ending-normal",
+      "ending-bad",
+    ]) {
+      expect(bgm(id), id).toBe("bgm_ending");
+    }
+  });
 });

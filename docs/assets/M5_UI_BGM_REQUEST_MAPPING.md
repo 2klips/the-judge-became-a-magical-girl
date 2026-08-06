@@ -1,7 +1,7 @@
 # M5 UI·BGM 작업 매핑
 
 - 최종 갱신: 2026-08-06
-- 현재 요청: 사용자 채택 SFX WAV 5종과 BGM 5종은 source 인계 완료, runtime 연결은 개발자 후속 작업이다. 기존 Web Audio SFX와 무음 BGM 폴백은 채택 전까지 유지한다.
+- 현재 요청: BGM 5종은 runtime `ready`, 사용자 채택 SFX WAV 5종은 source `ready`다. 파일 SFX는 개발자 통합 전까지 기존 Web Audio 9종을 대체하지 않으며, 사람 청각·권리 QA 전 `approved` 승격을 금지한다.
 
 ## 1. 담당 경계
 
@@ -9,7 +9,7 @@
 |---|---|---|
 | 대화창·이름표·버튼·게이지·자막·dev selector | Codex, HTML/CSS | 없음 |
 | 마이크 상태·입력 장치·dBFS 테스트 UI | Codex, DOM/SVG/CSS | 없음 |
-| 기존 결정·시전·크리티컬·타격·인식 실패 SFX | Codex, Web Audio | source 채택본 통합 전까지 유지 |
+| 진행·결정·시전·크리티컬·타격·인식 실패·방어·망령 전이·엔딩 SFX | Codex, Web Audio | source 채택본 통합 전까지 유지 |
 | 변신 완료·치명타·방어막·별빛 공격·주노 등장 파일 SFX | 외부 음악 작업자 + 개발자 통합 | `assets/source/sfx/delivery/` 5건 |
 | BGM·변신 징글 | 외부 음악 작업자 | 있음 |
 | 캐릭터·배경·컷 | 외부 이미지 작업자 | [`M5_ASSET_HANDOFF_REQUEST.md`](M5_ASSET_HANDOFF_REQUEST.md) |
@@ -38,13 +38,19 @@
 
 | 논리 ID | 트리거 | 방식 | 외부 파일 |
 |---|---|---|---|
-| `sfx.confirm` | 선택 확정 | Web Audio oscillator | 없음 |
-| `sfx.cast` | 주문 성공 | Web Audio oscillator | 없음 |
-| `sfx.critical` | 완창·크리티컬 | Web Audio oscillator | 없음 |
-| `sfx.impact` | 전투 타격·플래시 | Web Audio oscillator | 없음 |
-| `sfx.recognition_fail` | STT 실패 | Web Audio oscillator | 없음 |
+| `sfx.confirm` | 선택 확정 | 2층 짧은 상승 tone | 없음 |
+| `sfx.cast` | 주문 성공 | 2층 상승 sweep | 없음 |
+| `sfx.critical` | 완창·크리티컬 | 3음 상승 arpeggio | 없음 |
+| `sfx.impact` | 전투 타격·플래시 | square+triangle 저역 타격 | 없음 |
+| `sfx.recognition_fail` | STT·주문 실패 | 2음 부드러운 하강 | 없음 |
+| `sfx.advance` | 대사·컷 진행 | 매우 작은 2음 페이지 tone | 없음 |
+| `sfx.guard` | 전투 버티기 | 낮고 둥근 2층 방어 tone | 없음 |
+| `sfx.wraith_shift` | momentum 65 최초 상향 통과 | 안개가 갈라지는 2층 상승 shimmer | 없음 |
+| `sfx.ending` | ending 노드 진입 | 3음 부드러운 화음 | 없음 |
 
-최종 QA에서 실제 스피커·헤드폰으로 크기와 피로도를 청감한다. `[확정, DEC-059]` 선택 파일 SFX는 source 인계만 완료했으며 개발자가 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)의 장면 계약대로 채택하기 전에는 위 Web Audio 동작을 유지한다.
+`[구현, DEC-064]` 모든 cue는 0.4초 이하 Web Audio tone이다. 같은 cue 40ms 이내 중복을 막고 PTT press~release 동안 전 cue를 억제한다. `AudioContext` 생성·resume 실패는 무음으로 강등한다. 최종 QA에서 실제 스피커·헤드폰으로 크기와 피로도를 청감한다.
+
+`[source ready·runtime 대기, DEC-065]` 아래 파일은 사용자 선택 source 인계본이다. 개발자가 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)의 장면 계약대로 채택하기 전에는 위 Web Audio 동작을 유지한다.
 
 | 계획 cue·파일 | 장면 | 통합 상태 |
 |---|---|---|
@@ -86,6 +92,8 @@
 | N5 변신 결과 | `bgm_transform` | 결과 뒤 한 번만 재생, loop 금지 |
 | battle p1~p3 | `bgm_battle` | phase 이동 때 재시작 금지, PTT duck |
 | 전투 후 수렴·엔딩 | `bgm_ending`, 없으면 `bgm_daily` | ending 진입 crossfade |
+
+`[구현]` 기본 BGM 음량은 `0.62`, PTT duck은 기본값의 `0.18배`다. 로드 실패 경로는 세션에서 다시 요청하지 않으며, 브라우저 autoplay 거부는 다음 `pointerdown`에서 최신 요청을 한 번 재시도한다. `bgm_transform` 동일 ID 재렌더는 중복 재생하지 않는다.
 
 ## 7. 청감 인수 기준
 

@@ -159,7 +159,7 @@
   {
     "nodeId": "n3_wraith_choice",
     "type": "dialogue",
-    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_battle" },
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_crisis" },
     "npc": { "id": "juno", "startEmotion": "upset" },
     "objective": "플레이어가 망령 앞에서 무엇을 먼저 걱정하는지 말해 관계 분위기를 정하게 만든다",
     "opening": "사람들이 버린 기대가 뭉친 회색 망령이야. 도윤, 어떻게 할 거야?",
@@ -351,7 +351,7 @@
   {
     "nodeId": "n5_transform",
     "type": "cutscene",
-    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_battle" },
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_crisis" },
     "lines": [
       { "speaker": "narration", "text": "도윤의 사원증이 빛을 내며 공중으로 떠오른다." },
       { "speaker": "gray_wraith", "text": "창피하잖아……. 아무도 진심으로 듣지 않을 텐데……." },
@@ -432,7 +432,7 @@
   {
     "nodeId": "ch3_gray_answer",
     "type": "dialogue",
-    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_daily" },
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_ending" },
     "npc": { "id": "juno", "startEmotion": "neutral" },
     "objective": "플레이어가 남은 회색 빛의 가능성에 최종 답을 내려 GOOD/NORMAL/BAD로 수렴하게 만든다",
     "opening": "작은 회색 빛이 묻고 있어. 자기도 다시 즐거워질 수 있겠냐고.",
@@ -484,7 +484,7 @@
   {
     "nodeId": "ending_good",
     "type": "ending",
-    "scene": { "bg": "bg_hall_day", "bgm": "bgm_daily" },
+    "scene": { "bg": "bg_hall_day", "bgm": "bgm_ending" },
     "endingId": "good",
     "lines": [
       { "speaker": "narration", "text": "GOOD — 한 번 더 플레이" },
@@ -499,7 +499,7 @@
   {
     "nodeId": "ending_normal",
     "type": "ending",
-    "scene": { "bg": "bg_hall_day", "bgm": "bgm_daily" },
+    "scene": { "bg": "bg_hall_day", "bgm": "bgm_ending" },
     "endingId": "normal",
     "lines": [
       { "speaker": "narration", "text": "NORMAL — 한 번만 더" },
@@ -512,7 +512,7 @@
   {
     "nodeId": "ending_bad",
     "type": "ending",
-    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_daily" },
+    "scene": { "bg": "bg_hall_dark", "bgm": "bgm_ending" },
     "endingId": "bad",
     "lines": [
       { "speaker": "narration", "text": "BAD — 회색 업무일지" },

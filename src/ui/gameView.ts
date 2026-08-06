@@ -14,6 +14,7 @@ import {
   resolveBackgroundAsset,
   resolveCharacterAsset,
   resolveImageAsset,
+  resolveImageAssetFallback,
 } from "../assets/catalog";
 import { resolvePresentationBackground } from "../assets/presentationBackground";
 import { resolveDoyunVisual } from "../assets/presentationDoyun";
@@ -44,8 +45,8 @@ import {
   type PushToTalkShortcutBinding,
 } from "../input/keyboardPtt";
 import type { GameState, InputMode } from "../state";
-import { applySceneEffect, type SceneEffect } from "./effects";
 import { DIALOGUE_ADVANCE_DELAY_MS, DelayedActionGate } from "./advanceGate";
+import { applySceneEffect } from "./effects";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
 
@@ -66,16 +67,33 @@ export interface DialoguePresentation {
 export function resolveDialoguePresentation(speakerId: string): DialoguePresentation {
   switch (speakerId) {
     case "juno":
-      return { side: "left", tone: "juno", showName: true };
+      return { side: "center", tone: "juno", showName: true };
     case "doyun":
-      return { side: "right", tone: "doyun", showName: true };
+      return { side: "center", tone: "doyun", showName: true };
     case "gray_wraith":
-      return { side: "left", tone: "wraith", showName: true };
+      return { side: "center", tone: "wraith", showName: true };
     case "narration":
       return { side: "center", tone: "narration", showName: false };
     default:
       return { side: "center", tone: "voice", showName: true };
   }
+}
+
+export type SpriteSlot = "doyun" | "juno" | "gray_wraith";
+
+export function resolveSpriteSlot(logicalId: string): SpriteSlot | null {
+  if (logicalId.startsWith("doyun.")) return "doyun";
+  if (logicalId.startsWith("juno.")) return "juno";
+  if (logicalId.startsWith("gray_wraith.")) return "gray_wraith";
+  return null;
+}
+
+export const TYPEWRITER_BASE_DELAY_MS = 24;
+
+export function typewriterDelayFor(character: string): number {
+  if (/[.!?。！？…]/u.test(character)) return 92;
+  if (/[,，]/u.test(character)) return 48;
+  return TYPEWRITER_BASE_DELAY_MS;
 }
 
 export function formatDialogueText(text: string, speakerId: string): string {
@@ -105,6 +123,102 @@ export function resolveVoiceInputPresentation(): VoiceInputPresentation {
     buttonLabel: "누르고 말하기 (T)",
     showInstruction: false,
     showStatusRegion: false,
+  };
+}
+
+const BATTLE_PHASE_IDS = ["p1_defend", "p2_attack", "p3_answer"] as const;
+
+export interface BattleStagePresentation {
+  readonly phaseIndex: number;
+  readonly phaseTotal: 3;
+  readonly doyunLogicalId: string;
+  readonly junoEmotion: Emotion;
+}
+
+export function resolveBattleStagePresentation(
+  phaseId: string,
+): BattleStagePresentation {
+  const phaseIndex = Math.max(0, BATTLE_PHASE_IDS.indexOf(phaseId as (typeof BATTLE_PHASE_IDS)[number]));
+  return {
+    phaseIndex,
+    phaseTotal: 3,
+    doyunLogicalId:
+      resolveDoyunVisual({ kind: "battle", phaseId }) ?? "doyun.magical_finish",
+    junoEmotion: phaseIndex === 1 ? "happy" : "neutral",
+  };
+}
+
+export type BattlePresentationAction =
+  | "spell"
+  | "failed-spell"
+  | "guard"
+  | "freeform"
+  | "debug";
+
+export interface BattleActionPresentation {
+  readonly className: string;
+  readonly doyunLogicalId: string;
+  readonly particles: boolean;
+  readonly guardBarrier: boolean;
+  readonly wraithTransition: "none" | "weaken" | "recover";
+  readonly phaseCallout: string | null;
+  readonly gradeLabel: string | null;
+}
+
+export function resolveBattleActionPresentation(options: {
+  readonly phaseId: string;
+  readonly action: BattlePresentationAction;
+  readonly delta: number;
+  readonly previousEnemyState: BattleState["enemyState"];
+  readonly enemyState: BattleState["enemyState"];
+  readonly phaseChanged: boolean;
+  readonly completed: boolean;
+  readonly grade: BattleGrade | null;
+}): BattleActionPresentation {
+  const phase = resolveBattleStagePresentation(options.phaseId);
+  const success = options.delta > 0;
+  const spellSuccess = options.action === "spell" && options.delta >= 15;
+  const className =
+    options.action === "guard"
+      ? "battle-action-guard"
+      : options.action === "failed-spell" || (options.action === "spell" && !success)
+        ? "battle-action-failed"
+        : spellSuccess
+          ? "battle-action-spell-success"
+          : options.action === "freeform" && success
+            ? "battle-action-freeform-success"
+            : options.action === "freeform"
+              ? "battle-action-freeform-failed"
+              : "battle-action-debug";
+  const wraithTransition =
+    options.previousEnemyState === options.enemyState
+      ? "none"
+      : options.enemyState === "weakened"
+        ? "weaken"
+        : "recover";
+  const phaseCallout = options.phaseChanged
+    ? options.phaseId === "p1_defend"
+      ? "좋아! 중심을 정확히 노려!"
+      : options.phaseId === "p2_attack"
+        ? "……도윤. 이번에는 네 대답을 듣고 싶어."
+        : null
+    : null;
+  const gradeLabel = options.completed
+    ? options.grade === "S"
+      ? "완전한 언령"
+      : options.grade === "A"
+        ? "빛을 되찾은 언령"
+        : "끝까지 닿은 목소리"
+    : null;
+  return {
+    className,
+    doyunLogicalId:
+      options.action === "guard" ? "doyun.magical_defend" : phase.doyunLogicalId,
+    particles: spellSuccess || options.completed,
+    guardBarrier: options.action === "guard",
+    wraithTransition,
+    phaseCallout,
+    gradeLabel,
   };
 }
 
@@ -149,6 +263,18 @@ export function resolveBackgroundTransition(
   return previousBackgroundId === nextBackgroundId ? "same" : "change";
 }
 
+export function isActBoundaryTransition(
+  previousContext: string | null,
+  nextContext: string,
+): boolean {
+  return (
+    (previousContext === "title" && nextContext === "n0_review") ||
+    (previousContext === "n5_transform_result" && nextContext === "battle_wraith") ||
+    (previousContext === "battle_wraith" && nextContext === "ch3_gray_answer") ||
+    (previousContext === "ch3_gray_answer" && nextContext.startsWith("ending_"))
+  );
+}
+
 export function resolveEndingLines(
   node: EndingNode,
   battleGrade: GameState["battleGrade"],
@@ -188,6 +314,17 @@ export function resolveEndingPages(
 export interface EndingVisual {
   readonly characterId: "juno";
   readonly emotion: Emotion;
+}
+
+export interface IncantationCompanionVisual {
+  readonly characterId: "juno";
+  readonly emotion: Emotion;
+}
+
+export function resolveIncantationCompanionVisual(
+  state: Pick<GameState, "npcEmotion">,
+): IncantationCompanionVisual {
+  return { characterId: "juno", emotion: state.npcEmotion };
 }
 
 export function resolveEndingVisual(
@@ -244,7 +381,6 @@ interface LineViewOptions {
   speakerId?: string;
   emotion?: Emotion;
   text: string;
-  progress: string;
   continueLabel: string;
   state: GameState;
   onContinue: () => void;
@@ -331,17 +467,32 @@ export class GameView {
     PushToTalkShortcutBinding
   >();
   private currentBackgroundId: string | null = null;
+  private currentPresentationContext: string | null = null;
+  private readonly enteredPresentationContexts = new Set<string>();
+  private readonly spriteLogicalIds = new Map<SpriteSlot, string>();
+  private activeTypewriter: {
+    complete(): boolean;
+    cancel(): void;
+  } | null = null;
   private debugSttModel: OpenAiSttModel;
   private latestTranscription: TranscriptionObservation | null = null;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly debugSttOptions: DebugSttOptions,
+    private readonly onAdvance?: () => void,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
     this.debugSttModel = debugSttOptions.model;
     window.addEventListener("keydown", (event) => {
       if (event.ctrlKey || event.altKey || event.metaKey || isEditableKeyboardTarget(event.target)) {
+        return;
+      }
+      if (
+        (event.key === " " || event.key === "Enter") &&
+        this.activeTypewriter?.complete()
+      ) {
+        event.preventDefault();
         return;
       }
       const target = this.resolveKeyboardPttTarget();
@@ -356,7 +507,7 @@ export class GameView {
   }
 
   renderLoading(): void {
-    const shell = this.createShell("bg_title");
+    const shell = this.createShell("bg_title", "loading");
     shell.append(element("p", "loading", "게임 데이터를 검증하는 중…"));
     this.commit(shell);
   }
@@ -365,7 +516,7 @@ export class GameView {
     preview: DevScenePreview,
     onPlayBgm?: () => void,
   ): void {
-    const shell = this.createShell(preview.backgroundId);
+    const shell = this.createShell(preview.backgroundId, `dev:${preview.id}`);
     shell.classList.add("dev-scene-preview", `dev-layout-${preview.layout}`);
     shell.dataset.previewId = preview.id;
 
@@ -407,7 +558,7 @@ export class GameView {
   }
 
   renderDevSceneError(requestedId: string): void {
-    const shell = this.createShell("bg_title");
+    const shell = this.createShell("bg_title", "dev:error");
     shell.classList.add("dev-scene-preview");
     const card = element("section", "dev-preview-card");
     card.append(
@@ -421,12 +572,12 @@ export class GameView {
   }
 
   renderTitle(options: TitleOptions): void {
-    const shell = this.createShell("bg_title");
+    const shell = this.createShell("bg_title", "title");
     shell.classList.add("title-screen");
 
     const titleBlock = element("section", "title-block");
     titleBlock.append(
-      element("p", "eyebrow", "VOICE VISUAL NOVEL · INPUT CHECK"),
+      element("p", "eyebrow", "목소리로 이어지는 이야기"),
       element("h1", "game-title", "심사역은 마법소녀가 되었다"),
       element("p", "title-subtitle", "마이크가 연결되어야 플레이 가능해요"),
     );
@@ -435,7 +586,7 @@ export class GameView {
     setup.dataset.state = options.microphoneSupported ? "waiting" : "unsupported";
     const setupHeader = element("div", "microphone-setup-header");
     setupHeader.append(
-      element("span", "microphone-step", "01 / INPUT"),
+      element("span", "microphone-step", "마이크 준비"),
       element("h2", "microphone-title", "마이크 테스트"),
       element("p", "microphone-copy", "마이크를 연결하고 평소 목소리로 한 문장을 말해 주세요."),
     );
@@ -540,7 +691,7 @@ export class GameView {
           ? { ...measured, inputDeviceId: deviceSelect.value || undefined }
           : null;
         status.textContent = "마이크 테스트 완료. 이제 게임을 시작할 수 있어요.";
-        progressOutput.textContent = "READY";
+        progressOutput.textContent = "테스트 완료";
         startButton.disabled = calibration === null;
         if (resumeButton) resumeButton.disabled = calibration === null;
         connectButton.textContent = "다시 테스트";
@@ -556,7 +707,7 @@ export class GameView {
       deviceSelect.disabled = true;
       setup.dataset.state = "connecting";
       status.textContent = "마이크 권한과 입력 장치를 확인하고 있어요…";
-      progressOutput.textContent = "CONNECTING";
+      progressOutput.textContent = "연결 중";
       lastReadingAt = performance.now();
       try {
         const connection = await options.connectMicrophone(deviceId, updateLevel);
@@ -571,14 +722,14 @@ export class GameView {
         } else {
           connectButton.textContent = "테스트 초기화";
           status.textContent = "연결 완료. 테스트 문장을 평소 목소리로 말해 주세요.";
-          progressOutput.textContent = "LISTENING";
+          progressOutput.textContent = "듣는 중";
           setup.dataset.state = "listening";
         }
       } catch (error) {
         if (sequence !== connectionSequence || !this.root.contains(shell)) return;
         setup.dataset.state = "error";
         status.textContent = microphoneSetupErrorMessage(error);
-        progressOutput.textContent = "BLOCKED";
+        progressOutput.textContent = "연결 차단";
       } finally {
         if (sequence === connectionSequence) connectButton.disabled = false;
       }
@@ -615,7 +766,9 @@ export class GameView {
         baseBackground: options.sceneId,
         lineIndex: options.lineIndex,
       }),
+      options.nodeId,
     );
+    shell.dataset.activeSpeaker = options.speakerId ?? "narration";
     const doyunVisual = resolveDoyunVisual({
       kind: "node",
       nodeId: options.nodeId,
@@ -686,7 +839,9 @@ export class GameView {
         baseBackground: node.scene.bg,
         stage: "incantation",
       }),
+      node.nodeId,
     );
+    shell.dataset.activeSpeaker = "juno";
     shell.classList.add("incantation-screen");
     shell.append(
       this.createAssetVisual(
@@ -696,9 +851,18 @@ export class GameView {
         "character-visual scene-player-visual incantation-player-visual doyun-visual",
       ),
     );
+    const companion = resolveIncantationCompanionVisual(state);
+    shell.append(
+      this.createCharacterVisual(
+        companion.characterId,
+        companion.emotion,
+        "주노",
+        "character-visual cutscene-character incantation-juno-visual has-companion",
+      ),
+    );
     const card = element("section", "incantation-card");
     card.append(
-      element("p", "eyebrow", "INCANTATION GATE"),
+      element("p", "eyebrow", "변신 주문"),
       element("p", "incantation-copy", gate.displayText),
     );
     if (state.inputMode !== "voice") {
@@ -708,7 +872,7 @@ export class GameView {
     }
     if (options.notice) card.append(element("p", "input-notice", options.notice));
     const inputArea = element("section", "incantation-input");
-    const fallback = element("button", "secondary-button", "주문 외우기 · 표준 변신");
+    const fallback = element("button", "secondary-button", "주문 없이 변신하기");
     fallback.type = "button";
     fallback.addEventListener("click", options.onFallback, { once: true });
 
@@ -749,7 +913,8 @@ export class GameView {
     lines: readonly string[];
     onContinue(): void;
   }): void {
-    const shell = this.createShell(options.sceneId);
+    const shell = this.createShell(options.sceneId, "n5_transform_result");
+    shell.dataset.activeSpeaker = "narration";
     applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
     shell.append(
       this.createAssetVisual(
@@ -778,11 +943,11 @@ export class GameView {
     const card = element("section", "transformation-result");
     const title =
       options.outcome === "perfect"
-        ? "완전 변신 · MOMENTUM 60"
+        ? "완전한 변신"
         : options.outcome === "rescued"
-          ? "함께 완성한 변신 · MOMENTUM 50"
-          : "표준 변신 · MOMENTUM 50";
-    card.append(element("p", "eyebrow", "TRANSFORMATION"), element("h2", "ending-title", title));
+          ? "함께 완성한 변신"
+          : "빛으로 완성한 변신";
+    card.append(element("p", "eyebrow", "변신 완료"), element("h2", "ending-title", title));
     options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
     const button = this.delayedAdvanceButton(
       "primary-button",
@@ -808,47 +973,19 @@ export class GameView {
         beat: "prompt",
         baseBackground: node.scene.bg,
       }),
+      "battle_wraith",
     );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
-    const arena = element("section", "battle-arena");
-    const visualStage = element("section", "battle-visual-stage");
-    visualStage.setAttribute("aria-label", "전투 인물");
-    visualStage.append(
-      this.createAssetVisual(
-        `gray_wraith.${battleState.enemyState}`,
-        node.enemy.name,
-        "asset-visual battle-character enemy-visual",
-      ),
-      this.createAssetVisual(
-        resolveDoyunVisual({ kind: "battle", phaseId: phase.phaseId }) ?? "doyun.magical",
-        "마법소녀 도윤",
-        "asset-visual battle-character player-visual doyun-visual",
-      ),
-      this.createCharacterVisual(
-        "juno",
-        battleState.phaseIndex === 1 ? "happy" : "neutral",
-        "주노",
-        "asset-visual battle-character battle-juno-visual",
-      ),
+    shell.dataset.activeSpeaker = "gray_wraith";
+    const stage = this.createBattleStage(
+      phase.phaseId,
+      node.enemy.name,
+      phase.enemyPrompt,
+      battleState,
     );
-    const enemy = element("div", "enemy-card");
-    enemy.append(
-      element("p", "eyebrow", node.enemy.name),
-      element("p", "enemy-prompt", phase.enemyPrompt),
-      element(
-        "span",
-        "enemy-state",
-        battleState.enemyState === "weakened" ? "흔들림" : "정상",
-      ),
-    );
-    arena.append(
-      visualStage,
-      enemy,
-      createGauge("MOMENTUM", battleState.momentum, 20, 100),
-    );
-    const command = element("section", "battle-command");
+    const command = element("section", "battle-control-dock battle-command");
     command.append(
-      element("p", "prompt-label", "페이즈 주문"),
+      element("p", "battle-spell-label", "이번 언령"),
       element("p", "battle-spell", phase.spell.displayText),
     );
     if (options.notice) command.append(element("p", "input-notice", options.notice));
@@ -857,7 +994,7 @@ export class GameView {
       const controls = element("div", "battle-actions");
       const spell = element("button", "ptt-button", "주문 · 누르고 말하기 (T)");
       const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 (T)");
-      const guard = element("button", "secondary-button", "버티기 +3");
+      const guard = element("button", "secondary-button", "버티기");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       controls.append(spell, freeform, guard);
@@ -874,7 +1011,7 @@ export class GameView {
       command.append(clickMode);
     } else {
       const choices = element("div", "choice-list battle-choice-list");
-      const spell = element("button", "primary-button", "주문 시전 · 성공 +15");
+      const spell = element("button", "primary-button", "주문을 외친다");
       spell.type = "button";
       spell.addEventListener("click", options.onClickSpell, { once: true });
       choices.append(spell);
@@ -888,7 +1025,7 @@ export class GameView {
         );
         choices.append(button);
       });
-      const guard = element("button", "secondary-button", "버티기 +3");
+      const guard = element("button", "secondary-button", "버티기");
       guard.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       choices.append(guard);
@@ -905,8 +1042,8 @@ export class GameView {
       await options.onTranscript("spell", transcript);
     });
     command.append(utilities, this.battleDebugControls(options, battleState));
-    arena.append(command);
-    shell.append(arena);
+    stage.append(command);
+    shell.append(stage);
     this.commit(shell);
   }
 
@@ -917,50 +1054,90 @@ export class GameView {
     actionLabel: string;
     reply: string;
     narration?: string;
+    action: BattlePresentationAction;
+    previousMomentum: number;
+    previousEnemyState: BattleState["enemyState"];
+    phaseChanged: boolean;
     battleState: BattleState;
     state: GameState;
     completed: boolean;
     grade: BattleGrade | null;
-    effect: SceneEffect;
     onContinue(): void;
   }): void {
-    const shell = this.createShell(options.sceneId);
-    shell.classList.add("battle-screen");
-    applySceneEffect(shell, options.effect);
-    const card = element("section", "battle-result-card");
-    card.append(
-      this.createAssetVisual(
-        resolveDoyunVisual({ kind: "battle", phaseId: options.phaseId }) ?? "doyun.magical",
-        "마법소녀 도윤",
-        "asset-visual battle-reply-player doyun-visual",
-      ),
-      this.createAssetVisual(
-        `gray_wraith.${options.battleState.enemyState}`,
-        options.enemyName,
-        "asset-visual battle-reply-character",
-      ),
-      this.createCharacterVisual(
-        "juno",
-        options.battleState.phaseIndex === 1 ? "happy" : "neutral",
-        "주노",
-        "asset-visual battle-reply-juno",
-      ),
+    const shell = this.createShell(options.sceneId, "battle_wraith");
+    shell.classList.add("battle-screen", `enemy-${options.battleState.enemyState}`);
+    shell.dataset.activeSpeaker = "gray_wraith";
+    const delta = options.battleState.momentum - options.previousMomentum;
+    const actionPresentation = resolveBattleActionPresentation({
+      phaseId: options.phaseId,
+      action: options.action,
+      delta,
+      previousEnemyState: options.previousEnemyState,
+      enemyState: options.battleState.enemyState,
+      phaseChanged: options.phaseChanged,
+      completed: options.completed,
+      grade: options.grade,
+    });
+    shell.classList.add(actionPresentation.className);
+    if (actionPresentation.wraithTransition !== "none") {
+      shell.classList.add(`battle-wraith-${actionPresentation.wraithTransition}`);
+    }
+    if (options.phaseChanged) shell.classList.add("battle-phase-change");
+    if (options.completed) shell.classList.add("battle-purification");
+    const stage = this.createBattleStage(
+      options.phaseId,
+      options.enemyName,
+      options.reply,
+      options.battleState,
+      options.previousMomentum,
+      actionPresentation.doyunLogicalId,
     );
-    card.append(
+    stage.classList.add("battle-stage-result");
+    const dialogue = stage.querySelector<HTMLElement>(".battle-dialogue");
+    dialogue?.insertBefore(
       element("p", "player-line", `도윤 · ${options.actionLabel}`),
-      createGauge("MOMENTUM", options.battleState.momentum, 20, 100),
-      this.dialoguePanel(options.enemyName, options.reply, "gray_wraith"),
+      dialogue.firstChild,
     );
+    const result = element("section", "battle-control-dock battle-result-controls");
     if (options.narration) {
-      card.append(element("p", "ending-line", formatDialogueText(options.narration, "narration")));
+      result.append(
+        element("p", "battle-result-narration", formatDialogueText(options.narration, "narration")),
+      );
+    }
+    if (actionPresentation.phaseCallout) {
+      const callout = element("p", "battle-phase-callout");
+      callout.append(
+        element("strong", undefined, "주노"),
+        document.createTextNode(` ${actionPresentation.phaseCallout}`),
+      );
+      result.append(callout);
+    }
+    if (actionPresentation.guardBarrier) {
+      stage.append(element("div", "battle-guard-barrier"));
+    }
+    if (actionPresentation.gradeLabel) {
+      const grade = element("section", "battle-grade-reveal");
+      grade.append(
+        element("span", "battle-grade-mark", options.grade ?? "B"),
+        element("strong", undefined, actionPresentation.gradeLabel),
+      );
+      stage.append(grade);
+    }
+    if (actionPresentation.particles) {
+      mountParticleBurst(stage, {
+        count: options.completed ? 84 : 48,
+        originXRatio: options.completed ? 0.5 : 0.3,
+        originYRatio: 0.44,
+      });
     }
     const button = this.delayedAdvanceButton(
       "primary-button",
-      options.completed ? `${options.grade} 등급으로 수렴` : "다음 행동",
+      options.completed ? "계속" : "다음 행동",
       options.onContinue,
     );
-    card.append(button);
-    shell.append(card);
+    result.append(button);
+    stage.append(result);
+    shell.append(stage);
     this.commit(shell);
   }
 
@@ -977,7 +1154,9 @@ export class GameView {
         nodeId: node.nodeId,
         baseBackground: node.scene.bg,
       }),
+      node.nodeId,
     );
+    shell.dataset.activeSpeaker = node.nodeId === "n1_first_voice" ? "voice" : character.id;
     const identity = resolveDialogueIdentity(node.nodeId, character.name);
     this.appendDialogueVisuals(
       shell,
@@ -1034,7 +1213,10 @@ export class GameView {
         nodeId: options.nodeId,
         baseBackground: options.sceneId,
       }),
+      options.nodeId,
     );
+    shell.dataset.activeSpeaker =
+      options.nodeId === "n1_first_voice" ? "voice" : options.characterId;
     const identity = resolveDialogueIdentity(options.nodeId, options.speaker);
     this.appendDialogueVisuals(
       shell,
@@ -1074,7 +1256,8 @@ export class GameView {
     const renderPage = (): void => {
       const page = pages[pageIndex];
       if (!page) return;
-      const shell = this.createShell(page.sceneId);
+      const shell = this.createShell(page.sceneId, node.nodeId);
+      shell.dataset.activeSpeaker = page.line.speaker;
       shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
       const doyunVisual = resolveDoyunVisual({
         kind: "ending",
@@ -1104,9 +1287,8 @@ export class GameView {
 
       const card = element("section", "ending-card");
       card.append(
-        element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
+        element("p", "eyebrow", "이야기의 결말"),
         element("h2", "ending-title", pages[0]?.line.text ?? "엔딩"),
-        element("p", "ending-progress", `${page.lineIndex + 1}/${page.total}`),
       );
       if (page.lineIndex > 0) {
         const speaker =
@@ -1125,13 +1307,6 @@ export class GameView {
           });
       button.type = "button";
       if (page.isLast) {
-        card.append(
-          element(
-            "p",
-            "ending-summary",
-            `호감도 ${state.affinity} · 플래그 ${[...state.flags].join(", ") || "없음"}`,
-          ),
-        );
         button.addEventListener("click", onNewGame, { once: true });
       }
       card.append(button);
@@ -1143,10 +1318,10 @@ export class GameView {
   }
 
   renderError(error: unknown): void {
-    const shell = this.createShell("bg_hall_dark");
+    const shell = this.createShell("bg_hall_dark", "error");
     const panel = element("section", "error-panel");
     panel.append(
-      element("p", "eyebrow", "DATA VALIDATION ERROR"),
+      element("p", "eyebrow", "데이터 확인 오류"),
       element("h1", "error-title", "게임을 시작할 수 없습니다"),
     );
 
@@ -1164,9 +1339,20 @@ export class GameView {
     this.commit(shell);
   }
 
-  private createShell(sceneId: string): HTMLElement {
+  private createShell(sceneId: string, presentationContext = sceneId): HTMLElement {
     const shell = element("main", "game-shell");
     shell.dataset.scene = sceneId;
+    shell.dataset.presentationContext = presentationContext;
+    if (isActBoundaryTransition(this.currentPresentationContext, presentationContext)) {
+      shell.classList.add("act-boundary-transition");
+    }
+    if (
+      presentationContext === "n2_juno_intro" &&
+      !this.enteredPresentationContexts.has(presentationContext)
+    ) {
+      shell.classList.add("juno-first-entrance");
+      this.enteredPresentationContexts.add(presentationContext);
+    }
     const transition = resolveBackgroundTransition(this.currentBackgroundId, sceneId);
     shell.dataset.backgroundTransition = transition;
     if (transition === "change" && this.currentBackgroundId) {
@@ -1221,6 +1407,11 @@ export class GameView {
         },
         { once: true },
       );
+      if (transitionRole === "leaving") {
+        const removeLeavingImage = (): void => image.remove();
+        image.addEventListener("animationend", removeLeavingImage, { once: true });
+        window.setTimeout(removeLeavingImage, 520);
+      }
       if (isFallback && contract.fallbackClass) {
         shell.classList.add(contract.fallbackClass);
       }
@@ -1228,6 +1419,65 @@ export class GameView {
     };
 
     usePath(contract.primaryPath, false);
+  }
+
+  private createBattleStage(
+    phaseId: string,
+    enemyName: string,
+    dialogueText: string,
+    battleState: BattleState,
+    previousMomentum?: number,
+    doyunLogicalId?: string,
+  ): HTMLElement {
+    const presentation = resolveBattleStagePresentation(phaseId);
+    const stage = element("section", "battle-stage");
+    stage.dataset.phase = phaseId;
+    stage.dataset.enemyState = battleState.enemyState;
+
+    const phaseDots = element("div", "battle-phase-dots");
+    phaseDots.setAttribute(
+      "aria-label",
+      `언령 ${presentation.phaseIndex + 1}/${presentation.phaseTotal}`,
+    );
+    for (let index = 0; index < presentation.phaseTotal; index += 1) {
+      const dot = element("span", "battle-phase-dot");
+      dot.classList.toggle("is-active", index === presentation.phaseIndex);
+      dot.classList.toggle("is-complete", index < presentation.phaseIndex);
+      dot.setAttribute("aria-hidden", "true");
+      phaseDots.append(dot);
+    }
+    const hud = element("header", "battle-hud");
+    hud.append(
+      element("span", "battle-phase-label", `언령 ${presentation.phaseIndex + 1}`),
+      phaseDots,
+      createGauge("기세", battleState.momentum, 20, 100, previousMomentum),
+    );
+
+    const visualStage = element("section", "battle-character-stage");
+    visualStage.setAttribute("aria-label", "언령 배틀 무대");
+    visualStage.append(
+      this.createAssetVisual(
+        `gray_wraith.${battleState.enemyState}`,
+        enemyName,
+        "asset-visual battle-stage-character battle-stage-wraith enemy-visual",
+      ),
+      this.createAssetVisual(
+        doyunLogicalId ?? presentation.doyunLogicalId,
+        "마법소녀 도윤",
+        "asset-visual battle-stage-character battle-stage-doyun doyun-visual",
+      ),
+      this.createCharacterVisual(
+        "juno",
+        presentation.junoEmotion,
+        "주노",
+        "asset-visual battle-stage-character battle-stage-juno",
+      ),
+    );
+
+    const dialogue = this.dialoguePanel(enemyName, dialogueText, "gray_wraith");
+    dialogue.classList.add("battle-dialogue");
+    stage.append(hud, visualStage, dialogue);
+    return stage;
   }
 
   private createCharacterVisual(
@@ -1299,6 +1549,10 @@ export class GameView {
     resolvedPath = resolveImageAsset(logicalId),
   ): HTMLElement {
     const figure = element("figure", className);
+    figure.dataset.logicalId = logicalId;
+    const spriteSlot = resolveSpriteSlot(logicalId);
+    if (spriteSlot) figure.dataset.spriteSlot = spriteSlot;
+    const fallback = resolveImageAssetFallback(logicalId);
     const showPlaceholder = (): void => {
       const presentation = resolveMissingAssetPresentation(label);
       const placeholder = element("div", presentation.className);
@@ -1308,24 +1562,41 @@ export class GameView {
       figure.classList.add("is-placeholder", "is-black-placeholder");
     };
 
-    if (!resolvedPath || isAssetPathUnavailable(resolvedPath)) {
-      showPlaceholder();
-      return figure;
-    }
+    const mountImage = (path: string, isFallback: boolean): void => {
+      const image = element("img", "asset-image");
+      image.alt = label;
+      image.decoding = "async";
+      image.src = assetUrl(path);
+      image.addEventListener(
+        "error",
+        () => {
+          image.remove();
+          reportAssetLoadFailure(logicalId, path);
+          if (
+            !isFallback &&
+            fallback &&
+            !isAssetPathUnavailable(fallback.path)
+          ) {
+            mountImage(fallback.path, true);
+            return;
+          }
+          showPlaceholder();
+        },
+        { once: true },
+      );
+      if (isFallback && fallback) {
+        figure.classList.add("is-derived-asset", fallback.className);
+      }
+      figure.replaceChildren(image);
+    };
 
-    const image = element("img", "asset-image");
-    image.alt = label;
-    image.decoding = "async";
-    image.src = assetUrl(resolvedPath);
-    image.addEventListener(
-      "error",
-      () => {
-        reportAssetLoadFailure(logicalId, resolvedPath);
-        showPlaceholder();
-      },
-      { once: true },
-    );
-    figure.append(image);
+    if (resolvedPath && !isAssetPathUnavailable(resolvedPath)) {
+      mountImage(resolvedPath, false);
+    } else if (fallback && !isAssetPathUnavailable(fallback.path)) {
+      mountImage(fallback.path, true);
+    } else {
+      showPlaceholder();
+    }
     return figure;
   }
 
@@ -1336,10 +1607,103 @@ export class GameView {
       `dialogue-panel dialogue-side-${presentation.side} dialogue-tone-${presentation.tone}`,
     );
     panel.dataset.speaker = speakerId;
-    panel.setAttribute("aria-live", "polite");
+    panel.setAttribute("aria-live", "off");
     if (presentation.showName) panel.append(element("div", "nameplate", speaker));
-    panel.append(element("p", "dialogue-text", formatDialogueText(text, speakerId)));
+    const dialogueText = element("p", "dialogue-text");
+    dialogueText.dataset.typewriterText = formatDialogueText(text, speakerId);
+    dialogueText.textContent = dialogueText.dataset.typewriterText;
+    panel.append(dialogueText);
     return panel;
+  }
+
+  private applySpriteContinuity(container: HTMLElement): void {
+    const nextSlots = new Set<SpriteSlot>();
+    for (const sprite of container.querySelectorAll<HTMLElement>("[data-sprite-slot]")) {
+      const slot = resolveSpriteSlot(sprite.dataset.logicalId ?? "");
+      const logicalId = sprite.dataset.logicalId;
+      if (!slot || !logicalId) continue;
+      nextSlots.add(slot);
+      sprite.classList.add(
+        this.spriteLogicalIds.get(slot) === logicalId ? "sprite-static" : "sprite-entering",
+      );
+      this.spriteLogicalIds.set(slot, logicalId);
+    }
+    for (const slot of [...this.spriteLogicalIds.keys()]) {
+      if (!nextSlots.has(slot)) this.spriteLogicalIds.delete(slot);
+    }
+  }
+
+  private activateTypewriter(container: HTMLElement): void {
+    const textNode = container.querySelector<HTMLElement>(".dialogue-text[data-typewriter-text]");
+    if (!textNode) return;
+    const panel = textNode.closest<HTMLElement>(".dialogue-panel");
+    const fullText = textNode.dataset.typewriterText ?? "";
+    const advanceButtons = [...container.querySelectorAll<HTMLButtonElement>("[data-timer-ready]")];
+    const setTextReady = (ready: boolean): void => {
+      for (const button of advanceButtons) {
+        button.dataset.textReady = String(ready);
+        if (ready) {
+          button.dispatchEvent(new Event("typewritercomplete"));
+        } else {
+          button.disabled = true;
+          button.dataset.advanceState = "waiting";
+        }
+      }
+    };
+    const revealImmediately =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (revealImmediately || fullText.length === 0) {
+      textNode.textContent = fullText;
+      panel?.setAttribute("aria-live", "polite");
+      setTextReady(true);
+      return;
+    }
+
+    const characters = Array.from(fullText);
+    let index = 0;
+    let timer = 0;
+    let completed = false;
+    textNode.textContent = "";
+    textNode.setAttribute("aria-hidden", "true");
+    setTextReady(false);
+
+    const complete = (): boolean => {
+      if (completed) return false;
+      completed = true;
+      window.clearTimeout(timer);
+      textNode.textContent = fullText;
+      textNode.removeAttribute("aria-hidden");
+      panel?.setAttribute("aria-live", "polite");
+      setTextReady(true);
+      return true;
+    };
+    const tick = (): void => {
+      if (completed) return;
+      index += 1;
+      textNode.textContent = characters.slice(0, index).join("");
+      if (index >= characters.length) {
+        complete();
+        return;
+      }
+      const character = characters[index - 1] ?? "";
+      timer = window.setTimeout(tick, typewriterDelayFor(character));
+    };
+    const controller = {
+      complete,
+      cancel: (): void => {
+        completed = true;
+        window.clearTimeout(timer);
+      },
+    };
+    this.activeTypewriter = controller;
+    panel?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("button, input, select, textarea, a")) {
+        return;
+      }
+      controller.complete();
+    });
+    timer = window.setTimeout(tick, TYPEWRITER_BASE_DELAY_MS);
   }
 
   private delayedAdvanceButton(
@@ -1351,26 +1715,80 @@ export class GameView {
     button.type = "button";
     button.disabled = true;
     button.dataset.advanceState = "waiting";
+    button.dataset.timerReady = "false";
+    button.dataset.textReady = "true";
+    const updateReady = (): void => {
+      const ready =
+        button.dataset.timerReady === "true" && button.dataset.textReady === "true";
+      button.disabled = !ready;
+      button.dataset.advanceState = ready ? "ready" : "waiting";
+    };
     const gate = new DelayedActionGate({
       delayMs: DIALOGUE_ADVANCE_DELAY_MS,
       onReadyChange: (ready) => {
-        button.disabled = !ready;
-        button.dataset.advanceState = ready ? "ready" : "waiting";
+        button.dataset.timerReady = String(ready);
+        updateReady();
       },
-      onAction: onContinue,
+      onAction: () => {
+        this.onAdvance?.();
+        onContinue();
+      },
     });
     button.addEventListener("click", () => gate.trigger());
+    button.addEventListener("typewritercomplete", () => {
+      button.dataset.textReady = "true";
+      updateReady();
+    });
     gate.arm();
     return button;
   }
 
   private commit(shell: HTMLElement): void {
     this.keyboardPtt.cancel();
+    this.activeTypewriter?.cancel();
+    this.activeTypewriter = null;
+    this.applySpriteContinuity(shell);
+    const currentShell = this.root.firstElementChild;
+    if (
+      currentShell instanceof HTMLElement &&
+      currentShell.classList.contains("battle-screen") &&
+      shell.classList.contains("battle-screen")
+    ) {
+      const currentStage = currentShell.querySelector<HTMLElement>(":scope > .battle-stage");
+      const nextStage = shell.querySelector<HTMLElement>(":scope > .battle-stage");
+      if (currentStage && nextStage) {
+        currentShell.className = shell.className;
+        for (const key of Object.keys(currentShell.dataset)) {
+          delete currentShell.dataset[key];
+        }
+        Object.assign(currentShell.dataset, shell.dataset);
+        for (const child of [...currentShell.children]) {
+          if (child !== currentStage) child.remove();
+        }
+        for (const child of [...shell.children]) {
+          if (child !== nextStage) currentShell.insertBefore(child, currentStage);
+        }
+        currentStage.className = nextStage.className;
+        for (const key of Object.keys(currentStage.dataset)) {
+          delete currentStage.dataset[key];
+        }
+        Object.assign(currentStage.dataset, nextStage.dataset);
+        currentStage.replaceChildren(...nextStage.childNodes);
+        if (this.debugEnabled) currentShell.append(this.devSceneNavigator());
+        this.currentBackgroundId = currentShell.dataset.scene ?? null;
+        this.currentPresentationContext =
+          currentShell.dataset.presentationContext ?? null;
+        this.activateTypewriter(currentShell);
+        return;
+      }
+    }
     if (this.debugEnabled) {
       shell.append(this.devSceneNavigator());
     }
     this.root.replaceChildren(shell);
     this.currentBackgroundId = shell.dataset.scene ?? null;
+    this.currentPresentationContext = shell.dataset.presentationContext ?? null;
+    this.activateTypewriter(shell);
   }
 
   private devSceneNavigator(): HTMLElement {

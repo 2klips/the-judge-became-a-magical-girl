@@ -10,7 +10,8 @@
 | 도윤 외부 원본 6장 | `assets/source/doyun/doyoon-hero-sprites.zip` | commit `af26039`, 2026-08-03, 업로드자 `2klips` | 미확인 | 미확인 | 원본 추적용 |
 | 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 미확인 | 미확인 | 자동 규격 `ready`, 사용자 장면 사용 승인 |
 | 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격·runtime 합성 `ready`, 권리 승인 대기 |
-| BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` | 현재 인계 브랜치, 2026-08-06, Git 작성자 `lj33126` | Suno, 현재 Pro 플랜 사용자 확인; 생성 당시 플랜·모델 미확인 | 생성 당시 계정 기록·약관 확인 대기 | source 납품 완료, runtime 청각 QA·채택 대기 |
+| 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 생성 서비스 플랜·앵커 권한·공개 사용 미확인 | normal 자동 규격·동일 바이트 `ready`; hit/attack/death 미등록 |
+| BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1, 현재 Pro 플랜 사용자 확인; 생성 당시 플랜·모델 미확인 | 생성 당시 계정 기록·약관 확인 대기 | 자동 규격·동일 바이트 `ready`, 사람 청각·권리 승인 대기 |
 
 ## 배경 원본
 
@@ -82,7 +83,15 @@
 - 최종 SHA-256, 소스 구간, 생성폼은 [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md)에 기록한다.
 - 장면별 사용·통합 QA는 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md)에 기록한다.
 - 현재 Suno Pro 사용은 사용자가 확인했지만 생성 당시 플랜·곡 ID·생성일·모델은 증빙 보완 전 미확인이다.
-- `assets/runtime/bgm/`에는 복사하지 않았고 매니페스트 상태도 변경하지 않았다.
+- 2026-08-06 최종 5곡을 `assets/runtime/bgm/`에 동일 바이트로 채택했다. source/runtime SHA-256 일치, 전체 runtime 30MB 이하를 확인했다.
+- 사람의 3회 루프·대사 마스킹·PTT duck·장면 전환 청감과 생성 당시 플랜·곡 ID 확인 전 상태는 `ready`이며 `approved` 승격을 금지한다.
+
+## 회색 망령 액션 납품
+
+- 제작·검증 원문은 `docs/gray-wraith-action-v2/delivery/PRODUCTION_EVIDENCE.md`, `VALIDATION_REPORT.md`에 있다.
+- `char_gray_wraith_normal.png`는 1200×2000 투명 PNG, 413,056B, SHA-256 `508F119B89752B19B056256D5EB641CD23A74FD26FCB7543F719193C08756839`이며 runtime 채택본과 동일하다.
+- `hit`/`attack`/`death`는 수신했지만 사용자 결정에 따라 신규 논리 ID로 등록하지 않았다. source 납품만 보존한다.
+- 계약 필수 `char_gray_wraith_weakened.png`는 납품되지 않았다. 별도 제작 요청을 유지한다.
 
 ## SFX source 인계
 

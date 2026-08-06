@@ -2,15 +2,22 @@ import { describe, expect, it } from "vitest";
 import type { EndingNode } from "../src/data/schema";
 import {
   formatDialogueText,
+  isActBoundaryTransition,
   resolveDialogueIdentity,
   resolveDialoguePresentation,
+  resolveBattleStagePresentation,
+  resolveBattleActionPresentation,
   resolveEndingLines,
   resolveEndingPages,
   resolveEndingVisual,
+  resolveIncantationCompanionVisual,
   resolveMissingAssetPresentation,
+  resolveSpriteSlot,
   resolveSceneBrand,
   resolveSttModelControlVisibility,
   resolveVoiceInputPresentation,
+  TYPEWRITER_BASE_DELAY_MS,
+  typewriterDelayFor,
   VOICE_PROCESSING_LABEL,
   VOICE_TITLE_SUBTITLE,
 } from "../src/ui/gameView";
@@ -43,17 +50,17 @@ describe("M5 장면 표시 계약", () => {
 
   it("화자별 미연시 대화창 방향·색상과 무기명 내레이션을 고정한다", () => {
     expect(resolveDialoguePresentation("juno")).toEqual({
-      side: "left",
+      side: "center",
       tone: "juno",
       showName: true,
     });
     expect(resolveDialoguePresentation("doyun")).toEqual({
-      side: "right",
+      side: "center",
       tone: "doyun",
       showName: true,
     });
     expect(resolveDialoguePresentation("gray_wraith")).toEqual({
-      side: "left",
+      side: "center",
       tone: "wraith",
       showName: true,
     });
@@ -67,6 +74,30 @@ describe("M5 장면 표시 계약", () => {
       tone: "voice",
       showName: true,
     });
+  });
+
+  it("대화창 이동 대신 캐릭터 논리 ID를 고정 highlight 슬롯으로 분류한다", () => {
+    expect(resolveSpriteSlot("doyun.normal_smile")).toBe("doyun");
+    expect(resolveSpriteSlot("juno.happy")).toBe("juno");
+    expect(resolveSpriteSlot("gray_wraith.weakened")).toBe("gray_wraith");
+    expect(resolveSpriteSlot("transform.cast")).toBeNull();
+  });
+
+  it("타이프라이터는 24ms 기본 속도와 문장부호 휴지를 사용한다", () => {
+    expect(TYPEWRITER_BASE_DELAY_MS).toBe(24);
+    expect(typewriterDelayFor("가")).toBe(24);
+    expect(typewriterDelayFor(",")).toBe(48);
+    expect(typewriterDelayFor(".")).toBe(92);
+    expect(typewriterDelayFor("…")).toBe(92);
+  });
+
+  it("암전은 지정된 네 막 경계에서만 실행한다", () => {
+    expect(isActBoundaryTransition("title", "n0_review")).toBe(true);
+    expect(isActBoundaryTransition("n5_transform_result", "battle_wraith")).toBe(true);
+    expect(isActBoundaryTransition("battle_wraith", "ch3_gray_answer")).toBe(true);
+    expect(isActBoundaryTransition("ch3_gray_answer", "ending_good")).toBe(true);
+    expect(isActBoundaryTransition("n2_juno_intro", "n2_juno_followup")).toBe(false);
+    expect(isActBoundaryTransition("battle_wraith", "battle_wraith")).toBe(false);
   });
 
   it("내레이션만 소괄호로 감싸고 이미 감싼 문장은 중복 처리하지 않는다", () => {
@@ -158,5 +189,93 @@ describe("M5 장면 표시 계약", () => {
     expect(resolveEndingVisual("good", 6)).toBeNull();
     expect(resolveEndingVisual("normal", 0)?.emotion).toBe("neutral");
     expect(resolveEndingVisual("bad", 0)?.emotion).toBe("upset");
+  });
+
+  it("N5 주문 게이트에서 직전 N4의 주노 표정을 유지한다", () => {
+    expect(resolveIncantationCompanionVisual({ npcEmotion: "happy" })).toEqual({
+      characterId: "juno",
+      emotion: "happy",
+    });
+    expect(resolveIncantationCompanionVisual({ npcEmotion: "shy" })).toEqual({
+      characterId: "juno",
+      emotion: "shy",
+    });
+    expect(resolveIncantationCompanionVisual({ npcEmotion: "neutral" })).toEqual({
+      characterId: "juno",
+      emotion: "neutral",
+    });
+  });
+
+  it("전투 명령·결과 화면이 같은 페이즈별 무대 인물 계약을 사용한다", () => {
+    expect(resolveBattleStagePresentation("p1_defend")).toEqual({
+      phaseIndex: 0,
+      phaseTotal: 3,
+      doyunLogicalId: "doyun.magical_defend",
+      junoEmotion: "neutral",
+    });
+    expect(resolveBattleStagePresentation("p2_attack")).toMatchObject({
+      phaseIndex: 1,
+      doyunLogicalId: "doyun.magical_attack",
+      junoEmotion: "happy",
+    });
+    expect(resolveBattleStagePresentation("p3_answer")).toMatchObject({
+      phaseIndex: 2,
+      doyunLogicalId: "doyun.magical_finish",
+      junoEmotion: "neutral",
+    });
+  });
+
+  it("전투 행동·약화·페이즈·등급 연출을 수치 변경과 분리해 결정한다", () => {
+    expect(
+      resolveBattleActionPresentation({
+        phaseId: "p2_attack",
+        action: "spell",
+        delta: 25,
+        previousEnemyState: "normal",
+        enemyState: "weakened",
+        phaseChanged: true,
+        completed: false,
+        grade: null,
+      }),
+    ).toMatchObject({
+      className: "battle-action-spell-success",
+      doyunLogicalId: "doyun.magical_attack",
+      particles: true,
+      wraithTransition: "weaken",
+      phaseCallout: "……도윤. 이번에는 네 대답을 듣고 싶어.",
+    });
+    expect(
+      resolveBattleActionPresentation({
+        phaseId: "p3_answer",
+        action: "guard",
+        delta: 3,
+        previousEnemyState: "weakened",
+        enemyState: "weakened",
+        phaseChanged: false,
+        completed: true,
+        grade: "A",
+      }),
+    ).toMatchObject({
+      className: "battle-action-guard",
+      doyunLogicalId: "doyun.magical_defend",
+      guardBarrier: true,
+      gradeLabel: "빛을 되찾은 언령",
+    });
+    expect(
+      resolveBattleActionPresentation({
+        phaseId: "p1_defend",
+        action: "failed-spell",
+        delta: 0,
+        previousEnemyState: "weakened",
+        enemyState: "normal",
+        phaseChanged: false,
+        completed: false,
+        grade: null,
+      }),
+    ).toMatchObject({
+      className: "battle-action-failed",
+      particles: false,
+      wraithTransition: "recover",
+    });
   });
 });

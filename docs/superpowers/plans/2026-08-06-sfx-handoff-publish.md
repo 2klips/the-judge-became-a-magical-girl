@@ -29,7 +29,7 @@
 - `docs/assets/SCENE_ASSET_MAPPING.md`: N2/N5/p1/p2/critical 사용 시점과 runtime 대기 상태 기록.
 - `docs/assets/PROVENANCE.md`: Suno 사용자 확인, 원본명 정규화, SHA-256 기록.
 - `docs/assets/AI_PRODUCTION_LOG.md`: Suno 생성·사람 선택·무후처리·source 인계 기록.
-- `docs/dev/DECISIONS.md`: `DEC-059` source-only file SFX 예외와 개발자 통합 경계 기록.
+- `docs/dev/DECISIONS.md`: `DEC-065` source-only file SFX 예외와 개발자 통합 경계 기록.
 
 **Must not modify**
 
@@ -170,12 +170,12 @@ Add `3.5 효과음 source 인계` with the five files and exact events from Task
 
 In `PROVENANCE.md`, add a Suno SFX section with the five hashes, source/delivery relation, user-confirmed Pro plan, and unverified external terms evidence gate. In `AI_PRODUCTION_LOG.md`, add one row: Suno Sounds One Shot generation, user auditory selection of five, no trim/normalization, source-only handoff, runtime deferred.
 
-- [ ] **Step 5: Add `DEC-059`**
+- [ ] **Step 5: Add `DEC-065`**
 
 Use this decision:
 
 ```text
-DEC-059 accepted: 사용자 채택 Suno Sounds WAV 5종을 source-only 파일 SFX로 인계한다. 기존 Web Audio SFX는 runtime 채택 전까지 유지한다. 이번 변경은 파일명 정규화·장면 매핑·증빙만 수행하며 src, scenario, assets/runtime은 수정하지 않는다. 최신 사용자 결정이 별첨2의 code-only SFX 기본 방침을 이 인계 범위에서 대체한다.
+DEC-065 accepted: 사용자 채택 Suno Sounds WAV 5종을 source-only 파일 SFX로 인계한다. 기존 Web Audio SFX는 runtime 채택 전까지 유지한다. 이번 변경은 파일명 정규화·장면 매핑·증빙만 수행하며 src, scenario, assets/runtime은 수정하지 않는다. 최신 사용자 결정이 별첨2의 code-only SFX 기본 방침을 이 인계 범위에서 대체한다.
 ```
 
 - [ ] **Step 6: Verify document consistency**

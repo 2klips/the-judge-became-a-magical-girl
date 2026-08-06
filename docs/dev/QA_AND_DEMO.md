@@ -231,9 +231,9 @@ npm run build
 ### 15.4 실파일·검은 presentation·무음 게이트
 
 - [ ] 주노 5표정은 실제 투명 PNG로 표시되고 배경·도윤과 합성된다.
-- [ ] 망령 누락 장면에서 검은 placeholder로 표시되고 battle 입력과 momentum 게이지가 작동한다.
+- [ ] `gray_wraith.normal` 실파일이 표시되고, `gray_wraith.weakened` 누락 시 normal+CSS 균열 파생이 표시된다. normal까지 로드 실패하면 검은 placeholder여도 battle 입력과 momentum 게이지가 작동한다.
 - [ ] 변신 컷 2장 누락 상태에서 검은 컷 영역 뒤로 주문 결과·다음 진행 버튼이 보인다.
-- [ ] BGM 3종 누락 또는 로드 실패 시 예외 없이 무음 진행한다.
+- [ ] BGM 5종 실파일이 계약 장면에서 재생되고, 파일 로드 실패 시 폴백곡 또는 무음으로 예외 없이 진행한다.
 - [ ] 경로별 `[ASSET_HANDOFF]` 경고는 한 번만 기록된다.
 - [ ] 누락 파일을 빈 파일로 만들거나 manifest `ready`로 승격하지 않는다.
 - [ ] 외부 파일 도착 뒤 같은 논리 ID 경로에 배치하면 코드 변경 없이 실파일로 교체된다.
@@ -253,7 +253,7 @@ npm run build
 - [ ] GOOD 회복 책상→밝은 복도→검은빛 복도 전환.
 - [ ] NORMAL/BAD 전용 배경·주노 표정 구분.
 - [ ] 같은 배경 ID의 연속 대사는 애니메이션 없음, 다른 ID 전환만 420ms crossfade.
-- [ ] 주노 yellow·회색 망령 violet 대화창은 좌측, 도윤 rose 대화창은 우측, 익명 voice amber·내레이션 중립색은 중앙에 정렬되고 화자별 accent가 구분된다.
+- [ ] 모든 대화창은 화면 하단 중앙 고정이고, 주노 yellow·도윤 rose·회색 망령 violet·익명 voice amber·내레이션 중립 accent가 구분된다.
 - [ ] 내레이션 문장에 이름표·`내레이션`·`나레이션` 표시가 없고 본문은 중복 없는 `(…)`로 표시된다.
 - [ ] 일반 공개 QA·production 음성 UI에 고정 사용 안내, `STT`, `GPT · 고정`, transcript 원문, 별도 음성 상태 영역이 없고 `(T)`가 포함된 `누르고 말하기` 계열 PTT 버튼만 표시된다. `?debug=1`에서만 STT selector·전사 결과·지연 패널이 보인다.
 - [ ] 진행 버튼 문구에 남은 초가 표시되지 않고 렌더 후 1.5초 전 disabled, 1.5초 뒤 같은 문구로 enabled다.
@@ -279,6 +279,7 @@ npm run build
 - [ ] battle S/A/B 중 계획한 등급과 상호 배타 플래그.
 - [ ] affinity·momentum clamp 유지.
 - [ ] ending 마지막 페이지에서만 `처음부터` 표시.
+- [ ] ending production 화면에 호감도·플래그 등 내부 상태 요약이 표시되지 않는다.
 - [ ] ending 뒤 새 게임에서 이전 state·flag 제거.
 - [ ] console 미처리 exception 0.
 
@@ -346,8 +347,8 @@ npm run build
 - [ ] 22개 프리셋의 배경·인물·표정·컷·BGM 표기가 명세와 같다.
 - [ ] 이미 전달된 배경 16장, 도윤 runtime 11장, 주노 runtime 5장은 깨지지 않고 장면 매핑대로 표시된다.
 - [ ] 도윤은 오른쪽 확대·상반신 구도이며 주노와 대화 UI를 가리지 않는다.
-- [ ] 미전달 망령·변신 컷은 검은 placeholder이며 대사·버튼·게이지는 보인다.
-- [ ] 미전달 BGM은 무음이고 진행을 막지 않는다.
+- [ ] 전달된 `gray_wraith.normal`은 실파일, 미전달 `gray_wraith.weakened`는 normal+CSS 파생으로 보인다. normal 로드 실패와 미전달 변신 컷은 검은 placeholder여도 대사·버튼·게이지가 보인다.
+- [ ] 전달된 BGM 5곡이 계약 장면에 연결되고, 로드 실패 시 폴백곡 또는 무음으로 진행을 막지 않는다.
 - [ ] TITLE baked NHN/HACKATHON 문구·로고는 임시 승인본으로 표시된다. 최종 승인·라이선스 완료로 기록하지 않는다.
 
 ### 16.3 의도된 제한과 실패 보고

@@ -120,6 +120,18 @@ export type BackgroundId = keyof typeof backgrounds;
 export type ImageAssetId = keyof typeof imagePaths;
 export type BgmAssetId = keyof typeof bgmPaths;
 
+export interface ImageAssetFallback {
+  readonly path: string;
+  readonly className: string;
+}
+
+const imageFallbacks: Partial<Record<ImageAssetId, ImageAssetFallback>> = {
+  "gray_wraith.weakened": {
+    path: imagePaths["gray_wraith.normal"],
+    className: "asset-derived-wraith-weakened",
+  },
+};
+
 const unavailablePaths = new Set<string>();
 const reportedFailures = new Set<string>();
 
@@ -135,6 +147,12 @@ export function resolveBackgroundAsset(
 
 export function resolveImageAsset(logicalId: string): string | null {
   return imagePaths[logicalId as ImageAssetId] ?? null;
+}
+
+export function resolveImageAssetFallback(
+  logicalId: string,
+): ImageAssetFallback | null {
+  return imageFallbacks[logicalId as ImageAssetId] ?? null;
 }
 
 export function resolveCharacterAsset(

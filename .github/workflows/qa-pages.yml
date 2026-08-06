@@ -3,7 +3,7 @@ name: Deploy temporary QA Pages
 on:
   push:
     branches:
-      - codex/m5-asset-handoff-docs
+      - main
   workflow_dispatch:
 
 permissions:
@@ -75,3 +75,5 @@ jobs:
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 900000

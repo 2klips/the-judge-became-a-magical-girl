@@ -919,3 +919,278 @@
 - 요청된 두 STT 모델의 debug 단일 선택 비교와 공개 QA 실호출이 동작한다.
 - 측정값은 깨끗한 동일 WAV 1건 결과다. 실제 마이크·억양·배경 소음별 정확도와 p50/p95는 작업자 수동 QA가 남는다.
 - M6 production에서 debug selector를 유지할지는 DEC-021과 함께 별도 확정해야 한다.
+
+## M5 연출 폴리시 WP1-1·WP1-4 — BGM·회색 망령 runtime 채택
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)` + `ASSET_VALIDATION`
+- 상태: 자동 규격·동일 바이트·build PASS, 사람 시청각·권리 QA 대기
+
+### 처리 내용
+
+- `assets/source/bgm/delivery/`의 BGM 5곡을 같은 파일명으로 `assets/runtime/bgm/`에 복사했다.
+- `docs/gray-wraith-action-v2/delivery/char/char_gray_wraith_normal.png`를 같은 파일명으로 `assets/runtime/char/`에 복사했다.
+- source/runtime SHA-256 동일성을 확인하고 manifest를 `ready`로 갱신했다. 라이선스 확인 전 `approved`로 올리지 않았다.
+- `gray_wraith.weakened`와 변신 컷 2장은 누락 상태와 제작 요청을 유지했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| BGM 동일 바이트 | PASS | 5/5 source/runtime SHA-256 일치 |
+| 망령 동일 바이트 | PASS | SHA-256 `508F119B…08756839` 일치 |
+| 물리 규격·용량 | PASS | BGM 각 3MB 이하, 망령 1200×2000 투명 PNG·413,056B |
+| runtime 총합 | PASS | 38 files·11,511,198B, 30MB 이하 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·166 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| 사람 청감·합성·권리 | 대기 | BGM 3회 루프·대사 마스킹·PTT duck, 망령 장면 합성, 생성 당시 권리 증빙 필요 |
+
+## M5 연출 폴리시 WP1-2·WP1-4 — 선호 BGM·weakened 파생 폴백
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)` + `SCENARIO_VALIDATION` + `ASSET_VALIDATION`
+- 상태: 코드·자동 검증 PASS, 브라우저 장면·청각 QA 대기
+
+### 처리 내용
+
+- DEC-059에 따라 `n3_wraith_choice`, `n5_transform`을 `bgm_crisis`로, `ch3_gray_answer`와 3엔딩을 `bgm_ending`으로 정렬했다. N4는 필드 없이 crisis를 이어받는다.
+- 22개 dev 프리뷰 중 위기 6개와 수렴·엔딩 6개의 BGM 표시를 같은 계약으로 정렬했다.
+- DEC-060에 따라 `gray_wraith.weakened` 물리 파일이 없으면 normal + CSS 파생, normal도 실패하면 검은 presentation으로 강등한다.
+- 납품된 `attack/hit/death`는 신규 논리 ID로 등록하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| targeted tests | PASS | loader·asset·dev preview 3 files·23 tests |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·168 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| 시나리오 범위 | PASS | `scene.bgm` 6개 외 대사·분기·스키마 변경 없음 |
+| 사람 장면·청각 QA | 대기 | weakened 파생 합성, N3 crisis crossfade, N5 one-shot, 수렴·3엔딩 ending곡 확인 필요 |
+
+## M5 연출 폴리시 WP1-3 — BGM controller 견고화
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 사람 청감 QA 대기
+
+### 처리 내용
+
+- 재생 실패로 catalog가 unavailable 처리한 BGM 경로는 같은 세션에서 새 `Audio()`를 만들지 않는다.
+- `NotAllowedError`는 오류로 승격하지 않고 다음 `pointerdown`에서 최신 요청을 한 번 재시도한다. 새 장면이 이미 재생되면 대기 요청을 취소한다.
+- 기본 음량을 `0.62`, PTT duck을 기본 음량의 `0.18배`로 분리했다.
+- 동일 `bgm_transform` one-shot 요청은 결과 재렌더에서 다시 만들거나 재생하지 않는다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| audio targeted tests | PASS | play rejection·error event·autoplay retry·duck·one-shot 5 tests |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·171 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| 사람 청감 | 대기 | 헤드폰·노트북 스피커의 대사 명료도, 3회 loop, PTT duck 복귀 필요 |
+
+## M5 연출 폴리시 WP6 — 캐릭터 이미지-대화 정합 전수 점검
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)` + `ASSET_VALIDATION`
+- 상태: 코드·문서 매트릭스 완료, 브라우저 최종 합성 QA 대기
+
+### 처리 내용
+
+- `scenario.json` 14개 노드의 모든 라인·intent, battle p1~p3 행동·65 전이, GOOD/NORMAL/BAD 모든 라인을 계약과 실제 resolver에 대조했다.
+- A형 1건: N5 주문 게이트에서 사라지던 주노를 직전 N4 `npcEmotion`으로 유지하도록 수정했다.
+- B형 1건: `n2_juno_intro.npc.startEmotion=happy`는 대본의 `surprised → happy`와 어긋나지만 작가 JSON이므로 수정하지 않았다.
+- C형은 기존 요청 3종(`gray_wraith.weakened`, 변신 컷 2장)뿐이며 신규 표정 논리 ID 제안은 없다.
+- 전체 결과는 `docs/assets/CHARACTER_IMAGE_DIALOGUE_AUDIT.md`에 고정했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 14개 노드 전수 매트릭스 | PASS | N0~N5, battle, 수렴, 3엔딩 전 라인·비트 기록 |
+| A형 코드 수정 | PASS | N5 gate 주노 표정 연속성 resolver·unit test 추가 |
+| 작가 JSON 보호 | PASS | `public/scenario/scenario.json` 변경 없음 |
+| 신규 C형 | PASS | 신규 제안 0건; 기존 미납품 3종 문서 연결 |
+| 22개 프리뷰·N4-A/B/C 실플레이 | 대기 | WP3/WP4 최종 레이아웃 완료 뒤 브라우저 전수 QA |
+
+## M5 연출 폴리시 WP4-1 — 단일 전투 무대
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 구조·자동 검증 PASS, 브라우저 데스크톱/모바일 QA 대기
+
+### 처리 내용
+
+- 전투 대기 화면의 썸네일 그리드와 행동 결과의 float 카드를 폐기하고 둘 다 `battle-stage` 공통 구조로 렌더한다.
+- 망령 좌측 대형 전신, 도윤 우측 확대 상반신, 주노 도윤 곁 소형 보조 슬롯을 p1~p3에서 고정했다.
+- 상단 HUD를 `기세` 게이지와 3단계 점 표시로 축소했다.
+- 적 도발·판정 결과는 같은 망령 대화창에 표시하고, 입력·결과 버튼은 하단 dock에서만 교체한다.
+- 버튼의 `+15`, `+3`, `S/A/B 등급으로 수렴` 수치 문구를 제거했다. 전투 FSM·수치·대사 원문은 변경하지 않았다.
+- desktop과 390×844 전용 무대 배치 CSS를 추가하고 `.battle-screen` 전체 스크롤을 차단했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TypeScript | PASS | `npm run check` 오류 0 |
+| 전투 presentation unit | PASS | p1/p2/p3 도윤·주노·phase index 계약 추가 |
+| 게임 로직 변경 | PASS | `src/battle/`, judge, branch, scenario JSON 변경 없음 |
+| 브라우저 합성 | 대기 | WP4-2 액션 연출 결합 뒤 1280×720·390×844 확인 |
+
+## M5 연출 폴리시 WP4-2/3 — 행동·페이즈·정화 연출
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 브라우저 모션·청각 QA 대기
+
+### 처리 내용
+
+- battle→battle 렌더에서는 `<main>`과 `battle-stage` DOM을 유지하고 배경·인물·대화·입력 하위 상태만 갱신한다.
+- 게이지 fill을 이전 momentum으로 먼저 렌더한 뒤 2프레임 뒤 현재 값으로 이동시켜 260ms transition을 복구했다.
+- 주문 성공은 도윤 발광→망령 hit→망령 위치 파티클, 실패는 도윤 미세 흔들림, 버티기는 방어막, 자유 대응은 축소 시퀀스로 분리했다.
+- momentum 65 상·하향에서 망령 weakened/recover를 800ms로 전이한다. 실파일이 없으면 DEC-060 CSS 파생을 유지한다.
+- 페이즈 전환에 주노 callout·인물 crossfade를 추가하고, 완료 시 대량 파티클·정화광·세계관식 S/A/B 문구를 같은 무대에서 표시한다.
+- 버티기 행동 순간에만 `doyun.magical_defend`, 나머지는 phase pose를 쓰는 DEC-063을 기록했다.
+- particle burst에 origin·count 옵션을 추가해 변신 기본 연출은 유지하고 battle 타격점만 망령 쪽으로 옮겼다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 38 files·174 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| battle 로직 회귀 | PASS | `src/battle/`, momentum·phase·grade 산식 변경 없음 |
+| reduced-motion | PASS(코드) | 신규 animation 비활성 CSS, 파티클 기존 matchMedia gate 유지 |
+| 실제 모션·SFX 순서 | 대기 | WP2 cue 연결 뒤 브라우저/헤드폰 QA |
+
+## M5 연출 폴리시 WP3-A/B — 표준 미연시 대화창·타이프라이터
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 브라우저 연속 10턴·모바일 QA 대기
+
+### 처리 내용
+
+- 화자별 좌/우/중앙 대화창 이동을 폐기하고 전 화자를 하단 중앙 `min(920px, 92vw)`에 고정했다.
+- 주노 yellow·도윤 rose·망령 violet·voice amber는 이름표와 테두리 accent로 유지하고, 실제 화자 스프라이트만 밝게 강조한다.
+- 24ms/글자, 쉼표 48ms, 문장부호 92ms 타이프라이터를 추가했다. 대화창 클릭·Space·Enter는 현재 문장을 즉시 완성한다.
+- 텍스트 완성 및 기존 1.5초 타이머가 모두 끝나야 진행 버튼이 활성화되고, 준비되면 대화창 우하단에 `▼`가 나타난다.
+- reduced-motion은 본문을 즉시 완성하며 next indicator·sprite crossfade 애니메이션을 끈다.
+- 도윤/주노/망령 슬롯별 마지막 논리 ID를 기억해 동일 ID 재렌더 fade를 생략하고, 표정·상태 변경 시에만 180ms crossfade한다.
+- 타이프라이터 중 `aria-live=off`, 완성 시 전체 문장 `polite` 전환으로 글자 단위 스크린리더 낭독을 막았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TypeScript | PASS | `npm run check` 오류 0 |
+| presentation unit | PASS | 하단 중앙 5화자, sprite slot, 24/48/92ms 속도 계약 |
+| 1.5초 잠금 | 유지 | `DelayedActionGate` 수치 무변경, text/timer 이중 gate |
+| 브라우저 10턴·390×844 | 대기 | WP3-C 전환까지 결합 후 확인 |
+
+## M5 연출 폴리시 WP3-C·WP5-1/2/3 — 장면 전환·등장·effect 수명
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 브라우저 타이밍 QA 대기
+
+### 처리 내용
+
+- presentation context를 분리해 네 막 경계만 500ms 암전하도록 DEC-062를 적용했다.
+- 배경 논리 ID가 같으면 계속 무전환, 다르면 기존 420ms crossfade를 유지한다.
+- 떠나는 background image는 `animationend`에서 제거하고 reduced-motion/이벤트 누락 대비 520ms 안전 제거를 추가했다.
+- N2 첫 등장 주노에 400ms 낙하와 착지 빛 번짐을 한 세션 1회만 적용했다.
+- `applySceneEffect()`에 `fade`를 추가하고 자기 animation 종료 시 `effect-*` class를 제거한다.
+- N5 주문의 줄바꿈이 보이도록 `.incantation-copy { white-space: pre-line; }`을 적용했다.
+- 모든 신규 전환·등장 모션은 reduced-motion에서 비활성화된다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 39 files·179 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| act boundary unit | PASS | 지정 4경계 true, 일반 노드·battle 내부 false |
+| effect lifecycle unit | PASS | fade class 자기 animationend 제거, none 무동작 |
+| 브라우저 전환 | 대기 | 420/500ms 체감·N2 1회·reduced-motion 확인 |
+
+## M5 연출 폴리시 WP3-D — Production 표시 문구 정리
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·문서·자동 검증 PASS, 실제 화면 문맥 QA 대기
+
+### 처리 내용
+
+- 변신·battle·ending에서 `MOMENTUM`, `+N`, 정확한 battle dBFS, 영어 console풍 eyebrow, 페이지 수를 제거했다.
+- 결과 문구를 빛·안개·목소리 중심의 서사 표현으로 바꾸되 scenario JSON과 판정 결과는 변경하지 않았다.
+- 타이틀 마이크 세팅은 한국어화했으며, 사용자가 요청한 dBFS 그래프·수치는 그 화면에서만 유지했다.
+- cutscene의 미사용 `progress` 필드와 전달 코드를 제거했다.
+- `?debug=1`의 scene/STT/transcript/latency/momentum/grade 재현과 부팅 데이터 오류 상세는 QA 계약으로 유지했다.
+- 전수 목록과 유지 이유를 `docs/dev/PRESENTATION_LABEL_AUDIT.md`에 기록했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TypeScript | PASS | `npm run check` 오류 0 |
+| scenario 보호 | PASS | `public/scenario/scenario.json` 변경 없음 |
+| production 잔여 검색 | PASS | 내부 `momentum`은 변수·debug에만 남고, battle 표시 수치는 제거 |
+| 실제 화면 문맥 | 대기 | full path 브라우저 QA에서 잘림·중복·타이밍 확인 |
+
+## M5 연출 폴리시 WP2 — Web Audio SFX 확충
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 헤드폰·노트북 청감 QA 대기
+
+### 처리 내용
+
+- 기존 confirm/cast/critical/impact/recognition_fail을 cue별 2~3층 tone으로 교체했다.
+- advance/guard/wraith_shift/ending 4 cue를 추가하고 진행·버티기·65 전이·ending 진입에 연결했다.
+- 주문은 성공 `cast`, 완창 `critical`, 불발 `recognition_fail`; 자유 대응은 성공 `impact`, 무변화 `confirm`으로 구분했다.
+- 마스터 gain과 layer별 gain을 분리하고 전 cue를 0.4초 이하로 제한했다.
+- 같은 cue 40ms 이내 중복을 막고 PTT press~release 동안 전 SFX를 억제한다.
+- AudioContext 생성·resume·oscillator 실패는 exception 없이 무음으로 강등한다.
+- 외부 SFX 파일·의존성·이벤트 버스는 추가하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 40 files·182 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| SFX unit | PASS | 40ms throttle, PTT suppression, Context 실패 무음 |
+| 실제 청감 | 대기 | 헤드폰·노트북 스피커에서 BGM/대사 대비 크기·피로도 확인 |
+
+## M5 연출 폴리시 통합 브라우저 QA·Production 상태 노출 수정
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 클릭 GOOD 완주·22프리셋·반응형·reduced-motion PASS, 사람 음성/청각·9회 완주 매트릭스 대기
+
+### 확인·수정 내용
+
+- 실제 Logitech G733 마이크 권한을 허용하고 입력 장치 목록, dBFS 미터 변화, 테스트 완료, `시작` 활성화를 확인했다.
+- 실제 플레이를 타이틀→N0~N5→3페이즈 battle→수렴→GOOD 마지막 페이지까지 클릭 경로로 완주했다.
+- battle 첫 주문 전후 같은 `.battle-stage` DOM 인스턴스가 유지되고 momentum 50→65, p1→p2→p3, S 등급, weakened CSS 파생이 정상 반영됐다.
+- 22개 debug 프리셋을 1280×720과 390×844에서 전수 검사했다. 깨진 실이미지와 가로·세로 overflow는 0이었다. 검은 placeholder는 계약된 변신 컷 2장과 선택 GOOD 후속 컷만 남았다.
+- reduced-motion에서 N2·battle·GOOD preview의 animation이 `none`, overflow가 0임을 브라우저에서 확인했다.
+- 실제 GOOD 마지막 페이지에서 문서 원칙에 어긋난 `호감도/플래그` production 상태 요약을 발견해 제거했다. 관련 dead CSS와 QA 문서의 과거 좌우 대화창·누락 망령/BGM 문구도 현재 계약으로 정리했다.
+- console error는 0이다. warning 3건은 문서화된 `transform.cast`, `transform.complete`, `gray_wraith.weakened` 누락 handoff뿐이다.
+- 병합 전 작업 브랜치만 감시하던 임시 QA Pages workflow의 push 대상을 `main`으로 교체해 최신 QA 커밋이 자동 배포되도록 복구했다.
+- 첫 `main` 배포는 source 검증·QA build·artifact upload가 모두 PASS했지만 Pages backend가 10분 동안 `deployment_queued`에 머물러 timeout됐다. 같은 SHA의 failed-job 재시도는 취소된 deployment ID를 재사용해 즉시 취소되므로 새 커밋에서 deploy timeout을 15분으로 늘려 재시도한다.
+
+### 남은 수동 게이트
+
+- 실제 사람 음성 GOOD/NORMAL/BAD, DevTools Offline GOOD/NORMAL/BAD, 최신 연출 기준 클릭 NORMAL/BAD 재완주.
+- BGM 5곡 3회 loop·N3 crisis crossfade·N5 transform one-shot·수렴 ending곡과 Web Audio SFX를 헤드폰/노트북에서 청감 확인.
+- `gray_wraith.weakened`, 변신 컷 2장, 선택 GOOD 검은 마법소녀 컷 납품 뒤 사람 합성 QA.
+- N2 첫 표정 `happy`를 대본의 `surprised → happy`로 바꿀지는 사용자 승인 전까지 변경하지 않는다.
