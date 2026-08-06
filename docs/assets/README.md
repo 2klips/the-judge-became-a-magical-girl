@@ -49,7 +49,7 @@ docs/assets/
 | [`provenance/`](provenance/) | 작업자가 전달한 원문 증빙·인계 문서 |
 | [`validation/`](validation/) | 자동 규격 검사 보고서 |
 
-BGM 납품·효과음 제작 준비 문서는 각각 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md), [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md), [SFX_PRODUCTION_PLAN.md](provenance/SFX_PRODUCTION_PLAN.md)를 따른다.
+BGM 납품·효과음 제작 준비 문서는 각각 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md), [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md), [SFX_PRODUCTION_PLAN.md](provenance/SFX_PRODUCTION_PLAN.md)를 따른다. 실제 Suno Sounds 입력문은 [SFX_SUNO_GENERATION_FORMS.md](provenance/SFX_SUNO_GENERATION_FORMS.md)에 정리한다.
 
 ## 정리 이력
 
