@@ -1185,6 +1185,7 @@
 - reduced-motion에서 N2·battle·GOOD preview의 animation이 `none`, overflow가 0임을 브라우저에서 확인했다.
 - 실제 GOOD 마지막 페이지에서 문서 원칙에 어긋난 `호감도/플래그` production 상태 요약을 발견해 제거했다. 관련 dead CSS와 QA 문서의 과거 좌우 대화창·누락 망령/BGM 문구도 현재 계약으로 정리했다.
 - console error는 0이다. warning 3건은 문서화된 `transform.cast`, `transform.complete`, `gray_wraith.weakened` 누락 handoff뿐이다.
+- 병합 전 작업 브랜치만 감시하던 임시 QA Pages workflow의 push 대상을 `main`으로 교체해 최신 QA 커밋이 자동 배포되도록 복구했다.
 
 ### 남은 수동 게이트
 
