@@ -139,6 +139,20 @@
 
 대화창, 이름표, 버튼, 자막, 호감도·momentum 게이지는 CSS 컴포넌트다. 파일 에셋 매니페스트에 추가하지 않는다.
 
+### 파일 SFX source 인계
+
+`[확정, DEC-059]` 아래 WAV는 사용자 청감 선택과 기본 규격 검사를 통과한 source 납품본이다. 아직 runtime 파일이나 코드 cue가 아니며 현재 Web Audio 동작을 대체하지 않는다.
+
+| 계획 cue | source 파일 | 규격·길이 | 상태 | 생성 도구·플랜 | 사용 위치 | runtime·QA |
+|---|---|---|---|---|---|---|
+| `sfx.transform_complete` | `sfx_transform_complete.wav` | WAV PCM16, 48kHz stereo, 2.440초 | ready | Suno Sounds One Shot·Pro 사용자 확인 | N5 `n5_transform` 결과 표시 | 미연결·BGM 중첩 청감 대기 |
+| `sfx.critical` | `sfx_critical.wav` | WAV PCM16, 48kHz stereo, 2.000초 | ready | Suno Sounds One Shot·Pro 사용자 확인 | battle spell `delta >= 25` | 기존 oscillator 교체 대기 |
+| `sfx.barrier` | `sfx_barrier.wav` | WAV PCM16, 48kHz stereo, 5.000초 | ready | Suno Sounds One Shot·Pro 사용자 확인 | p1 `p1_defend` 방어막 활성 | 신규 cue·중복 재생 QA 대기 |
+| `sfx.star_attack` | `sfx_star_attack.wav` | WAV PCM16, 48kHz stereo, 2.000초 | ready | Suno Sounds One Shot·Pro 사용자 확인 | p2 `p2_attack` 별 투사체 발사 | 신규 cue·타격음 분리 QA 대기 |
+| `sfx.juno_appear` | `sfx_juno_appear.wav` | WAV PCM16, 48kHz stereo, 2.000초 | ready | Suno Sounds One Shot·Pro 사용자 확인 | N2 `n2_juno_intro` 첫 등장 | 신규 cue·장면당 1회 QA 대기 |
+
+최종 SHA-256과 원본 구분은 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)와 [SFX_PRODUCTION_EVIDENCE.md](provenance/SFX_PRODUCTION_EVIDENCE.md)를 따른다. 생성 당시 권리 근거와 runtime 청감 QA 전에는 `approved`로 올리지 않는다.
+
 ## 통합 게이트
 
 - 논리 ID는 시나리오에서 확장자 없이 사용한다.

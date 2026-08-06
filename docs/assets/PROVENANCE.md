@@ -83,3 +83,20 @@
 - 장면별 사용·통합 QA는 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md)에 기록한다.
 - 현재 Suno Pro 사용은 사용자가 확인했지만 생성 당시 플랜·곡 ID·생성일·모델은 증빙 보완 전 미확인이다.
 - `assets/runtime/bgm/`에는 복사하지 않았고 매니페스트 상태도 변경하지 않았다.
+
+## SFX source 인계
+
+- 사용자 청감으로 선택한 Suno Sounds One Shot WAV 5종만 `assets/source/sfx/delivery/`에 계약명으로 복사했다.
+- 모두 생성 WAV와 동일 바이트이며 트림·정규화·재인코딩하지 않았다. 48kHz stereo 16-bit PCM 규격이다.
+- Suno Pro 사용은 사용자가 확인했다. 생성 당시 계정 화면·작업 ID·약관·해커톤 제출 허용 근거는 팀 보존 전 미확인이다.
+- `assets/runtime/sfx/`와 코드는 수정하지 않았으며 상태는 `ready`, `approved`가 아니다.
+
+| 원본 구분 | 계약 파일명 | SHA-256 |
+|---|---|---|
+| Magical-girl Transformation Completion | `sfx_transform_complete.wav` | `CCF478921EF8B3BE124FC3A0F21568850378D624ACCD93D46E97A224F1F1E318` |
+| Critical Magical Hit | `sfx_critical.wav` | `BB5880185585B1FB2AE2BEDA50D8EDBE0AED9B2CE4AD7B1AB89859D31420ECA2` |
+| Magical Shield Activation | `sfx_barrier.wav` | `52BCF2011D5815AE4B0D06534113CA2B7BACBB0D47400347B48CF2265ACE70F9` |
+| Magical Wand Attack | `sfx_star_attack.wav` | `C4DE29A13BA813D76724D0DC0464813E4410D00C580AD68A838FED52999AD6FE` |
+| Cute Character Pop-out From A CRT Monitor | `sfx_juno_appear.wav` | `C2A0B50743E1FC9C99D86F5A818438ED361AAB494A875EB16777F3CBABEE70EF` |
+
+장면별 통합 계약은 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md), 생성 후보·미반영 기록은 [SFX_PRODUCTION_EVIDENCE.md](provenance/SFX_PRODUCTION_EVIDENCE.md)를 따른다.

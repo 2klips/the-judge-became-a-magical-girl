@@ -107,6 +107,18 @@
 | `[컷 가능]` | `bgm_crisis` | `bgm_crisis.mp3` | 30~60초 loop | 회색 안개, 정지한 모니터, 망령 등장. 저역 압박은 쓰되 대사를 덮지 않음 | N3~N5. 없으면 `bgm_battle` |
 | `[컷 가능]` | `bgm_ending` | `bgm_ending.mp3` | 약 60초 loop 또는 자연스러운 tail | 씁쓸함과 다시 판단할 용기가 공존. BAD에서도 과도한 승리감 금지 | 전투 후 수렴~엔딩. 없으면 `bgm_daily` |
 
+### 3.5 효과음 source 인계
+
+`[확정, DEC-059]` 아래 5종은 사용자 채택 source WAV이며 아직 runtime에 연결하지 않았다. 통합 상세는 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)를 따른다.
+
+| 계획 cue·파일명 | 장면 | 정확한 재생 시점 | 개발 주의 |
+|---|---|---|---|
+| `sfx.transform_complete` / `sfx_transform_complete.wav` | N5 `n5_transform` | 주문 판정 뒤 변신 결과 표시 순간, 결과 렌더당 1회 | perfect·standard·rescued 공통. `bgm_transform` 중첩 청감 QA |
+| `sfx.critical` / `sfx_critical.wav` | `battle_wraith` | spell 결과 `delta >= 25` 확정 순간 | N5 perfect에는 사용하지 않고 기존 battle critical oscillator 교체 후보로 사용 |
+| `sfx.barrier` / `sfx_barrier.wav` | p1 `p1_defend` | 성공 방어 주문 뒤 방어막 visual 활성 순간 | `Magical Shield Activation` 신버전만 사용, 장면 행동당 1회 |
+| `sfx.star_attack` / `sfx_star_attack.wav` | p2 `p2_attack` | 성공 공격 주문 뒤 별 투사체 발사 순간 | 후속 충돌음이 아닌 귀여운 발사음으로 사용 |
+| `sfx.juno_appear` / `sfx_juno_appear.wav` | N2 `n2_juno_intro` | 주노가 모니터 밖으로 나타나는 첫 표시 순간 | 대사 rerender가 아니라 장면 진입당 1회 |
+
 ## 4. 장면별 런타임 매핑
 
 ### 4.1 타이틀·N0~N4
@@ -193,6 +205,7 @@
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
 - `[구현·QA PASS, DEC-036~039]` 배경 원본 16장을 `1920×1080 WebP ≤500KB` runtime 파일로 변환하고 catalog·node line·변신 stage·battle phase/p3 spell·ending line 고정 전환을 연결했다. `?debug=1` 장면 선택기와 22개 비파괴 프리뷰가 16개 배경을 모두 검수한다.
 - `[대기]` `bgm_crisis`, `bgm_ending`, `ending.black_magical_girl`은 컷 가능이다. 승인 파일을 채택하기 전에는 현재 필수곡·narration·CSS 폴백을 사용한다.
+- `[source ready·runtime 대기, DEC-059]` 선택 SFX 5종은 `assets/source/sfx/delivery/`에 보존했다. Web Audio 교체·신규 cue·중복 방지·PTT 격리는 개발자 후속 통합이다.
 - `[대기]` 모든 필수 물리 에셋의 시각·청각·라이선스 QA는 외부 담당자 전달 후 진행한다.
 
 ## 7. 현재 M5에서 제작하지 않을 항목
@@ -202,7 +215,7 @@
 - 불완전 변신 전용 컷·스프라이트
 - HIDDEN 전용 신규 이미지·음악
 - UI 프레임, 평가표 이미지, 주문 글자 이미지
-- 파일 SFX. 결정음·시전음·크리티컬·타격·인식 실패음은 Web Audio 코드 생성
+- 선택 5종 외 추가 파일 SFX. 현재 결정음·시전음·일반 타격·인식 실패음은 Web Audio를 유지하고, source 5종은 개발자 통합 전까지 runtime 미연결
 
 ## 8. 제작자 제출 체크리스트
 
@@ -229,6 +242,9 @@
 - [ ] 제목 마이크 테스트를 통과하기 전 시작·이어하기가 불가능하다.
 - [ ] battle 주문의 너무 작음·너무 큼이 각각 무료 1회 재시도 후 두 번째에 턴을 소비한다.
 - [ ] `bgm_transform`이 반복 재생되지 않는다.
+- [ ] N2·N5 파일 SFX가 장면당 한 번만 재생되고 rerender·재시도에서 중복되지 않는다.
+- [ ] p1 방어막·p2 별빛 발사·battle 치명타가 서로 다른 이벤트에 연결된다.
+- [ ] PTT 청취 중 파일 SFX가 녹음에 섞이지 않고 로드 실패 시 Web Audio 또는 무음으로 완주된다.
 - [ ] GOOD/NORMAL/BAD의 색 회복량과 주노 표정이 구분된다.
 - [ ] 누락·불량 이미지·컷은 검은 presentation, BGM은 무음으로 강등되며 클릭·음성·오프라인 완주된다.
 
@@ -253,12 +269,13 @@
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
 | AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
 | AR-15 | `구현·실기기 QA 대기` | 제목 마이크 필수 게이트와 적응형 dBFS battle 판정 | 브라우저·마이크별 입력 편차로 오판 가능 | fake mic 자동 QA + 실제 심사 PC에서 장치 선택·보정·저/고음량 수동 QA |
+| AR-16 | `source ready·runtime 대기` | 선택 SFX 5종은 규격·해시 확인됐지만 코드 cue·중복 방지·PTT 격리 미연결 | 잘못 연결하면 N5 치명타 오사용, 장면 중복음, STT 오염 가능 | [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)대로 runtime 채택 후 자동·청감 QA |
 
 ### 다음 단계 순서
 
 1. 제작자/사용자: 과거 17번째 배경 식별자와 생성·라이선스 증빙을 전달한다. clean TITLE은 현 임시본 교체용으로 요청 유지한다.
 2. 제작자: 망령 2상태, 변신 컷 2장, 필수 BGM 3곡을 계약명·규격으로 납품한다. 주노는 재제작하지 않고 권리 증빙만 보완한다.
-3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지하고, 다른 실에셋 도착 뒤 남은 시각·청각 QA를 수행한다.
+3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지하고, `SFX_HANDOFF.md`의 선택 5종을 runtime cue로 통합한 뒤 중복·PTT 격리·로드 실패 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.
 5. 문서 담당: 자동 규격 통과분만 `ASSET_MANIFEST.md`를 `ready`로 갱신하고 제작 증빙을 `AI_PRODUCTION_LOG.md`에 연결한다.
 6. 사람 검수: 주노 표정 정렬, 망령 상태 일관성, 배경 합성·전환, BGM loop·duck·crossfade, 라이선스를 확인한 뒤 `approved`로 승격한다.
