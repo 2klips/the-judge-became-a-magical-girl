@@ -381,7 +381,6 @@ interface LineViewOptions {
   speakerId?: string;
   emotion?: Emotion;
   text: string;
-  progress: string;
   continueLabel: string;
   state: GameState;
   onContinue: () => void;
@@ -577,7 +576,7 @@ export class GameView {
 
     const titleBlock = element("section", "title-block");
     titleBlock.append(
-      element("p", "eyebrow", "VOICE VISUAL NOVEL · INPUT CHECK"),
+      element("p", "eyebrow", "목소리로 이어지는 이야기"),
       element("h1", "game-title", "심사역은 마법소녀가 되었다"),
       element("p", "title-subtitle", "마이크가 연결되어야 플레이 가능해요"),
     );
@@ -586,7 +585,7 @@ export class GameView {
     setup.dataset.state = options.microphoneSupported ? "waiting" : "unsupported";
     const setupHeader = element("div", "microphone-setup-header");
     setupHeader.append(
-      element("span", "microphone-step", "01 / INPUT"),
+      element("span", "microphone-step", "마이크 준비"),
       element("h2", "microphone-title", "마이크 테스트"),
       element("p", "microphone-copy", "마이크를 연결하고 평소 목소리로 한 문장을 말해 주세요."),
     );
@@ -691,7 +690,7 @@ export class GameView {
           ? { ...measured, inputDeviceId: deviceSelect.value || undefined }
           : null;
         status.textContent = "마이크 테스트 완료. 이제 게임을 시작할 수 있어요.";
-        progressOutput.textContent = "READY";
+        progressOutput.textContent = "테스트 완료";
         startButton.disabled = calibration === null;
         if (resumeButton) resumeButton.disabled = calibration === null;
         connectButton.textContent = "다시 테스트";
@@ -707,7 +706,7 @@ export class GameView {
       deviceSelect.disabled = true;
       setup.dataset.state = "connecting";
       status.textContent = "마이크 권한과 입력 장치를 확인하고 있어요…";
-      progressOutput.textContent = "CONNECTING";
+      progressOutput.textContent = "연결 중";
       lastReadingAt = performance.now();
       try {
         const connection = await options.connectMicrophone(deviceId, updateLevel);
@@ -722,14 +721,14 @@ export class GameView {
         } else {
           connectButton.textContent = "테스트 초기화";
           status.textContent = "연결 완료. 테스트 문장을 평소 목소리로 말해 주세요.";
-          progressOutput.textContent = "LISTENING";
+          progressOutput.textContent = "듣는 중";
           setup.dataset.state = "listening";
         }
       } catch (error) {
         if (sequence !== connectionSequence || !this.root.contains(shell)) return;
         setup.dataset.state = "error";
         status.textContent = microphoneSetupErrorMessage(error);
-        progressOutput.textContent = "BLOCKED";
+        progressOutput.textContent = "연결 차단";
       } finally {
         if (sequence === connectionSequence) connectButton.disabled = false;
       }
@@ -862,7 +861,7 @@ export class GameView {
     );
     const card = element("section", "incantation-card");
     card.append(
-      element("p", "eyebrow", "INCANTATION GATE"),
+      element("p", "eyebrow", "변신 주문"),
       element("p", "incantation-copy", gate.displayText),
     );
     if (state.inputMode !== "voice") {
@@ -872,7 +871,7 @@ export class GameView {
     }
     if (options.notice) card.append(element("p", "input-notice", options.notice));
     const inputArea = element("section", "incantation-input");
-    const fallback = element("button", "secondary-button", "주문 외우기 · 표준 변신");
+    const fallback = element("button", "secondary-button", "주문 없이 변신하기");
     fallback.type = "button";
     fallback.addEventListener("click", options.onFallback, { once: true });
 
@@ -943,11 +942,11 @@ export class GameView {
     const card = element("section", "transformation-result");
     const title =
       options.outcome === "perfect"
-        ? "완전 변신 · MOMENTUM 60"
+        ? "완전한 변신"
         : options.outcome === "rescued"
-          ? "함께 완성한 변신 · MOMENTUM 50"
-          : "표준 변신 · MOMENTUM 50";
-    card.append(element("p", "eyebrow", "TRANSFORMATION"), element("h2", "ending-title", title));
+          ? "함께 완성한 변신"
+          : "빛으로 완성한 변신";
+    card.append(element("p", "eyebrow", "변신 완료"), element("h2", "ending-title", title));
     options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
     const button = this.delayedAdvanceButton(
       "primary-button",
@@ -1287,9 +1286,8 @@ export class GameView {
 
       const card = element("section", "ending-card");
       card.append(
-        element("p", "eyebrow", `${node.endingId.toUpperCase()} ENDING`),
+        element("p", "eyebrow", "이야기의 결말"),
         element("h2", "ending-title", pages[0]?.line.text ?? "엔딩"),
-        element("p", "ending-progress", `${page.lineIndex + 1}/${page.total}`),
       );
       if (page.lineIndex > 0) {
         const speaker =
@@ -1329,7 +1327,7 @@ export class GameView {
     const shell = this.createShell("bg_hall_dark", "error");
     const panel = element("section", "error-panel");
     panel.append(
-      element("p", "eyebrow", "DATA VALIDATION ERROR"),
+      element("p", "eyebrow", "데이터 확인 오류"),
       element("h1", "error-title", "게임을 시작할 수 없습니다"),
     );
 

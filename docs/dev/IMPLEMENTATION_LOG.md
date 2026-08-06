@@ -1119,3 +1119,27 @@
 | act boundary unit | PASS | 지정 4경계 true, 일반 노드·battle 내부 false |
 | effect lifecycle unit | PASS | fade class 자기 animationend 제거, none 무동작 |
 | 브라우저 전환 | 대기 | 420/500ms 체감·N2 1회·reduced-motion 확인 |
+
+## M5 연출 폴리시 WP3-D — Production 표시 문구 정리
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·문서·자동 검증 PASS, 실제 화면 문맥 QA 대기
+
+### 처리 내용
+
+- 변신·battle·ending에서 `MOMENTUM`, `+N`, 정확한 battle dBFS, 영어 console풍 eyebrow, 페이지 수를 제거했다.
+- 결과 문구를 빛·안개·목소리 중심의 서사 표현으로 바꾸되 scenario JSON과 판정 결과는 변경하지 않았다.
+- 타이틀 마이크 세팅은 한국어화했으며, 사용자가 요청한 dBFS 그래프·수치는 그 화면에서만 유지했다.
+- cutscene의 미사용 `progress` 필드와 전달 코드를 제거했다.
+- `?debug=1`의 scene/STT/transcript/latency/momentum/grade 재현과 부팅 데이터 오류 상세는 QA 계약으로 유지했다.
+- 전수 목록과 유지 이유를 `docs/dev/PRESENTATION_LABEL_AUDIT.md`에 기록했다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| TypeScript | PASS | `npm run check` 오류 0 |
+| scenario 보호 | PASS | `public/scenario/scenario.json` 변경 없음 |
+| production 잔여 검색 | PASS | 내부 `momentum`은 변수·debug에만 남고, battle 표시 수치는 제거 |
+| 실제 화면 문맥 | 대기 | full path 브라우저 QA에서 잘림·중복·타이밍 확인 |

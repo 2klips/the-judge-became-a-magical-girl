@@ -23,6 +23,7 @@
 | 보안과 배포 | [SECURITY_AND_DEPLOYMENT.md](SECURITY_AND_DEPLOYMENT.md) | 비밀·Workers·Pages 운영 계약 |
 | 에셋 추적 | [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md) | 논리 ID→실파일→QA 상태 |
 | 캐릭터 이미지-대화 정합 | [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](../assets/CHARACTER_IMAGE_DIALOGUE_AUDIT.md) | 14개 노드 전 라인·intent·전투·엔딩의 계약/실렌더/A·B·C 판정 |
+| Production 표시 문구 점검 | [PRESENTATION_LABEL_AUDIT.md](PRESENTATION_LABEL_AUDIT.md) | 수치·내부 상태·영문 console풍 문구 제거와 debug 유지 목록 |
 | 에셋 출처 | [PROVENANCE.md](../assets/PROVENANCE.md) | Git 이력·납품 경로·확인/미확인 출처 |
 | AI 제작 증빙 | [AI_PRODUCTION_LOG.md](../assets/AI_PRODUCTION_LOG.md) | 입력·생성·사람 검수 기록 |
 | 마일스톤 실행 이력 | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) | 작업·테스트·오류 수정·잔여 위험 기록 |

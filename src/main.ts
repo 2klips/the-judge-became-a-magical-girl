@@ -315,7 +315,7 @@ async function bootstrap(): Promise<void> {
                     ? "목소리가 너무 작아 주문이 닿지 않았어. 조금 더 크게"
                     : "목소리가 너무 커 주문이 깨졌어. 마이크와 거리를 두고";
                 renderCurrent(
-                  `${direction} 다시 외쳐 줘. 현재 ${audioLevel.rmsDbfs.toFixed(1)} dBFS · 재시도는 턴을 소모하지 않아.`,
+                  `${direction} 다시 외쳐 줘. 이번 재시도는 전투 진행을 소모하지 않아.`,
                 );
                 return;
               }
@@ -325,9 +325,11 @@ async function bootstrap(): Promise<void> {
                   : "『넘친 마력이 갈라져 주문이 흩어진다.』";
               applyAction(
                 { kind: "failed-spell", reason: levelResult },
-                `${transcript} · ${audioLevel.rmsDbfs.toFixed(1)} dBFS`,
+                transcript,
                 reply,
-                `음량 판정 ${levelResult === "too-quiet" ? "너무 작음" : "너무 큼"} · 주문 불발 +0`,
+                levelResult === "too-quiet"
+                  ? "목소리가 너무 작아 주문이 닿지 않았다."
+                  : "너무 큰 목소리에 주문의 모양이 흩어졌다.",
               );
               return;
             }
@@ -348,7 +350,10 @@ async function bootstrap(): Promise<void> {
             enemyName: node.enemy.name,
             actionLabel: transcript,
             reply: delta >= 25 ? "『그 주문은… 완전했어.』" : delta >= 15 ? "『빛이 내 안개를 가른다…!』" : "『흐린 목소리로는 닿지 않는다.』",
-            narration: `주문 결과 momentum ${delta >= 0 ? "+" : ""}${delta}`,
+            narration:
+              delta >= 15
+                ? "빛이 망령의 안개를 밀어냈다."
+                : "주문의 빛이 아직 망령에게 닿지 않았다.",
             action: delta > 0 ? "spell" : "failed-spell",
             previousMomentum: before.momentum,
             previousEnemyState: before.enemyState,
@@ -402,8 +407,8 @@ async function bootstrap(): Promise<void> {
             transcript,
             "『말은 들었다. 하지만 아직 흔들리지는 않는다.』",
             outcome.reason === "disabled"
-              ? "로컬 판정 모드: 안전한 0점 폴백"
-              : "네트워크 판정 실패: 안전한 0점 폴백",
+              ? "목소리는 닿았지만 망령은 아직 흔들리지 않는다."
+              : "멀어진 목소리를 주노가 붙잡아 전투를 이어 간다.",
           );
         } catch (error) {
           if (!request.signal.aborted) throw error;
@@ -422,7 +427,7 @@ async function bootstrap(): Promise<void> {
             { kind: "click-spell" },
             phase.spell.displayText,
             "『빛이 내 안개를 가른다…!』",
-            "클릭 주문 성공 +15",
+            "주문의 빛이 망령의 안개를 갈랐다.",
           ),
         onClickResponse: (text, momentumDelta) =>
           applyAction(
@@ -716,7 +721,6 @@ function renderCutscene(
       speakerId: line.speaker,
       emotion: line.emotion,
       text: line.text,
-      progress: `${nextIndex}/${node.lines.length}`,
       continueLabel: nextIndex === node.lines.length ? "다음 장면" : "계속",
       state: engine.getState(),
       onContinue: () => {
