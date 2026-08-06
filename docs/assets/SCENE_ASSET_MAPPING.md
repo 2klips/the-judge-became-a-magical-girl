@@ -285,7 +285,7 @@
 ### 다음 단계 순서
 
 1. 제작자/사용자: 과거 17번째 배경 식별자와 생성·라이선스 증빙을 전달한다. clean TITLE은 현 임시본 교체용으로 요청 유지한다.
-2. 제작자: 망령 weakened와 변신 컷 2장을 계약명·규격으로 납품하고, BGM·SFX·주노 생성·권리 증빙을 보완한다.
+2. 제작자: 누락된 망령 `weakened`와 변신 컷 2장을 계약명·규격으로 납품한다. 주노·BGM·SFX는 재제작하지 않고 권리 증빙과 사람 시청각 QA를 보완한다.
 3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지하고, `SFX_HANDOFF.md`의 선택 5종을 runtime cue로 통합한 뒤 중복·PTT 격리·로드 실패 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.
 5. 문서 담당: 자동 규격 통과분만 `ASSET_MANIFEST.md`를 `ready`로 갱신하고 제작 증빙을 `AI_PRODUCTION_LOG.md`에 연결한다.

@@ -14,7 +14,7 @@ assets/
   source/                  # 외부 납품 원본·중간본; 빌드 제외
     background/
     bgm/
-      delivery/            # 최종 BGM 납품본; runtime 미연결
+      delivery/            # 최종 BGM source; 같은 이름으로 runtime 채택 완료
     sfx/
       delivery/            # 사용자 채택 WAV; runtime 미연결
     doyun/
@@ -51,7 +51,7 @@ docs/assets/
 | [`provenance/`](provenance/) | 작업자가 전달한 원문 증빙·인계 문서 |
 | [`validation/`](validation/) | 자동 규격 검사 보고서 |
 
-BGM 납품·효과음 제작 준비 문서는 각각 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md), [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md), [SFX_PRODUCTION_PLAN.md](provenance/SFX_PRODUCTION_PLAN.md)를 따른다. 사용자 채택 WAV 5종의 장면·트리거·개발 통합 계약은 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)에 기록하고, 실제 Suno Sounds 입력문은 [SFX_SUNO_GENERATION_FORMS.md](provenance/SFX_SUNO_GENERATION_FORMS.md)에 정리한다.
+BGM 납품·채택 증빙과 효과음 제작 준비 문서는 각각 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md), [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md), [SFX_PRODUCTION_PLAN.md](provenance/SFX_PRODUCTION_PLAN.md)를 따른다. BGM 5종은 source와 같은 바이트로 runtime에 채택했으며 사람 청각·권리 QA가 남았다. 사용자 채택 WAV 5종의 장면·트리거·개발 통합 계약은 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)에 기록하고, 실제 Suno Sounds 입력문은 [SFX_SUNO_GENERATION_FORMS.md](provenance/SFX_SUNO_GENERATION_FORMS.md)에 정리한다.
 
 ## 정리 이력
 
@@ -59,5 +59,5 @@ BGM 납품·효과음 제작 준비 문서는 각각 [BGM_HANDOFF.md](provenance
 - `asset/doyoon-hero-sprites/` 6장은 보관 ZIP entry와 SHA-256이 같은 압축 해제 중복본이어서 제거했다. ZIP은 `assets/source/doyun/doyoon-hero-sprites.zip`에 보존한다.
 - 도윤 23장 납품본, 주노 원본·중간본·납품본, 배경 원본 ZIP은 삭제하지 않고 역할별 하위 폴더로 이동했다.
 - 주노 과거 `docs/Asset/juno-reference-v2/` 파일은 commit `6940236`에서 `assets/source/juno/`로 `R100` 이동된 것으로 확인했다. delivery 5장은 2026-08-04 `assets/runtime/char/`에 동일 바이트로 채택했다.
-- 2026-08-06: 최종 편집 BGM 5종을 `assets/source/bgm/delivery/`에 외부 납품본으로 추가했다. runtime 채택은 사람 검수·개발자 통합 뒤 진행한다.
+- 2026-08-06: 최종 편집 BGM 5종을 `assets/source/bgm/delivery/`에 외부 납품본으로 추가했고, 같은 바이트를 `assets/runtime/bgm/`에 채택했다. 사람 청각·권리 QA 전에는 `approved`로 승격하지 않는다.
 - 2026-08-06: 사용자 채택 SFX WAV 5종을 `assets/source/sfx/delivery/`에 원본 바이트로 추가했다. runtime·코드는 개발자 통합 전까지 변경하지 않는다.

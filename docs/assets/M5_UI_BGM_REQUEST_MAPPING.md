@@ -1,7 +1,7 @@
 # M5 UI·BGM 작업 매핑
 
 - 최종 갱신: 2026-08-06
-- 현재 요청: BGM 5종은 runtime `ready`, 사용자 채택 SFX WAV 5종은 source `ready`다. 파일 SFX는 개발자 통합 전까지 기존 Web Audio 9종을 대체하지 않으며, 사람 청각·권리 QA 전 `approved` 승격을 금지한다.
+- 현재 요청: BGM 5종은 runtime `ready`, 사용자 채택 SFX WAV 5종은 source `ready`·runtime 대기다. SFX 채택 전까지 기존 Web Audio를 유지하며, 사람 청각·권리 QA 전 `approved` 승격을 금지한다.
 
 ## 1. 담당 경계
 
