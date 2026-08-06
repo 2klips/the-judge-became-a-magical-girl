@@ -1186,7 +1186,8 @@
 - 실제 GOOD 마지막 페이지에서 문서 원칙에 어긋난 `호감도/플래그` production 상태 요약을 발견해 제거했다. 관련 dead CSS와 QA 문서의 과거 좌우 대화창·누락 망령/BGM 문구도 현재 계약으로 정리했다.
 - console error는 0이다. warning 3건은 문서화된 `transform.cast`, `transform.complete`, `gray_wraith.weakened` 누락 handoff뿐이다.
 - 병합 전 작업 브랜치만 감시하던 임시 QA Pages workflow의 push 대상을 `main`으로 교체해 최신 QA 커밋이 자동 배포되도록 복구했다.
-- 첫 `main` 배포는 source 검증·QA build·artifact upload가 모두 PASS했지만 Pages backend가 10분 동안 `deployment_queued`에 머물러 timeout됐다. `deploy-pages@v4`의 timeout 상한도 10분이라 15분 설정은 적용할 수 없어 제거했다. 이후 기존 deployment를 명시적으로 취소했고, SFX 작업 브랜치의 동시 실행이 최신 `main` 배포를 취소한 문제도 해당 실행 취소와 최신 branch 병합으로 정리했다. 병합된 `main`의 새 SHA로 다시 배포한다.
+- 첫 `main` 배포는 source 검증·QA build·artifact upload가 모두 PASS했지만 Pages backend가 10분 동안 `deployment_queued`에 머물러 timeout됐다. `deploy-pages@v4`의 timeout 상한도 10분이라 15분 설정은 적용할 수 없어 제거했다. 이후 기존 deployment를 명시적으로 취소했고, SFX 작업 브랜치의 동시 실행이 최신 `main` 배포를 취소한 문제도 해당 실행 취소와 branch 병합으로 정리했다.
+- 병합된 `main` SHA `f45f076`의 run `31108793141`도 build·artifact 단계는 PASS했다. Pages backend가 약 4분 `deployment_queued`, 이후 약 6분 `deployment_in_progress`에 머물러 10분 상한으로 취소됐다. 공개 URL은 HTTP 200·`noindex,nofollow`지만 이전 QA SHA `ba38d7a`를 계속 제공한다. GitHub 공식 상태는 Actions·Pages 정상으로 표시되므로 저장소 Pages site 재생성 또는 GitHub 지원 문의가 다음 외부 조치 후보이며, site 재생성은 사용자 승인 전 수행하지 않는다.
 
 ### 남은 수동 게이트
 
@@ -1194,3 +1195,4 @@
 - BGM 5곡 3회 loop·N3 crisis crossfade·N5 transform one-shot·수렴 ending곡과 Web Audio SFX를 헤드폰/노트북에서 청감 확인.
 - `gray_wraith.weakened`, 변신 컷 2장, 선택 GOOD 검은 마법소녀 컷 납품 뒤 사람 합성 QA.
 - N2 첫 표정 `happy`를 대본의 `surprised → happy`로 바꿀지는 사용자 승인 전까지 변경하지 않는다.
+- `[미결정]` 최신 QA Pages 배포가 반복 timeout된다. 기존 공개본을 일시 중단할 수 있는 Pages site 재생성 여부를 사용자에게 확인한다.
