@@ -1,7 +1,7 @@
 # M5 UI·BGM 작업 매핑
 
 - 최종 갱신: 2026-08-06
-- 현재 요청: 코드 생성 UI·SFX 추가 외부 파일 0건. BGM 5종은 runtime `ready`이며 사람 청각·권리 QA가 남았다. 라이선스 확인 전 `approved` 승격 금지.
+- 현재 요청: BGM 5종은 runtime `ready`, 사용자 채택 SFX WAV 5종은 source `ready`·runtime 대기다. SFX 채택 전까지 기존 Web Audio를 유지하며, 사람 청각·권리 QA 전 `approved` 승격을 금지한다.
 
 ## 1. 담당 경계
 
@@ -9,7 +9,8 @@
 |---|---|---|
 | 대화창·이름표·버튼·게이지·자막·dev selector | Codex, HTML/CSS | 없음 |
 | 마이크 상태·입력 장치·dBFS 테스트 UI | Codex, DOM/SVG/CSS | 없음 |
-| 결정·시전·크리티컬·타격·인식 실패 SFX | Codex, Web Audio | 없음 |
+| 기존 결정·시전·크리티컬·타격·인식 실패 SFX | Codex, Web Audio | source 채택본 통합 전까지 유지 |
+| 변신 완료·치명타·방어막·별빛 공격·주노 등장 파일 SFX | 외부 음악 작업자 + 개발자 통합 | `assets/source/sfx/delivery/` 5건 |
 | BGM·변신 징글 | 외부 음악 작업자 | 있음 |
 | 캐릭터·배경·컷 | 외부 이미지 작업자 | [`M5_ASSET_HANDOFF_REQUEST.md`](M5_ASSET_HANDOFF_REQUEST.md) |
 
@@ -33,7 +34,7 @@
 
 검은 화면 placeholder에서도 모든 UI는 유지한다. 검은 presentation이 입력 상태나 대사를 가리면 실패다.
 
-## 3. 코드 생성 SFX 매핑
+## 3. 코드 생성·source 파일 SFX 매핑
 
 | 논리 ID | 트리거 | 방식 | 외부 파일 |
 |---|---|---|---|
@@ -47,7 +48,15 @@
 | `sfx.wraith_shift` | momentum 65 최초 상향 통과 | 안개가 갈라지는 2층 상승 shimmer | 없음 |
 | `sfx.ending` | ending 노드 진입 | 3음 부드러운 화음 | 없음 |
 
-`[구현, DEC-064]` 모든 cue는 0.4초 이하 Web Audio tone이다. 같은 cue 40ms 이내 중복을 막고 PTT press~release 동안 전 cue를 억제한다. `AudioContext` 생성·resume 실패는 무음으로 강등한다. 최종 QA에서 실제 스피커·헤드폰으로 크기와 피로도를 청감한다. 파일 SFX로 교체하지 않는다.
+`[구현, DEC-064]` 모든 현재 cue는 0.4초 이하 Web Audio tone이다. 같은 cue 40ms 이내 중복을 막고 PTT press~release 동안 전 cue를 억제한다. `AudioContext` 생성·resume 실패는 무음으로 강등한다. 최종 QA에서 실제 스피커·헤드폰으로 크기와 피로도를 청감한다. `[확정, DEC-065]` 선택 파일 SFX는 source 인계만 완료했으며 개발자가 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)의 장면 계약대로 채택하기 전에는 위 Web Audio 동작을 유지한다.
+
+| 계획 cue·파일 | 장면 | 통합 상태 |
+|---|---|---|
+| `sfx.transform_complete` / `sfx_transform_complete.wav` | N5 `n5_transform` 결과 표시 | source ready, runtime 대기 |
+| `sfx.critical` / `sfx_critical.wav` | battle spell `delta >= 25` | source ready, 기존 oscillator 교체 대기 |
+| `sfx.barrier` / `sfx_barrier.wav` | p1 `p1_defend` 방어막 활성 | source ready, 신규 cue 대기 |
+| `sfx.star_attack` / `sfx_star_attack.wav` | p2 `p2_attack` 별 투사체 발사 | source ready, 신규 cue 대기 |
+| `sfx.juno_appear` / `sfx_juno_appear.wav` | N2 `n2_juno_intro` 첫 등장 | source ready, 신규 cue 대기 |
 
 ## 4. BGM 납품 매핑
 
