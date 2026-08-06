@@ -37,13 +37,17 @@
 
 | 논리 ID | 트리거 | 방식 | 외부 파일 |
 |---|---|---|---|
-| `sfx.confirm` | 선택 확정 | Web Audio oscillator | 없음 |
-| `sfx.cast` | 주문 성공 | Web Audio oscillator | 없음 |
-| `sfx.critical` | 완창·크리티컬 | Web Audio oscillator | 없음 |
-| `sfx.impact` | 전투 타격·플래시 | Web Audio oscillator | 없음 |
-| `sfx.recognition_fail` | STT 실패 | Web Audio oscillator | 없음 |
+| `sfx.confirm` | 선택 확정 | 2층 짧은 상승 tone | 없음 |
+| `sfx.cast` | 주문 성공 | 2층 상승 sweep | 없음 |
+| `sfx.critical` | 완창·크리티컬 | 3음 상승 arpeggio | 없음 |
+| `sfx.impact` | 전투 타격·플래시 | square+triangle 저역 타격 | 없음 |
+| `sfx.recognition_fail` | STT·주문 실패 | 2음 부드러운 하강 | 없음 |
+| `sfx.advance` | 대사·컷 진행 | 매우 작은 2음 페이지 tone | 없음 |
+| `sfx.guard` | 전투 버티기 | 낮고 둥근 2층 방어 tone | 없음 |
+| `sfx.wraith_shift` | momentum 65 최초 상향 통과 | 안개가 갈라지는 2층 상승 shimmer | 없음 |
+| `sfx.ending` | ending 노드 진입 | 3음 부드러운 화음 | 없음 |
 
-최종 QA에서 실제 스피커·헤드폰으로 크기와 피로도를 청감한다. 파일 SFX로 교체하지 않는다.
+`[구현, DEC-064]` 모든 cue는 0.4초 이하 Web Audio tone이다. 같은 cue 40ms 이내 중복을 막고 PTT press~release 동안 전 cue를 억제한다. `AudioContext` 생성·resume 실패는 무음으로 강등한다. 최종 QA에서 실제 스피커·헤드폰으로 크기와 피로도를 청감한다. 파일 SFX로 교체하지 않는다.
 
 ## 4. BGM 납품 매핑
 

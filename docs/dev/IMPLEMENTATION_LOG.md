@@ -1143,3 +1143,29 @@
 | scenario 보호 | PASS | `public/scenario/scenario.json` 변경 없음 |
 | production 잔여 검색 | PASS | 내부 `momentum`은 변수·debug에만 남고, battle 표시 수치는 제거 |
 | 실제 화면 문맥 | 대기 | full path 브라우저 QA에서 잘림·중복·타이밍 확인 |
+
+## M5 연출 폴리시 WP2 — Web Audio SFX 확충
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 코드·자동 검증 PASS, 헤드폰·노트북 청감 QA 대기
+
+### 처리 내용
+
+- 기존 confirm/cast/critical/impact/recognition_fail을 cue별 2~3층 tone으로 교체했다.
+- advance/guard/wraith_shift/ending 4 cue를 추가하고 진행·버티기·65 전이·ending 진입에 연결했다.
+- 주문은 성공 `cast`, 완창 `critical`, 불발 `recognition_fail`; 자유 대응은 성공 `impact`, 무변화 `confirm`으로 구분했다.
+- 마스터 gain과 layer별 gain을 분리하고 전 cue를 0.4초 이하로 제한했다.
+- 같은 cue 40ms 이내 중복을 막고 PTT press~release 동안 전 SFX를 억제한다.
+- AudioContext 생성·resume·oscillator 실패는 exception 없이 무음으로 강등한다.
+- 외부 SFX 파일·의존성·이벤트 버스는 추가하지 않았다.
+
+### 검증 결과
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 40 files·182 tests |
+| `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
+| SFX unit | PASS | 40ms throttle, PTT suppression, Context 실패 무음 |
+| 실제 청감 | 대기 | 헤드폰·노트북 스피커에서 BGM/대사 대비 크기·피로도 확인 |

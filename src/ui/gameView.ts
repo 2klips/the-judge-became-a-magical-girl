@@ -480,6 +480,7 @@ export class GameView {
   constructor(
     private readonly root: HTMLElement,
     private readonly debugSttOptions: DebugSttOptions,
+    private readonly onAdvance?: () => void,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
     this.debugSttModel = debugSttOptions.model;
@@ -1735,7 +1736,10 @@ export class GameView {
         button.dataset.timerReady = String(ready);
         updateReady();
       },
-      onAction: onContinue,
+      onAction: () => {
+        this.onAdvance?.();
+        onContinue();
+      },
     });
     button.addEventListener("click", () => gate.trigger());
     button.addEventListener("typewritercomplete", () => {

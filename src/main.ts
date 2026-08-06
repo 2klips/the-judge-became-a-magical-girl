@@ -5,7 +5,7 @@ import {
   createWorkerBattleLlmPort,
   judgeBattleWithFailureGate,
 } from "./battle/llm";
-import type { BattleAction, BattleGrade } from "./battle/state";
+import type { BattleAction, BattleGrade, BattleState } from "./battle/state";
 import { BgmController } from "./audio/bgm";
 import { SfxPlayer } from "./audio/sfx";
 import { preloadCoreAssets } from "./assets/catalog";
@@ -68,12 +68,12 @@ const workerUrl = resolveWorkerUrl({
 if (isQaPreview) {
   installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
+const sfx = new SfxPlayer();
 const view = new GameView(root, {
   model: selectedSttModel,
   onModelChange: (model) => handleDebugSttModelChange(model),
-});
+}, () => sfx.play("advance"));
 const bgm = new BgmController();
-const sfx = new SfxPlayer();
 const microphoneTester = new BrowserMicrophoneTester();
 preloadCoreAssets();
 
@@ -138,10 +138,12 @@ async function bootstrap(): Promise<void> {
     const voiceCapture = (voice: RecordedVoiceTurnController) => ({
       startCapture: async (): Promise<void> => {
         bgm.setDucked(true);
+        sfx.setSuppressed(true);
         try {
           await voice.press();
         } catch (error) {
           bgm.setDucked(false);
+          sfx.setSuppressed(false);
           throw error;
         }
       },
@@ -150,11 +152,13 @@ async function bootstrap(): Promise<void> {
           return await voice.release();
         } finally {
           bgm.setDucked(false);
+          sfx.setSuppressed(false);
         }
       },
       cancel: (): void => {
         voice.cancel();
         bgm.setDucked(false);
+        sfx.setSuppressed(false);
       },
     });
 
@@ -249,6 +253,25 @@ async function bootstrap(): Promise<void> {
       const voice = createVoiceTurn(microphoneCalibration?.inputDeviceId);
       if (state.inputMode === "voice") activeVoice = voice;
 
+      const playBattleActionSfx = (
+        action: BattleAction,
+        delta: number,
+        before: BattleState,
+        after: BattleState,
+      ): void => {
+        if (action.kind === "guard") sfx.play("guard");
+        else if (action.kind === "failed-spell" || (action.kind === "spell" && delta === 0)) {
+          sfx.play("recognition_fail");
+        } else if (action.kind === "spell" || action.kind === "click-spell") {
+          sfx.play(delta >= 25 ? "critical" : "cast");
+        } else {
+          sfx.play(delta > 0 ? "impact" : "confirm");
+        }
+        if (before.enemyState === "normal" && after.enemyState === "weakened") {
+          sfx.play("wraith_shift");
+        }
+      };
+
       const applyAction = (
         action: BattleAction,
         actionLabel: string,
@@ -259,7 +282,7 @@ async function bootstrap(): Promise<void> {
         const before = engine.getBattleState();
         const result = engine.submitBattleAction(action);
         const delta = result.battleState.momentum - before.momentum;
-        sfx.play(delta === 0 ? "confirm" : "impact");
+        playBattleActionSfx(action, delta, before, result.battleState);
         view.renderBattleReply({
           sceneId: resolvePresentationBackground({
             kind: "battle",
@@ -336,9 +359,10 @@ async function bootstrap(): Promise<void> {
           }
           battleVolumeFailures.delete(`${phase.phaseId}:${battleState.phaseTurn}`);
           const before = engine.getBattleState();
-          const result = engine.submitBattleAction({ kind: "spell", transcript });
+          const action = { kind: "spell", transcript } as const;
+          const result = engine.submitBattleAction(action);
           const delta = result.battleState.momentum - before.momentum;
-          sfx.play(delta >= 25 ? "critical" : "impact");
+          playBattleActionSfx(action, delta, before, result.battleState);
           view.renderBattleReply({
             sceneId: resolvePresentationBackground({
               kind: "battle",
@@ -452,7 +476,11 @@ async function bootstrap(): Promise<void> {
           renderCurrent();
         },
         onDebugMomentum: (momentum) => {
-          engine.setBattleMomentumForDebug(momentum);
+          const before = engine.getBattleState();
+          const after = engine.setBattleMomentumForDebug(momentum);
+          if (before.enemyState === "normal" && after.enemyState === "weakened") {
+            sfx.play("wraith_shift");
+          }
           renderCurrent(`debug momentum을 ${Math.min(100, Math.max(20, Math.trunc(momentum)))}로 설정했어.`);
         },
         onDebugGrade: (grade: BattleGrade) => {
@@ -651,6 +679,7 @@ async function bootstrap(): Promise<void> {
         return;
       }
 
+      sfx.play("ending");
       view.renderEnding(
         node,
         new Map([...characters].map(([id, character]) => [id, character.name])),
