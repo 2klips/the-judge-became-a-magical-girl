@@ -1169,3 +1169,26 @@
 | `npm run build` | PASS | production build 성공. 기존 transformers chunk 경고만 유지 |
 | SFX unit | PASS | 40ms throttle, PTT suppression, Context 실패 무음 |
 | 실제 청감 | 대기 | 헤드폰·노트북 스피커에서 BGM/대사 대비 크기·피로도 확인 |
+
+## M5 연출 폴리시 통합 브라우저 QA·Production 상태 노출 수정
+
+- 실행일: 2026-08-06
+- 작업 모드: `MILESTONE_IMPLEMENTATION(M5)`
+- 상태: 클릭 GOOD 완주·22프리셋·반응형·reduced-motion PASS, 사람 음성/청각·9회 완주 매트릭스 대기
+
+### 확인·수정 내용
+
+- 실제 Logitech G733 마이크 권한을 허용하고 입력 장치 목록, dBFS 미터 변화, 테스트 완료, `시작` 활성화를 확인했다.
+- 실제 플레이를 타이틀→N0~N5→3페이즈 battle→수렴→GOOD 마지막 페이지까지 클릭 경로로 완주했다.
+- battle 첫 주문 전후 같은 `.battle-stage` DOM 인스턴스가 유지되고 momentum 50→65, p1→p2→p3, S 등급, weakened CSS 파생이 정상 반영됐다.
+- 22개 debug 프리셋을 1280×720과 390×844에서 전수 검사했다. 깨진 실이미지와 가로·세로 overflow는 0이었다. 검은 placeholder는 계약된 변신 컷 2장과 선택 GOOD 후속 컷만 남았다.
+- reduced-motion에서 N2·battle·GOOD preview의 animation이 `none`, overflow가 0임을 브라우저에서 확인했다.
+- 실제 GOOD 마지막 페이지에서 문서 원칙에 어긋난 `호감도/플래그` production 상태 요약을 발견해 제거했다. 관련 dead CSS와 QA 문서의 과거 좌우 대화창·누락 망령/BGM 문구도 현재 계약으로 정리했다.
+- console error는 0이다. warning 3건은 문서화된 `transform.cast`, `transform.complete`, `gray_wraith.weakened` 누락 handoff뿐이다.
+
+### 남은 수동 게이트
+
+- 실제 사람 음성 GOOD/NORMAL/BAD, DevTools Offline GOOD/NORMAL/BAD, 최신 연출 기준 클릭 NORMAL/BAD 재완주.
+- BGM 5곡 3회 loop·N3 crisis crossfade·N5 transform one-shot·수렴 ending곡과 Web Audio SFX를 헤드폰/노트북에서 청감 확인.
+- `gray_wraith.weakened`, 변신 컷 2장, 선택 GOOD 검은 마법소녀 컷 납품 뒤 사람 합성 QA.
+- N2 첫 표정 `happy`를 대본의 `surprised → happy`로 바꿀지는 사용자 승인 전까지 변경하지 않는다.

@@ -1307,13 +1307,6 @@ export class GameView {
           });
       button.type = "button";
       if (page.isLast) {
-        card.append(
-          element(
-            "p",
-            "ending-summary",
-            `호감도 ${state.affinity} · 플래그 ${[...state.flags].join(", ") || "없음"}`,
-          ),
-        );
         button.addEventListener("click", onNewGame, { once: true });
       }
       card.append(button);

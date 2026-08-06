@@ -713,20 +713,6 @@ button {
   font-size: 0.875rem;
 }
 
-.ending-summary {
-  margin: 24px 0;
-  color: #cfc7ff;
-  font-family: "Courier New", monospace;
-  font-size: 0.875rem;
-}
-
-.ending-progress {
-  margin: 14px 0 0;
-  color: rgba(255, 255, 255, 0.48);
-  font-family: "Courier New", monospace;
-  font-size: 0.875rem;
-}
-
 .dev-scene-nav {
   position: fixed;
   z-index: 40;
@@ -1735,8 +1721,6 @@ button {
 .microphone-status,
 .microphone-test-prompt,
 .warning-message,
-.ending-summary,
-.ending-progress,
 .dev-scene-nav label,
 .dev-preview-meta,
 .enemy-state,
