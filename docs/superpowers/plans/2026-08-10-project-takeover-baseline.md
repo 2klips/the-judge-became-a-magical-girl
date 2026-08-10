@@ -4,7 +4,7 @@
 
 **Goal:** Preserve the verified handover baseline and add a beginner-oriented, non-duplicative record of project structure, decisions, changes, and learning.
 
-**Architecture:** Keep factual execution history in `IMPLEMENTATION_LOG.md`, beginner explanations in new `LEARNING_LOG.md`, and document routing in `PROJECT_MAP.md`. Preserve the original source outside Git as a checksum-verified `git archive`; do not change game code, product contracts, assets, or `main`.
+**Architecture:** Keep factual execution history in `IMPLEMENTATION_LOG.md`, beginner explanations in new `LEARNING_LOG.md`, and register that file as a non-SSOT auxiliary guide in `PROJECT_MAP.md`. Preserve the original source outside Git as a checksum-verified `git archive`; do not change game code, product contracts, document precedence, assets, or `main`.
 
 **Tech Stack:** Markdown, Git, PowerShell, npm, TypeScript/Vite/Vitest verification
 
@@ -13,9 +13,9 @@
 ## File Structure
 
 - Create: `docs/dev/LEARNING_LOG.md`
-  - Beginner-facing architecture, cost choices, terms, current state, work protocol, and first handover entry.
+  - Beginner-facing architecture, cost choices, terms, work protocol, and learning interpretation only. It does not own execution status, decisions, or milestone state.
 - Modify: `docs/dev/PROJECT_MAP.md`
-  - Register `LEARNING_LOG.md` as the learning explanation source and route takeover work to it.
+  - Register `LEARNING_LOG.md` as a non-SSOT auxiliary guide and route takeover learning work to it without changing document precedence.
 - Modify: `docs/dev/IMPLEMENTATION_LOG.md`
   - Append factual execution evidence for the handover snapshot and documentation setup.
 - Existing external artifacts, verify only:
@@ -51,7 +51,7 @@ Create `docs/dev/LEARNING_LOG.md` with this content:
 ````markdown
 # 프로젝트 인수 학습 기록
 
-이 문서는 비개발자가 프로젝트를 인수하면서 변경 이유와 개발 개념을 이해하기 위한 기록이다. 실제 수행 사실과 테스트 결과는 [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md), 제품 계약과 기술 결정은 [DECISIONS.md](DECISIONS.md)를 기준으로 한다.
+이 문서는 비개발자가 프로젝트를 인수하면서 변경 이유와 개발 개념을 이해하기 위한 보조 설명이다. 실제 수행 사실과 테스트 결과는 [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md), 제품 계약과 기술 결정은 [DECISIONS.md](DECISIONS.md), 단계별 범위와 완료 기준은 [MILESTONES.md](MILESTONES.md)를 기준으로 한다. 이 문서는 단일 진실 공급원이 아니며 기존 문서 우선순위를 바꾸지 않는다.
 
 ## 기록 원칙
 
@@ -61,6 +61,7 @@ Create `docs/dev/LEARNING_LOG.md` with this content:
 - 사용자가 직접 확인할 파일과 화면을 연결한다.
 - 확실한 사실은 `[확정]`, 제안은 `[제안]`, 사람 검수가 필요한 내용은 `[미결정]`으로 표시한다.
 - 작업 결과와 학습 설명을 분리해 같은 사실을 여러 문서에 복제하지 않는다.
+- 테스트 수치·완료 상태·미결정 항목은 복제하지 않고 해당 기준 문서로 연결한다.
 
 ## 프로젝트를 한 문장으로 설명하면
 
@@ -102,38 +103,28 @@ Create `docs/dev/LEARNING_LOG.md` with this content:
 - AI 장애가 나도 클릭·로컬 경로로 엔딩까지 갈 수 있어 시연 실패를 줄인다.
 - 싱글 플레이 완성이 우선이므로 현재는 DB와 UI 프레임워크를 추가하지 않는다.
 
-## 현재 인수 기준점
+## 인수 기준점을 이해하는 법
 
 - `[확정]` 기준 날짜: 2026-08-10 KST
 - `[확정]` 기준 브랜치: `main`
 - `[확정]` 기준 커밋: `2a5821d8429d88208cb415b06992e7f6fe4dfabf`
-- `[확정]` 기준 테스트: TypeScript 검사 PASS, 41 files·187 tests PASS, production build PASS
 - `[확정]` 원본은 저장소 밖 ZIP과 SHA-256으로 보관한다.
 - `[확정]` 이후 구현은 최신 `origin/main`에서 만든 `codex/` 브랜치에서 수행한다.
+- 정확한 보관 파일 수·체크섬·테스트 결과는 `IMPLEMENTATION_LOG.md`의 인수 기준점 항목에서 확인한다.
 
-### 인수 당시 남은 주요 작업
+커밋 번호는 책의 판본 번호와 같다. 같은 번호를 가리키면 누구나 같은 코드 상태를 확인할 수 있다. ZIP은 사람이 열어보는 원본 사본이고, SHA-256은 그 사본이 바뀌지 않았음을 확인하는 지문이다.
 
-1. 누락된 변신 컷 2장과 `gray_wraith.weakened` 실파일 해결
-2. 채택한 WAV 효과음 5종 runtime 연결
-3. 모바일 타이틀 BGM HUD 겹침 수정
-4. 마이크 없이 시작하는 클릭 전용 진입 결정
-5. Worker 호출 제한·비용 경고 추가
-6. 키보드 포커스·화면 낭독·모바일 조작 접근성 보완
-7. production 빌드에서 STT Lab 대용량 의존성 분리
-8. README·LICENSE·권리·AI 제작 증빙과 정식 릴리스 절차 정리
+## 학습 진행 순서
 
-## 앞으로의 작업 순서
+아래 순서는 비개발자가 구조를 익히기 위한 학습 순서다. 제품 마일스톤과 완료 상태는 `MILESTONES.md`를 변경하지 않고 그대로 따른다.
 
-1. 현재 인수 기준점과 기록 체계 고정
-2. 필수 누락 이미지 해결
-3. 채택 효과음 5종 연결
-4. 모바일·마이크 없는 시작·접근성 개선
-5. 실제 화면 E2E 검증 추가
-6. 저장·로컬 판정·전투 정책 오류 보강
-7. Worker 호출 비용 방어
-8. production 빌드와 배포 절차 정리
-9. 공개 문서·권리·AI 제작 증빙 완성
-10. 클릭·음성 3종 엔딩 완주 검수와 정식 릴리스
+1. 시나리오 JSON에서 장면과 대사가 연결되는 방식 이해
+2. CSS와 `GameView`에서 화면이 만들어지는 방식 이해
+3. 이미지·BGM·SFX가 논리 ID로 연결되는 방식 이해
+4. `GameState`와 FSM이 장면·선택·엔딩을 진행하는 방식 이해
+5. 자동 테스트가 기존 기능을 보호하는 방식 이해
+6. Worker가 API 키와 OpenAI 요청을 보호하는 방식 이해
+7. Git 브랜치·커밋·diff로 변경을 검토하고 복구하는 방식 이해
 
 ## 작업별 기록 양식
 
@@ -168,13 +159,12 @@ Create `docs/dev/LEARNING_LOG.md` with this content:
 
 현재 버전을 원본 파일로 별도 보관해 최종 버전과 비교하고, 이후 작업마다 무엇을 왜 수정했는지 초보자 관점으로 기록한다.
 
-### 수행 내용
+### 이번 작업을 이해하는 방법
 
-- 기준 커밋 `2a5821d`의 Git 추적 파일만 `git archive` ZIP으로 보관했다.
-- ZIP 262개 파일과 Git 추적 파일 262개가 일치하고 목록 차이가 0임을 확인했다.
-- SHA-256 체크섬을 별도 파일로 보관했다.
-- `main`을 수정하지 않고 `codex/project-takeover-baseline` 격리 브랜치를 만들었다.
-- 기존 실행 기록과 겹치지 않도록 이 학습 문서를 분리했다.
+- 일반 폴더 복사 대신 `git archive`를 쓰면 기준 커밋에 속한 파일만 재현할 수 있다.
+- ZIP과 체크섬을 저장소 밖에 두면 비교 자료가 새 버전의 일부로 잘못 포함되지 않는다.
+- 별도 브랜치와 worktree를 쓰면 원본 `main`을 유지한 채 문서 변경을 검토할 수 있다.
+- 정확한 파일 수·체크섬·검증 명령 결과는 중복하지 않고 `IMPLEMENTATION_LOG.md`에서 확인한다.
 
 ### 이번에 배운 개념
 
@@ -197,7 +187,7 @@ Create `docs/dev/LEARNING_LOG.md` with this content:
 Run:
 
 ```powershell
-rg -n '^## (프로젝트를 한 문장으로 설명하면|전체 구조|비용과 시간을 줄인 선택|현재 인수 기준점|앞으로의 작업 순서|작업별 기록 양식|2026-08-10)' docs/dev/LEARNING_LOG.md
+rg -n '^## (프로젝트를 한 문장으로 설명하면|전체 구조|비용과 시간을 줄인 선택|인수 기준점을 이해하는 법|학습 진행 순서|작업별 기록 양식|2026-08-10)' docs/dev/LEARNING_LOG.md
 @(
   'public/scenario/scenario.json',
   'src/state.ts',
@@ -227,17 +217,19 @@ git commit -m "docs: add project takeover learning log"
 
 Expected: only `docs/dev/LEARNING_LOG.md` is committed.
 
-## Task 2: Register Learning Log in Project Map
+## Task 2: Register Learning Log as an Auxiliary Guide
 
 **Files:**
 - Modify: `docs/dev/PROJECT_MAP.md`
 
-- [ ] **Step 1: Add the document responsibility row**
+- [ ] **Step 1: Add a non-SSOT auxiliary-document section**
 
-Add this row after the `마일스톤 실행 이력` row in `단일 진실 공급원`:
+Add this section after the `단일 진실 공급원` table without changing any existing row or precedence:
 
 ```markdown
-| 프로젝트 인수 학습 기록 | [LEARNING_LOG.md](LEARNING_LOG.md) | 변경 이유·개념·비용·위험을 비개발자 관점으로 설명. 수행 사실은 `IMPLEMENTATION_LOG.md`를 기준으로 함 |
+### 보조 학습 문서
+
+[LEARNING_LOG.md](LEARNING_LOG.md)는 변경 이유·개념·비용·위험을 비개발자 관점으로 설명한다. 단일 진실 공급원이 아니며 수행 사실은 `IMPLEMENTATION_LOG.md`, 결정은 `DECISIONS.md`, 단계 계약은 `MILESTONES.md`를 따른다.
 ```
 
 - [ ] **Step 2: Add the takeover reading set**
@@ -261,7 +253,7 @@ Add this bullet under `문서 갱신 규칙`:
 Run:
 
 ```powershell
-rg -n '프로젝트 인수 학습 기록|프로젝트 인수·학습 기록|사용자 학습 설명' docs/dev/PROJECT_MAP.md
+rg -n '보조 학습 문서|프로젝트 인수·학습 기록|사용자 학습 설명' docs/dev/PROJECT_MAP.md
 Test-Path -LiteralPath 'docs\dev\LEARNING_LOG.md'
 git diff --check
 git add -- docs/dev/PROJECT_MAP.md
@@ -378,7 +370,7 @@ Append:
 ### 문서 처리
 
 - `docs/dev/LEARNING_LOG.md`를 새로 만들어 구조·비용 절감 선택·현재 위험·작업별 학습 형식을 기록했다.
-- `docs/dev/PROJECT_MAP.md`에 학습 기록의 역할·읽기 세트·갱신 규칙을 등록했다.
+- `docs/dev/PROJECT_MAP.md`에 학습 기록을 SSOT가 아닌 보조 문서로 등록하고 읽기 세트·갱신 규칙을 추가했다.
 - 수행 사실은 이 문서, 제품 계약은 기존 기준 문서, 학습 설명은 `LEARNING_LOG.md`로 분리했다.
 
 ### 자동 검증
