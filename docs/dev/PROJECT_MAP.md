@@ -28,6 +28,10 @@
 | AI 제작 증빙 | [AI_PRODUCTION_LOG.md](../assets/AI_PRODUCTION_LOG.md) | 입력·생성·사람 검수 기록 |
 | 마일스톤 실행 이력 | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) | 작업·테스트·오류 수정·잔여 위험 기록 |
 
+### 보조 학습 문서
+
+[LEARNING_LOG.md](LEARNING_LOG.md)는 변경 이유·개념·비용·위험을 비개발자 관점으로 설명한다. 단일 진실 공급원이 아니며 수행 사실은 `IMPLEMENTATION_LOG.md`, 결정은 `DECISIONS.md`, 단계 계약은 `MILESTONES.md`를 따른다.
+
 [팀 전달용 완료 메시지](../팀전달용_대본디벨롭_완료메시지.md)는 제작 상태·검토 요청을 설명하는 인계 문서다. 스토리 내용의 단일 진실 공급원은 완성대본 v2다.
 
 `docs/temp/`와 루트 `prompt/`는 기획 과정 자료다. 구현 계약의 출처로 사용하지 않는다. `files.zip`은 기준 문서 사본 보관물이며 단일 진실 공급원이 아니다.
@@ -74,6 +78,7 @@ Codex 행동 충돌 시 사용자 지시 → 루트 `AGENTS.md` → 작업 템�
 | 배포·현장 준비 | `SECURITY_AND_DEPLOYMENT.md`, `QA_AND_DEMO.md`, M6 |
 | 기능 제안 | [DECISIONS.md](DECISIONS.md), [기능 제안 템플릿](../../prompts/FEATURE_PROPOSAL_TEMPLATE.md) |
 | 버그 수정 | [버그 수정 템플릿](../../prompts/BUG_FIX_TEMPLATE.md), 영향받는 계약 문서 |
+| 프로젝트 인수·학습 기록 | `AGENTS.md`, 이 문서, `LEARNING_LOG.md`, `IMPLEMENTATION_LOG.md` |
 
 ## 문서 갱신 규칙
 
@@ -82,5 +87,6 @@ Codex 행동 충돌 시 사용자 지시 → 루트 `AGENTS.md` → 작업 템�
 - 마일스톤 범위·완료 기준 변경: `MILESTONES.md` 한 곳에서 갱신.
 - 테스트 절차 변경: `QA_AND_DEMO.md` 한 곳에서 갱신.
 - 마일스톤 수행 결과·오류 수정: `IMPLEMENTATION_LOG.md`에 누적.
+- 사용자 학습 설명: `LEARNING_LOG.md`에 변경 이유·개념·비용·위험을 기록하되 수행 사실과 테스트 결과는 `IMPLEMENTATION_LOG.md`를 기준으로 링크한다.
 - 에셋 상태 변경: `docs/assets/ASSET_MANIFEST.md`; 제작 증빙은 `docs/assets/AI_PRODUCTION_LOG.md`, 확인 가능한 출처는 `docs/assets/PROVENANCE.md`.
 - 장면별 배경·인물·표정·음악 사용처 변경: `docs/assets/SCENE_ASSET_MAPPING.md`; 논리 ID·파일명·상태 변경은 manifest와 함께 갱신.
