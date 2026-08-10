@@ -1228,3 +1228,55 @@
 - 공개 QA Worker 재배포 뒤 Pages Origin에서 Realtime 대화·전투 실제 발화와 지역 403 부재 확인.
 - 사람 3명 이상·조용한 환경/현장 소음에서 정확도, p50/p95, schema reject율 측정.
 - 헤드폰·노트북에서 0/28/62/100% 청감과 PTT duck 복귀 확인. 키보드 실제 조작은 추가 접근성 QA에서 확인.
+
+## 프로젝트 인수 기준점 — 원본 보관·학습 기록 체계
+
+- 실행일: 2026-08-10
+- 작업 모드: `PROJECT_TAKEOVER_BASELINE`
+- 브랜치: `codex/project-takeover-baseline`
+- 상태: 원본 archive·체크섬·기준선 검증 PASS, 게임 코드 변경 없음
+
+### 사용자 지시
+
+- 현재 버전을 원본 파일로 별도 저장해 최종 버전 비교용으로 보존한다.
+- 기존 실행 기록과 별도로 초보자용 변경 이유·개념·비용·위험을 계속 기록한다.
+- `main`을 직접 수정하지 않고 코드가 꼬이지 않게 별도 브랜치에서 작업한다.
+
+### 기준점과 보관 결과
+
+| 항목 | 결과 |
+|---|---|
+| 기준 저장소 | `2klips/the-judge-became-a-magical-girl` |
+| 기준 브랜치 | `main` |
+| 기준 커밋 | `2a5821d8429d88208cb415b06992e7f6fe4dfabf` |
+| 원본 ZIP | `baseline-archives/the-judge-became-a-magical-girl-handover-2026-08-10-2a5821d.zip` 저장소 밖 보관 |
+| ZIP 크기 | `82,730,214 bytes` |
+| SHA-256 | `AB4C1ACA6CDDF9DC8E7A09C4C40240BD4F70D9B88AB1BBD88F6E35EBBF877EDC` |
+| 파일 목록 검증 | Git 262개·ZIP 262개·차이 0 |
+| 제외 확인 | `.git`, `node_modules`, `dist`, Git 비추적 로컬 Secret 파일 없음 |
+
+`.env.example`은 실제 Secret이 아닌 자리표시자 계약 파일이므로 Git 원본과 함께 보관했다.
+
+### 문서 처리
+
+- `docs/dev/LEARNING_LOG.md`를 새로 만들어 구조·비용 절감 선택·작업별 학습 형식을 설명했다.
+- `docs/dev/PROJECT_MAP.md`에 학습 기록을 SSOT가 아닌 보조 문서로 등록하고 읽기 세트·갱신 규칙을 추가했다.
+- 수행 사실은 이 문서, 제품 계약은 기존 기준 문서, 학습 설명은 `LEARNING_LOG.md`로 분리했다.
+- `DECISIONS.md`와 `MILESTONES.md`는 수정하지 않았다.
+
+### 자동 검증
+
+| 명령 | 결과 | 세부 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 41 files·187 tests |
+| `npm run build` | PASS | production build 성공, 기존 Transformers chunk 경고 유지 |
+| ZIP SHA-256 | PASS | 체크섬 파일과 재계산 값 일치 |
+| ZIP 파일 목록 | PASS | 기준 커밋 추적 파일과 차이 0 |
+
+### 변경 경계와 다음 단계
+
+- 게임 코드, 시나리오, 에셋, Worker, 배포 설정은 변경하지 않았다.
+- 원본 `main`은 `2a5821d`에 유지한다.
+- 인수 기록 검토 뒤 후속 기능은 별도 설계와 `codex/` 브랜치에서 진행한다.
+- 원격 push·PR·merge는 사용자 요청 전 수행하지 않는다.
