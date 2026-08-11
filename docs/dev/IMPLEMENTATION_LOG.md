@@ -1352,7 +1352,7 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - 실행일: 2026-08-11
 - 작업 모드: `ASSET_REVISION(transform.cast)`
 - 브랜치: `codex/p0-required-image-assets`
-- 상태: 포즈 에셋·focused 계약 GREEN, 독립 Unit 1 검토 완료. Unit 3 fresh 전체 build·브라우저 QA와 사람 미술·권리 QA 대기
+- 상태: 포즈 에셋·focused 계약 GREEN, 독립 Unit 1 검토와 Unit 3 fresh 전체 자동·production 복사본·데스크톱 Browser QA PASS. 사람 미술·권리 QA 대기
 
 ### 사용자 지시와 범위 변경
 
@@ -1383,9 +1383,14 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 
 현재 컷을 편집 대상으로 사용하고 `char_doyun_normal_shy.png`의 사무복·정체성과 `char_juno_surprised.png`의 몸·별 지팡이를 참조했다. Codex 내장 OpenAI 이미지 편집과 FFmpeg 정규화를 사용했으며 정확한 모델명·버전·작업 ID는 도구가 노출하지 않는다. 최종 화면은 평상복 도윤 한 명, 자연스럽게 손에 잡힌 전경의 무문자 사원증 하나, 보이는 중간 크기 발화 입, 눈 감고 세운 지팡이 주위로 두 날개를 모은 주노 한 명, 청색·금색 야간 사무실과 마법진으로 구성된다. 텍스트·UI·로고는 없다.
 
-### 독립 검토와 남은 게이트
+### 독립 검토·Unit 3 최종 QA와 남은 게이트
 
 - 독립 Unit 1 요구사항 검토에서 사용자 포즈·데스크톱 범위·동일 바이트 계약과 변경 파일 경계를 확인했다.
 - 독립 Unit 1 품질 검토는 TypeScript 검사와 전체 188/188 tests를 통과했다.
-- 위 결과는 Unit 3 최종 fresh 검증을 대신하지 않는다. `npm run check`, `npm test`, `npm run build`, production 복사본 hash, 1280×720 N5 브라우저 합성·overflow·console QA는 Unit 3에서 다시 실행하고 기록한다.
+- Unit 3 fresh 검증에서 `npm run check` exit 0, `npm test` 41 files·188 tests PASS, `npm run build` exit 0을 순서대로 확인했다. build에는 기존 Transformers 516.22kB 대형 chunk 경고만 있었고 비차단으로 유지했다.
+- production `dist/assets/cut/cut_transform_01.webp`는 정확히 1개이며 source/runtime과 동일 바이트다. 세 경로 모두 200,470B, SHA-256 `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152`다.
+- 1280×720 in-app Browser에서 `?debug=1&scene=n5-incantation`은 결과 전 `doyun.normal_shy` 평상복을, `?debug=1&scene=n5-transformation`은 visible한 `cut_transform_01.webp` natural 1920×1080과 `beat=cast → complete`를 표시했다. 검은 화면·fallback은 없었다.
+- 영창 컷은 자연스럽게 손에 잡힌 전경의 무문자 사원증 정확히 하나, 평상복 도윤, 중간 크기로 열린 발화 입, 눈 감고 세운 별 지팡이 주위로 두 날개를 모은 주노를 보였다. baked text·UI·logo는 없었다. 후속 `cut_transform_02.webp`는 natural 1920×1080의 마법 복장 완료 컷으로 유지돼 asset replacement 없이 영창 뒤를 이었다.
+- 두 N5 화면의 가로 overflow는 0, Browser console error는 0이었다. debug overlay가 프리뷰 일부를 가리는 기존 현상은 재현됐지만 에셋·순서 판정에는 영향 없는 비차단 관찰이다.
+- 로컬 실제 플레이 주소는 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`, 직접 QA 주소는 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation`과 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-transformation`이다. 모바일 `390×844` crop은 사용자 지시에 따라 이번 수정 범위에서 제외했고 CSS·코드는 변경하지 않았다.
 - 상태는 `ready`이며 `approved`가 아니다. 사람 미술 품질, 참조 이미지 권한, 생성 서비스 플랜과 공개 배포 허용 확인이 남아 있다. 세부 출처와 최종 hash는 [PROVENANCE.md](../assets/PROVENANCE.md)를 따른다.
