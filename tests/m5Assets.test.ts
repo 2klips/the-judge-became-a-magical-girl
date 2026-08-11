@@ -62,6 +62,18 @@ const runtimeBgm = [
   "bgm_ending.mp3",
 ] as const;
 
+const p0ImageSourceDirectory = resolve(
+  "assets",
+  "source",
+  "p0-required-images",
+  "delivery",
+);
+
+const runtimeP0Cuts = [
+  "cut_transform_01.webp",
+  "cut_transform_02.webp",
+] as const;
+
 const runtimeDiskPath = (assetPath: string): string =>
   resolve(process.cwd(), "assets", "runtime", assetPath.replace(/^assets\//, ""));
 
@@ -224,6 +236,26 @@ describe("M5 에셋 계약", () => {
       "char_gray_wraith_normal.png",
       resolve("docs", "gray-wraith-action-v2", "delivery", "char"),
     );
+  });
+
+  it("P0 필수 이미지 3종은 source와 같은 runtime 규격 파일이다", () => {
+    expectTransparentCharacterAsset(
+      "char_gray_wraith_weakened.png",
+      p0ImageSourceDirectory,
+    );
+
+    for (const filename of runtimeP0Cuts) {
+      const sourcePath = resolve(p0ImageSourceDirectory, filename);
+      const runtimePath = resolve("assets", "runtime", "cut", filename);
+      const runtimeFile = readFileSync(runtimePath);
+
+      expect(runtimeFile.equals(readFileSync(sourcePath)), filename).toBe(true);
+      expect(readWebpDimensions(runtimeFile), filename).toEqual({
+        width: 1920,
+        height: 1080,
+      });
+      expect(statSync(runtimePath).size, filename).toBeLessThanOrEqual(700 * 1024);
+    }
   });
 
   it("BGM runtime 5곡은 납품 source와 같은 파일이며 각각 3MB 이하다", () => {
