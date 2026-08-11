@@ -43,7 +43,7 @@
 
 | 2026-08-06 | M5 BGM controller 견고화 | Codex | runtime BGM 5곡, BGM 재생·duck·실패·autoplay·one-shot 계약 | 실패 경로 재요청 차단, autoplay pointerdown 재시도, 기본 음량 0.62·duck 0.18배, one-shot 중복 방지 | audio 5 tests, `check`, 38 files·171 tests, build PASS. 사람 청감은 대기 | 사용 | 미측정 | `src/audio/bgm.ts`, `tests/m5Audio.test.ts`, `M5_UI_BGM_REQUEST_MAPPING.md` |
 
-| 2026-08-11 | P0 필수 누락 이미지 3종 생성·정규화·runtime 채택 | Codex 내장 OpenAI 이미지 생성·편집 도구, FFmpeg 8.1.1, Pillow | 기존 망령 normal/hit, 변신 공간, 도윤 normal_shy/magical_pose, 주노 surprised/happy, 사용자 C형 선택·장면 정합 피드백 | `gray_wraith.weakened`, `transform.cast`, `transform.complete` source/runtime 동일 바이트 3종 | 사용자가 영창 컷의 조기 마법 복장을 지적해 평상복으로 재생성하고 중복 사원증을 제거. 망령 투명 배경 확인. targeted 12 tests PASS; 전체 회귀·브라우저 QA는 후속 단계 | `ready`; 사람 장면·권리 QA 전 `approved` 아님. 조기 마법 복장 후보는 폐기 | 단계별 대화 상단에 전체 사용량 추정치 기록 | commit `438f2f7`, `assets/source/p0-required-images/delivery/`, `assets/runtime/char/`, `assets/runtime/cut/` |
+| 2026-08-11 | P0 필수 누락 이미지 3종 생성·정규화·runtime 채택 | Codex 내장 OpenAI 이미지 생성·편집 도구, FFmpeg 8.1.1, Pillow | 기존 망령 normal/hit, 변신 공간, 도윤 normal_shy/magical_pose, 주노 surprised/happy, 사용자 C형 선택·장면 정합 피드백 | `gray_wraith.weakened`, `transform.cast`, `transform.complete` source/runtime 동일 바이트 3종 | 사용자가 영창 컷의 조기 마법 복장을 지적해 평상복으로 재생성하고 중복 사원증을 제거. 망령 투명 배경 확인. targeted 12 tests, 전체 41 files·188 tests, check/build PASS. 1280×720·390×844 N5/battle 합성, overflow·console error 0 | `ready`; 사람 미술·권리 QA 전 `approved` 아님. 조기 마법 복장 후보는 폐기 | 단계별 대화 상단에 전체 사용량 추정치 기록 | commit `438f2f7`, `assets/source/p0-required-images/delivery/`, `assets/runtime/char/`, `assets/runtime/cut/` |
 
 ## 기록 규칙
 

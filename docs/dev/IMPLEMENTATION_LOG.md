@@ -1287,7 +1287,7 @@
 - 작업 모드: `MILESTONE_IMPLEMENTATION(P0-1)`
 - 브랜치: `codex/p0-required-image-assets`
 - 시작 커밋: `58e8164`
-- 상태: 이미지·targeted test PASS, 전체 회귀·브라우저 QA 진행 전
+- 상태: 이미지·전체 회귀·브라우저 QA PASS, 사람 미술·권리 QA 대기
 
 ### 사용자 지시와 장면 정합 수정
 
@@ -1328,5 +1328,21 @@
 - 설계 문서: `9fd85cc`
 - 실행 계획: `58e8164`
 - 이미지·계약 테스트: `438f2f7`
-- 남은 단계: 관련 문서 링크 검사, `npm run check`, `npm test`, `npm run build`, N5·battle 브라우저 합성 QA.
+- 문서 링크·전체 회귀·N5·battle 브라우저 합성 QA를 완료했다.
 - 원격 push·PR·main merge는 수행하지 않는다.
+
+### 최종 검증
+
+| 항목 | 결과 | 세부 |
+|---|---|---|
+| 문서 상대 링크 | PASS | 변경 문서의 로컬 Markdown 링크가 실제 저장소 경로와 일치 |
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 41 files·188 tests |
+| `npm run build` | PASS | production build 성공, 기존 Transformers 대형 chunk 경고만 유지 |
+| `dist` 에셋 | PASS | 3종 각각 1개, runtime과 크기·SHA-256 일치 |
+| Browser desktop | PASS | 1280×720, N5 incantation/transformation·battle p2, overflow 0·console error 0 |
+| Browser mobile | PASS | 390×844, transformation·battle p2, overflow 0·console error 0 |
+
+N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 → 마법 복장 완료 컷 순서를 확인했다. 약화 망령은 투명 배경으로 합성됐고 크로마·흰 배경·검은 폴백이 나타나지 않았다. debug 프리뷰에서 기존 기본 스프라이트와 인물 일부가 정보 카드·다른 인물에 가려지는 현상은 새 파일 결함이 아닌 기존 합성 레이아웃 후속 개선 후보로 남긴다.
+
+로컬 실제 플레이 주소는 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`이며, 사용자 마이크 권한·사람 미술 합성·생성물 권리 확인은 자동 QA 범위 밖이다.
