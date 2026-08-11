@@ -11,20 +11,29 @@
 3. 이미지에 텍스트·UI·로고를 박지 않는다(텍스트는 런타임 DOM/CSS 담당).
 4. 생성 도구·모델, 프롬프트/작업 ID, 생성일, 라이선스 확인 결과를 함께 전달한다. 증빙 없는 납품은 `approved`로 승격되지 않는다.
 
-## 1. 신규 제작 필요 (M5 필수; 2026-08-11 납품 완료)
+## 1. 신규 제작 필요 (M5 필수; 최초 납품 이력)
+
+아래 표는 2026-08-11 최초 제작 요청을 보존한 역사 기록이다. 특히 `transform.cast`의 "떠오르는 사원증" 요청은 같은 날 포즈 수정으로 대체됐으며 현재 채택본 설명이 아니다.
 
 | 논리 ID | 파일명 | 요청 내용 | 사용 장면 | 현재 폴백 | 근거 |
 |---|---|---|---|---|---|
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | `char_gray_wraith_normal.png`와 **같은 캔버스·구도·스케일**에서, 회색 안개가 갈라지고 몸 안에 갇힌 게임 캐릭터의 빛이 새어 나오는 상태. 과장된 고통 표현 금지 — 무겁고 체념한 인상 유지 | battle에서 기세(momentum) 65 이상, N7~N8 우세 연출 | normal + CSS 파생(채도↓·내부 빛 오버레이) | SCENE_ASSET_MAPPING §3.2. 납품 delivery에 `attack`/`hit`/`death`는 있으나 `weakened`는 없음 |
-| `transform.cast` | `cut_transform_01.webp` | 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간. 텍스트 없음 | N5 주문 성공 직후 1번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3. 2026-08-11 납품 전에는 ASSET_MANIFEST `missing` |
+| `transform.cast` | `cut_transform_01.webp` | `[역사 기록·대체됨]` 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간. 텍스트 없음 | N5 주문 성공 직후 1번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3. 2026-08-11 납품 전에는 ASSET_MANIFEST `missing` |
 | `transform.complete` | `cut_transform_02.webp` | 변신 완료. 마법소녀 도윤은 뒷모습/반측면, 주노는 곁에 위치. 완전·표준·구제 공용 1장 | N5 주문 성공 직후 2번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3. 2026-08-11 납품 전에는 ASSET_MANIFEST `missing` |
 
 ### 2026-08-11 납품 상태
 
 - `gray_wraith.weakened`: 1200×2000 투명 PNG를 source/runtime에 동일 바이트로 채택했다. 자동 규격 검사를 통과해 `ready`이며, 사람 장면 합성·권리 QA는 남아 있다.
-- `transform.cast`: 변신 전 평상복 도윤, 떠 있는 무문자 사원증, 주노, 막 시작되는 변신광으로 수정한 1920×1080 WebP를 채택했다. 자동 규격 검사를 통과해 `ready`다.
+- `transform.cast`: 최초에는 변신 전 평상복 도윤, 떠 있는 무문자 사원증, 주노, 막 시작되는 변신광의 1920×1080 WebP를 채택했다. 이 구성은 아래 포즈 수정으로 대체된 역사 기록이며 현재 최종본이 아니다.
 - `transform.complete`: 마법소녀 도윤의 뒷모습/반측면과 주노가 함께 보이는 1920×1080 WebP를 채택했다. 자동 규격 검사를 통과해 `ready`다.
 - 위 표의 폴백은 납품 전 상태 기록이자 실파일 로딩 실패 시 안전장치다. 세 항목 모두 `approved`는 아니며 사람 합성·권리 QA 후 승격한다.
+
+### 2026-08-11 `transform.cast` 포즈 수정 완료
+
+- 사용자 선택인 입 모양 1번과 A 균형형을 반영했다. 현재 최종본은 평상복 도윤이 무문자 사원증 하나를 손으로 카메라 쪽 전경에 내밀고, 진지하고 약간 부끄러운 표정의 보이는 입으로 말하며, 주노가 눈을 감고 세운 별 지팡이 주위로 두 날개를 모아 기도한다.
+- 야간 사무실, 청색·금색 변신광, 원형 마법진을 유지하며 텍스트·UI·로고는 이미지에 넣지 않았다.
+- 사용자 범위 변경으로 모바일 crop과 `390×844` 검수는 이 수정에서 제외했다. 데스크톱 16:9만 최종 구도 기준이며 CSS·코드·시나리오는 변경하지 않았다.
+- source/runtime 동일 바이트 자동 계약을 통과해 상태는 `ready`다. 사람 미술·권리 QA가 남아 있어 `approved`는 아니다.
 
 ## 2. 교체 요청 (현재본 임시 승인 상태)
 
@@ -61,9 +70,11 @@
 | 논리 ID | 파일명 | 요청 내용 (장면·감정·구도) | 사용 장면·대사 위치 | 임시 대체 | 근거 (대본·매핑 문서 위치) |
 |---|---|---|---|---|---|
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 망령의 안개가 갈라지고 내부 게임 캐릭터의 빛이 비치는 약화 상태 | battle p1~p3, momentum 65 이상 | `gray_wraith.normal` + CSS 채도·빛·균열 파생 | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §4, 본 문서 §1 |
-| `transform.cast` | `cut_transform_01.webp` | 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간 | N5 주문 성공 직후 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
+| `transform.cast` | `cut_transform_01.webp` | `[역사 기록·대체됨]` 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간 | N5 주문 성공 직후 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
 | `transform.complete` | `cut_transform_02.webp` | 변신을 마친 도윤과 곁의 주노가 한 장면으로 읽히는 완료 컷 | N5 완전·표준·구제 결과 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
 
 이 WP6 표의 임시 대체는 납품 전 점검 당시의 기록이다. 2026-08-11부터 세 논리 ID는 위 실파일을 우선 사용하고, 임시 대체는 로딩 실패 시에만 사용한다.
+
+WP6 표의 `transform.cast` 제작 문구도 최초 요청을 보존한 역사 기록이다. 현재 최종 구도는 이 문서의 포즈 수정 완료 절과 [SCENE_ASSET_MAPPING.md](SCENE_ASSET_MAPPING.md) §3.3을 따른다.
 
 전수 점검 결과, 위 3종 외에 도윤·주노 신규 표정 논리 ID가 필요한 C형은 발견되지 않았다. 전체 매트릭스와 B형 1건은 [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](CHARACTER_IMAGE_DIALOGUE_AUDIT.md)에 기록했다.

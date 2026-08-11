@@ -8,6 +8,8 @@
 
 **Tech Stack:** Codex built-in OpenAI image editing, `view_image`, FFmpeg/ffprobe, Node.js/Vitest, Vite, in-app Browser, Git.
 
+> **Authoritative user amendment (2026-08-11):** Mobile is excluded from this revision. The previously planned centered vertical crop and `390×844` acceptance checks are superseded; desktop 16:9 at 1280×720 is the only browser/composition target. Do not change CSS or code to accommodate this asset revision.
+
 ---
 
 ## File map
@@ -105,7 +107,7 @@ Doyun: adult Korean man in the same white rolled-sleeve office shirt, loosened b
 
 Juno: on the right, eyes closed, praying. Bring both small wings together at chest height around the star wand, with the wand upright between them. Keep Juno fully readable and separate from Doyun and the ID.
 
-Composition: balanced triangular eye flow between foreground ID, Doyun's speaking mouth, and praying Juno. Keep all three safe for a centered vertical mobile crop.
+Composition: balanced triangular eye flow between foreground ID, Doyun's speaking mouth, and praying Juno in the authoritative desktop 16:9 frame.
 
 Constraints: Doyun remains in ordinary office clothes; exactly one employee ID; blank card with no photo, name, company, logo, letters, numbers, or UI; exactly one Doyun and one Juno; natural hands and fingers; preserve night office and magic circle.
 Avoid: magical-girl outfit on Doyun, hand covering mouth, floating ID, neck lanyard duplicate, extra cards, extra limbs, deformed fingers, Juno holding the wand one-handed, open Juno eyes, text, speech bubbles, watermark, logo, baked game UI.
@@ -130,7 +132,7 @@ Use `view_image` at original detail and check, in order:
 3. the mouth is visible, moderately open, and not covered;
 4. Juno's eyes are closed and both wings meet around an upright wand;
 5. no text/logo/UI and no malformed hands;
-6. ID, mouth, and Juno remain inside the centered mobile-safe region.
+6. ID, mouth, and Juno remain readable together in the desktop 16:9 frame.
 
 - [ ] **Step 5: If one checklist item fails, perform one targeted edit**
 
@@ -265,9 +267,9 @@ Use:
 http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-transformation
 ```
 
-- [ ] **Step 4: Perform desktop and mobile browser QA**
+- [ ] **Step 4: Perform desktop browser QA**
 
-Using the in-app Browser, verify at 1280×720 and 390×844:
+Using the in-app Browser, verify at 1280×720:
 
 - `cut_transform_01.webp` loads at natural 1920×1080 and does not use a black fallback;
 - one handheld ID, Doyun's speaking mouth, and praying Juno remain visible;

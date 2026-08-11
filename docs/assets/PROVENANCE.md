@@ -11,7 +11,7 @@
 | 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 미확인 | 미확인 | 자동 규격 `ready`, 사용자 장면 사용 승인 |
 | 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격·runtime 합성 `ready`, 권리 승인 대기 |
 | 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 생성 서비스 플랜·앵커 권한·공개 사용 미확인 | normal 자동 규격·동일 바이트 `ready`; hit/attack/death 미등록 |
-| P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | commit `438f2f7`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | 생성 서비스 플랜·참조 이미지 권한·공개 사용 미확인 | 자동 규격·동일 바이트 `ready`, 사람 장면·권리 QA 대기 |
+| P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | 최초 commit `438f2f7`, `transform.cast` 최종 commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | 생성 서비스 플랜·참조 이미지 권한·공개 사용 미확인 | 자동 규격·동일 바이트 `ready`, 사람 장면·권리 QA 대기 |
 | BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1, 현재 Pro 플랜 사용자 확인; 생성 당시 플랜·모델 미확인 | 생성 당시 계정 기록·약관 확인 대기 | 자동 규격·동일 바이트 `ready`, 사람 청각·권리 승인 대기 |
 
 ## 배경 원본
@@ -97,15 +97,25 @@
 ## P0 필수 이미지 3종
 
 - 회색 망령 약화본은 `char_gray_wraith_normal.png`, `char_gray_wraith_hit.png`의 실루엣·균열 방향을 참조해 같은 캔버스의 약화 상태로 생성했다.
-- 변신 영창 컷은 `bg_transform_space.webp`, `char_doyun_normal_shy.png`, `char_juno_surprised.png`를 참조했다. 최초 후보가 이미 마법소녀 복장을 입어 장면 순서와 어긋나 폐기했고, 평상복으로 재생성한 뒤 목걸이형 사원증 중복을 제거했다. 떠 있는 무문자 사원증 하나만 남겼다.
+- 변신 영창 컷의 최초 납품은 `bg_transform_space.webp`, `char_doyun_normal_shy.png`, `char_juno_surprised.png`를 참조했다. 최초 후보가 이미 마법소녀 복장을 입어 장면 순서와 어긋나 폐기됐고, 평상복으로 재생성한 뒤 목걸이형 사원증 중복을 제거해 떠 있는 무문자 사원증 하나를 남겼다. 이 최초 납품은 아래 2026-08-11 포즈 수정으로 대체됐다.
 - 변신 완료 컷은 `bg_transform_space.webp`, `char_doyun_magical_pose.png`, `char_juno_happy.png`를 참조해 도윤의 뒷모습/반측면과 주노가 함께 보이도록 생성했다.
 - 생성 원본의 크로마 배경은 imagegen 보조 스크립트로 알파 처리했다. 컷 2장은 FFmpeg로 WebP 정규화했고, 망령 RGBA PNG는 용량 상한을 넘어서 Pillow로 indexed palette + `tRNS` PNG로 무손실 캔버스·투명도 계약을 유지하며 압축했다.
 - Codex 내장 도구가 정확한 모델명·버전·작업 ID를 노출하지 않아 해당 값은 미확인이다. 생성 서비스 플랜, 참조 이미지 권한, 공개 배포 허용은 사람 확인 전까지 미확인이다.
 
+### 2026-08-11 `transform.cast` 포즈 수정 이력
+
+- 사용자는 입 모양 1번(중간 크기로 분명히 말하는 입, 진지하고 약간 부끄러운 표정)과 A 균형형을 선택했다. 현재 `cut_transform_01.webp`를 편집 대상으로, `char_doyun_normal_shy.png`를 도윤의 사무복·정체성 참고로, `char_juno_surprised.png`를 주노의 몸·별 지팡이 참고로 사용했다.
+- Codex 내장 OpenAI 이미지 편집으로 후보를 만들고 FFmpeg로 1920×1080 WebP를 정규화했다. 도구는 정확한 모델명·버전·작업 ID를 노출하지 않는다.
+- 최초 포즈 수정 commit `2b99e2327c1a752751a614bc6003456dbb5f816e`의 후보는 186,428B, SHA-256 `038E554CFCAAB243C230C25316B62F3048602B7B67747AB4F8BFFCE6C30C6A54`였다. 데스크톱 전체 구도는 통과했지만 당시 요구한 정확한 중앙 모바일 crop에서 핵심 관계가 남지 않아 최종본으로 쓰지 않았다. 파일은 별도로 채택하지 않고 Git 이력에 보존한다.
+- 이후 사용자가 모바일을 제품 범위에서 제외했다. CSS·코드 변경 없이 데스크톱 16:9 중앙 구도 후보를 final commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`로 source/runtime 두 경로에 동일 바이트 채택했다.
+- 최종본은 평상복 도윤 한 명이 무문자 사원증 하나를 자연스럽게 손에 잡아 전경으로 내밀며 보이는 입으로 말하고, 눈을 감은 주노 한 명이 세운 별 지팡이 주위로 두 날개를 모아 기도한다. 청색·금색 야간 사무실과 마법진을 유지하며 텍스트·UI·로고는 없다.
+- 교체 전 원본 `transform.cast`는 177,098B, SHA-256 `507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D`였으며 현재는 superseded 이력이다.
+- 최종 `transform.cast`는 200,470B, SHA-256 `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152`다. 자동 계약을 통과한 `ready` 상태이며 사람 미술·권리 QA 전에는 `approved`로 승격하지 않는다. 참조 이미지 권한, 생성 서비스 플랜, 공개 배포 허용도 계속 미확인이다.
+
 | runtime 파일 | 규격·크기 | SHA-256 |
 |---|---|---|
 | `assets/runtime/char/char_gray_wraith_weakened.png` | 1200×2000 indexed PNG + `tRNS`, 205,779B | `3B9746765326936E3598DCF6CA74DCA29A134229D4BF2DE5ADF607D8E8FF468C` |
-| `assets/runtime/cut/cut_transform_01.webp` | 1920×1080 WebP, 177,098B | `507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D` |
+| `assets/runtime/cut/cut_transform_01.webp` | 1920×1080 WebP, 200,470B | `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152` |
 | `assets/runtime/cut/cut_transform_02.webp` | 1920×1080 WebP, 205,400B | `1BBB807758BB978B6C97223E949EF91BF77CB456C30A68AE7E99E29611C32EB6` |
 
 각 source delivery 파일과 runtime 파일은 SHA-256이 일치한다. 기본 규격과 동일 바이트 검사를 통과해 `ready`이며, 사람 장면 합성·화풍·권리 QA 전에는 `approved`로 승격하지 않는다.

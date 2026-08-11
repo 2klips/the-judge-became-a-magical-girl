@@ -11,7 +11,7 @@
 
 `[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 2장, 변신 컷 2장, BGM 5곡이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`이며, 생성 증빙·라이선스와 사람 시청각 QA가 남은 항목은 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 41개 파일, 총 `12,099,475 bytes`다.
+현재 `assets/runtime/`은 41개 파일, 총 `12,122,847 bytes`다.
 
 ## 이미지
 
@@ -35,7 +35,7 @@
 | `doyun.magical_attack` | `char_doyun_magical_attack.png` | 마법소녀 공격 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | battle p2 | 자동 규격 PASS, 장면 QA 대기 |
 | `doyun.magical_finish` | `char_doyun_magical_finish.png` | 마법소녀 마무리 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | battle p3 | 자동 규격 PASS, 장면 QA 대기 |
 | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 마법소녀 포즈 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N5 변신 결과·전투 후 수렴 | 자동 규격 PASS, 장면 QA 대기 |
-| `transform.cast` | `cut_transform_01.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | 미확인 | 엔진 고정 변신 연출 1번, DEC-016 | source/runtime 동일 바이트·177,098B·평상복 영창 구성·자동 규격 PASS. 사람 합성·권리 QA 대기 |
+| `transform.cast` | `cut_transform_01.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | 미확인 | 엔진 고정 변신 연출 1번, DEC-016 | source/runtime 동일 바이트·200,470B·도윤이 전경의 무문자 사원증을 손에 들고 보이는 입으로 발화·주노 기도 자세·자동 계약 PASS. 사람 미술·권리 QA 대기, `approved` 아님 |
 | `transform.complete` | `cut_transform_02.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | 미확인 | 엔진 고정 변신 연출 2번, DEC-016 | source/runtime 동일 바이트·205,400B·뒷모습/반측면 완료 구성·자동 규격 PASS. 사람 합성·권리 QA 대기 |
 | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | GOOD 후속 컷 | 1920×1080 WebP | 700KB | 컷 가능 | planned | 미정 | 미확인 | GOOD 후속 훅·HIDDEN 재사용, DEC-032 | 얼굴·이름 비노출 검수 대기 |
 | `juno.climax` | `char_juno_climax.png` | 추가 포즈 | 1200×2000 PNG 투명 | 800KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |

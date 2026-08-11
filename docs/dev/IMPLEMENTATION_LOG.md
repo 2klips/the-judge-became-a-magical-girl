@@ -1287,13 +1287,13 @@
 - 작업 모드: `MILESTONE_IMPLEMENTATION(P0-1)`
 - 브랜치: `codex/p0-required-image-assets`
 - 시작 커밋: `58e8164`
-- 상태: 이미지·전체 회귀·브라우저 QA PASS, 사람 미술·권리 QA 대기
+- 상태: 당시 이미지·전체 회귀·브라우저 QA PASS. 이 절의 `transform.cast` 채택본은 아래 데스크톱 포즈 수정으로 superseded; 사람 미술·권리 QA 대기
 
 ### 사용자 지시와 장면 정합 수정
 
 - P0-1 필수 누락 이미지 해결은 C형(기존 캐릭터·배경을 참조해 새 장면 컷 생성)으로 진행했다.
 - 최초 `transform.cast` 후보가 영창 중 이미 마법소녀 복장을 입어 N5 순서와 모순된다는 사용자 피드백을 반영했다.
-- 최종 영창 컷은 평상복 도윤, 떠 있는 무문자 사원증, 주노, 막 시작되는 변신광으로 수정했다. 목걸이형 사원증 중복도 제거했다.
+- 당시 채택한 영창 컷은 평상복 도윤, 떠 있는 무문자 사원증, 주노, 막 시작되는 변신광으로 수정했다. 목걸이형 사원증 중복도 제거했다. 이 구성은 아래 포즈 수정으로 대체됐다.
 - 회색 망령 약화본은 게임 합성을 위해 투명 배경으로 확정했다.
 
 ### 변경 파일과 이유
@@ -1317,7 +1317,7 @@
 | RED | 실파일 추가 전 targeted test 1 fail·11 pass; `char_gray_wraith_weakened.png` ENOENT로 예상 실패 |
 | GREEN | 실파일 추가 후 targeted test 12 pass |
 | 망령 약화본 | 1200×2000 투명 indexed PNG + `tRNS`, 205,779B |
-| 변신 영창 컷 | 1920×1080 WebP, 177,098B |
+| 당시 변신 영창 컷(superseded) | 1920×1080 WebP, 177,098B |
 | 변신 완료 컷 | 1920×1080 WebP, 205,400B |
 | source/runtime | 세 쌍 모두 SHA-256 동일 |
 
@@ -1346,3 +1346,46 @@
 N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 → 마법 복장 완료 컷 순서를 확인했다. 약화 망령은 투명 배경으로 합성됐고 크로마·흰 배경·검은 폴백이 나타나지 않았다. debug 프리뷰에서 기존 기본 스프라이트와 인물 일부가 정보 카드·다른 인물에 가려지는 현상은 새 파일 결함이 아닌 기존 합성 레이아웃 후속 개선 후보로 남긴다.
 
 로컬 실제 플레이 주소는 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`이며, 사용자 마이크 권한·사람 미술 합성·생성물 권리 확인은 자동 QA 범위 밖이다.
+
+## `transform.cast` 데스크톱 포즈 수정 채택
+
+- 실행일: 2026-08-11
+- 작업 모드: `ASSET_REVISION(transform.cast)`
+- 브랜치: `codex/p0-required-image-assets`
+- 상태: 포즈 에셋·focused 계약 GREEN, 독립 Unit 1 검토 완료. Unit 3 fresh 전체 build·브라우저 QA와 사람 미술·권리 QA 대기
+
+### 사용자 지시와 범위 변경
+
+- 도윤이 사원증을 카메라 쪽으로 직접 내밀고, 가리지 않은 입으로 실제 말하는 모습이 보이며, 주노가 기도하는 자세를 취하도록 수정했다.
+- 사용자는 입 모양 1번(중간 크기로 분명한 발화, 진지하고 약간 부끄러움)과 A 균형형을 선택했다.
+- 첫 수정 후보의 모바일 crop 피드백 뒤 사용자가 모바일을 이번 수정 범위에서 제외했다. 데스크톱 16:9만 최종 기준이며 `390×844` 대응과 CSS·코드 변경은 수행하지 않는다.
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|---|---|
+| `tests/m5Assets.test.ts` | 교체 전 `transform.cast` hash를 거부하는 회귀 guard 추가 |
+| `assets/source/p0-required-images/delivery/cut_transform_01.webp` | 추적용 최종 채택 WebP로 교체 |
+| `assets/runtime/cut/cut_transform_01.webp` | source와 동일 바이트인 게임 로드용 WebP로 교체 |
+
+게임 production 코드, catalog, 시나리오 JSON, CSS, 논리 ID, `transform.cast → transform.complete` 순서는 변경하지 않았다.
+
+### TDD·후보·채택 증거
+
+| 단계 | 결과 |
+|---|---|
+| 교체 전 원본 | 177,098B, SHA-256 `507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D`; 최종본에서 superseded |
+| RED | focused `m5Assets` 11 pass·1 expected fail. 새 guard가 교체 전 hash를 감지 |
+| GREEN | focused `m5Assets` 12/12 pass |
+| 첫 수정 commit | `2b99e2327c1a752751a614bc6003456dbb5f816e`; 186,428B, SHA-256 `038E554CFCAAB243C230C25316B62F3048602B7B67747AB4F8BFFCE6C30C6A54`. 데스크톱 전체는 통과했지만 당시 요구한 정확한 중앙 모바일 crop 실패로 최종 제외, Git 이력 보존 |
+| 최종 채택 commit | `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`; 200,470B, SHA-256 `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152` |
+| source/runtime | 두 경로 동일 바이트, 1920×1080 WebP. runtime 합계 41 files·12,122,847B(기존 12,099,475B 대비 +23,372B) |
+
+현재 컷을 편집 대상으로 사용하고 `char_doyun_normal_shy.png`의 사무복·정체성과 `char_juno_surprised.png`의 몸·별 지팡이를 참조했다. Codex 내장 OpenAI 이미지 편집과 FFmpeg 정규화를 사용했으며 정확한 모델명·버전·작업 ID는 도구가 노출하지 않는다. 최종 화면은 평상복 도윤 한 명, 자연스럽게 손에 잡힌 전경의 무문자 사원증 하나, 보이는 중간 크기 발화 입, 눈 감고 세운 지팡이 주위로 두 날개를 모은 주노 한 명, 청색·금색 야간 사무실과 마법진으로 구성된다. 텍스트·UI·로고는 없다.
+
+### 독립 검토와 남은 게이트
+
+- 독립 Unit 1 요구사항 검토에서 사용자 포즈·데스크톱 범위·동일 바이트 계약과 변경 파일 경계를 확인했다.
+- 독립 Unit 1 품질 검토는 TypeScript 검사와 전체 188/188 tests를 통과했다.
+- 위 결과는 Unit 3 최종 fresh 검증을 대신하지 않는다. `npm run check`, `npm test`, `npm run build`, production 복사본 hash, 1280×720 N5 브라우저 합성·overflow·console QA는 Unit 3에서 다시 실행하고 기록한다.
+- 상태는 `ready`이며 `approved`가 아니다. 사람 미술 품질, 참조 이미지 권한, 생성 서비스 플랜과 공개 배포 허용 확인이 남아 있다. 세부 출처와 최종 hash는 [PROVENANCE.md](../assets/PROVENANCE.md)를 따른다.
