@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -73,6 +74,9 @@ const runtimeP0Cuts = [
   "cut_transform_01.webp",
   "cut_transform_02.webp",
 ] as const;
+
+const previousTransformCastSha256 =
+  "507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D";
 
 const runtimeDiskPath = (assetPath: string): string =>
   resolve(process.cwd(), "assets", "runtime", assetPath.replace(/^assets\//, ""));
@@ -255,6 +259,12 @@ describe("M5 에셋 계약", () => {
         height: 1080,
       });
       expect(statSync(runtimePath).size, filename).toBeLessThanOrEqual(700 * 1024);
+      if (filename === "cut_transform_01.webp") {
+        expect(
+          createHash("sha256").update(runtimeFile).digest("hex").toUpperCase(),
+          "transform.cast must use the approved pose revision",
+        ).not.toBe(previousTransformCastSha256);
+      }
     }
   });
 
