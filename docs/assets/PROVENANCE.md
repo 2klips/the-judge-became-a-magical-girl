@@ -11,6 +11,7 @@
 | 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 미확인 | 미확인 | 자동 규격 `ready`, 사용자 장면 사용 승인 |
 | 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격·runtime 합성 `ready`, 권리 승인 대기 |
 | 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 생성 서비스 플랜·앵커 권한·공개 사용 미확인 | normal 자동 규격·동일 바이트 `ready`; hit/attack/death 미등록 |
+| P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | commit `438f2f7`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | 생성 서비스 플랜·참조 이미지 권한·공개 사용 미확인 | 자동 규격·동일 바이트 `ready`, 사람 장면·권리 QA 대기 |
 | BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1, 현재 Pro 플랜 사용자 확인; 생성 당시 플랜·모델 미확인 | 생성 당시 계정 기록·약관 확인 대기 | 자동 규격·동일 바이트 `ready`, 사람 청각·권리 승인 대기 |
 
 ## 배경 원본
@@ -91,7 +92,23 @@
 - 제작·검증 원문은 `docs/gray-wraith-action-v2/delivery/PRODUCTION_EVIDENCE.md`, `VALIDATION_REPORT.md`에 있다.
 - `char_gray_wraith_normal.png`는 1200×2000 투명 PNG, 413,056B, SHA-256 `508F119B89752B19B056256D5EB641CD23A74FD26FCB7543F719193C08756839`이며 runtime 채택본과 동일하다.
 - `hit`/`attack`/`death`는 수신했지만 사용자 결정에 따라 신규 논리 ID로 등록하지 않았다. source 납품만 보존한다.
-- 계약 필수 `char_gray_wraith_weakened.png`는 납품되지 않았다. 별도 제작 요청을 유지한다.
+- 이 액션 납품 묶음에는 계약 필수 `char_gray_wraith_weakened.png`가 없었다. 해당 상태는 아래 P0 필수 이미지 작업에서 별도로 생성·채택했다.
+
+## P0 필수 이미지 3종
+
+- 회색 망령 약화본은 `char_gray_wraith_normal.png`, `char_gray_wraith_hit.png`의 실루엣·균열 방향을 참조해 같은 캔버스의 약화 상태로 생성했다.
+- 변신 영창 컷은 `bg_transform_space.webp`, `char_doyun_normal_shy.png`, `char_juno_surprised.png`를 참조했다. 최초 후보가 이미 마법소녀 복장을 입어 장면 순서와 어긋나 폐기했고, 평상복으로 재생성한 뒤 목걸이형 사원증 중복을 제거했다. 떠 있는 무문자 사원증 하나만 남겼다.
+- 변신 완료 컷은 `bg_transform_space.webp`, `char_doyun_magical_pose.png`, `char_juno_happy.png`를 참조해 도윤의 뒷모습/반측면과 주노가 함께 보이도록 생성했다.
+- 생성 원본의 크로마 배경은 imagegen 보조 스크립트로 알파 처리했다. 컷 2장은 FFmpeg로 WebP 정규화했고, 망령 RGBA PNG는 용량 상한을 넘어서 Pillow로 indexed palette + `tRNS` PNG로 무손실 캔버스·투명도 계약을 유지하며 압축했다.
+- Codex 내장 도구가 정확한 모델명·버전·작업 ID를 노출하지 않아 해당 값은 미확인이다. 생성 서비스 플랜, 참조 이미지 권한, 공개 배포 허용은 사람 확인 전까지 미확인이다.
+
+| runtime 파일 | 규격·크기 | SHA-256 |
+|---|---|---|
+| `assets/runtime/char/char_gray_wraith_weakened.png` | 1200×2000 indexed PNG + `tRNS`, 205,779B | `3B9746765326936E3598DCF6CA74DCA29A134229D4BF2DE5ADF607D8E8FF468C` |
+| `assets/runtime/cut/cut_transform_01.webp` | 1920×1080 WebP, 177,098B | `507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D` |
+| `assets/runtime/cut/cut_transform_02.webp` | 1920×1080 WebP, 205,400B | `1BBB807758BB978B6C97223E949EF91BF77CB456C30A68AE7E99E29611C32EB6` |
+
+각 source delivery 파일과 runtime 파일은 SHA-256이 일치한다. 기본 규격과 동일 바이트 검사를 통과해 `ready`이며, 사람 장면 합성·화풍·권리 QA 전에는 `approved`로 승격하지 않는다.
 
 ## SFX source 인계
 

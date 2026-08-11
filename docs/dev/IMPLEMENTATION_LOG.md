@@ -1280,3 +1280,53 @@
 - 원본 `main`은 `2a5821d`에 유지한다.
 - 인수 기록 검토 뒤 후속 기능은 별도 설계와 `codex/` 브랜치에서 진행한다.
 - 원격 push·PR·merge는 사용자 요청 전 수행하지 않는다.
+
+## P0 필수 누락 이미지 3종 제작·runtime 채택
+
+- 실행일: 2026-08-11
+- 작업 모드: `MILESTONE_IMPLEMENTATION(P0-1)`
+- 브랜치: `codex/p0-required-image-assets`
+- 시작 커밋: `58e8164`
+- 상태: 이미지·targeted test PASS, 전체 회귀·브라우저 QA 진행 전
+
+### 사용자 지시와 장면 정합 수정
+
+- P0-1 필수 누락 이미지 해결은 C형(기존 캐릭터·배경을 참조해 새 장면 컷 생성)으로 진행했다.
+- 최초 `transform.cast` 후보가 영창 중 이미 마법소녀 복장을 입어 N5 순서와 모순된다는 사용자 피드백을 반영했다.
+- 최종 영창 컷은 평상복 도윤, 떠 있는 무문자 사원증, 주노, 막 시작되는 변신광으로 수정했다. 목걸이형 사원증 중복도 제거했다.
+- 회색 망령 약화본은 게임 합성을 위해 투명 배경으로 확정했다.
+
+### 변경 파일과 이유
+
+| 구분 | 파일 | 변경 이유 |
+|---|---|---|
+| source 납품 | `assets/source/p0-required-images/delivery/char_gray_wraith_weakened.png` | 생성·정규화한 채택본 보존 |
+| source 납품 | `assets/source/p0-required-images/delivery/cut_transform_01.webp` | N5 영창 1번 컷 보존 |
+| source 납품 | `assets/source/p0-required-images/delivery/cut_transform_02.webp` | N5 변신 완료 2번 컷 보존 |
+| runtime | `assets/runtime/char/char_gray_wraith_weakened.png` | momentum 65 이상에서 물리 약화 상태 우선 사용 |
+| runtime | `assets/runtime/cut/cut_transform_01.webp` | DEC-016 영창 1번 컷 연결 |
+| runtime | `assets/runtime/cut/cut_transform_02.webp` | DEC-016 완료 2번 컷 연결 |
+| test | `tests/m5Assets.test.ts` | 세 source/runtime 파일의 동일 바이트·규격·용량 계약 회귀 방지 |
+
+코드, 시나리오, catalog, runtime 동작은 수정하지 않았다. 기존 논리 ID와 경로가 이미 연결돼 있어 계약 파일을 채우는 방식으로 통합했다.
+
+### TDD·정규화 결과
+
+| 항목 | 결과 |
+|---|---|
+| RED | 실파일 추가 전 targeted test 1 fail·11 pass; `char_gray_wraith_weakened.png` ENOENT로 예상 실패 |
+| GREEN | 실파일 추가 후 targeted test 12 pass |
+| 망령 약화본 | 1200×2000 투명 indexed PNG + `tRNS`, 205,779B |
+| 변신 영창 컷 | 1920×1080 WebP, 177,098B |
+| 변신 완료 컷 | 1920×1080 WebP, 205,400B |
+| source/runtime | 세 쌍 모두 SHA-256 동일 |
+
+초기 망령 RGBA PNG는 800KB 상한을 넘었다. 캔버스와 투명도를 유지한 indexed palette PNG로 압축해 계약을 통과시켰다. 정확한 해시와 제작 도구·권리 한계는 [PROVENANCE.md](../assets/PROVENANCE.md)에 기록했다.
+
+### 커밋과 후속 검증
+
+- 설계 문서: `9fd85cc`
+- 실행 계획: `58e8164`
+- 이미지·계약 테스트: `438f2f7`
+- 남은 단계: 관련 문서 링크 검사, `npm run check`, `npm test`, `npm run build`, N5·battle 브라우저 합성 QA.
+- 원격 push·PR·main merge는 수행하지 않는다.

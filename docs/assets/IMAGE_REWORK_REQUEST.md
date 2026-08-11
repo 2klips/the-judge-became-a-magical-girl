@@ -11,13 +11,20 @@
 3. 이미지에 텍스트·UI·로고를 박지 않는다(텍스트는 런타임 DOM/CSS 담당).
 4. 생성 도구·모델, 프롬프트/작업 ID, 생성일, 라이선스 확인 결과를 함께 전달한다. 증빙 없는 납품은 `approved`로 승격되지 않는다.
 
-## 1. 신규 제작 필요 (M5 필수)
+## 1. 신규 제작 필요 (M5 필수; 2026-08-11 납품 완료)
 
 | 논리 ID | 파일명 | 요청 내용 | 사용 장면 | 현재 폴백 | 근거 |
 |---|---|---|---|---|---|
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | `char_gray_wraith_normal.png`와 **같은 캔버스·구도·스케일**에서, 회색 안개가 갈라지고 몸 안에 갇힌 게임 캐릭터의 빛이 새어 나오는 상태. 과장된 고통 표현 금지 — 무겁고 체념한 인상 유지 | battle에서 기세(momentum) 65 이상, N7~N8 우세 연출 | normal + CSS 파생(채도↓·내부 빛 오버레이) | SCENE_ASSET_MAPPING §3.2. 납품 delivery에 `attack`/`hit`/`death`는 있으나 `weakened`는 없음 |
-| `transform.cast` | `cut_transform_01.webp` | 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간. 텍스트 없음 | N5 주문 성공 직후 1번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3, ASSET_MANIFEST `missing` |
-| `transform.complete` | `cut_transform_02.webp` | 변신 완료. 마법소녀 도윤은 뒷모습/반측면, 주노는 곁에 위치. 완전·표준·구제 공용 1장 | N5 주문 성공 직후 2번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3, ASSET_MANIFEST `missing` |
+| `transform.cast` | `cut_transform_01.webp` | 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간. 텍스트 없음 | N5 주문 성공 직후 1번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3. 2026-08-11 납품 전에는 ASSET_MANIFEST `missing` |
+| `transform.complete` | `cut_transform_02.webp` | 변신 완료. 마법소녀 도윤은 뒷모습/반측면, 주노는 곁에 위치. 완전·표준·구제 공용 1장 | N5 주문 성공 직후 2번 컷 | 배경+도윤+CSS 플래시/파티클 | SCENE_ASSET_MAPPING §3.3. 2026-08-11 납품 전에는 ASSET_MANIFEST `missing` |
+
+### 2026-08-11 납품 상태
+
+- `gray_wraith.weakened`: 1200×2000 투명 PNG를 source/runtime에 동일 바이트로 채택했다. 자동 규격 검사를 통과해 `ready`이며, 사람 장면 합성·권리 QA는 남아 있다.
+- `transform.cast`: 변신 전 평상복 도윤, 떠 있는 무문자 사원증, 주노, 막 시작되는 변신광으로 수정한 1920×1080 WebP를 채택했다. 자동 규격 검사를 통과해 `ready`다.
+- `transform.complete`: 마법소녀 도윤의 뒷모습/반측면과 주노가 함께 보이는 1920×1080 WebP를 채택했다. 자동 규격 검사를 통과해 `ready`다.
+- 위 표의 폴백은 납품 전 상태 기록이자 실파일 로딩 실패 시 안전장치다. 세 항목 모두 `approved`는 아니며 사람 합성·권리 QA 후 승격한다.
 
 ## 2. 교체 요청 (현재본 임시 승인 상태)
 
@@ -57,4 +64,6 @@
 | `transform.cast` | `cut_transform_01.webp` | 사원증이 떠오르고 도윤과 주노가 함께 주문을 외치는 영창 순간 | N5 주문 성공 직후 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
 | `transform.complete` | `cut_transform_02.webp` | 변신을 마친 도윤과 곁의 주노가 한 장면으로 읽히는 완료 컷 | N5 완전·표준·구제 결과 | 배경 + 도윤 `magical_pose` + 검은 컷 영역 + CSS | `CHARACTER_IMAGE_DIALOGUE_AUDIT.md` §3, 본 문서 §1 |
 
-전수 점검 결과, 위 기존 미납품 3종 외에 도윤·주노 신규 표정 논리 ID가 필요한 C형은 발견되지 않았다. 전체 매트릭스와 B형 1건은 [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](CHARACTER_IMAGE_DIALOGUE_AUDIT.md)에 기록했다.
+이 WP6 표의 임시 대체는 납품 전 점검 당시의 기록이다. 2026-08-11부터 세 논리 ID는 위 실파일을 우선 사용하고, 임시 대체는 로딩 실패 시에만 사용한다.
+
+전수 점검 결과, 위 3종 외에 도윤·주노 신규 표정 논리 ID가 필요한 C형은 발견되지 않았다. 전체 매트릭스와 B형 1건은 [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](CHARACTER_IMAGE_DIALOGUE_AUDIT.md)에 기록했다.
