@@ -75,8 +75,10 @@ const runtimeP0Cuts = [
   "cut_transform_02.webp",
 ] as const;
 
-const previousTransformCastSha256 =
-  "507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D";
+const supersededTransformCastSha256s = [
+  "507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D",
+  "A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152",
+] as const;
 
 const runtimeDiskPath = (assetPath: string): string =>
   resolve(process.cwd(), "assets", "runtime", assetPath.replace(/^assets\//, ""));
@@ -260,10 +262,14 @@ describe("M5 에셋 계약", () => {
       });
       expect(statSync(runtimePath).size, filename).toBeLessThanOrEqual(700 * 1024);
       if (filename === "cut_transform_01.webp") {
+        const transformCastSha256 = createHash("sha256")
+          .update(runtimeFile)
+          .digest("hex")
+          .toUpperCase();
         expect(
-          createHash("sha256").update(runtimeFile).digest("hex").toUpperCase(),
-          "transform.cast must use the approved pose revision",
-        ).not.toBe(previousTransformCastSha256);
+          supersededTransformCastSha256s,
+          "transform.cast must use the approved A2 badge glow revision",
+        ).not.toContain(transformCastSha256);
       }
     }
   });
