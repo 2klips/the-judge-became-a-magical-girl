@@ -37,19 +37,19 @@
 | 우선순위 | 논리 ID | 정확한 파일명 | 제작 내용 | 장면 |
 |---|---|---|---|---|
 | `[확정·M5 필수]` | `bg_title` | `bg_title.webp` | NHN 사옥 외경 타이틀 베이스. 작품명·시작 버튼은 DOM/CSS. 현재 원본의 대형 NHN/HACKATHON 문구·로고는 `[임시 승인, DEC-037]`; clean 교체 요청 유지 | 타이틀 |
-| `[확정·M5 폴백 가능]` | `bg_office_wide` | `bg_office_wide.webp` | 빈 메인 사무실 전경. N0 늦은 밤 조건은 CSS 야간 색보정으로 맞춘다 | N0 도입 establishing |
+| `[확정·M5 폴백 가능]` | `bg_office_wide` | `bg_office_wide.webp` | 늦은 밤, 심사 핵심 팀이 야근하는 메인 사무실 전경. 창밖·조명은 심야 자체 표현 | N0 도입 establishing |
 | `[확정·M5 필수]` | `bg_hall_day` | `bg_hall_day.webp` | **이름은 호환용 레거시 ID다. 실제 내용은 도윤 책상 1인칭 기본 배경.** 모니터·키보드·사원증이 보이는 구도 | N0 심사, N2 주노 등장·대화 |
 | `[확정·M5 폴백 가능]` | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | 정면 책상 구도에 푸른 정지광과 빛나는 사원증. 없으면 `bg_hall_day` + CSS 정지 효과 | N1 첫 목소리 |
-| `[확정·M5 폴백 가능]` | `bg_hall_dark` | `bg_hall_dark.webp` | 정면 책상 구도에 색 빠짐·회색 침식·평가표 잔향 | N3~N5 도입, 전투 후 수렴 |
+| `[확정·M5 폴백 가능]` | `bg_hall_dark` | `bg_hall_dark.webp` | 심야 사무실의 정지한 핵심 팀. 마법이 동료의 시간·인식을 멈춰 위험을 느끼지 못하고, 회색 침식·평가표 잔향은 도윤의 행동 공간에 집중 | N3~N5 도입, 전투 후 수렴 |
 | `[확정·M5 폴백 가능]` | `bg_hall_good` | `bg_hall_good.webp` | 아침빛과 색이 완전히 회복된 도윤 책상 | GOOD 본 장면 |
 | `[확정·M5 폴백 가능]` | `bg_hall_normal` | `bg_hall_normal.webp` | 일부 회색과 잔향이 남은 도윤 책상 | NORMAL 본 장면 |
 | `[확정·M5 폴백 가능]` | `bg_hall_bad` | `bg_hall_bad.webp` | 색이 돌아오지 않고 화면 오류 잔향이 남은 도윤 책상 | BAD 본 장면 |
 | `[확정·M5 폴백 가능]` | `bg_desk_closeup` | `bg_desk_closeup.webp` | 키보드·사원증 중심 데스크 클로즈업 | N5 사원증 부상·주문 게이트 |
-| `[확정·M5 폴백 가능]` | `bg_transform_space` | `bg_transform_space.webp` | 사원증과 업무 UI 파편이 빛의 원형 마법진 위로 떠오르는 추상 변신 공간 | N5 영창 결과의 컷 하부 배경 |
-| `[확정·M5 폴백 가능]` | `bg_battle_wide` | `bg_battle_wide.webp` | 넓은 빈 사무실 전투 stage. 변신 직후 색과 빛이 되돌아오는 p1 도입 | battle p1 |
+| `[확정·M5 폴백 가능]` | `bg_transform_space` | `bg_transform_space.webp` | 심야 사무실을 기준으로 사원증과 업무 UI 파편이 빛의 원형 마법진 위로 떠오르는 변신 공간 | N5 영창 결과의 컷 하부 배경 |
+| `[확정·M5 폴백 가능]` | `bg_battle_wide` | `bg_battle_wide.webp` | 심야 사무실 전투 stage. 시간·인식이 멈춘 동료를 뒤에 두고 도윤이 보호선을 만드는 p1 도입 | battle p1 |
 | `[확정·M5 필수]` | `bg_hall_void` | `bg_hall_void.webp` | 같은 사무실 와이드 구도에 회색 안개·떠다니는 평가표가 침식한 상태 | battle p2 |
 | `[확정·M5 폴백 가능]` | `bg_mind_archive` | `bg_mind_archive.webp` | 기록 UI·평가표가 떠다니는 심리/아카이브 공간 | battle p3의 N7 과거 기록·핵심 질문 |
-| `[확정·M5 폴백 가능]` | `bg_battle_core` | `bg_battle_core.webp` | 회색 벽이 갈라지고 빛과 회색이 대치하는 최종전 공간 | battle p3 최종 주문·정화 직전 |
+| `[확정·M5 폴백 가능]` | `bg_battle_core` | `bg_battle_core.webp` | 심야 사무실의 정지한 핵심 팀을 보호하며, 회색 핵과 별빛이 대치하는 최종전 공간 | battle p3 최종 주문·정화 직전 |
 | `[컷 가능]` | `bg_corridor_day` | `bg_corridor_day.webp` | 밝은 빈 사무실 복도 | GOOD 후속 훅 도입, HIDDEN 전환 |
 | `[컷 가능]` | `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | 같은 복도 계열의 검은빛·보랏빛 침식 상태. 검은 마법소녀 인물은 별도 컷/스프라이트 | GOOD 후속 검은빛, HIDDEN 크레딧 이후 |
 | `[확장]` | `bg_lounge_day` | `bg_lounge_day.webp` | 10~30분 확장판 일상 제2장소 | 현재 M5 미사용 |
@@ -93,11 +93,11 @@
 
 | 우선순위 | 논리 ID | 정확한 파일명 | 제작 내용 | 장면 |
 |---|---|---|---|---|
-| `[확정·M5 필수]` | `transform.cast` | `cut_transform_01.webp` | 평상복 도윤이 무문자 사원증 하나를 카메라 쪽 전경으로 직접 내밀며 입을 보이고 주문을 말하고, 주노는 눈을 감고 세운 별 지팡이 주위로 두 날개를 모아 기도하는 영창 순간. 텍스트 없음 | N5 주문 성공 직후 1번 |
-| `[확정·M5 필수]` | `transform.complete` | `cut_transform_02.webp` | 변신 완료. 마법소녀 도윤은 뒷모습/반측면, 주노는 곁에 위치. 완전·표준·구제 공용 | N5 주문 성공 직후 2번 |
+| `[확정·M5 필수]` | `transform.cast` | `cut_transform_01.webp` | 평상복 도윤이 A2 사원증의 은백색 내부 별빛·파란 테두리를 보이며 주문을 말하고, 주노는 기도하는 심야 영창 순간. 텍스트·UI·로고 없음 | N5 주문 성공 직후 1번 |
+| `[확정·M5 필수]` | `transform.complete` | `cut_transform_02.webp` | 일몰이 아닌 심야 변신 완료. 마법소녀 도윤과 주노가 야근 장면의 시간대를 유지. 완전·표준·구제 공용 | N5 주문 성공 직후 2번 |
 | `[컷 가능]` | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | 어두운 복도, 긴 검은 지팡이를 든 성인 여성 실루엣, 회색 픽셀이 지팡이로 흡수됨. 얼굴·이름·정체 노출 금지 | GOOD 후속 장면, HIDDEN 크레딧 이후 재사용 |
 
-`[ready, 2026-08-11]` `transform.cast`는 변신 전 평상복 도윤이 무문자 사원증을 직접 내밀며 말하고 주노가 기도하는 영창 시작, `transform.complete`는 마법소녀 도윤의 뒷모습/반측면 완료 상태로 채택했다. DEC-016의 `cast → complete` 순서와 완전·표준·구제 공용 사용 계약은 변경하지 않았다. 사용자 범위 변경에 따라 이 포즈 수정은 데스크톱 16:9 전용이며 모바일은 제외했고, CSS·코드·시나리오는 바꾸지 않았다.
+`[ready, 2026-08-13]` `transform.cast`는 A2 사원증·야간 영창, `transform.complete`는 심야 변신 완료로 재편집했다. DEC-016의 `cast → complete` 순서와 완전·표준·구제 공용 사용 계약은 변경하지 않았다. 사용자가 미세한 구도·가시성 차이를 수용하고 시각 채택했으며, 데스크톱 16:9만 범위다. 대체 후 브라우저 QA와 권리·배포 확인은 대기다.
 
 완전·표준·자동 구제 변신은 같은 두 컷을 사용한다. 차이는 CSS 플래시·파티클·색 강도와 결과 문구로 표현한다. 불완전 변신 전용 물리 이미지는 M5 필수가 아니다.
 
@@ -130,11 +130,11 @@
 | 순서·런타임 | 장면 | 배경 | 화면 인물 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
 | 타이틀 | 마이크 연결·테스트 후 시작 | `bg_title` | 없음 | 무음 | `마이크가 연결되어야 플레이 가능해요` 안내, 입력 장치 선택, 실시간 dBFS 미터, 테스트 진행률을 DOM/CSS로 표시한다. 테스트 통과 전 시작·이어하기 비활성. baked NHN/HACKATHON 문구·로고는 DEC-037 임시 승인 |
-| N0 `n0_review` | 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` | 첫 두 대사는 도윤 미표시. 3~4번째 `doyun.normal_tired`, 5번째 이후 `doyun.normal_startled` | `bgm_daily` | 첫 두 대사만 1인칭 독백 클리셰로 숨기고 곧바로 도윤을 표시한다. 평가 문장·커서는 DOM/CSS |
+| N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. 3~4번째 `doyun.normal_tired`, 5번째 이후 `doyun.normal_startled` | `bgm_daily` | 첫 두 대사만 1인칭 독백 클리셰로 숨기고 곧바로 도윤을 표시한다. 평가 문장·커서는 DOM/CSS |
 | N1 `n1_first_voice` | 모니터 속 첫 목소리 | `bg_hall_time_stop` | `doyun.normal_startled`. **주노 실물 미노출** | 계속 `bgm_daily` | NPC가 주노여도 N2 전까지 주노 스프라이트는 숨긴다. 사원증 빛·시간 정지는 배경+CSS |
 | N2 `n2_juno_intro` | 주노가 키보드 위로 등장 | `bg_hall_day` | 도윤 `normal_startled` + 주노 `surprised → happy`; 반응에 따라 `neutral/upset` | 계속 `bgm_daily` | 등장 순간 짧은 CSS 빛·낙하. 자유 대화 결과 표정 사용 |
 | N2 `n2_juno_followup` | 정체·선택 이유 확인 | `bg_hall_day` | 도윤 `normal` + 주노 `neutral`; 선택 이유 질문 `shy`, 냉담 `upset` | 계속 `bgm_daily` | 각 캐릭터는 한 번에 한 표정만 표시 |
-| N3 `n3_wraith_choice` | 회색 망령 등장 | `bg_hall_dark` | 도윤 `normal_startled` + `gray_wraith.normal` 중앙/후면 + `juno.upset` 측면 | 선호 `bgm_crisis`; MVP 폴백 `bgm_battle` | 세 인물을 동시에 표시. 평가표·안개·방어막 균열은 CSS/Canvas |
+| N3 `n3_wraith_choice` | 회색 망령 등장 | `bg_hall_dark` | 도윤 `normal_startled` + `gray_wraith.normal` 중앙/후면 + `juno.upset` 측면; 시간·인식이 멈춘 핵심 팀은 배경 실루엣 | 선호 `bgm_crisis`; MVP 폴백 `bgm_battle` | 마법의 보호 범위 밖 감각 반응을 추가하지 않는다. 평가표·안개·방어막 균열은 CSS/Canvas |
 | N4-A `n4_team` | 죽이 맞는 콤비 | `bg_hall_dark` | 도윤 `normal_smile` + `juno.happy`; 망령 유지 | 계속 crisis/폴백 | 주노 한 바퀴 회전은 CSS |
 | N4-B `n4_cooperate` | 마지못한 협력 | `bg_hall_dark` | 도윤 `normal` + `juno.neutral`; 망령 유지 | 계속 crisis/폴백 | 주노를 N4-A보다 작고 차분하게 배치 |
 | N4-C `n4_awkward` | 서먹함·회복 기회 | `bg_hall_dark` | 도윤 `normal_shy` + 주노 시작 `upset`, 회복 `shy`, 거리 유지 `neutral`; 망령 유지 | 계속 crisis/폴백 | 주노 발광량 감소는 CSS. 별도 어두운 스프라이트 금지 |
@@ -158,18 +158,18 @@
 |---|---|---|---|---|---|
 | N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 도윤 `normal_shy` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | `juno.surprised`는 망령 공격 순간에만 사용. 도입은 직전 N4 관계 표정을 이어받음 |
 | N5 주문 게이트 | 두 문장 한 번에 낭독 | `bg_desk_closeup` | 도윤 `normal_shy`; 주문 UI 중심, 주노는 작게 유지 | 입력 중 기존 곡 duck | 주문 전문은 DOM. BGM·SFX가 STT에 섞이지 않도록 입력 중 음량 낮춤 |
-| N5 변신 결과 | 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` + `transform.cast → transform.complete` | `bgm_transform` one-shot | 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등. 완전/표준/구제는 효과 강도만 다름 |
-| `battle_wraith` / p1 `p1_defend` | 직원·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` + `gray_wraith.normal` + `juno.neutral` | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void` |
+| N5 변신 결과 | 야간 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` + `transform.cast` A2 사원증·야간 → `transform.complete` 심야 완료 | `bgm_transform` one-shot | 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등. 완전/표준/구제는 효과 강도만 다름 |
+| `battle_wraith` / p1 `p1_defend` | 정지한 핵심 팀·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` + `gray_wraith.normal` + `juno.neutral`; 팀은 위협을 인식하지 못한 배경 실루엣 | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void` |
 | `battle_wraith` / p2 `p2_attack` | 망령 중심 공격 | `bg_hall_void` | 도윤 `magical_attack` + momentum별 망령 + `juno.happy` | 계속 `bgm_battle` | 공격 플래시 뒤에도 같은 캔버스 정렬 유지 |
 | `battle_wraith` / p3 `p3_answer` 질문 | 과거 기록·핵심 질문 | `bg_mind_archive` | 도윤 `magical_finish` + 현재 망령 상태 + `juno.neutral` | 계속 `bgm_battle`, 질문 중 일시 duck | `/project_archive/`, 소개 문구는 DOM/CSS |
-| `battle_wraith` / p3 `p3_answer` 주문 | 마지막 주문·회색 핵 노출 | `bg_battle_core` | 도윤 `magical_finish` + 현재 망령 상태 + `juno.neutral` | 계속 `bgm_battle` | 주문 음성은 제목에서 보정한 dBFS 범위도 판정. 너무 작거나 크면 문서 지정 재시도/턴 소모 분기를 적용 |
+| `battle_wraith` / p3 `p3_answer` 주문 | 마지막 주문·회색 핵 노출 | `bg_battle_core` | 도윤 `magical_finish` + 현재 망령 상태 + `juno.neutral`; 정지한 팀은 배경에 보호 | 계속 `bgm_battle` | 주문 음성은 제목에서 보정한 dBFS 범위도 판정. 너무 작거나 크면 문서 지정 재시도/턴 소모 분기를 적용 |
 
 ### 4.3 수렴·엔딩
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물·컷 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
 | 수렴 `ch3_gray_answer` | 작은 회색 빛의 질문 | `bg_hall_dark` + 색 회복 오버레이 | 도윤 `magical_pose` + 주노 `neutral`; 긍정 `happy`, 냉소 `upset`; 망령 제거 | 선호 `bgm_ending`; 폴백 `bgm_daily` | 작은 회색 핵은 Canvas/CSS 파티클 |
-| GOOD `ending_good` | 다시 플레이·평가 수정 | `bg_hall_good` | 도윤 `normal_smile` + `juno.happy` | ending/폴백 daily | 평가표 문장은 DOM. 실패 시 `bg_hall_day` + 아침빛 |
+| GOOD `ending_good` | 멈췄던 시간이 다시 흐르고 긴 밤 끝에 아침빛·평가 수정 | `bg_hall_good` | 도윤 `normal_smile` + `juno.happy` | ending/폴백 daily | `멈췄던 시간이 다시 흐른다. 긴 밤 끝에 아침빛...`의 시간 전환을 표현. 평가표 문장은 DOM |
 | GOOD 후속 훅 도입 | 1,024개 잔향·복도 전환 | `bg_corridor_day` | `juno.surprised` 반응 | ending 유지 | 복도 끝 검은빛 직전까지 사용. 컷 가능 배경이므로 없으면 기존 검은 화면 전환 |
 | GOOD 후속 훅 검은빛 | 검은 마법소녀 암시 | `bg_corridor_blacklight` + 컷 가능 `ending.black_magical_girl` | 인물은 컷에 포함. 주노 별도 표시 금지 | 마지막 순간 정지/감쇠 | 배경 자체는 인물 대체물이 아니다. 컷 없으면 복도+픽셀 흡수 CSS+대사. 본편 이름 `노아` 노출 금지 |
 | NORMAL `ending_normal` | 판단 보류·한 번 더 | `bg_hall_normal` | 도윤 `normal_smile` + `juno.neutral` | ending/폴백 daily | `UNKNOWN USER CONNECTED`는 DOM. 검은 마법소녀 실루엣 금지 |
@@ -202,7 +202,7 @@
 - `[구현]` 물리 파일은 기본 핵심분만 preload하고 나머지는 장면 진입 시 지연 로드한다. 실패는 `physical → 지정 파생 → 검은 presentation`으로 강등하며 `[ASSET_HANDOFF]`를 경로별 한 번 기록한다. BGM 실패는 무음으로 계속한다.
 - `[구현·자동 QA PASS]` BGM 5곡을 `assets/runtime/bgm/`에 source와 동일 바이트로 채택했다. 규격·용량은 통과했으며 3회 루프·대사 마스킹·PTT duck·3엔딩 사람 청감 QA와 권리 확인은 대기한다.
 - `[구현·자동 QA PASS]` 회색 망령 `normal`과 `weakened`를 source와 동일 바이트로 `assets/runtime/char/`에 채택했다. 두 파일 모두 1200×2000 투명 PNG·800KB 이하이며 사람 합성·권리 QA는 대기한다.
-- `[구현·자동 QA PASS]` 변신 컷 `cast`와 `complete`를 source와 동일 바이트로 `assets/runtime/cut/`에 채택했다. 두 파일 모두 1920×1080 WebP·700KB 이하이며 N5 사람 합성·권리 QA는 대기한다.
+- `[구현·자동 QA PASS·시각 채택]` 2026-08-13 야근 연속성 배경 5종과 변신 컷 2종을 source/runtime 동일 바이트로 채택했다. 사용자가 사전 지적된 미세한 구도·가시성 차이를 수용했다. 데스크톱 16:9 교체 후 브라우저 QA와 권리·배포 확인은 대기며, 모바일은 범위 제외다.
 - `[구현, DEC-059]` N3~N5 도입은 `bgm_crisis`, 수렴~GOOD/NORMAL/BAD는 `bgm_ending`을 사용한다. 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백과 무음 완주를 유지한다.
 - `[구현, DEC-060]` `gray_wraith.weakened` 실파일 로딩에 실패하면 `normal` + CSS 균열 빛 파생으로 표시하고, normal도 실패하면 검은 presentation으로 강등한다. `attack/hit/death`는 미등록 상태다.
 - `[구현]` BGM controller는 기본 음량 `0.62`, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.

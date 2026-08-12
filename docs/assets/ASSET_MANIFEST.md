@@ -9,9 +9,9 @@
 - `ready`: 파일 존재·기본 규격 통과.
 - `approved`: 사람 QA·라이선스 확인까지 완료.
 
-`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 2장, 변신 컷 2장, BGM 5곡이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`이며, 생성 증빙·라이선스와 사람 시청각 QA가 남은 항목은 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
+`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04·08-13 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 2장, 변신 컷 2장, BGM 5곡이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`이며, 사용자가 2026-08-13 시각 후보 7종을 모두 채택했어도 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용을 확인하기 전에는 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 41개 파일, 총 `12,122,847 bytes`다.
+현재 `assets/runtime/`은 41개 파일, 총 `11,853,531 bytes`다.
 
 ## 이미지
 
@@ -35,24 +35,24 @@
 | `doyun.magical_attack` | `char_doyun_magical_attack.png` | 마법소녀 공격 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | battle p2 | 자동 규격 PASS, 장면 QA 대기 |
 | `doyun.magical_finish` | `char_doyun_magical_finish.png` | 마법소녀 마무리 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | battle p3 | 자동 규격 PASS, 장면 QA 대기 |
 | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 마법소녀 포즈 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 미확인 | 미확인 | N5 변신 결과·전투 후 수렴 | 자동 규격 PASS, 장면 QA 대기 |
-| `transform.cast` | `cut_transform_01.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | 미확인 | 엔진 고정 변신 연출 1번, DEC-016 | source/runtime 동일 바이트·200,470B·도윤이 전경의 무문자 사원증을 손에 들고 보이는 입으로 발화·주노 기도 자세·자동 계약 PASS. 사람 미술·권리 QA 대기, `approved` 아님 |
-| `transform.complete` | `cut_transform_02.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | 미확인 | 엔진 고정 변신 연출 2번, DEC-016 | source/runtime 동일 바이트·205,400B·뒷모습/반측면 완료 구성·자동 규격 PASS. 사람 합성·권리 QA 대기 |
+| `transform.cast` | `cut_transform_01.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | 미확인 | 엔진 고정 변신 연출 1번, DEC-016 | source/runtime 동일 바이트·229,306B·SHA-256 `43E98D673C2DF9989B929A5B4575763CE254248410DEEC02D616E7F2EF80FD74`. A2 사원증의 은백색 내부 별빛·파란 테두리와 야간 영창 장면. 2026-08-13 사용자 시각 채택; 권리·배포 QA 대기 |
+| `transform.complete` | `cut_transform_02.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | 미확인 | 엔진 고정 변신 연출 2번, DEC-016 | source/runtime 동일 바이트·209,748B·SHA-256 `113F777CAA7785171B9CC112175E5D7CCDB1B2CBAE96BC592FF166918C2CFD3A`. 일몰을 야간 완료 장면으로 교체. 2026-08-13 사용자 시각 채택; 권리·배포 QA 대기 |
 | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | GOOD 후속 컷 | 1920×1080 WebP | 700KB | 컷 가능 | planned | 미정 | 미확인 | GOOD 후속 훅·HIDDEN 재사용, DEC-032 | 얼굴·이름 비노출 검수 대기 |
 | `juno.climax` | `char_juno_climax.png` | 추가 포즈 | 1200×2000 PNG 투명 | 800KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
 | `bg_title` | `bg_title.webp` | 타이틀 배경 | 1920×1080 WebP | 500KB | 필수 | ready | 미확인 | 미확인 | title presentation | 210,992B. baked NHN/HACKATHON 문구·로고는 사용자 임시 승인 DEC-037. clean 교체·라이선스 QA 대기 |
-| `bg_office_wide` | `bg_office_wide.webp` | 메인 사무실 전경 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | N0 도입 beat | 174,438B. 인물 없음. N0 첫 문장 runtime 전환 QA PASS |
+| `bg_office_wide` | `bg_office_wide.webp` | 메인 사무실 전경 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | 미확인 | N0 도입 beat | 131,376B·SHA-256 `F404F46A15FBA0F6B884E6777D0B1858DD2B0C100E452E3DFB7152104E39AE5D`. 심사 핵심 팀이 남아 있는 심야 야근. 2026-08-13 사용자 시각 채택; 권리·배포 QA 대기 |
 | `bg_hall_day` | `bg_hall_day.webp` | 도윤 책상 1인칭 기본 | 1920×1080 WebP | 500KB | 필수 | ready | 미확인 | 미확인 | N0 심사, N2 | 176,244B. `BG-02` 4:3 원본 중앙 16:9 crop, 모니터·키보드·사원증 보존 및 runtime 전환 QA PASS |
 | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | 시간정지 책상 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | N1 | 130,218B. 자동 규격·runtime 전환 QA PASS |
-| `bg_hall_dark` | `bg_hall_dark.webp` 우선 → `bg_hall_day.webp` + scene recipe | 회색 침식 책상/파생 | 1920×1080 WebP 또는 CSS | 500KB/0 | 필수·폴백 가능 | ready | 외부 담당 + Codex 폴백 | 미확인/N/A | N3~N5 도입, 수렴; DEC-019·036 | 163,262B. 자동 규격·N2→N3·수렴 전환 QA PASS |
+| `bg_hall_dark` | `bg_hall_dark.webp` 우선 → `bg_hall_day.webp` + scene recipe | 회색 침식 책상/파생 | 1920×1080 WebP 또는 CSS | 500KB/0 | 필수·폴백 가능 | ready | Codex 내장 OpenAI 이미지 편집 + Codex 폴백 | 미확인/N/A | N3~N5 도입, 수렴; DEC-019·036 | 114,630B·SHA-256 `D0C3999651ADC8CDA35EDF24F0F433608FD690CF13FB01AA89FCC88E15160BE9`. 시간·인식이 멈춘 핵심 팀을 보호하는 야간 장면. 2026-08-13 시각 채택; 권리·배포 QA 대기 |
 | `bg_hall_good` | `bg_hall_good.webp` | GOOD 회복 책상 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | GOOD | 180,822B. 자동 규격·GOOD 1~5페이지 runtime QA PASS |
 | `bg_hall_normal` | `bg_hall_normal.webp` | NORMAL 부분 회복 책상 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | NORMAL | 135,792B. 자동 규격·dev ending 합성 QA PASS |
 | `bg_hall_bad` | `bg_hall_bad.webp` | BAD 회색 책상 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | BAD | 100,448B. 자동 규격·dev ending 합성 QA PASS |
 | `bg_desk_closeup` | `bg_desk_closeup.webp` | 데스크 클로즈업 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | N5 사원증·주문 게이트 | 206,318B. 자동 규격·주문 UI 가독성 QA PASS |
-| `bg_transform_space` | `bg_transform_space.webp` | 변신 추상 공간 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | N5 변신 결과 하부 | 316,250B. 자동 규격·변신 결과 runtime QA PASS. 변신 컷 대체 폴백 가능 |
-| `bg_battle_wide` | `bg_battle_wide.webp` | 전투 와이드 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | battle p1 | 210,512B. 자동 규격·도윤 실파일 합성 runtime QA PASS |
+| `bg_transform_space` | `bg_transform_space.webp` | 변신 추상 공간 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | 미확인 | N5 변신 결과 하부 | 283,142B·SHA-256 `D1BA348DCE1BA9C1258996376EA7E4830A33B579EF724263A779208CB4497011`. 야간 사무실 연속성. 2026-08-13 시각 채택; 권리·배포 QA 대기 |
+| `bg_battle_wide` | `bg_battle_wide.webp` | 전투 와이드 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | 미확인 | battle p1 | 142,878B·SHA-256 `622E8355ACD187B0029112B0A0F30F0D31A49C33C7D42AF2E26F2636042B235B`. 정지된 핵심 팀을 보호하는 야간 전투. 2026-08-13 시각 채택; 권리·배포 QA 대기 |
 | `bg_hall_void` | `bg_hall_void.webp` | 망령 전투 공간 | 1920×1080 WebP | 500KB | 필수 | ready | 미확인 | 미확인 | battle p2 | 131,940B. 자동 규격·도윤 실파일 합성 runtime QA PASS |
 | `bg_mind_archive` | `bg_mind_archive.webp` | N7 심리·아카이브 공간 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | battle p3 질문 beat | 126,264B. 자동 규격·질문 UI 가독성 runtime QA PASS |
-| `bg_battle_core` | `bg_battle_core.webp` | 회색 핵 최종전 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | 미확인 | 미확인 | battle p3 주문 beat | 200,006B. 자동 규격·주문 응답 전환 runtime QA PASS |
+| `bg_battle_core` | `bg_battle_core.webp` | 회색 핵 최종전 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | 미확인 | battle p3 주문 beat | 118,876B·SHA-256 `6AE173DD2C61306CD1DA740D6FD7DE92A0C638B90547B2589FC468EB7159AE8C`. 정지된 핵심 팀을 보호하는 야간 최종전. 2026-08-13 시각 채택; 권리·배포 QA 대기 |
 | `bg_corridor_day` | `bg_corridor_day.webp` | 밝은 복도 | 1920×1080 WebP | 500KB | 컷 가능 | ready | 미확인 | 미확인 | GOOD 후속 도입, HIDDEN 전환 | 126,688B. 자동 규격·GOOD 6페이지 runtime QA PASS |
 | `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | 검은빛 복도 | 1920×1080 WebP | 500KB | 컷 가능 | ready | 미확인 | 미확인 | GOOD 후속 검은빛, HIDDEN | 76,672B. 포스터 baked text 포함. GOOD 7페이지 runtime QA PASS |
 | `bg_lounge_day` | `bg_lounge_day.webp` | 배경 | 1920×1080 WebP | 500KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
@@ -71,7 +71,7 @@
 | 납품 원본 | 논리 ID | runtime 계약 파일 | 확정 장면 | 상태·폴백 |
 |---|---|---|---|---|
 | `title__bg00_nhn_hq_hackathon_2026_afternoon.png` | `bg_title` | `bg_title.webp` | 타이틀 | DEC-037 임시 승인·ready. clean 교체·라이선스 대기 |
-| `BG-01_메인_사무실_전경.png` | `bg_office_wide` | `bg_office_wide.webp` | N0 도입 | 야간 CSS grade; 실패 시 `bg_hall_day` |
+| `BG-01_메인_사무실_전경.png` | `bg_office_wide` | `bg_office_wide.webp` | N0 도입 | 2026-08-03 납품 원본은 2026-08-13 야간 재편집본으로 superseded; 실패 시 `bg_hall_day` |
 | `BG-02_도윤_책상_1인칭.png` | `bg_hall_day` | `bg_hall_day.webp` | N0 심사, N2 | 16:9 crop QA 필수 |
 | `BG-02A_시간정지.png` | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | N1 | 실패 시 `bg_hall_day` + CSS |
 | `BG-02B_회색침식.png` | `bg_hall_dark` | `bg_hall_dark.webp` | N3~N5 도입, 수렴 | 실패 시 `bg_hall_day` 파생 |
@@ -86,6 +86,12 @@
 | `BG-04B_회색핵_최종전.png` | `bg_battle_core` | `bg_battle_core.webp` | battle p3 주문 | 실패 시 `bg_hall_void` |
 | `BG-06_복도.png` | `bg_corridor_day` | `bg_corridor_day.webp` | GOOD 후속 도입, HIDDEN 전환 | 컷 가능. 없으면 검은 화면 전환 |
 | `BG-06A_검은빛_복도.png` | `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | GOOD 후속 검은빛, HIDDEN | 컷 가능. 포스터 text·검은 잔향 QA 대기 |
+
+### 2026-08-13 야근 연속성 재편집본 source/runtime
+
+- commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`에서 배경 5종의 source 대응본을 `assets/source/background/delivery/`에 추가했고 컷 2종은 `assets/source/p0-required-images/delivery/`를 교체했다. 위 현재 표의 7개 runtime과 각 source 대응본은 모두 동일 바이트다.
+- 모두 1920×1080 WebP이며 배경 5종은 500KiB 이하, 컷 2종은 700KiB 이하다. 배경은 FFmpeg Lanczos 중앙 crop·quality 82, 컷은 quality 84로 정규화했다.
+- 사용자가 사전에 지적된 작은 구도·가시성 차이를 인지하고 7종 모두를 시각 채택했다. 현재 상태는 `ready`며, 대체 후 데스크톱 16:9 브라우저 QA와 권리·배포 게이트는 대기다. 모바일은 제품 범위에서 제외했다.
 
 ### 2026-08-03 도윤 납품 추적
 

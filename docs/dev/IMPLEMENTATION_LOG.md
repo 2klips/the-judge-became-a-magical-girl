@@ -1394,3 +1394,35 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - 두 N5 화면의 가로 overflow는 0, Browser console error는 0이었다. debug overlay가 프리뷰 일부를 가리는 기존 현상은 재현됐지만 에셋·순서 판정에는 영향 없는 비차단 관찰이다.
 - 로컬 실제 플레이 주소는 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`, 직접 QA 주소는 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation`과 `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-transformation`이다. 모바일 `390×844` crop은 사용자 지시에 따라 이번 수정 범위에서 제외했고 CSS·코드는 변경하지 않았다.
 - 상태는 `ready`이며 `approved`가 아니다. 사람 미술 품질, 참조 이미지 권한, 생성 서비스 플랜과 공개 배포 허용 확인이 남아 있다. 세부 출처와 최종 hash는 [PROVENANCE.md](../assets/PROVENANCE.md)를 따른다.
+
+## 야근 스토리·장면 에셋 연속성 정렬
+
+- 작업일: 2026-08-13 KST
+- 상태: 스토리·자동 규격·회귀 PASS, 사용자 후보 7종 시각 채택. 교체 후 데스크톱 16:9 브라우저 QA·권리·배포 게이트 대기
+
+### 스토리 변경
+
+- commit `9a70392e8a6ff8a41d9e08146d71eb33586c7073`에서 `docs/심사역은_마법소녀가_되었다_완성대본_v2.md`, `public/scenario/scenario.json`, `tests/scenarioContinuity.test.ts`를 야근 연속성에 맞춰 변경했다.
+- commits `9443a93f136d8e311580185eb854abc64d87ab5a`·`caa7fc5267007dc35596139cc23ae50322c694f6`에서 `tests/scenarioContinuity.test.ts`의 야근 가드를 강화하고 의도한 범위로 한정했다.
+- 핵심 팀은 심야 야근 장소에 남고, 마법이 동료의 시간·인식을 멈춰 위험에서 보호한다. GOOD은 `멈췄던 시간이 다시 흐른다. 긴 밤 끝에 아침빛...`으로 야간에서 아침으로 연결한다.
+
+### 에셋 변경
+
+- commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5` `feat(assets): align late-night overtime scenes`.
+- `assets/runtime/bg/`의 `bg_office_wide.webp`, `bg_hall_dark.webp`, `bg_transform_space.webp`, `bg_battle_wide.webp`, `bg_battle_core.webp`를 교체하고, 동일 바이트 source를 `assets/source/background/delivery/`에 추가했다.
+- `assets/runtime/cut/`와 `assets/source/p0-required-images/delivery/`의 `cut_transform_01.webp`, `cut_transform_02.webp`를 교체했다. `tests/m5Assets.test.ts`는 7종 최종 hash·source/runtime 동일성·이전 리비전 거부를 검증하도록 갱신했다.
+- 논리 ID, catalog, CSS, 런타임 코드, 모바일은 변경하지 않았다. 해시·크기·source lineage는 [PROVENANCE.md](../assets/PROVENANCE.md)와 [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md)를 따른다.
+
+### TDD·검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| 채택 전 RED | 의도한 FAIL | focused 20 tests 중 6 cases 실패, 교체 필요 7 signals |
+| 채택 후 focused GREEN | PASS | 2 files, 20/20 tests |
+| 전체 테스트 | PASS | 42 files, 196/196 tests |
+| `npm run check` | PASS | TypeScript·정적 검사 성공 |
+| `npm run build` | PASS | production build 성공. 기존 500kB 초과 Transformers chunk advisory만 유지 |
+| diff check | PASS | 공백·patch 문제 없음 |
+| 교체 후 desktop browser | 대기 | 데스크톱 16:9 장면 실화면 QA는 아직 실행하지 않음. 모바일은 제품 범위 제외 |
+
+자동 검증과 사용자 시각 채택은 에셋을 `ready`로 쓸 근거지만 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 확인을 대체하지 않는다. M5 최종 완료로 판정하지 않는다.

@@ -12,6 +12,7 @@
 | 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격·runtime 합성 `ready`, 권리 승인 대기 |
 | 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 생성 서비스 플랜·앵커 권한·공개 사용 미확인 | normal 자동 규격·동일 바이트 `ready`; hit/attack/death 미등록 |
 | P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | 최초 commit `438f2f7`, `transform.cast` 최종 commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | 생성 서비스 플랜·참조 이미지 권한·공개 사용 미확인 | 자동 규격·동일 바이트 `ready`, 사람 장면·권리 QA 대기 |
+| 2026-08-13 야근 연속성 재편집 7종 | 배경 source `assets/source/background/delivery/`, 컷 source `assets/source/p0-required-images/delivery/` → runtime 동일 바이트 | commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`, 2026-08-13, Codex | Codex 내장 OpenAI `image_gen` 편집(정확한 모델·버전·작업 ID 미노출), FFmpeg Lanczos | 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 미확인 | 7종 사용자 시각 채택·자동 규격·동일 바이트 `ready`; 데스크톱 브라우저·권리 QA 대기 |
 | BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1, 현재 Pro 플랜 사용자 확인; 생성 당시 플랜·모델 미확인 | 생성 당시 계정 기록·약관 확인 대기 | 자동 규격·동일 바이트 `ready`, 사람 청각·권리 승인 대기 |
 
 ## 배경 원본
@@ -118,7 +119,25 @@
 | `assets/runtime/cut/cut_transform_01.webp` | 1920×1080 WebP, 200,470B | `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152` |
 | `assets/runtime/cut/cut_transform_02.webp` | 1920×1080 WebP, 205,400B | `1BBB807758BB978B6C97223E949EF91BF77CB456C30A68AE7E99E29611C32EB6` |
 
-각 source delivery 파일과 runtime 파일은 SHA-256이 일치한다. 기본 규격과 동일 바이트 검사를 통과해 `ready`이며, 사람 장면 합성·화풍·권리 QA 전에는 `approved`로 승격하지 않는다.
+위 컷 2종 표는 2026-08-11 채택 이력이며 commit `92ef1e2`에서 superseded됐다. `cut_transform_01`의 `A9AB42...D5152`는 이번 편집의 역사적 입력 base였고, 직전 current 229,404B 리비전과 같은 파일이 아니다.
+
+## 2026-08-13 야근 연속성 7종 최종 lineage
+
+- 각 기존 source/채택본을 Codex 내장 OpenAI `image_gen`으로 한 번씩 편집했다. 후보는 저장소 밖 `C:/Users/user/.codex/visualizations/2026/08/12/019ff64a-8a00-72e3-a26f-020f8215bbe6/late-night-team-overtime-candidates`에 생성됐다.
+- FFmpeg Lanczos 중앙 crop으로 1920×1080 WebP를 만들었다. 배경 quality 82, 컷 quality 84다. 텍스트·UI·로고를 baked하지 않았다.
+- 사용자가 2026-08-13 사전에 지적된 미세한 구도·가시성 차이를 수용하고 7종 모두를 시각 채택했다. 이 검토는 참조 권한·생성 서비스 플랜·공개 배포 허용을 증명하지 않으므로 상태는 `ready`다.
+
+| source ↔ runtime 동일 바이트 | 입력·편집 계보 | 규격·크기 | SHA-256 |
+|---|---|---|---|
+| `background/delivery/bg_office_wide.webp` ↔ `bg/bg_office_wide.webp` | 2026-08-03 배경을 심야 야근 핵심 팀 전경으로 편집 | 1920×1080 WebP, 131,376B | `F404F46A15FBA0F6B884E6777D0B1858DD2B0C100E452E3DFB7152104E39AE5D` |
+| `background/delivery/bg_hall_dark.webp` ↔ `bg/bg_hall_dark.webp` | 정지한 팀·마법적 인식 차단을 심야 장면으로 편집 | 1920×1080 WebP, 114,630B | `D0C3999651ADC8CDA35EDF24F0F433608FD690CF13FB01AA89FCC88E15160BE9` |
+| `background/delivery/bg_transform_space.webp` ↔ `bg/bg_transform_space.webp` | 변신 공간의 야간 연속성 강화 | 1920×1080 WebP, 283,142B | `D1BA348DCE1BA9C1258996376EA7E4830A33B579EF724263A779208CB4497011` |
+| `background/delivery/bg_battle_wide.webp` ↔ `bg/bg_battle_wide.webp` | 정지한 핵심 팀 보호 구도로 편집 | 1920×1080 WebP, 142,878B | `622E8355ACD187B0029112B0A0F30F0D31A49C33C7D42AF2E26F2636042B235B` |
+| `background/delivery/bg_battle_core.webp` ↔ `bg/bg_battle_core.webp` | 정지한 팀 보호·야간 최종전으로 편집 | 1920×1080 WebP, 118,876B | `6AE173DD2C61306CD1DA740D6FD7DE92A0C638B90547B2589FC468EB7159AE8C` |
+| `p0-required-images/delivery/cut_transform_01.webp` ↔ `cut/cut_transform_01.webp` | 역사적 base `A9AB42...D5152`를 편집. A2 사원증 은백색 내부 별빛·파란 테두리 유지 | 1920×1080 WebP, 229,306B | `43E98D673C2DF9989B929A5B4575763CE254248410DEEC02D616E7F2EF80FD74` |
+| `p0-required-images/delivery/cut_transform_02.webp` ↔ `cut/cut_transform_02.webp` | 일몰 변신 완료를 야간으로 편집 | 1920×1080 WebP, 209,748B | `113F777CAA7785171B9CC112175E5D7CCDB1B2CBAE96BC592FF166918C2CFD3A` |
+
+모든 lineage의 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용은 미확인이다. 자동 규격·source/runtime 동일성은 commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`에서 확인했고, 교체 후 데스크톱 16:9 브라우저 QA는 대기다.
 
 ## SFX source 인계
 
