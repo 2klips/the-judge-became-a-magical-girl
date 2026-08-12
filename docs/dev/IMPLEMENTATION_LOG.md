@@ -1398,7 +1398,7 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 ## 야근 스토리·장면 에셋 연속성 정렬
 
 - 작업일: 2026-08-13 KST
-- 상태: 스토리·자동 규격·회귀 PASS, 사용자 후보 7종 시각 채택. 교체 후 데스크톱 16:9 브라우저 QA·권리·배포 게이트 대기
+- 상태: 스토리·자동 규격·회귀·데스크톱 16:9 브라우저 QA PASS, 사용자 에셋 7종 시각 승인과 기존 검토 caveat 수용. 권리·서비스 플랜·공개 배포 게이트 대기
 
 ### 스토리 변경
 
@@ -1419,10 +1419,21 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 |---|---|---|
 | 채택 전 RED | 의도한 FAIL | focused 20 tests 중 6 cases 실패, 교체 필요 7 signals |
 | 채택 후 focused GREEN | PASS | 2 files, 20/20 tests |
-| 전체 테스트 | PASS | 42 files, 196/196 tests |
-| `npm run check` | PASS | TypeScript·정적 검사 성공 |
-| `npm run build` | PASS | production build 성공. 기존 500kB 초과 Transformers chunk advisory만 유지 |
+| `npm run check` | PASS | 최종 코드 HEAD `eae590a61f5db01c3a5fff9efcc5fb79a41a5d7e`에서 `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 42 files, 196 tests, duration 3.47s, exit 0 |
+| `npm run build` | PASS | Vite 8.2.0, 147 modules, built 2.60s, exit 0. 기존 `transformers.web-UeFc_ACU.js` 516.22 kB(gzip 148.38 kB) chunk >500 kB 경고만 비차단으로 유지 |
 | diff check | PASS | 공백·patch 문제 없음 |
-| 교체 후 desktop browser | 대기 | 데스크톱 16:9 장면 실화면 QA는 아직 실행하지 않음. 모바일은 제품 범위 제외 |
+| 교체 후 desktop browser | PASS | 1280×720 debug 프리뷰 7 routes·8 visual beats, 양축 overflow 0, route별 console warning/error 0. 모바일은 제품 범위 제외 |
 
-자동 검증과 사용자 시각 채택은 에셋을 `ready`로 쓸 근거지만 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 확인을 대체하지 않는다. M5 최종 완료로 판정하지 않는다.
+### 2026-08-13 최종 데스크톱 브라우저 QA
+
+- 최종 문서 commit 전 코드 HEAD `eae590a61f5db01c3a5fff9efcc5fb79a41a5d7e`의 로컬 dev server `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`에서 1280×720 debug 프리뷰를 검사했다.
+- 확인한 scene ID는 `n0-office`, `n3-wraith`, `n5-incantation`, `n5-transformation`, `battle-p1`, `battle-p3-spell`, `ending-good`이다. 7개 preview route이며 `n5-transformation`의 cast·complete 두 cut을 따로 확인해 시각 beat는 8개다.
+- 모든 route에서 `overflowX 0`, `overflowY 0`, route 확인 중 console warning/error `[]`였다. 관련 background·cut 이미지는 모두 complete·visible이었고 natural size는 1920×1080이었다. 기존 character sprite는 1200×2000을 유지했다.
+- `n0-office`는 불 켜진 모니터 책상에 동료가 남아 있는 심야 사무실, `n3-wraith`는 같은 야근 사무실 안의 회색 오염으로 보였다. `n5-incantation`은 `doyun.normal_shy` 평상복과 사원증 close-up을 유지했다.
+- `n5-transformation` 배경은 심야로 이어졌다. cast의 `cut_transform_01.webp`는 파란 테두리 사원증 안쪽에서 은은한 빛이 나고, complete의 `cut_transform_02.webp`는 깊은 밤의 변신 완료를 보여 두 cut 모두 순서대로 visible이었다.
+- `battle-p1`과 `battle-p3-spell`은 같은 심야 사무실을 유지했다. 멈춘 동료의 존재와 보호 의도가 읽히면서 중앙 전투 가독성도 유지됐다.
+- `ending-good`에서만 따뜻한 아침으로 바뀌어 밤에서 아침으로 넘어가는 payoff가 의도적으로 읽혔다.
+- 모바일은 검사하지 않았고 이번 범위 밖이다. 사용자는 2026-08-13 에셋 7종을 모두 시각 승인하고 기존 검토자의 caveat를 수용했다.
+
+자동 검증·데스크톱 QA·사용자 시각 승인은 에셋을 `ready`로 쓸 근거지만 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 확인을 대체하지 않는다. `approved`로 올리지 않으며 M5 또는 프로젝트 전체 완료로 판정하지 않는다.
