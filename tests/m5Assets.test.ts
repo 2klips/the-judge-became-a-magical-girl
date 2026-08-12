@@ -33,6 +33,21 @@ const confirmedBackgrounds = [
   "bg_transform_space",
 ] as const;
 
+const lateNightBackgrounds = [
+  "bg_office_wide.webp",
+  "bg_hall_dark.webp",
+  "bg_transform_space.webp",
+  "bg_battle_wide.webp",
+  "bg_battle_core.webp",
+] as const;
+
+const backgroundSourceDirectory = resolve(
+  "assets",
+  "source",
+  "background",
+  "delivery",
+);
+
 const runtimeDoyun = [
   "char_doyun_normal_tired.png",
   "char_doyun_normal_startled.png",
@@ -75,10 +90,19 @@ const runtimeP0Cuts = [
   "cut_transform_02.webp",
 ] as const;
 
-const supersededTransformCastSha256s = [
-  "507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D",
-  "A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152",
-] as const;
+const supersededTransformCutSha256s: Record<
+  (typeof runtimeP0Cuts)[number],
+  readonly string[]
+> = {
+  "cut_transform_01.webp": [
+    "507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D",
+    "A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152",
+    "DC59AF0B57FBBA6B0997BBBD284538B360BBA10713178C70318852FF2DB06ACF",
+  ],
+  "cut_transform_02.webp": [
+    "1BBB807758BB978B6C97223E949EF91BF77CB456C30A68AE7E99E29611C32EB6",
+  ],
+};
 
 const runtimeDiskPath = (assetPath: string): string =>
   resolve(process.cwd(), "assets", "runtime", assetPath.replace(/^assets\//, ""));
@@ -261,18 +285,35 @@ describe("M5 에셋 계약", () => {
         height: 1080,
       });
       expect(statSync(runtimePath).size, filename).toBeLessThanOrEqual(700 * 1024);
-      if (filename === "cut_transform_01.webp") {
-        const transformCastSha256 = createHash("sha256")
-          .update(runtimeFile)
-          .digest("hex")
-          .toUpperCase();
-        expect(
-          supersededTransformCastSha256s,
-          "transform.cast must use the approved A2 badge glow revision",
-        ).not.toContain(transformCastSha256);
-      }
+      const transformCutSha256 = createHash("sha256")
+        .update(runtimeFile)
+        .digest("hex")
+        .toUpperCase();
+      expect.soft(
+        supersededTransformCutSha256s[filename],
+        `${filename} must use the approved late-night continuity revision`,
+      ).not.toContain(transformCutSha256);
     }
   });
+
+  it.each(lateNightBackgrounds)(
+    "late-night backgrounds keep source/runtime identical and valid: %s",
+    (filename) => {
+      const sourceFile = readFileSync(
+        resolve(backgroundSourceDirectory, filename),
+      );
+      const runtimeFile = readFileSync(
+        resolve("assets", "runtime", "bg", filename),
+      );
+
+      expect(runtimeFile.equals(sourceFile), filename).toBe(true);
+      expect(readWebpDimensions(runtimeFile), filename).toEqual({
+        width: 1920,
+        height: 1080,
+      });
+      expect(runtimeFile.byteLength, filename).toBeLessThanOrEqual(500 * 1024);
+    },
+  );
 
   it("BGM runtime 5곡은 납품 source와 같은 파일이며 각각 3MB 이하다", () => {
     for (const filename of runtimeBgm) {
