@@ -4,7 +4,7 @@
     "type": "cutscene",
     "scene": { "bg": "bg_hall_day", "bgm": "bgm_daily" },
     "lines": [
-      { "speaker": "narration", "text": "늦은 밤, 마지막까지 남은 도윤의 모니터에 평가표가 이어진다." },
+      { "speaker": "narration", "text": "늦은 밤, 도윤과 동료들의 모니터에 평가표가 이어진다." },
       { "speaker": "narration", "text": "완성도는 양호하나 차별성이 부족함." },
       { "speaker": "narration", "text": "기존 작품과 유사한 경험을 제공함." },
       { "speaker": "narration", "text": "도윤은 같은 문장을 붙여 넣으려다 멈춘다." },
@@ -244,7 +244,7 @@
         "affinityDelta": 1,
         "setFlags": [],
         "npcEmotion": "neutral",
-        "offlineReply": "좋아, 주변에는 아무도 없어. 마음껏 외쳐!",
+        "offlineReply": "좋아, 다들 시간이 멈춰서 듣지 못해. 마음껏 외쳐!",
         "next": "n5_transform"
       }
     ],
@@ -488,6 +488,7 @@
     "endingId": "good",
     "lines": [
       { "speaker": "narration", "text": "GOOD — 한 번 더 플레이" },
+      { "speaker": "narration", "text": "멈췄던 시간이 다시 흐른다. 긴 밤 끝에 아침빛이 사무실로 들어온다." },
       { "speaker": "narration", "text": "도윤은 기존 평가를 지우고 작품을 다시 실행한다." },
       { "speaker": "narration", "text": "완성도는 부족하지만 전달하려는 즐거움이 분명함." },
       { "speaker": "narration", "text": "조금 더 플레이해 보고 싶음." },
