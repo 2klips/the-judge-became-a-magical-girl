@@ -53,13 +53,18 @@ describe("심사팀 야근 연속성", () => {
       "늦은 밤, 도윤과 동료들의 모니터에 평가표가 이어진다.",
     );
     expect(runtimeText).not.toContain("마지막까지 남은 도윤");
-    expectAdjacentLines(
+    const n0Lines = sectionLines(
       scriptLines,
+      "# N0. 반복되는 심사",
+      "# N1. 첫 번째 목소리",
+    );
+    expectAdjacentLines(
+      n0Lines,
       "시간이 흐르며 일부 빈자리가 생기지만,",
       "핵심 심사팀은 각자의 자리에서 계속 출품작을 확인한다.",
     );
-    expect(scriptLines).not.toContain("시간이 흐르며 한 명씩 자리를 비운다.");
-    expect(scriptLines).not.toContain("마지막에는 도윤의 자리 주변만 불이 켜져 있다.");
+    expect(n0Lines).not.toContain("시간이 흐르며 한 명씩 자리를 비운다.");
+    expect(n0Lines).not.toContain("마지막에는 도윤의 자리 주변만 불이 켜져 있다.");
   });
 
   it("N4 팀 루트에서 정지한 시간 때문에 동료들이 듣지 못한다고 설명한다", () => {
@@ -91,11 +96,15 @@ describe("심사팀 야근 연속성", () => {
       "# 엔딩 A. GOOD — 한 번 더 플레이",
       "# 엔딩 B. NORMAL — 한 번만 더",
     );
-    expectAdjacentLines(
-      goodLines,
+    const sceneHeadingIndex = goodLines.indexOf("## 장면");
+    expect(sceneHeadingIndex).toBeGreaterThanOrEqual(0);
+    const sceneContentLines = goodLines
+      .slice(sceneHeadingIndex + 1)
+      .filter((line) => line.length > 0);
+    expect(sceneContentLines.slice(0, 2)).toEqual([
       "멈췄던 시간이 다시 흐른다.",
       "긴 밤 끝에 아침빛이 사무실 안으로 들어온다.",
-    );
+    ]);
     expect(goodLines).not.toContain("아침빛이 사무실 안으로 들어온다.");
   });
 });
