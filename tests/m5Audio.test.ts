@@ -84,6 +84,90 @@ describe("M5 BGM 제어", () => {
     expect(channels[1]!.volume).toBe(0.2);
   });
 
+  it("play 완료 전에 error가 발생한 채널은 완료 뒤에도 현재 채널이 되지 않는다", async () => {
+    vi.useFakeTimers();
+    const channel = fakeChannel();
+    let finishPlay!: () => void;
+    let onError: (() => void) | null = null;
+    vi.mocked(channel.play).mockImplementation(
+      () => new Promise<void>((resolve) => {
+        finishPlay = resolve;
+      }),
+    );
+    vi.mocked(channel.addEventListener).mockImplementation((_type, listener) => {
+      onError = listener;
+    });
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const controller = new BgmController(() => channel, 600, null);
+
+    const playback = controller.play("bgm_daily");
+    const emitError = (): void => {
+      const listener = onError;
+      if (!listener) throw new Error("audio error listener가 등록되지 않았습니다.");
+      listener();
+    };
+    emitError();
+    finishPlay();
+    await playback;
+    await vi.advanceTimersByTimeAsync(600);
+
+    expect(channel.pause).toHaveBeenCalledOnce();
+    expect(channel.volume).toBe(0);
+  });
+
+  it("동시 play 완료 순서가 뒤집혀도 가장 최근 cue만 유지한다", async () => {
+    vi.useFakeTimers();
+    const channels = [fakeChannel(), fakeChannel()];
+    const finishPlay: Array<() => void> = [];
+    for (const channel of channels) {
+      vi.mocked(channel.play).mockImplementation(
+        () => new Promise<void>((resolve) => finishPlay.push(resolve)),
+      );
+    }
+    let index = 0;
+    const controller = new BgmController(() => channels[index++]!, 600, null);
+
+    const dailyPlayback = controller.play("bgm_daily");
+    const crisisPlayback = controller.play("bgm_crisis");
+    finishPlay[1]!();
+    await crisisPlayback;
+    await vi.advanceTimersByTimeAsync(600);
+    finishPlay[0]!();
+    await dailyPlayback;
+    await vi.advanceTimersByTimeAsync(600);
+
+    expect(channels[0]!.pause).toHaveBeenCalledOnce();
+    expect(channels[1]!.pause).not.toHaveBeenCalled();
+    expect(channels[1]!.volume).toBe(0.2);
+  });
+
+  it("현재 채널 error는 진행 중 fade를 즉시 취소한다", async () => {
+    vi.useFakeTimers();
+    const channels = [fakeChannel(), fakeChannel()];
+    const onError: Array<() => void> = [];
+    for (const channel of channels) {
+      vi.mocked(channel.addEventListener).mockImplementation((_type, listener) => {
+        onError.push(listener);
+      });
+    }
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    let index = 0;
+    const controller = new BgmController(() => channels[index++]!, 600, null);
+
+    await controller.play("bgm_daily");
+    await vi.advanceTimersByTimeAsync(600);
+    await controller.play("bgm_crisis");
+    await vi.advanceTimersByTimeAsync(100);
+    const volumeAtError = channels[1]!.volume;
+    onError[1]!();
+
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(600);
+    expect(channels[1]!.volume).toBe(volumeAtError);
+    expect(channels[0]!.pause).toHaveBeenCalledOnce();
+    expect(channels[1]!.pause).toHaveBeenCalledOnce();
+  });
+
   it("누락 BGM 로드 실패는 예외 대신 무음으로 계속하고 같은 경로를 재요청하지 않는다", async () => {
     const channel = fakeChannel();
     vi.mocked(channel.play).mockRejectedValueOnce(new Error("BGM 404"));

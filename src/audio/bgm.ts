@@ -88,6 +88,7 @@ export class BgmController {
   private ducked = false;
   private pendingAutoplay: { id: string; loop: boolean } | null = null;
   private autoplayListenerAttached = false;
+  private playbackGeneration = 0;
   private volume = BGM_DEFAULT_VOLUME;
   private muted = false;
 
@@ -99,6 +100,7 @@ export class BgmController {
   ) {}
 
   async play(logicalId: string, loop = true): Promise<void> {
+    const generation = ++this.playbackGeneration;
     if (this.current?.id === logicalId) {
       if (this.pendingAutoplay?.id !== logicalId) this.clearAutoplayRetry();
       return;
@@ -114,14 +116,22 @@ export class BgmController {
     next.src = assetUrl(relativePath);
     next.loop = loop;
     next.volume = 0;
+    let failed = false;
     next.addEventListener(
       "error",
       () => {
+        failed = true;
         reportAssetLoadFailure(logicalId, relativePath);
+        next.pause();
+        const wasLive = this.liveChannels.delete(next);
         if (this.current?.channel === next) {
-          next.pause();
-          this.liveChannels.delete(next);
+          this.cancelFade();
+          for (const channel of this.liveChannels) channel.pause();
+          this.liveChannels.clear();
           this.current = null;
+        } else if (wasLive) {
+          this.cancelFade();
+          if (this.current) this.current.channel.volume = this.targetVolume();
         }
       },
       { once: true },
@@ -130,7 +140,8 @@ export class BgmController {
     try {
       await next.play();
     } catch (error) {
-      next.pause();
+      if (!failed) next.pause();
+      if (failed || generation !== this.playbackGeneration) return;
       if (error instanceof DOMException && error.name === "NotAllowedError") {
         this.queueAutoplayRetry(logicalId, loop);
         return;
@@ -143,6 +154,11 @@ export class BgmController {
       return;
     }
 
+    if (failed || generation !== this.playbackGeneration) {
+      if (!failed) next.pause();
+      return;
+    }
+
     this.clearAutoplayRetry();
     this.liveChannels.add(next);
     const previous = this.current?.channel ?? null;
@@ -151,6 +167,7 @@ export class BgmController {
   }
 
   stop(): void {
+    this.playbackGeneration += 1;
     this.cancelFade();
     for (const channel of this.liveChannels) channel.pause();
     this.liveChannels.clear();
