@@ -251,7 +251,8 @@ export function createWorkerTranscriptionPort(
       const body = await readWorkerJson(response, "STT Worker");
       if (!response.ok) {
         const parsed = WorkerErrorSchema.safeParse(body);
-        throw new Error(parsed.success ? parsed.data.error : `STT 요청 실패 (${response.status})`);
+        const detail = parsed.success ? `: ${parsed.data.error}` : "";
+        throw new Error(`STT 요청 실패 (${response.status})${detail}`);
       }
       const transcript = WorkerTranscriptSchema.parse(body);
       return {
@@ -292,11 +293,8 @@ export function createWorkerRealtimeVoicePort(
       const body = await readWorkerJson(response, "Realtime Voice Worker");
       if (!response.ok) {
         const parsed = WorkerErrorSchema.safeParse(body);
-        throw new Error(
-          parsed.success
-            ? parsed.data.error
-            : `Realtime 음성 요청 실패 (${response.status})`,
-        );
+        const detail = parsed.success ? `: ${parsed.data.error}` : "";
+        throw new Error(`Realtime 음성 요청 실패 (${response.status})${detail}`);
       }
       const result = RealtimeVoiceResponseSchema.parse(body);
       const analysis: VoiceAnalysis =
@@ -383,7 +381,7 @@ export function formatVoiceInputError(failure: VoiceInputFailure): string {
     case "no-speech":
       return "녹음에서 목소리를 찾지 못했어.";
     case "recording":
-      return "녹음이 너무 짧아 음성을 처리하지 못했어.";
+      return "마이크 녹음을 처리하지 못했어.";
   }
 }
 
