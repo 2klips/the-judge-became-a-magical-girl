@@ -16,6 +16,11 @@ export type VoiceLevelResult = "acceptable" | "too-quiet" | "too-loud";
 export type VoiceLevelFailureDisposition = "retry" | "consume-turn";
 export type MicrophoneTestState = "waiting" | "too-quiet" | "too-loud" | "sampling" | "passed";
 
+export interface MicrophoneMeterPresentation {
+  readonly percent: number;
+  readonly tone: "quiet" | "good" | "loud";
+}
+
 const SILENCE_DBFS = -96;
 const SETUP_MINIMUM_RMS_DBFS = -48;
 const SETUP_MAXIMUM_RMS_DBFS = -7;
@@ -47,6 +52,21 @@ export function calculateAudioLevel(samples: Float32Array): AudioLevelMetrics {
 
 export function meterPercent(rmsDbfs: number): number {
   return Math.round(clamp(((rmsDbfs + 60) / 60) * 100, 0, 100));
+}
+
+export function resolveMicrophoneMeterPresentation(
+  metrics: AudioLevelMetrics,
+  state: MicrophoneTestState,
+): MicrophoneMeterPresentation {
+  return {
+    percent: meterPercent(metrics.rmsDbfs),
+    tone:
+      state === "too-loud"
+        ? "loud"
+        : state === "too-quiet" || state === "waiting"
+          ? "quiet"
+          : "good",
+  };
 }
 
 export function evaluateVoiceLevel(

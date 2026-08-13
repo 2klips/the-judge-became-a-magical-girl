@@ -25,8 +25,8 @@ import {
 } from "../dev/scenePreview";
 import { ClickInputPort } from "../input/click";
 import {
-  meterPercent,
   MicrophoneCalibrationAccumulator,
+  resolveMicrophoneMeterPresentation,
   type AudioLevelMetrics,
   type MicrophoneCalibration,
 } from "../input/audioLevel";
@@ -712,9 +712,10 @@ export class GameView {
       const now = performance.now();
       const state = accumulator.add(metrics, Math.min(100, Math.max(16, now - lastReadingAt)));
       lastReadingAt = now;
-      const percent = meterPercent(metrics.rmsDbfs);
-      meter.style.setProperty("--microphone-level", `${percent}%`);
-      meter.setAttribute("aria-valuenow", String(percent));
+      const presentation = resolveMicrophoneMeterPresentation(metrics, state);
+      meter.style.setProperty("--microphone-level", `${presentation.percent}%`);
+      meter.dataset.tone = presentation.tone;
+      meter.setAttribute("aria-valuenow", String(presentation.percent));
       dbOutput.textContent = `${metrics.rmsDbfs.toFixed(1)} dBFS`;
       setup.dataset.state = state;
       if (state === "too-quiet") {

@@ -1,10 +1,14 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   calculateAudioLevel,
   evaluateVoiceLevel,
   MicrophoneCalibrationAccumulator,
+  resolveMicrophoneMeterPresentation,
   resolveVoiceLevelFailure,
 } from "../src/input/audioLevel";
+
+const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
 const signal = (amplitude: number, length = 1_600): Float32Array =>
   Float32Array.from({ length }, (_, index) => Math.sin(index / 8) * amplitude);
@@ -72,5 +76,25 @@ describe("M5 마이크 레벨 계약", () => {
     expect(resolveVoiceLevelFailure(0)).toBe("retry");
     expect(resolveVoiceLevelFailure(1)).toBe("consume-turn");
     expect(resolveVoiceLevelFailure(2)).toBe("consume-turn");
+  });
+
+  it.each([
+    [-55, "too-quiet", "quiet"],
+    [-24, "sampling", "good"],
+    [-5, "too-loud", "loud"],
+  ] as const)("%d dBFS와 %s 판정을 %s meter tone으로 표시한다", (rmsDbfs, state, tone) => {
+    expect(
+      resolveMicrophoneMeterPresentation(
+        { rmsDbfs, peakDbfs: rmsDbfs, clippingRatio: 0 },
+        state,
+      ),
+    ).toMatchObject({ tone });
+  });
+
+  it("meter tone CSS만 사용하고 고정 red marker는 표시하지 않는다", () => {
+    expect(stylesSource).not.toMatch(/\.microphone-meter::after\s*\{/);
+    expect(stylesSource).toContain('.microphone-meter[data-tone="quiet"]');
+    expect(stylesSource).toContain('.microphone-meter[data-tone="good"]');
+    expect(stylesSource).toContain('.microphone-meter[data-tone="loud"]');
   });
 });

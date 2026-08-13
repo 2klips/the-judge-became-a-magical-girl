@@ -631,20 +631,24 @@ button {
     rgba(255, 255, 255, 0.05);
 }
 
-.microphone-meter::after {
-  position: absolute;
-  inset: 0 20% 0 auto;
-  width: 2px;
-  content: "";
-  background: rgba(255, 124, 124, 0.8);
-}
-
 .microphone-meter-fill {
   width: var(--microphone-level, 0%);
   height: 100%;
   background: linear-gradient(90deg, #62d6ff 0 58%, #ffe066 78%, #ff6f91 100%);
   box-shadow: 0 0 22px rgba(98, 214, 255, 0.28);
   transition: width 70ms linear;
+}
+
+.microphone-meter[data-tone="quiet"] .microphone-meter-fill {
+  background: #7da9c7;
+}
+
+.microphone-meter[data-tone="good"] .microphone-meter-fill {
+  background: #74c69d;
+}
+
+.microphone-meter[data-tone="loud"] .microphone-meter-fill {
+  background: #ef6f6c;
 }
 
 .microphone-readout {
