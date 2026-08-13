@@ -68,7 +68,7 @@ describe("GameState 중앙 갱신", () => {
     ).toBeNull();
   });
 
-  it("STT 실패 턴 5회째 음성에서 클릭 모드로 강등한다", () => {
+  it("STT가 두 번 실패한 턴만 한 번씩 기록해 다섯 번째 실패 턴에서 강등한다", () => {
     const data = loadFixtureData();
     let state: GameState = {
       ...createInitialGameState(data.config),
@@ -77,6 +77,7 @@ describe("GameState 중앙 갱신", () => {
 
     for (let failedTurn = 0; failedTurn < 4; failedTurn += 1) {
       state = recordSttTurnFailure(state).state;
+      expect(state.sttFailCount).toBe(failedTurn + 1);
       expect(state.inputMode).toBe("voice");
     }
     const fifthFailure = recordSttTurnFailure(state);

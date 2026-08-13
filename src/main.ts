@@ -31,6 +31,16 @@ import {
 } from "./input/audioLevel";
 import { BrowserMicrophoneTester } from "./input/microphoneSetup";
 import {
+  consumeDebugVoiceFailure,
+  createPendingDebugVoiceFailure,
+} from "./input/voiceFailureInjection";
+import {
+  clearVoiceFailureAttempts,
+  formatVoiceTurnFailureMessage,
+  resolveUnavailableVoiceFailure,
+  resolveVoiceTurnFailure,
+} from "./input/voiceTurnRecovery";
+import {
   createWorkerRealtimeVoicePort,
   createWorkerTranscriptionPort,
   formatVoiceInputError,
@@ -40,6 +50,7 @@ import {
   type OpenAiSttModel,
   type RealtimeVoiceRequest,
   type TranscriptionObservation,
+  type VoiceInputFailure,
 } from "./input/transcription";
 import {
   createDebugLlmPort,
@@ -140,6 +151,7 @@ async function bootstrap(): Promise<void> {
     let incantationAttempt = 1;
     let microphoneCalibration: MicrophoneCalibration | null = null;
     const battleVolumeFailures = new Map<string, number>();
+    const voiceFailureAttempts = new Map<string, number>();
     let renderCurrent: (inputNotice?: string, forceClickForTurn?: boolean) => void;
 
     handleDebugSttModelChange = (model): void => {
@@ -162,8 +174,73 @@ async function bootstrap(): Promise<void> {
       if (recentTurns.length > 6) recentTurns.splice(0, recentTurns.length - 6);
     };
 
-    const voiceCapture = (voice: RecordedVoiceTurnController) => ({
+    const resetVoiceFailureSession = (): void => {
+      clearVoiceFailureAttempts(voiceFailureAttempts);
+    };
+
+    const handleVoiceFailure = (
+      turnKey: string,
+      message: string,
+    ): { readonly forceClickForTurn: boolean; readonly forceGlobalClick: boolean } => {
+      const state = engine.getState();
+      const attempt = voiceFailureAttempts.get(turnKey) ?? 0;
+      const decision = resolveVoiceTurnFailure(attempt, state.sttFailCount);
+      if (!decision.countFailedTurn) {
+        voiceFailureAttempts.set(turnKey, decision.nextAttemptInTurn);
+        renderCurrent(formatVoiceTurnFailureMessage(message, "retry"));
+        return decision;
+      }
+      voiceFailureAttempts.delete(turnKey);
+      const failure = engine.recordSttTurnFailure();
+      if (failure.forcedClickMode || decision.forceGlobalClick) {
+        engine.setInputMode("click");
+        renderCurrent("음성 인식에 실패한 턴이 5회 누적돼 클릭 모드로 전환했어.");
+        return { ...decision, forceGlobalClick: true };
+      }
+      renderCurrent(formatVoiceTurnFailureMessage(message, "click"), true);
+      return decision;
+    };
+
+    const handleTypedVoiceFailure = (
+      turnKey: string,
+      failure: VoiceInputFailure,
+    ): void => {
+      const baseMessage = formatVoiceInputError(failure);
+      if (failure.kind === "permission" || failure.kind === "recording") {
+        const decision = resolveUnavailableVoiceFailure(
+          recordingSupported,
+          voiceFailureAttempts.get(turnKey) ?? 0,
+          engine.getState().sttFailCount,
+        );
+        if (decision.capabilityUnavailable) {
+          engine.setInputMode("click");
+          renderCurrent("이 브라우저에서는 음성 입력을 사용할 수 없어. 클릭으로 진행해 줘.");
+          return;
+        }
+      }
+      handleVoiceFailure(turnKey, baseMessage);
+    };
+
+    const pendingDebugVoiceFailure = createPendingDebugVoiceFailure(
+      window.location.search,
+      debugEnabled,
+      import.meta.env.DEV,
+    );
+
+    const consumeInjectedVoiceFailure = (turnKey: string): boolean => {
+      const failure = consumeDebugVoiceFailure(pendingDebugVoiceFailure);
+      if (!failure) return false;
+      sfx.play("recognition_fail");
+      handleTypedVoiceFailure(turnKey, failure);
+      return true;
+    };
+
+    const voiceCapture = (
+      voice: RecordedVoiceTurnController,
+      turnKey: string,
+    ) => ({
       startCapture: async (): Promise<void> => {
+        if (consumeInjectedVoiceFailure(turnKey)) return;
         bgm.setDucked(true);
         sfx.setSuppressed(true);
         try {
@@ -243,19 +320,23 @@ async function bootstrap(): Promise<void> {
     const renderIncantationNode = (
       node: CutsceneNode & { incantationGate: NonNullable<CutsceneNode["incantationGate"]> },
       notice?: string,
+      forceClickForTurn = false,
     ): void => {
       const state = engine.getState();
+      const incantationTurnKey = `incantation:${node.nodeId}:${incantationAttempt}`;
       const voice = createVoiceTurn(
         microphoneCalibration?.inputDeviceId,
         { mode: "transcript" },
       );
-      if (state.inputMode === "voice") activeVoice = voice;
+      if (state.inputMode === "voice" && !forceClickForTurn) activeVoice = voice;
       view.renderIncantation(node, state, {
         speechSupported: recordingSupported,
         attempt: incantationAttempt,
         notice,
-        ...voiceCapture(voice),
+        forceClickForTurn,
+        ...voiceCapture(voice, incantationTurnKey),
         onTranscript: async (transcript) => {
+          voiceFailureAttempts.delete(incantationTurnKey);
           const result = engine.submitIncantation(transcript, incantationAttempt);
           if (result.outcome === "retry") {
             incantationAttempt += 1;
@@ -268,15 +349,11 @@ async function bootstrap(): Promise<void> {
         },
         onFallback: () => showTransformationResult(node, engine.chooseIncantationFallback()),
         onTurnFailed: (failure) => {
-          const message = formatVoiceInputError(failure);
-          engine.recordSttTurnFailure();
-          engine.setInputMode("click");
-          renderCurrent(`${message} 주문 외우기 버튼으로 계속해 줘.`);
+          sfx.play("recognition_fail");
+          handleTypedVoiceFailure(incantationTurnKey, failure);
         },
         onUnavailable: (failure) => {
-          const message = formatVoiceInputError(failure);
-          engine.setInputMode("click");
-          renderCurrent(message);
+          handleTypedVoiceFailure(incantationTurnKey, failure);
         },
         onModeChange: (inputMode) => {
           engine.setInputMode(inputMode);
@@ -285,11 +362,16 @@ async function bootstrap(): Promise<void> {
       });
     };
 
-    const renderBattleNode = (node: BattleNode, notice?: string): void => {
+    const renderBattleNode = (
+      node: BattleNode,
+      notice?: string,
+      forceClickForTurn = false,
+    ): void => {
       const state = engine.getState();
       const battleState = engine.getBattleState();
       const phase = node.phases[battleState.phaseIndex];
       if (!phase) throw new Error("현재 battle phase를 찾을 수 없습니다.");
+      const battleTurnKey = `battle:${phase.phaseId}:${battleState.phaseTurn}`;
       const voice = createVoiceTurn(
         microphoneCalibration?.inputDeviceId,
         {
@@ -300,7 +382,7 @@ async function bootstrap(): Promise<void> {
           },
         },
       );
-      if (state.inputMode === "voice") activeVoice = voice;
+      if (state.inputMode === "voice" && !forceClickForTurn) activeVoice = voice;
 
       const playBattleActionSfx = (
         action: BattleAction,
@@ -374,6 +456,7 @@ async function bootstrap(): Promise<void> {
         audioLevel?: AudioLevelMetrics,
         observation?: TranscriptionObservation,
       ): Promise<void> => {
+        voiceFailureAttempts.delete(battleTurnKey);
         if (action === "spell") {
           if (audioLevel && microphoneCalibration) {
             const levelResult = evaluateVoiceLevel(audioLevel, microphoneCalibration);
@@ -508,7 +591,8 @@ async function bootstrap(): Promise<void> {
       view.renderBattle(node, phase, battleState, state, {
         speechSupported: recordingSupported,
         notice,
-        ...voiceCapture(voice),
+        forceClickForTurn,
+        ...voiceCapture(voice, battleTurnKey),
         onTranscript: handleBattleTranscript,
         onClickSpell: () =>
           applyAction(
@@ -526,16 +610,11 @@ async function bootstrap(): Promise<void> {
         onGuard: () =>
           applyAction({ kind: "guard" }, "버티기", "『계속 버틴다고 달라질까.』", phase.guardLine),
         onTurnFailed: (failure) => {
-          const message = formatVoiceInputError(failure);
           sfx.play("recognition_fail");
-          engine.recordSttTurnFailure();
-          engine.setInputMode("click");
-          renderCurrent(`${message} 클릭 행동으로 계속해 줘.`);
+          handleTypedVoiceFailure(battleTurnKey, failure);
         },
         onUnavailable: (failure) => {
-          const message = formatVoiceInputError(failure);
-          engine.setInputMode("click");
-          renderCurrent(message);
+          handleTypedVoiceFailure(battleTurnKey, failure);
         },
         onModeChange: (inputMode) => {
           engine.setInputMode(inputMode);
@@ -590,6 +669,23 @@ async function bootstrap(): Promise<void> {
       activeLlm = null;
       const node = engine.getCurrentNode();
       const state = engine.getState();
+      const currentVoiceTurnKey =
+        node.type === "dialogue"
+          ? `dialogue:${node.nodeId}:${state.nodeTurn}`
+          : node.type === "battle"
+            ? (() => {
+                const battleState = engine.getBattleState();
+                const phase = node.phases[battleState.phaseIndex];
+                return phase ? `battle:${phase.phaseId}:${battleState.phaseTurn}` : null;
+              })()
+            : node.type === "cutscene" &&
+                node.incantationGate &&
+                readyIncantationNodeId === node.nodeId
+              ? `incantation:${node.nodeId}:${incantationAttempt}`
+              : null;
+      for (const turnKey of voiceFailureAttempts.keys()) {
+        if (turnKey !== currentVoiceTurnKey) voiceFailureAttempts.delete(turnKey);
+      }
       if (node.scene.bgm) void bgm.play(node.scene.bgm);
       if (readyIncantationNodeId && readyIncantationNodeId !== node.nodeId) {
         readyIncantationNodeId = null;
@@ -654,7 +750,8 @@ async function bootstrap(): Promise<void> {
             },
           },
         );
-        if (state.inputMode === "voice") activeVoice = voice;
+        const dialogueTurnKey = `dialogue:${node.nodeId}:${state.nodeTurn}`;
+        if (state.inputMode === "voice" && !forceClickForTurn) activeVoice = voice;
 
         const applyFallback = (transcript: string, failureRecorded: boolean): boolean => {
           if (!failureRecorded) engine.recordLlmFailure();
@@ -670,6 +767,7 @@ async function bootstrap(): Promise<void> {
           transcript: string,
           observation?: TranscriptionObservation,
         ): Promise<boolean> => {
+          voiceFailureAttempts.delete(dialogueTurnKey);
           const local = engine.submitTranscript(transcript);
           if (local.kind === "matched") {
             rememberTurn(transcript, local.reply);
@@ -727,23 +825,14 @@ async function bootstrap(): Promise<void> {
           speechSupported: recordingSupported,
           notice: inputNotice,
           forceClickForTurn,
-          ...voiceCapture(voice),
+          ...voiceCapture(voice, dialogueTurnKey),
           onTranscript: handleTranscript,
           onTurnFailed: (failure) => {
-            const message = formatVoiceInputError(failure);
             sfx.play("recognition_fail");
-            const result = engine.recordSttTurnFailure();
-            if (result.forcedClickMode) {
-              engine.setInputMode("click");
-              renderCurrent("음성 인식 실패가 5회 누적돼 클릭 모드로 전환했어.");
-            } else {
-              renderCurrent(`${message} 이 턴은 클릭으로 진행해 줘.`, true);
-            }
+            handleTypedVoiceFailure(dialogueTurnKey, failure);
           },
           onUnavailable: (failure) => {
-            const message = formatVoiceInputError(failure);
-            engine.setInputMode("click");
-            renderCurrent(message);
+            handleTypedVoiceFailure(dialogueTurnKey, failure);
           },
           onModeChange: (inputMode) => {
             if (inputMode === "voice" && !recordingSupported) {
@@ -766,6 +855,7 @@ async function bootstrap(): Promise<void> {
               incantationGate: NonNullable<CutsceneNode["incantationGate"]>;
             },
             inputNotice,
+            forceClickForTurn,
           );
           return;
         }
@@ -782,7 +872,7 @@ async function bootstrap(): Promise<void> {
       }
 
       if (node.type === "battle") {
-        renderBattleNode(node, inputNotice);
+        renderBattleNode(node, inputNotice, forceClickForTurn);
         return;
       }
 
@@ -793,6 +883,7 @@ async function bootstrap(): Promise<void> {
         state,
         () => {
           recentTurns.length = 0;
+          resetVoiceFailureSession();
           engine.startNewGame(recordingSupported ? "voice" : "click");
           renderCurrent();
         },
@@ -812,11 +903,13 @@ async function bootstrap(): Promise<void> {
       onNewGame: (calibration) => {
         microphoneCalibration = calibration;
         recentTurns.length = 0;
+        resetVoiceFailureSession();
         engine.startNewGame("voice");
         renderCurrent();
       },
       onResume: (calibration) => {
         microphoneCalibration = calibration;
+        resetVoiceFailureSession();
         if (!loaded.state) engine.startNewGame();
         else engine.resume(loaded.state);
         if (engine.getState().inputMode === "voice" && !recordingSupported) {

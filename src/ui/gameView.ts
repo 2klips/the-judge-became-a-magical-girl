@@ -397,12 +397,33 @@ interface LineViewOptions {
 interface SharedVoiceOptions {
   speechSupported: boolean;
   notice?: string;
+  forceClickForTurn?: boolean;
   startCapture(): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
   onTurnFailed(failure: VoiceInputFailure): void;
   onUnavailable(failure: VoiceInputFailure): void;
   onModeChange(inputMode: InputMode): void;
+}
+
+export function resolveVoiceControlContract(
+  surface: "dialogue" | "incantation" | "battle",
+  inputMode: InputMode,
+  speechSupported: boolean,
+  forceClickForTurn: boolean,
+): {
+  readonly surface: "dialogue" | "incantation" | "battle";
+  readonly showVoiceCapture: boolean;
+  readonly showClickActions: boolean;
+  readonly showVoiceModeSwitch: boolean;
+} {
+  const showVoiceCapture = inputMode === "voice" && speechSupported && !forceClickForTurn;
+  return {
+    surface,
+    showVoiceCapture,
+    showClickActions: !showVoiceCapture,
+    showVoiceModeSwitch: !showVoiceCapture && speechSupported && !forceClickForTurn,
+  };
 }
 
 interface DebugSttOptions {
@@ -854,6 +875,12 @@ export class GameView {
     options: IncantationInputOptions,
   ): void {
     const gate = node.incantationGate;
+    const controlContract = resolveVoiceControlContract(
+      "incantation",
+      state.inputMode,
+      options.speechSupported,
+      options.forceClickForTurn ?? false,
+    );
     const shell = this.createShell(
       resolvePresentationBackground({
         kind: "node",
@@ -898,7 +925,7 @@ export class GameView {
     fallback.type = "button";
     fallback.addEventListener("click", options.onFallback, { once: true });
 
-    if (state.inputMode === "voice" && options.speechSupported) {
+    if (controlContract.showVoiceCapture) {
       const controls = element("div", "voice-controls");
       const ptt = element("button", "ptt-button", "누르고 주문 읽기 (T)");
       ptt.type = "button";
@@ -914,9 +941,9 @@ export class GameView {
         await options.onTranscript(transcript);
       });
       inputArea.append(utilities);
-    } else {
+    } else if (controlContract.showClickActions) {
       inputArea.append(fallback);
-      if (options.speechSupported) {
+      if (controlContract.showVoiceModeSwitch) {
         const voice = element("button", "secondary-button compact-input", "음성 입력으로 전환");
         voice.type = "button";
         voice.addEventListener("click", () => options.onModeChange("voice"), { once: true });
@@ -988,6 +1015,12 @@ export class GameView {
     state: GameState,
     options: BattleInputOptions,
   ): void {
+    const controlContract = resolveVoiceControlContract(
+      "battle",
+      state.inputMode,
+      options.speechSupported,
+      options.forceClickForTurn ?? false,
+    );
     const shell = this.createShell(
       resolvePresentationBackground({
         kind: "battle",
@@ -1012,7 +1045,7 @@ export class GameView {
     );
     if (options.notice) command.append(element("p", "input-notice", options.notice));
 
-    if (state.inputMode === "voice" && options.speechSupported) {
+    if (controlContract.showVoiceCapture) {
       const controls = element("div", "battle-actions");
       const spell = element("button", "ptt-button", "주문 · 누르고 말하기 (T)");
       const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 (T)");
@@ -1041,7 +1074,7 @@ export class GameView {
       clickMode.type = "button";
       clickMode.addEventListener("click", () => options.onModeChange("click"), { once: true });
       command.append(clickMode);
-    } else {
+    } else if (controlContract.showClickActions) {
       const choices = element("div", "choice-list battle-choice-list");
       const spell = element("button", "primary-button", "주문을 외친다");
       spell.type = "button";
@@ -1062,7 +1095,7 @@ export class GameView {
       guard.addEventListener("click", options.onGuard, { once: true });
       choices.append(guard);
       command.append(choices);
-      if (options.speechSupported) {
+      if (controlContract.showVoiceModeSwitch) {
         const voice = element("button", "secondary-button compact-input", "음성 입력으로 전환");
         voice.type = "button";
         voice.addEventListener("click", () => options.onModeChange("voice"), { once: true });
@@ -1180,6 +1213,12 @@ export class GameView {
     onSelect: (intentId: string) => void,
     inputOptions: DialogueInputOptions,
   ): void {
+    const controlContract = resolveVoiceControlContract(
+      "dialogue",
+      state.inputMode,
+      inputOptions.speechSupported,
+      inputOptions.forceClickForTurn ?? false,
+    );
     const shell = this.createShell(
       resolvePresentationBackground({
         kind: "node",
@@ -1205,20 +1244,16 @@ export class GameView {
     const inputArea = element("section", "dialogue-input");
     inputArea.dataset.inputMode = state.inputMode;
     panel.append(inputArea);
-    if (
-      state.inputMode === "voice" &&
-      inputOptions.speechSupported &&
-      !inputOptions.forceClickForTurn
-    ) {
+    if (controlContract.showVoiceCapture) {
       this.renderVoiceInput(inputArea, node, onSelect, inputOptions);
-    } else {
+    } else if (controlContract.showClickActions) {
       this.renderClickInput(
         inputArea,
         node,
         onSelect,
         inputOptions,
         inputOptions.notice,
-        !inputOptions.forceClickForTurn,
+        controlContract.showVoiceModeSwitch,
       );
     }
 

@@ -158,7 +158,7 @@ describe("M3 선택형 STT", () => {
     expect(formatVoiceInputError(failure)).toBe("음성 서버에 연결하지 못했어.");
   });
 
-  it("세 surface의 finished/start callback 모두 typed failure만 안전하게 format한다", () => {
+  it("세 surface의 finished/start callback 모두 typed failure를 공통 adapter로 보낸다", () => {
     const mainSource = readFileSync(new URL("../src/main.ts", import.meta.url), "utf8");
     const section = (start: string, end: string): string => {
       const startIndex = mainSource.indexOf(start);
@@ -168,21 +168,41 @@ describe("M3 선택형 STT", () => {
       return mainSource.slice(startIndex, endIndex);
     };
     const surfaces = [
-      section("const renderIncantationNode", "const renderBattleNode"),
-      section("const renderBattleNode", "renderCurrent ="),
-      section("view.renderDialogue(node", 'if (node.type === "cutscene")'),
+      {
+        source: section("const renderIncantationNode", "const renderBattleNode"),
+        turnKey: "incantationTurnKey",
+      },
+      {
+        source: section("const renderBattleNode", "renderCurrent ="),
+        turnKey: "battleTurnKey",
+      },
+      {
+        source: section("view.renderDialogue(node", 'if (node.type === "cutscene")'),
+        turnKey: "dialogueTurnKey",
+      },
     ];
 
-    for (const surface of surfaces) {
-      expect(surface).toMatch(
-        /onTurnFailed: \(failure\) => \{[\s\S]*?formatVoiceInputError\(failure\)/,
+    for (const { source, turnKey } of surfaces) {
+      expect(source).toMatch(
+        new RegExp(
+          `onTurnFailed: \\(failure\\) => \\{[^}]*handleTypedVoiceFailure\\(${turnKey}, failure\\)`,
+        ),
       );
-      expect(surface).toMatch(
-        /onUnavailable: \(failure\) => \{[\s\S]*?formatVoiceInputError\(failure\)/,
+      expect(source).toMatch(
+        new RegExp(
+          `onUnavailable: \\(failure\\) => \\{[^}]*handleTypedVoiceFailure\\(${turnKey}, failure\\)`,
+        ),
       );
-      expect(surface).not.toMatch(
-        /failure\.debugMessage|renderCurrent\(failure\)|\$\{failure\}/,
+      expect(source).not.toMatch(
+        /formatVoiceInputError\(failure\)|failure\.debugMessage|renderCurrent\(failure\)|\$\{failure\}/,
       );
     }
+
+    const adapter = section(
+      "const handleTypedVoiceFailure",
+      "const pendingDebugVoiceFailure",
+    );
+    expect(adapter.match(/formatVoiceInputError\(failure\)/g)).toHaveLength(1);
+    expect(adapter).not.toMatch(/failure\.debugMessage|renderCurrent\(failure\)|\$\{failure\}/);
   });
 });

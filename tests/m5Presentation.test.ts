@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { EndingNode } from "../src/data/schema";
 import {
@@ -16,11 +17,22 @@ import {
   resolveSceneBrand,
   resolveSttModelControlVisibility,
   resolveVoiceInputPresentation,
+  resolveVoiceControlContract,
   TYPEWRITER_BASE_DELAY_MS,
   typewriterDelayFor,
   VOICE_PROCESSING_LABEL,
   VOICE_TITLE_SUBTITLE,
 } from "../src/ui/gameView";
+
+const gameViewSource = readFileSync(new URL("../src/ui/gameView.ts", import.meta.url), "utf8");
+
+function rendererSection(start: string, end: string): string {
+  const startIndex = gameViewSource.indexOf(start);
+  const endIndex = gameViewSource.indexOf(end, startIndex + start.length);
+  expect(startIndex, start).toBeGreaterThanOrEqual(0);
+  expect(endIndex, end).toBeGreaterThan(startIndex);
+  return gameViewSource.slice(startIndex, endIndex);
+}
 
 describe("M5 장면 표시 계약", () => {
   it("누락 외부 이미지는 UI를 보존하는 검은 presentation으로 표시한다", () => {
@@ -118,6 +130,48 @@ describe("M5 장면 표시 계약", () => {
       showStatusRegion: false,
     });
     expect(VOICE_PROCESSING_LABEL).toBe("목소리 전달 중…");
+  });
+
+  it("dialogue 현재 턴 강제 클릭은 선택지만 보이고 음성 복귀를 숨긴다", () => {
+    expect(resolveVoiceControlContract("dialogue", "voice", true, true)).toEqual({
+      surface: "dialogue",
+      showVoiceCapture: false,
+      showClickActions: true,
+      showVoiceModeSwitch: false,
+    });
+    const renderer = rendererSection("renderDialogue(", "renderDialogueReply(");
+    expect(renderer).toMatch(/resolveVoiceControlContract\(\s*"dialogue"/);
+    expect(renderer).toMatch(/controlContract\.showVoiceCapture/);
+    expect(renderer).toMatch(/controlContract\.showClickActions/);
+    expect(renderer).toMatch(/controlContract\.showVoiceModeSwitch/);
+  });
+
+  it("incantation 현재 턴 강제 클릭은 주문 버튼만 보이고 음성 복귀를 숨긴다", () => {
+    expect(resolveVoiceControlContract("incantation", "voice", true, true)).toEqual({
+      surface: "incantation",
+      showVoiceCapture: false,
+      showClickActions: true,
+      showVoiceModeSwitch: false,
+    });
+    const renderer = rendererSection("renderIncantation(", "renderTransformationResult(");
+    expect(renderer).toMatch(/resolveVoiceControlContract\(\s*"incantation"/);
+    expect(renderer).toMatch(/controlContract\.showVoiceCapture/);
+    expect(renderer).toMatch(/controlContract\.showClickActions/);
+    expect(renderer).toMatch(/controlContract\.showVoiceModeSwitch/);
+  });
+
+  it("battle 현재 턴 강제 클릭은 행동 버튼만 보이고 음성 복귀를 숨긴다", () => {
+    expect(resolveVoiceControlContract("battle", "voice", true, true)).toEqual({
+      surface: "battle",
+      showVoiceCapture: false,
+      showClickActions: true,
+      showVoiceModeSwitch: false,
+    });
+    const renderer = rendererSection("renderBattle(", "renderBattleReply(");
+    expect(renderer).toMatch(/resolveVoiceControlContract\(\s*"battle"/);
+    expect(renderer).toMatch(/controlContract\.showVoiceCapture/);
+    expect(renderer).toMatch(/controlContract\.showClickActions/);
+    expect(renderer).toMatch(/controlContract\.showVoiceModeSwitch/);
   });
 
   it("ending 본문 뒤에 현재 전투 등급의 추가 대사만 붙인다", () => {
