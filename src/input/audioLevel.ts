@@ -58,13 +58,14 @@ export function resolveMicrophoneMeterPresentation(
   metrics: AudioLevelMetrics,
   state: MicrophoneTestState,
 ): MicrophoneMeterPresentation {
+  const currentLevel = evaluateMicrophoneTestSample(metrics);
   return {
     percent: meterPercent(metrics.rmsDbfs),
     tone:
-      state === "too-loud"
-        ? "loud"
-        : state === "too-quiet" || state === "waiting"
-          ? "quiet"
+      state === "waiting" || currentLevel === "too-quiet"
+        ? "quiet"
+        : currentLevel === "too-loud"
+          ? "loud"
           : "good",
   };
 }
@@ -98,15 +99,12 @@ export class MicrophoneCalibrationAccumulator {
   add(metrics: AudioLevelMetrics, durationMs: number): MicrophoneTestState {
     if (this.latestState === "passed") return this.latestState;
     if (!Number.isFinite(durationMs) || durationMs <= 0) return this.latestState;
-    if (
-      metrics.rmsDbfs > SETUP_MAXIMUM_RMS_DBFS ||
-      metrics.peakDbfs > MAXIMUM_PEAK_DBFS ||
-      metrics.clippingRatio > MAXIMUM_CLIPPING_RATIO
-    ) {
+    const currentLevel = evaluateMicrophoneTestSample(metrics);
+    if (currentLevel === "too-loud") {
       this.latestState = "too-loud";
       return this.latestState;
     }
-    if (metrics.rmsDbfs < SETUP_MINIMUM_RMS_DBFS) {
+    if (currentLevel === "too-quiet") {
       this.latestState = this.acceptedDurationMs > 0 ? "sampling" : "too-quiet";
       return this.latestState;
     }
@@ -141,6 +139,17 @@ export class MicrophoneCalibrationAccumulator {
 function amplitudeToDbfs(amplitude: number): number {
   if (amplitude <= 0) return SILENCE_DBFS;
   return Math.max(SILENCE_DBFS, 20 * Math.log10(amplitude));
+}
+
+function evaluateMicrophoneTestSample(metrics: AudioLevelMetrics): VoiceLevelResult {
+  if (
+    metrics.rmsDbfs > SETUP_MAXIMUM_RMS_DBFS ||
+    metrics.peakDbfs > MAXIMUM_PEAK_DBFS ||
+    metrics.clippingRatio > MAXIMUM_CLIPPING_RATIO
+  ) {
+    return "too-loud";
+  }
+  return metrics.rmsDbfs < SETUP_MINIMUM_RMS_DBFS ? "too-quiet" : "acceptable";
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

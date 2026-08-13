@@ -476,6 +476,16 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+export function resetMicrophoneMeterPresentation(
+  meter: Pick<HTMLElement, "style" | "dataset" | "setAttribute">,
+  dbOutput: Pick<HTMLOutputElement, "textContent">,
+): void {
+  meter.style.setProperty("--microphone-level", "0%");
+  meter.dataset.tone = "quiet";
+  meter.setAttribute("aria-valuenow", "0");
+  dbOutput.textContent = "-∞ dBFS";
+}
+
 function isEditableKeyboardTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
@@ -747,6 +757,7 @@ export class GameView {
       if (resumeButton) resumeButton.disabled = true;
       connectButton.disabled = true;
       deviceSelect.disabled = true;
+      resetMicrophoneMeterPresentation(meter, dbOutput);
       setup.dataset.state = "connecting";
       status.textContent = "마이크 권한과 입력 장치를 확인하고 있어요…";
       progressOutput.textContent = "연결 중";
