@@ -38,9 +38,12 @@ import type {
   OpenAiSttModel,
   RecordedVoiceResult,
   TranscriptionObservation,
+  VoiceInputFailure,
 } from "../input/transcription";
-import { OpenAiSttModelSchema } from "../input/transcription";
-import { formatVoiceInputError } from "../input/transcription";
+import {
+  classifyVoiceInputError,
+  OpenAiSttModelSchema,
+} from "../input/transcription";
 import {
   PushToTalkShortcutController,
   type PushToTalkShortcutBinding,
@@ -373,8 +376,8 @@ export interface DialogueInputOptions {
     transcript: string,
     observation?: TranscriptionObservation,
   ): Promise<boolean>;
-  onTurnFailed(message: string): void;
-  onUnavailable(message: string): void;
+  onTurnFailed(failure: VoiceInputFailure): void;
+  onUnavailable(failure: VoiceInputFailure): void;
   onModeChange(inputMode: InputMode): void;
 }
 
@@ -397,8 +400,8 @@ interface SharedVoiceOptions {
   startCapture(): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
-  onTurnFailed(message: string): void;
-  onUnavailable(message: string): void;
+  onTurnFailed(failure: VoiceInputFailure): void;
+  onUnavailable(failure: VoiceInputFailure): void;
   onModeChange(inputMode: InputMode): void;
 }
 
@@ -2018,7 +2021,7 @@ export class GameView {
       } catch (error) {
         capturing = false;
         setPttButtonState(ptt, "idle");
-        options.onUnavailable(microphoneErrorMessage(error));
+        options.onUnavailable(classifyVoiceInputError(error));
       }
     };
     const stopCapture = async (): Promise<void> => {
@@ -2084,9 +2087,8 @@ export class GameView {
       return;
     }
     if (result.kind === "error") {
-      const message = formatVoiceInputError(result.error);
       setPttButtonState(button, "idle");
-      options.onTurnFailed(message);
+      options.onTurnFailed(result.failure);
       return;
     }
     setPttButtonState(button, "idle");
@@ -2113,7 +2115,7 @@ export class GameView {
       } catch (error) {
         capturing = false;
         setPttButtonState(button, "idle");
-        options.onUnavailable(microphoneErrorMessage(error));
+        options.onUnavailable(classifyVoiceInputError(error));
       }
     };
     const finish = async (): Promise<void> => {
@@ -2122,9 +2124,8 @@ export class GameView {
       setPttButtonState(button, "processing");
       const result = await options.finishCapture();
       if (result.kind === "error") {
-        const message = formatVoiceInputError(result.error);
         setPttButtonState(button, "idle");
-        options.onTurnFailed(message);
+        options.onTurnFailed(result.failure);
         return;
       }
       if (result.kind === "cancelled") {
@@ -2269,13 +2270,6 @@ export class GameView {
     });
     container.append(form);
   }
-}
-
-function microphoneErrorMessage(error: unknown): string {
-  if (error instanceof DOMException && error.name === "NotAllowedError") {
-    return "마이크 권한이 거부됐어. 클릭 모드로 계속할게.";
-  }
-  return "마이크 녹음을 시작할 수 없어. 클릭 모드로 계속할게.";
 }
 
 function microphoneSetupErrorMessage(error: unknown): string {

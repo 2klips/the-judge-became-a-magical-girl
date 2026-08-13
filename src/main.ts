@@ -33,6 +33,7 @@ import { BrowserMicrophoneTester } from "./input/microphoneSetup";
 import {
   createWorkerRealtimeVoicePort,
   createWorkerTranscriptionPort,
+  formatVoiceInputError,
   RecordedVoiceTurnController,
   resolveOpenAiSttModel,
   sttSampleRate,
@@ -266,12 +267,14 @@ async function bootstrap(): Promise<void> {
           showTransformationResult(node, result);
         },
         onFallback: () => showTransformationResult(node, engine.chooseIncantationFallback()),
-        onTurnFailed: (message) => {
+        onTurnFailed: (failure) => {
+          const message = formatVoiceInputError(failure);
           engine.recordSttTurnFailure();
           engine.setInputMode("click");
           renderCurrent(`${message} 주문 외우기 버튼으로 계속해 줘.`);
         },
-        onUnavailable: (message) => {
+        onUnavailable: (failure) => {
+          const message = formatVoiceInputError(failure);
           engine.setInputMode("click");
           renderCurrent(message);
         },
@@ -522,13 +525,15 @@ async function bootstrap(): Promise<void> {
           ),
         onGuard: () =>
           applyAction({ kind: "guard" }, "버티기", "『계속 버틴다고 달라질까.』", phase.guardLine),
-        onTurnFailed: (message) => {
+        onTurnFailed: (failure) => {
+          const message = formatVoiceInputError(failure);
           sfx.play("recognition_fail");
           engine.recordSttTurnFailure();
           engine.setInputMode("click");
           renderCurrent(`${message} 클릭 행동으로 계속해 줘.`);
         },
-        onUnavailable: (message) => {
+        onUnavailable: (failure) => {
+          const message = formatVoiceInputError(failure);
           engine.setInputMode("click");
           renderCurrent(message);
         },
@@ -724,17 +729,19 @@ async function bootstrap(): Promise<void> {
           forceClickForTurn,
           ...voiceCapture(voice),
           onTranscript: handleTranscript,
-          onTurnFailed: (message) => {
+          onTurnFailed: (failure) => {
+            const message = formatVoiceInputError(failure);
             sfx.play("recognition_fail");
-            const failure = engine.recordSttTurnFailure();
-            if (failure.forcedClickMode) {
+            const result = engine.recordSttTurnFailure();
+            if (result.forcedClickMode) {
               engine.setInputMode("click");
               renderCurrent("음성 인식 실패가 5회 누적돼 클릭 모드로 전환했어.");
             } else {
               renderCurrent(`${message} 이 턴은 클릭으로 진행해 줘.`, true);
             }
           },
-          onUnavailable: (message) => {
+          onUnavailable: (failure) => {
+            const message = formatVoiceInputError(failure);
             engine.setInputMode("click");
             renderCurrent(message);
           },

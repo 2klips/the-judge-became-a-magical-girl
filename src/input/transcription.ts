@@ -42,6 +42,20 @@ export interface TranscriptionPort {
   transcribe(audio: Blob, signal: AbortSignal): Promise<TranscriptionObservation>;
 }
 
+export type VoiceFailureKind =
+  | "recording"
+  | "permission"
+  | "network"
+  | "timeout"
+  | "http"
+  | "schema"
+  | "no-speech";
+
+export interface VoiceInputFailure {
+  readonly kind: VoiceFailureKind;
+  readonly debugMessage: string;
+}
+
 export type RecordedVoiceResult =
   | {
       kind: "transcript";
@@ -50,7 +64,7 @@ export type RecordedVoiceResult =
       observation: TranscriptionObservation;
     }
   | { kind: "cancelled" }
-  | { kind: "error"; error: Error };
+  | { kind: "error"; failure: VoiceInputFailure };
 
 interface WorkerTranscriptionOptions {
   provider: SttProviderId;
@@ -180,7 +194,12 @@ export class RecordedVoiceTurnController {
       const observation = await this.transcription.transcribe(audio.wavBlob, controller.signal);
       const transcript = observation.text.trim();
       if (requestId !== this.requestId) return { kind: "cancelled" };
-      if (!transcript) return { kind: "error", error: new Error("전사문이 비어 있습니다.") };
+      if (!transcript) {
+        return {
+          kind: "error",
+          failure: classifyVoiceInputError(new Error("전사문이 비어 있습니다.")),
+        };
+      }
       return {
         kind: "transcript",
         transcript,
@@ -189,7 +208,7 @@ export class RecordedVoiceTurnController {
       };
     } catch (error) {
       if (requestId !== this.requestId || controller.signal.aborted) return { kind: "cancelled" };
-      return { kind: "error", error: toError(error) };
+      return { kind: "error", failure: classifyVoiceInputError(error) };
     } finally {
       if (this.abortController === controller) this.abortController = undefined;
       if (requestId === this.requestId) this.active = false;
@@ -323,11 +342,49 @@ export function sttProviderLabel(provider: SttProviderId): string {
   return provider === "openai" ? "GPT" : "Gemini";
 }
 
-export function formatVoiceInputError(error: Error): string {
-  if (/unable to decode audio data/i.test(error.message)) {
-    return "녹음이 너무 짧아 음성을 처리하지 못했어. 버튼이나 T 키를 누른 채 말해 줘.";
+export function classifyVoiceInputError(error: unknown): VoiceInputFailure {
+  const value = toError(error);
+  const message = value.message.trim();
+  if (value instanceof DOMException && value.name === "NotAllowedError") {
+    return { kind: "permission", debugMessage: message };
   }
-  return error.message.trim() || "음성을 처리하지 못했어. 한 번 더 시도해 줘.";
+  if (/unable to decode audio data/i.test(message)) {
+    return { kind: "recording", debugMessage: message };
+  }
+  if (/전사문이 비어|no speech/i.test(message)) {
+    return { kind: "no-speech", debugMessage: message };
+  }
+  if (/timeout|시간 초과/i.test(message)) {
+    return { kind: "timeout", debugMessage: message };
+  }
+  if (/failed to fetch|networkerror|network request failed/i.test(message)) {
+    return { kind: "network", debugMessage: message };
+  }
+  if (/요청 실패 \([45][0-9]{2}\)/i.test(message)) {
+    return { kind: "http", debugMessage: message };
+  }
+  if (/응답이 JSON이 아닙니다|zod|invalid.*response|schema/i.test(message)) {
+    return { kind: "schema", debugMessage: message };
+  }
+  return { kind: "recording", debugMessage: message };
+}
+
+export function formatVoiceInputError(failure: VoiceInputFailure): string {
+  switch (failure.kind) {
+    case "permission":
+      return "마이크 권한을 사용할 수 없어.";
+    case "network":
+    case "http":
+      return "음성 서버에 연결하지 못했어.";
+    case "timeout":
+      return "음성 처리가 예상보다 오래 걸렸어.";
+    case "schema":
+      return "음성 서버 응답 형식을 확인하지 못했어.";
+    case "no-speech":
+      return "녹음에서 목소리를 찾지 못했어.";
+    case "recording":
+      return "녹음이 너무 짧아 음성을 처리하지 못했어.";
+  }
 }
 
 async function fetchWithTimeout(

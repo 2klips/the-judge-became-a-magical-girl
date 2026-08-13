@@ -81,4 +81,28 @@ describe("M3 release 기반 녹음", () => {
     await expect(result).resolves.toEqual({ kind: "cancelled" });
     expect(recording.cancel).toHaveBeenCalledTimes(1);
   });
+
+  it("전사 오류를 raw Error 대신 typed failure로 반환한다", async () => {
+    const recording: PttRecordingPort = {
+      start: vi.fn(async () => undefined),
+      stop: vi.fn(async () => ({
+        wavBlob: new Blob(["voice"], { type: "audio/wav" }),
+        level,
+      })),
+      cancel: vi.fn(),
+    };
+    const transcription: TranscriptionPort = {
+      provider: "openai",
+      transcribe: vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+    };
+    const controller = new RecordedVoiceTurnController(recording, transcription);
+
+    await controller.press();
+    await expect(controller.release()).resolves.toMatchObject({
+      kind: "error",
+      failure: { kind: "network" },
+    });
+  });
 });

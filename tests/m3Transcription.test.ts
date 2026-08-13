@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
+  classifyVoiceInputError,
   createWorkerTranscriptionPort,
   formatVoiceInputError,
   resolveSttProvider,
@@ -76,8 +78,34 @@ describe("M3 선택형 STT", () => {
   });
 
   it("너무 짧은 녹음의 브라우저 디코드 오류를 한국어로 안내한다", () => {
-    expect(formatVoiceInputError(new Error("Unable to decode audio data"))).toBe(
-      "녹음이 너무 짧아 음성을 처리하지 못했어. 버튼이나 T 키를 누른 채 말해 줘.",
-    );
+    expect(
+      formatVoiceInputError(
+        classifyVoiceInputError(new Error("Unable to decode audio data")),
+      ),
+    ).toContain("녹음이 너무 짧");
+  });
+
+  it.each([
+    [new DOMException("denied", "NotAllowedError"), "permission", "마이크 권한"],
+    [new TypeError("Failed to fetch"), "network", "음성 서버"],
+    [new Error("STT timeout"), "timeout", "예상보다 오래"],
+    [new Error("Realtime 음성 요청 실패 (503)"), "http", "음성 서버"],
+    [new Error("STT Worker 응답이 JSON이 아닙니다: <html>"), "schema", "응답 형식"],
+    [new Error("전사문이 비어 있습니다."), "no-speech", "목소리를 찾지"],
+    [new Error("Unable to decode audio data"), "recording", "녹음이 너무 짧"],
+  ] as const)("%s 오류를 %s 상태와 안전한 문구로 바꾼다", (error, kind, phrase) => {
+    const failure = classifyVoiceInputError(error);
+    const message = formatVoiceInputError(failure);
+
+    expect(failure.kind).toBe(kind);
+    expect(message).toContain(phrase);
+    expect(message).not.toMatch(/Failed to fetch|<html>|503|Realtime|STT Worker/i);
+  });
+
+  it("모든 게임 음성 실패 callback은 typed failure를 안전한 문구로 바꾼다", () => {
+    const mainSource = readFileSync(new URL("../src/main.ts", import.meta.url), "utf8");
+
+    expect(mainSource.match(/formatVoiceInputError\(failure\)/g) ?? []).toHaveLength(6);
+    expect(mainSource).not.toMatch(/\$\{failure\}/);
   });
 });
