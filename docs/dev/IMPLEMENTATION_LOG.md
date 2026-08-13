@@ -1437,3 +1437,90 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - 모바일은 검사하지 않았고 이번 범위 밖이다. 사용자는 2026-08-13 에셋 7종을 모두 시각 승인하고 기존 검토자의 caveat를 수용했다.
 
 자동 검증·데스크톱 QA·사용자 시각 승인은 에셋을 `ready`로 쓸 근거지만 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 확인을 대체하지 않는다. `approved`로 올리지 않으며 M5 또는 프로젝트 전체 완료로 판정하지 않는다.
+
+## Wave 1 — 오디오·음성 신뢰성
+
+- 작업일: 2026-08-14 KST
+- 코드 기준 HEAD: `97b8da29b72cdc1e2595a4e2d8604800c40d6e66`
+- 상태: 코드·자동 검증·제한된 데스크톱 브라우저 점검 PASS. 실제 마이크·Worker·헤드폰 수동 QA는 `PENDING`이며 Wave 1 전체 수동 완료로 판정하지 않음
+
+### 구현 범위
+
+- commits `5e6351f`·`2bac286`: 신규·손상 BGM 설정 20%, 유효 설정 보존, 무음 경유 fade, 중단·오류·stale 재생 채널 정리.
+- commits `ad2d6a3`·`a171d1a`: Start·Resume 클릭 스택에서 게임 진입을 비동기 마이크 정리보다 먼저 실행하고 정리 실패 Promise를 UI 밖에서 흡수.
+- commits `a34c6fd`·`9abdd7b`: 음성 오류 7종 typed failure, HTTP 상태 진단 보존, raw 네트워크·HTML·공급자 문구를 숨긴 한국어 안내.
+- commit `511d4c7`: dialogue·incantation·battle 공통 턴 키와 복구 정책. 첫 실패는 같은 턴 한 번 재시도, 두 번째는 현재 턴 클릭·실패 턴 1회 누적, 누적 다섯 번째만 전역 클릭. 새 게임·Resume·엔딩 재시작에서 세션 실패 상태 초기화.
+- commits `5d7f2b9`·`97b8da2`: meter의 quiet/good/loud를 실제 dBFS 판정과 연결하고 고정 빨간 선 제거. 재연결·장치 변경 시작 즉시 0%·`-∞ dBFS`·quiet로 초기화.
+- 시나리오·게임 분기·이미지·오디오 binary·Worker route·공개 배포는 변경하지 않았다.
+
+### 자동 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript `tsc --noEmit`, exit 0 |
+| focused 음성 복구 | PASS | 8 files, 76 tests |
+| `npm test` | PASS | 47 files, 256 tests |
+| `npm run build` | PASS | Vite build 완료. 기존 Transformers 516.22 kB chunk 경고만 유지 |
+| `git diff --check` | PASS | 공백·patch 오류 없음 |
+| 최종 코드 status | clean | Task 6 문서 작업 전 코드 HEAD에서 변경 없음 |
+
+### 2026-08-14 데스크톱 브라우저 점검
+
+- URL: `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`, viewport `1280×720`.
+- clean profile의 BGM HUD는 20%였다. 타이틀에서 `<audio>` 요소는 0개였고 자동 BGM 시작은 관찰되지 않았다.
+- 37% 설정은 reload 뒤 유지됐고 mute도 reload 뒤 유지됐다.
+- 타이틀의 가로·세로 overflow는 각각 0, console warning/error는 각각 0이었다.
+- meter 초기값은 `aria-valuenow=0`, `-∞ dBFS`, 고정 `::after` content `none`이었다. 재연결 시도 직후 quiet·0%·`-∞ dBFS`로 초기화됐다.
+- production 형태 URL `?voiceFailure=network&voiceFailureCount=2`에서 debug UI와 raw 기술 용어 노출은 각각 0이었다.
+- debug 시각 preview `n1-first-voice`, `n5-incantation`, `battle-p1`은 각각 로드됐고 양축 overflow와 console warning/error가 0이었다. 단, 이 preview는 `SAVE/FSM ISOLATED` 시각 프리뷰이며 음성 capture 버튼이 없다. injected failure를 실제 capture로 소비하는 수동 matrix는 실행하지 못했다. 복구 정책 결과는 focused 8 files/76 tests 근거만 PASS로 기록한다.
+- Worker는 `npm run dev:m3:worker` 실행 시 `.env.local: not found`로 exit 1이었다. `127.0.0.1:8787`은 기동하지 않았다.
+
+### 음성 실패 재현 URL 목록
+
+아래는 개발 빌드의 재현 주소다. 각 주소는 실제 게임 세션의 해당 턴에서 capture를 눌러야 실패를 소비한다. 현재 debug scene preview에는 capture 버튼이 없으므로 목록 자체를 PASS 결과로 해석하지 않는다. `recording`은 device-open/recording-start 계열 typed branch를 재현한다.
+
+#### dialogue — `n1-first-voice`
+
+| kind | 첫 실패 1회 | 같은 턴 2회 |
+|---|---|---|
+| permission | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=permission&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=permission&voiceFailureCount=2` |
+| recording | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=recording&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=recording&voiceFailureCount=2` |
+| no-speech | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=no-speech&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=no-speech&voiceFailureCount=2` |
+| timeout | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=timeout&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=timeout&voiceFailureCount=2` |
+| http | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=http&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=http&voiceFailureCount=2` |
+| schema | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=schema&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=schema&voiceFailureCount=2` |
+| network | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=network&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice&voiceFailure=network&voiceFailureCount=2` |
+
+#### incantation — `n5-incantation`
+
+| kind | 첫 실패 1회 | 같은 턴 2회 |
+|---|---|---|
+| permission | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=permission&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=permission&voiceFailureCount=2` |
+| recording | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=recording&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=recording&voiceFailureCount=2` |
+| no-speech | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=no-speech&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=no-speech&voiceFailureCount=2` |
+| timeout | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=timeout&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=timeout&voiceFailureCount=2` |
+| http | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=http&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=http&voiceFailureCount=2` |
+| schema | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=schema&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=schema&voiceFailureCount=2` |
+| network | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=network&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation&voiceFailure=network&voiceFailureCount=2` |
+
+#### battle — `battle-p1`
+
+| kind | 첫 실패 1회 | 같은 턴 2회 |
+|---|---|---|
+| permission | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=permission&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=permission&voiceFailureCount=2` |
+| recording | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=recording&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=recording&voiceFailureCount=2` |
+| no-speech | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=no-speech&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=no-speech&voiceFailureCount=2` |
+| timeout | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=timeout&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=timeout&voiceFailureCount=2` |
+| http | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=http&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=http&voiceFailureCount=2` |
+| schema | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=schema&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=schema&voiceFailureCount=2` |
+| network | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=network&voiceFailureCount=1` | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1&voiceFailure=network&voiceFailureCount=2` |
+
+### 남은 수동 게이트
+
+- 실제 마이크에서 permission, device-open/recording-start, no-speech와 `recordingSupported=false`를 확인한다.
+- `.env.local`을 갖춘 실제 Worker로 HTTP, schema, network 실패와 raw 정보 비노출을 확인한다.
+- 마이크 보정 뒤 Start 한 번으로 `bgm_daily`가 시작되는 user gesture를 청감 확인한다.
+- 헤드폰으로 `bgm_daily`, `bgm_crisis`, `bgm_battle`, `bgm_ending`을 각각 3회 loop하고 click·의도하지 않은 무음·beat jump를 계수한다.
+- `bgm_transform`을 끝까지 1회, 중간 이탈 1회 실행해 surprise restart·orphan channel이 없는지 확인한다.
+
+위 항목은 장치·Secret·실제 음원이 필요한 사람 QA다. 수행 전에는 PASS 또는 Wave 1 완료로 올리지 않는다.
