@@ -1475,9 +1475,11 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - debug 시각 preview `n1-first-voice`, `n5-incantation`, `battle-p1`은 각각 로드됐고 양축 overflow와 console warning/error가 0이었다. 단, 이 preview는 `SAVE/FSM ISOLATED` 시각 프리뷰이며 음성 capture 버튼이 없다. injected failure를 실제 capture로 소비하는 수동 matrix는 실행하지 못했다. 복구 정책 결과는 focused 8 files/76 tests 근거만 PASS로 기록한다.
 - Worker는 `npm run dev:m3:worker` 실행 시 `.env.local: not found`로 exit 1이었다. `127.0.0.1:8787`은 기동하지 않았다.
 
-### 음성 실패 재현 URL 목록
+### 실패 주입 예정 URL(PENDING · 정적 preview에서는 소비 불가)
 
-아래는 개발 빌드의 재현 주소다. 각 주소는 실제 게임 세션의 해당 턴에서 capture를 눌러야 실패를 소비한다. 현재 debug scene preview에는 capture 버튼이 없으므로 목록 자체를 PASS 결과로 해석하지 않는다. `recording`은 device-open/recording-start 계열 typed branch를 재현한다.
+아래 각 URL은 query와 화면 조합을 정리한 예정 matrix일 뿐 실제 재현 주소가 아니다. `scene=`는 capture가 없는 `SAVE/FSM ISOLATED` 정적 preview를 열기 때문에 실패 주입을 소비할 수 없으며, 실제 game-mode full URL·사전 상태·조작 절차는 아직 미확정이다. `recording`은 device-open/recording-start 계열 typed branch의 예정 항목이다.
+
+> **PENDING · visual preview only:** 아래 42개 URL은 계획의 full URL 목록을 보존한 것이며, 실제 game session capture 실행 또는 PASS 증거가 아니다.
 
 #### dialogue — `n1-first-voice`
 
@@ -1517,6 +1519,7 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 
 ### 남은 수동 게이트
 
+- actual game-mode full URLs/procedure 확정 후 matrix를 실행한다.
 - 실제 마이크에서 permission, device-open/recording-start, no-speech와 `recordingSupported=false`를 확인한다.
 - `.env.local`을 갖춘 실제 Worker로 HTTP, schema, network 실패와 raw 정보 비노출을 확인한다.
 - 마이크 보정 뒤 Start 한 번으로 `bgm_daily`가 시작되는 user gesture를 청감 확인한다.
