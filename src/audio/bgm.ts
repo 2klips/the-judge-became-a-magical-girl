@@ -26,7 +26,7 @@ export interface AutoplayGestureTarget {
   removeEventListener(type: "pointerdown", listener: () => void): void;
 }
 
-export const BGM_DEFAULT_VOLUME = 0.62;
+export const BGM_DEFAULT_VOLUME = 0.2;
 export const BGM_DUCK_MULTIPLIER = 0.18;
 export const BGM_PREFERENCES_STORAGE_KEY = "judge-magical-girl:bgm-preferences";
 
@@ -83,6 +83,7 @@ export function saveBgmPreferences(
 
 export class BgmController {
   private current: { id: string; channel: AudioChannel } | null = null;
+  private readonly liveChannels = new Set<AudioChannel>();
   private fadeTimer: ReturnType<typeof setInterval> | null = null;
   private ducked = false;
   private pendingAutoplay: { id: string; loop: boolean } | null = null;
@@ -119,6 +120,7 @@ export class BgmController {
         reportAssetLoadFailure(logicalId, relativePath);
         if (this.current?.channel === next) {
           next.pause();
+          this.liveChannels.delete(next);
           this.current = null;
         }
       },
@@ -142,15 +144,16 @@ export class BgmController {
     }
 
     this.clearAutoplayRetry();
+    this.liveChannels.add(next);
     const previous = this.current?.channel ?? null;
     this.current = { id: logicalId, channel: next };
-    this.crossfade(previous, next);
+    this.fadeThroughSilence(previous, next);
   }
 
   stop(): void {
-    if (this.fadeTimer) clearInterval(this.fadeTimer);
-    this.fadeTimer = null;
-    this.current?.channel.pause();
+    this.cancelFade();
+    for (const channel of this.liveChannels) channel.pause();
+    this.liveChannels.clear();
     this.current = null;
     this.clearAutoplayRetry();
   }
@@ -178,21 +181,40 @@ export class BgmController {
     return this.muted;
   }
 
-  private crossfade(previous: AudioChannel | null, next: AudioChannel): void {
-    if (this.fadeTimer) clearInterval(this.fadeTimer);
+  private fadeThroughSilence(previous: AudioChannel | null, next: AudioChannel): void {
+    this.cancelFade();
+    for (const channel of [...this.liveChannels]) {
+      if (channel === previous || channel === next) continue;
+      channel.pause();
+      this.liveChannels.delete(channel);
+    }
+    const previousStartVolume = previous?.volume ?? 0;
     const steps = 12;
+    const midpoint = steps / 2;
     let step = 0;
+    next.volume = 0;
     this.fadeTimer = setInterval(() => {
       step += 1;
-      const progress = Math.min(1, step / steps);
-      const target = this.targetVolume();
-      next.volume = progress * target;
-      if (previous) previous.volume = (1 - progress) * target;
-      if (progress < 1) return;
-      if (this.fadeTimer) clearInterval(this.fadeTimer);
-      this.fadeTimer = null;
-      previous?.pause();
+      if (step <= midpoint) {
+        const fadeOutProgress = step / midpoint;
+        if (previous) previous.volume = (1 - fadeOutProgress) * previousStartVolume;
+        if (step === midpoint && previous) {
+          previous.pause();
+          this.liveChannels.delete(previous);
+        }
+        return;
+      }
+
+      const fadeInProgress = (step - midpoint) / (steps - midpoint);
+      next.volume = Math.min(1, fadeInProgress) * this.targetVolume();
+      if (step < steps) return;
+      this.cancelFade();
     }, Math.max(16, this.fadeDurationMs / steps));
+  }
+
+  private cancelFade(): void {
+    if (this.fadeTimer) clearInterval(this.fadeTimer);
+    this.fadeTimer = null;
   }
 
   private targetVolume(): number {

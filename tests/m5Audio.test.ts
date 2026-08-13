@@ -30,6 +30,60 @@ afterEach(() => {
 });
 
 describe("M5 BGM 제어", () => {
+  it("신규·손상 설정은 20%를 사용하고 유효한 기존 설정은 보존한다", () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+
+    expect(BGM_DEFAULT_VOLUME).toBe(0.2);
+    expect(loadBgmPreferences(storage)).toEqual({ volume: 0.2, muted: false });
+
+    saveBgmPreferences(storage, { volume: 0.37, muted: true });
+    expect(loadBgmPreferences(storage)).toEqual({ volume: 0.37, muted: true });
+
+    values.set(BGM_PREFERENCES_STORAGE_KEY, "{broken");
+    expect(loadBgmPreferences(storage)).toEqual({ volume: 0.2, muted: false });
+  });
+
+  it("fade 도중 새 cue가 오면 이전 두 채널을 모두 정리하고 최신 채널만 남긴다", async () => {
+    vi.useFakeTimers();
+    const channels = [fakeChannel(), fakeChannel(), fakeChannel()];
+    let index = 0;
+    const controller = new BgmController(() => channels[index++]!, 600, null);
+
+    await controller.play("bgm_daily");
+    await vi.advanceTimersByTimeAsync(300);
+    await controller.play("bgm_crisis");
+    await vi.advanceTimersByTimeAsync(300);
+    await controller.play("bgm_battle");
+
+    expect(channels[0]!.pause).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(600);
+    expect(channels[1]!.pause).toHaveBeenCalledOnce();
+    expect(channels[2]!.pause).not.toHaveBeenCalled();
+    expect(channels[2]!.volume).toBe(0.2);
+  });
+
+  it("서로 다른 cue는 앞 곡을 먼저 닫은 뒤 다음 곡을 연다", async () => {
+    vi.useFakeTimers();
+    const channels = [fakeChannel(), fakeChannel()];
+    let index = 0;
+    const controller = new BgmController(() => channels[index++]!, 600, null);
+
+    await controller.play("bgm_daily");
+    await vi.advanceTimersByTimeAsync(600);
+    await controller.play("bgm_crisis");
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(channels[0]!.pause).toHaveBeenCalledOnce();
+    expect(channels[1]!.volume).toBe(0);
+
+    await vi.advanceTimersByTimeAsync(300);
+    expect(channels[1]!.volume).toBe(0.2);
+  });
+
   it("누락 BGM 로드 실패는 예외 대신 무음으로 계속하고 같은 경로를 재요청하지 않는다", async () => {
     const channel = fakeChannel();
     vi.mocked(channel.play).mockRejectedValueOnce(new Error("BGM 404"));
