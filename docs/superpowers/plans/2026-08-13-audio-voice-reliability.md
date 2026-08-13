@@ -329,7 +329,7 @@ Extend the imports in `tests/m3Transcription.test.ts` with `classifyVoiceInputEr
 it.each([
   [new DOMException("denied", "NotAllowedError"), "permission", "마이크 권한"],
   [new TypeError("Failed to fetch"), "network", "음성 서버"],
-  [new Error("STT timeout"), "timeout", "시간이 오래"],
+  [new Error("STT timeout"), "timeout", "예상보다 오래"],
   [new Error("Realtime 음성 요청 실패 (503)"), "http", "음성 서버"],
   [new Error("STT Worker 응답이 JSON이 아닙니다: <html>"), "schema", "응답 형식"],
   [new Error("전사문이 비어 있습니다."), "no-speech", "목소리를 찾지"],
@@ -439,18 +439,18 @@ export function classifyVoiceInputError(error: unknown): VoiceInputFailure {
 export function formatVoiceInputError(failure: VoiceInputFailure): string {
   switch (failure.kind) {
     case "permission":
-      return "마이크 권한을 확인해 줘. 권한을 허용한 뒤 다시 시도할 수 있어.";
+      return "마이크 권한을 사용할 수 없어.";
     case "network":
     case "http":
-      return "음성 서버에 연결하지 못했어. 같은 턴에서 한 번 더 시도해 줘.";
+      return "음성 서버에 연결하지 못했어.";
     case "timeout":
-      return "음성 처리가 예상보다 오래 걸렸어. 같은 턴에서 한 번 더 시도해 줘.";
+      return "음성 처리가 예상보다 오래 걸렸어.";
     case "schema":
-      return "음성 서버 응답 형식을 확인하지 못했어. 같은 턴에서 한 번 더 시도해 줘.";
+      return "음성 서버 응답 형식을 확인하지 못했어.";
     case "no-speech":
-      return "녹음에서 목소리를 찾지 못했어. 버튼을 누른 채 다시 말해 줘.";
+      return "녹음에서 목소리를 찾지 못했어.";
     case "recording":
-      return "녹음이 너무 짧아 음성을 처리하지 못했어. 버튼이나 T 키를 누른 채 말해 줘.";
+      return "녹음이 너무 짧아 음성을 처리하지 못했어.";
   }
 }
 ```
@@ -482,11 +482,13 @@ if (!transcript) {
 return { kind: "error", failure: classifyVoiceInputError(error) };
 ```
 
-In both `GameView` error branches, pass `result.failure`:
+In both `GameView` finished-capture error branches, preserve the typed failure instead of formatting it in the view:
 
 ```ts
-const message = formatVoiceInputError(result.failure);
+options.onTurnFailed(result.failure);
 ```
+
+In both press/start catch branches, replace `microphoneErrorMessage(error)` with `classifyVoiceInputError(error)` and pass that typed value to `options.onUnavailable(...)`. Update the relevant option callback types to `VoiceInputFailure`; Task 4 will make both callbacks converge on one recovery adapter. Do not stringify the failure inside `GameView`.
 
 Keep `failure.debugMessage` out of production DOM. Diagnostics may log it with `console.warn` only in debug mode.
 
@@ -510,7 +512,11 @@ git commit -m "fix(voice): classify input failures safely"
 
 **Files:**
 - Create: `src/input/voiceTurnRecovery.ts`
+- Create: `src/input/voiceFailureInjection.ts`
 - Create: `tests/voiceTurnRecovery.test.ts`
+- Create: `tests/voiceFailureInjection.test.ts`
+- Create: `tests/mainVoiceFailureInjection.test.ts`
+- Create: `tests/mainVoiceLifecycle.test.ts`
 - Modify: `src/main.ts:136-142,213-282,285-578,580-751`
 - Modify: `src/ui/gameView.ts:364-437,845-923,978-1074`
 - Modify: `tests/state.test.ts:75-90`
@@ -524,9 +530,11 @@ Create `tests/voiceTurnRecovery.test.ts`:
 import { describe, expect, it } from "vitest";
 import {
   clearVoiceFailureAttempts,
+  formatVoiceTurnFailureMessage,
   resolveUnavailableVoiceFailure,
   resolveVoiceTurnFailure,
 } from "../src/input/voiceTurnRecovery";
+import { resolveDebugVoiceFailure } from "../src/input/voiceFailureInjection";
 
 describe("음성 실패 복구 정책", () => {
   it("첫 실패는 같은 턴 음성을 유지하고 누적 실패를 올리지 않는다", () => {
@@ -545,6 +553,15 @@ describe("음성 실패 복구 정책", () => {
       forceClickForTurn: true,
       forceGlobalClick: false,
     });
+  });
+
+  it("첫 실패와 두 번째 실패의 안내가 서로 상충하지 않는다", () => {
+    const first = formatVoiceTurnFailureMessage("음성 서버에 연결하지 못했어.", "retry");
+    const second = formatVoiceTurnFailureMessage("음성 서버에 연결하지 못했어.", "click");
+    expect(first).toContain("한 번 더");
+    expect(first).not.toContain("클릭");
+    expect(second).toContain("이 턴은 클릭");
+    expect(second).not.toMatch(/한 번 더|다시 시도/);
   });
 
   it("다섯 번째 실패 턴의 두 번째 실패에서만 전체 클릭 모드가 된다", () => {
@@ -578,6 +595,12 @@ describe("음성 실패 복구 정책", () => {
     });
   });
 
+  it("voice failure 주입은 debug URL에서만 허용한다", () => {
+    expect(resolveDebugVoiceFailure("?voiceFailure=network", false)).toBeNull();
+    expect(resolveDebugVoiceFailure("?debug=1&voiceFailure=network", true)).toBe("network");
+    expect(resolveDebugVoiceFailure("?debug=1&voiceFailure=unknown", true)).toBeNull();
+  });
+
   it.each(["new-game", "resume", "ending-restart"] as const)(
     "%s 세션 진입은 이전 턴 attempt를 비운다",
     () => {
@@ -589,15 +612,69 @@ describe("음성 실패 복구 정책", () => {
 });
 ```
 
+Create `tests/voiceFailureInjection.test.ts` in the same RED step:
+
+```ts
+import { describe, expect, it } from "vitest";
+import {
+  consumeDebugVoiceFailure,
+  createPendingDebugVoiceFailure,
+} from "../src/input/voiceFailureInjection";
+
+describe("debug 음성 실패 주입", () => {
+  it("production에서는 query를 무시한다", () => {
+    expect(
+      createPendingDebugVoiceFailure(
+        "?debug=1&voiceFailure=network&voiceFailureCount=2",
+        true,
+        false,
+      ),
+    ).toEqual({ kind: null, remaining: 0 });
+  });
+
+  it("기본값은 다음 capture 한 번만 typed failure로 소비한다", () => {
+    const pending = createPendingDebugVoiceFailure(
+      "?debug=1&voiceFailure=permission",
+      true,
+      true,
+    );
+    expect(consumeDebugVoiceFailure(pending)).toEqual({
+      kind: "permission",
+      debugMessage: "debug injected permission",
+    });
+    expect(consumeDebugVoiceFailure(pending)).toBeNull();
+  });
+
+  it("수동 2회 실패 검수는 각 capture에서 한 항목씩 소비한다", () => {
+    const pending = createPendingDebugVoiceFailure(
+      "?debug=1&voiceFailure=network&voiceFailureCount=2",
+      true,
+      true,
+    );
+    expect(consumeDebugVoiceFailure(pending)?.kind).toBe("network");
+    expect(consumeDebugVoiceFailure(pending)?.kind).toBe("network");
+    expect(consumeDebugVoiceFailure(pending)).toBeNull();
+  });
+});
+```
+
+Also create `tests/mainVoiceFailureInjection.test.ts` before production edits. Read `src/main.ts` and assert it imports `createPendingDebugVoiceFailure`/`consumeDebugVoiceFailure`, creates one pending holder at bootstrap while passing both `debugEnabled` and `import.meta.env.DEV`, expands the common helper to `voiceCapture(voice, turnKey)`, and checks this exact statement before real capture begins:
+
+```ts
+if (consumeInjectedVoiceFailure(turnKey)) return;
+```
+
+Assert the three existing spread call sites pass their stable keys as the second argument: `voiceCapture(voice, dialogueTurnKey)`, `voiceCapture(voice, incantationTurnKey)`, and `voiceCapture(voice, battleTurnKey)`. The wiring test must also reject direct `engine.setInputMode()` and direct game-action submission inside `consumeInjectedVoiceFailure`; injected and real failures must enter the same `handleTypedVoiceFailure()` adapter.
+
 Before production wiring, add `tests/m5Presentation.test.ts` RED contracts for all three renderers. Read the rendered control model used by `renderDialogue`, `renderIncantation`, and `renderBattle` (not one repeated boolean-only assertion) and assert that `forceClickForTurn: true` yields click actions but no `음성 입력으로 전환` control for each surface. Add a `tests/mainVoiceLifecycle.test.ts` source/wiring contract asserting title New Game, title Resume, and ending restart each call the shared session-reset helper before their engine state transition. This test is intentionally RED until Step 4 connects the callbacks.
 
 - [ ] **Step 2: Run the focused test and verify RED**
 
 ```powershell
-npm test -- tests/voiceTurnRecovery.test.ts tests/m5Presentation.test.ts tests/mainVoiceLifecycle.test.ts
+npm test -- tests/voiceTurnRecovery.test.ts tests/voiceFailureInjection.test.ts tests/mainVoiceFailureInjection.test.ts tests/m5Presentation.test.ts tests/mainVoiceLifecycle.test.ts
 ```
 
-Expected: FAIL because the policy module, renderer control model, and session-reset wiring do not exist.
+Expected: FAIL because the policy/injection modules, typed next-capture consumption, three-surface callback wiring, renderer control model, and session-reset wiring do not exist.
 
 - [ ] **Step 3: Implement the pure policy**
 
@@ -609,6 +686,15 @@ export interface VoiceTurnFailureDecision {
   readonly countFailedTurn: boolean;
   readonly forceClickForTurn: boolean;
   readonly forceGlobalClick: boolean;
+}
+
+export function formatVoiceTurnFailureMessage(
+  baseMessage: string,
+  next: "retry" | "click",
+): string {
+  return next === "retry"
+    ? `${baseMessage} 같은 턴에서 한 번 더 말해 줘.`
+    : `${baseMessage} 이 턴은 클릭으로 진행해 줘.`;
 }
 
 export function resolveVoiceTurnFailure(
@@ -656,13 +742,69 @@ export function clearVoiceFailureAttempts(attempts: Map<string, number>): void {
 }
 ```
 
+Create `src/input/voiceFailureInjection.ts`:
+
+```ts
+import type { VoiceInputFailure } from "./transcription";
+
+const DEBUG_VOICE_FAILURES = [
+  "permission", "recording", "no-speech", "timeout", "http", "schema", "network",
+] as const;
+export type DebugVoiceFailure = (typeof DEBUG_VOICE_FAILURES)[number];
+
+export interface PendingDebugVoiceFailure {
+  kind: DebugVoiceFailure | null;
+  remaining: number;
+}
+
+export function resolveDebugVoiceFailure(
+  search: string,
+  debugEnabled: boolean,
+): DebugVoiceFailure | null {
+  if (!debugEnabled) return null;
+  const value = new URLSearchParams(search).get("voiceFailure");
+  return DEBUG_VOICE_FAILURES.find((kind) => kind === value) ?? null;
+}
+
+export function createPendingDebugVoiceFailure(
+  search: string,
+  debugEnabled: boolean,
+  developmentBuild: boolean,
+): PendingDebugVoiceFailure {
+  if (!developmentBuild) return { kind: null, remaining: 0 };
+  const kind = resolveDebugVoiceFailure(search, debugEnabled);
+  if (!kind) return { kind: null, remaining: 0 };
+  const requestedCount = Number(new URLSearchParams(search).get("voiceFailureCount") ?? "1");
+  return {
+    kind,
+    remaining: requestedCount === 2 ? 2 : 1,
+  };
+}
+
+export function consumeDebugVoiceFailure(
+  pending: PendingDebugVoiceFailure,
+): VoiceInputFailure | null {
+  if (!pending.kind || pending.remaining <= 0) return null;
+  const kind = pending.kind;
+  pending.remaining -= 1;
+  if (pending.remaining === 0) pending.kind = null;
+  return { kind, debugMessage: `debug injected ${kind}` };
+}
+```
+
 - [ ] **Step 4: Connect turn keys and current-turn click rendering**
 
 In `src/main.ts`, import the helper and add state next to `battleVolumeFailures`:
 
 ```ts
+import { formatVoiceInputError } from "./input/transcription";
+import {
+  consumeDebugVoiceFailure,
+  createPendingDebugVoiceFailure,
+} from "./input/voiceFailureInjection";
 import {
   clearVoiceFailureAttempts,
+  formatVoiceTurnFailureMessage,
   resolveUnavailableVoiceFailure,
   resolveVoiceTurnFailure,
 } from "./input/voiceTurnRecovery";
@@ -708,7 +850,7 @@ const handleVoiceFailure = (
   const decision = resolveVoiceTurnFailure(attempt, state.sttFailCount);
   if (!decision.countFailedTurn) {
     voiceFailureAttempts.set(turnKey, decision.nextAttemptInTurn);
-    renderCurrent(message);
+    renderCurrent(formatVoiceTurnFailureMessage(message, "retry"));
     return decision;
   }
   voiceFailureAttempts.delete(turnKey);
@@ -718,7 +860,7 @@ const handleVoiceFailure = (
     renderCurrent("음성 인식에 실패한 턴이 5회 누적돼 클릭 모드로 전환했어.");
     return { ...decision, forceGlobalClick: true };
   }
-  renderCurrent(`${message} 이 턴은 클릭으로 진행해 줘.`, true);
+  renderCurrent(formatVoiceTurnFailureMessage(message, "click"), true);
   return decision;
 };
 ```
@@ -737,34 +879,7 @@ At the beginning of each successful transcript handler, clear its key:
 voiceFailureAttempts.delete(dialogueTurnKey);
 ```
 
-Replace each `onTurnFailed` body with:
-
-```ts
-onTurnFailed: (message) => {
-  sfx.play("recognition_fail");
-  handleVoiceFailure(dialogueTurnKey, message);
-},
-```
-
-Use `incantationTurnKey` and `battleTurnKey` in their respective callbacks. Connect every dialogue/incantation/battle `onUnavailable` with this exact capability split:
-
-```ts
-onUnavailable: (message) => {
-  const decision = resolveUnavailableVoiceFailure(
-    recordingSupported,
-    voiceFailureAttempts.get(turnKey) ?? 0,
-    engine.getState().sttFailCount,
-  );
-  if (decision.capabilityUnavailable) {
-    engine.setInputMode("click");
-    renderCurrent(message);
-    return;
-  }
-  handleVoiceFailure(turnKey, message);
-},
-```
-
-Permission denial, device-open failure, and recording-start failure therefore receive the same first retry/second current-turn-click policy. Browser API capability absence (`recordingSupported === false`) is the only immediate global-click case. Do not call `engine.setInputMode("click")` on the second recoverable failure unless the global threshold is reached.
+Delete the existing `microphoneErrorMessage()` strings that say `클릭 모드로 계속할게`. `classifyVoiceInputError()` now carries permission/device-open/recording-start failures as `VoiceInputFailure`; `formatVoiceInputError()` returns only a neutral cause, and `formatVoiceTurnFailureMessage()` is the sole owner of retry/current-turn-click guidance. Browser API capability absence (`recordingSupported === false`) is the only immediate global-click case. Do not call `engine.setInputMode("click")` on the second recoverable failure unless the global threshold is reached. Exact tests must require first-failure copy to contain `한 번 더` but not `클릭`, and second-failure copy to contain `이 턴은 클릭` but neither `한 번 더` nor `다시 시도`.
 
 Extend `SharedVoiceOptions`:
 
@@ -776,8 +891,8 @@ interface SharedVoiceOptions {
   startCapture(): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
-  onTurnFailed(message: string): void;
-  onUnavailable(message: string): void;
+  onTurnFailed(failure: VoiceInputFailure): void;
+  onUnavailable(failure: VoiceInputFailure): void;
   onModeChange(inputMode: InputMode): void;
 }
 ```
@@ -792,10 +907,70 @@ Pass `forceClickForTurn` from `renderCurrent()` through `renderIncantationNode()
 
 When `forceClickForTurn` is true, the shared control contract must make every dialogue, incantation, and battle renderer omit `음성 입력으로 전환`. Call `clearVoiceFailureAttempts(voiceFailureAttempts)` in title New Game, title Resume, and ending restart callbacks before engine state changes; the Step 1 wiring test must fail if any callback omits or reverses that order. Also delete keys whose node/phase no longer matches the current `renderCurrent()` turn; this bounds the map during a full run.
 
+Replace the string-only unavailable path with one typed adapter used by both real and injected failures:
+
+```ts
+const handleTypedVoiceFailure = (
+  turnKey: string,
+  failure: VoiceInputFailure,
+): void => {
+  const baseMessage = formatVoiceInputError(failure);
+  if (failure.kind === "permission" || failure.kind === "recording") {
+    const decision = resolveUnavailableVoiceFailure(
+      recordingSupported,
+      voiceFailureAttempts.get(turnKey) ?? 0,
+      engine.getState().sttFailCount,
+    );
+    if (decision.capabilityUnavailable) {
+      engine.setInputMode("click");
+      renderCurrent("이 브라우저에서는 음성 입력을 사용할 수 없어. 클릭으로 진행해 줘.");
+      return;
+    }
+  }
+  handleVoiceFailure(turnKey, baseMessage);
+};
+```
+
+Change `SharedVoiceOptions.onUnavailable` to receive `VoiceInputFailure`, and have the real permission/device-open/recording-start catch classify the error and call `handleTypedVoiceFailure(turnKey, failure)`. Real finished-capture errors must use this same adapter too. This removes a debug-only recovery branch: permission/recording injection now exercises the exact typed unavailable decision used by actual failures, while other kinds exercise the exact finished-capture failure decision.
+
+At all three renderer option call sites, wire both typed callbacks to the same adapter:
+
+```ts
+onTurnFailed: (failure) => {
+  sfx.play("recognition_fail");
+  handleTypedVoiceFailure(turnKey, failure);
+},
+onUnavailable: (failure) => {
+  handleTypedVoiceFailure(turnKey, failure);
+},
+```
+
+Use the stable dialogue/incantation/battle key for `turnKey`. The UI view owns only capture state; it never chooses click mode or formats a raw technical error.
+
+After `handleTypedVoiceFailure` is declared inside `bootstrap()`, create and wire the debug adapter:
+
+```ts
+const pendingDebugVoiceFailure = createPendingDebugVoiceFailure(
+  window.location.search,
+  debugEnabled,
+  import.meta.env.DEV,
+);
+
+const consumeInjectedVoiceFailure = (turnKey: string): boolean => {
+  const failure = consumeDebugVoiceFailure(pendingDebugVoiceFailure);
+  if (!failure) return false;
+  sfx.play("recognition_fail");
+  handleTypedVoiceFailure(turnKey, failure);
+  return true;
+};
+```
+
+Change the existing common helper signature to `voiceCapture(voice, turnKey)` and put `if (consumeInjectedVoiceFailure(turnKey)) return;` as the first line of its single `startCapture` callback, before ducking or microphone permission/device access. Pass `dialogueTurnKey`, `incantationTurnKey`, and `battleTurnKey` at the three existing `...voiceCapture(voice)` call sites. Do not invent three duplicate capture callbacks. The adapter must not call `engine.setInputMode()` or submit an action: it only feeds a typed `VoiceInputFailure` into the same adapter used after real capture. A production build ignores the query even with `?debug=1` because `import.meta.env.DEV` is false; a development build additionally requires `debugEnabled`. A normal development debug URL consumes the next capture once and clears it; `voiceFailureCount=2` queues exactly two independently consumed entries for deterministic first/second same-turn QA, then clears.
+
 - [ ] **Step 5: Verify all three paths and state threshold**
 
 ```powershell
-npm test -- tests/voiceTurnRecovery.test.ts tests/state.test.ts tests/m3Recording.test.ts tests/m5Presentation.test.ts tests/mainVoiceLifecycle.test.ts
+npm test -- tests/voiceTurnRecovery.test.ts tests/voiceFailureInjection.test.ts tests/mainVoiceFailureInjection.test.ts tests/state.test.ts tests/m3Recording.test.ts tests/m5Presentation.test.ts tests/mainVoiceLifecycle.test.ts
 npm run check
 ```
 
@@ -804,7 +979,7 @@ Expected: first failure keeps voice, second forces only current-turn click, fift
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add src/input/voiceTurnRecovery.ts src/main.ts src/ui/gameView.ts tests/voiceTurnRecovery.test.ts tests/state.test.ts tests/m5Presentation.test.ts tests/mainVoiceLifecycle.test.ts
+git add src/input/voiceTurnRecovery.ts src/input/voiceFailureInjection.ts src/main.ts src/ui/gameView.ts tests/voiceTurnRecovery.test.ts tests/voiceFailureInjection.test.ts tests/mainVoiceFailureInjection.test.ts tests/state.test.ts tests/m5Presentation.test.ts tests/mainVoiceLifecycle.test.ts
 git commit -m "fix(voice): restore per-turn retry policy"
 ```
 
@@ -942,13 +1117,15 @@ Verify at `http://127.0.0.1:5173/the-judge-became-a-magical-girl/`:
 1. Clean profile shows BGM 20% and title remains silent.
 2. Existing saved 37% and mute preferences remain unchanged.
 3. One Start click begins daily BGM without another pointer input.
-4. Disconnect Worker, fail voice once, and confirm the same turn stays in voice mode.
-5. Fail the same turn twice and confirm only that turn exposes click actions.
-6. Repeat on dialogue, incantation, and battle.
+4. On dialogue, incantation, and battle separately, inject each failure class: permission, device-open/recording-start, no-speech, timeout, HTTP, schema, and disconnected network/Worker.
+5. For every matrix cell, confirm first failure keeps voice and says retry without `클릭`; second same-turn failure exposes only current-turn click; the fifth failed turn alone changes global mode.
+6. Confirm true `recordingSupported=false` skips voice immediately and is the only immediate global-click case.
 7. Confirm DOM and visible UI contain none of `Failed to fetch`, HTML, HTTP status, model, or provider.
 8. Confirm meter color changes match quiet/acceptable/loud states and no fixed red marker exists.
 9. With headphones, let `bgm_daily`, `bgm_crisis`, `bgm_battle`, and `bgm_ending` each loop three complete times; record click, unintended silence, and beat-jump counts, all expected zero.
 10. Let non-loop `bgm_transform` finish once and also leave it early once; confirm both routes enter the next cue without a surprise restart or orphaned channel.
+
+Use the existing `?debug=1` surface plus the development-only `voiceFailure` selector (`permission`, `recording`, `no-speech`, `timeout`, `http`, `schema`, `network`). For each surface/kind, run `voiceFailureCount=1` to inspect first-failure copy and a fresh run with `voiceFailureCount=2` to consume two captures on the same turn and inspect current-turn click fallback. The selector must be ignored unless debug mode is active and must never bypass `handleVoiceFailure`; it only creates the injected typed failure consumed by the next capture. Add a test that production URLs ignore it. Record the exact full debug URL for every matrix row so the result is reproducible without changing device/browser permissions between runs.
 
 If an existing binary has a seam, record the exact cue/time and stop at the separate BGM comparison/approval gate. Do not edit BGM files in this plan.
 

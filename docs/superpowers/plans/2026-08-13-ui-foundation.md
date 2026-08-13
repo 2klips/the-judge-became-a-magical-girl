@@ -120,6 +120,7 @@ git commit -m "feat(ui): add repository served Pretendard font"
 - Create: `src/ui/sceneFrame.ts`
 - Create: `tests/m5SceneFrame.test.ts`
 - Modify: `src/ui/gameView.ts:1368-1395,1773-1859`
+- Modify: `src/styles.css:1484-1535`
 
 - [ ] **Step 1: Write the failing slot contract test**
 
@@ -127,7 +128,13 @@ Create `tests/m5SceneFrame.test.ts`:
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { SCENE_FRAME_SLOTS, sceneFrameClassName } from "../src/ui/sceneFrame";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import {
+  fitsSceneFrameHeight,
+  SCENE_FRAME_SLOTS,
+  sceneFrameClassName,
+} from "../src/ui/sceneFrame";
 
 describe("SceneFrame 슬롯", () => {
   it("모든 화면이 같은 다섯 슬롯을 같은 class로 사용한다", () => {
@@ -140,6 +147,22 @@ describe("SceneFrame 슬롯", () => {
       "scene-slot scene-slot-audio",
     ]);
   });
+
+  it("BGM은 fixed 좌표가 아니라 audio 슬롯을 따른다", () => {
+    const css = readFileSync(resolve("src/styles.css"), "utf8");
+    const block = css.match(/\.bgm-controls\s*\{([^}]*)\}/)?.[1] ?? "";
+    expect(block).toContain("position: relative");
+    expect(block).toContain("inset: auto");
+    expect(block).not.toMatch(/position:\s*fixed|\btop:|\bright:|\bleft:/);
+    expect(css).not.toMatch(/\.game-shell\.debug-enabled \.bgm-controls\s*\{[^}]*\bleft:/s);
+  });
+
+  it("1280×720의 같은 행 HUD/audio는 큰 쪽 하나만 높이 예산에 센다", () => {
+    expect(fitsSceneFrameHeight({
+      viewport: 720, safeTop: 16, safeBottom: 16,
+      hud: 56, audio: 56, stage: 160, dialogue: 244, actions: 160, gap: 12,
+    })).toBe(true);
+  });
 });
 ```
 
@@ -149,7 +172,7 @@ describe("SceneFrame 슬롯", () => {
 npm test -- tests/m5SceneFrame.test.ts
 ```
 
-Expected: FAIL because `src/ui/sceneFrame.ts` does not exist.
+Expected: FAIL because `src/ui/sceneFrame.ts` does not exist and BGM still uses fixed top/right coordinates.
 
 - [ ] **Step 3: Implement the slot module**
 
@@ -161,6 +184,24 @@ export type SceneFrameSlot = (typeof SCENE_FRAME_SLOTS)[number];
 
 export function sceneFrameClassName(slot: SceneFrameSlot): string {
   return `scene-slot scene-slot-${slot}`;
+}
+
+export interface SceneFrameHeightBudget {
+  viewport: number;
+  safeTop: number;
+  safeBottom: number;
+  hud: number;
+  audio: number;
+  stage: number;
+  dialogue: number;
+  actions: number;
+  gap: number;
+}
+
+export function fitsSceneFrameHeight(value: SceneFrameHeightBudget): boolean {
+  const used = Math.max(value.hud, value.audio) + value.stage + value.dialogue +
+    value.actions + value.gap * 3;
+  return used <= value.viewport - value.safeTop - value.safeBottom;
 }
 ```
 
@@ -207,6 +248,8 @@ In `commit()`, replace the direct audio append with:
 this.appendToSceneSlot(shell, "audio", this.audioControlPanel());
 ```
 
+Move `.bgm-controls` into normal slot flow: explicitly remove `position: fixed`, `top`, `right`, and the debug-only `left` override. Set `position: relative`, `inset: auto`, `max-width: 100%`, and let `.scene-slot-audio { justify-self: end; align-self: start; }` own placement. Add a static style assertion rejecting fixed positioning and a 1280×720 bounding-box assertion that audio stays inside the SceneFrame and at least 16px from HUD/dialogue.
+
 Keep the existing background elements outside `SceneFrame`; they remain below all slots.
 
 - [ ] **Step 5: Verify GREEN**
@@ -221,7 +264,7 @@ Expected: tests and TypeScript PASS.
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add src/ui/sceneFrame.ts src/ui/gameView.ts tests/m5SceneFrame.test.ts
+git add src/ui/sceneFrame.ts src/ui/gameView.ts src/styles.css tests/m5SceneFrame.test.ts
 git commit -m "refactor(ui): add shared scene frame slots"
 ```
 
@@ -297,6 +340,7 @@ Before deleting any historical block, inventory the four current `.dialogue-pane
 
 - `position: relative`, `z-index: var(--z-dialogue)`, `align-self: flex-end`;
 - `width: min(76vw, 1080px)`, `min-height: 154px`;
+- at desktop heights up to 720px, `min-height: 0`, `max-height: 34vh`, reduced vertical padding, and internal text scrolling only when content exceeds the budget;
 - centered or side-specific margins through `.dialogue-side-left/right/center` only;
 - `padding: clamp(30px, 3vw, 42px) clamp(30px, 4vw, 54px) clamp(24px, 3vw, 38px)`;
 - `overflow: visible`, `border-radius: 18px 18px 8px 8px`, `clip-path: none`;
@@ -395,9 +439,23 @@ Add one final owner for these selectors:
   clip-path: none;
   backdrop-filter: blur(14px);
 }
+
+@media (max-height: 760px) and (min-width: 1024px) {
+  .scene-slot-dialogue,
+  .scene-slot-actions { min-height: 0; }
+  .dialogue-panel {
+    min-height: 0;
+    max-height: 34vh;
+    padding-block: clamp(18px, 2.4vh, 26px);
+    overflow-y: auto;
+  }
+  .scene-slot-actions { max-height: 28vh; overflow-y: auto; }
+}
 ```
 
 Move only the inventoried retained declarations into this owner, then delete repeated blocks. Keep side selectors for margins/marker position and tone selectors such as `.dialogue-tone-juno` and `.dialogue-tone-wraith` only for accent border/nameplate differences. Do not carry forward the explicitly rejected historical values above.
+
+The Task 2 pure budget helper makes the 1280×720 arithmetic executable without a DOM emulator. The shared first row uses `max(hud, audio)`, not their sum. Keep actual `getBoundingClientRect()` containment/intersection checks browser-only at 1280×720 and 1920×1080: every slot stays inside the frame and dialogue/actions/audio have zero intersection.
 
 - [ ] **Step 5: Verify GREEN**
 

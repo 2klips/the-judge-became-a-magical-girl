@@ -43,7 +43,9 @@ Do not use `char_gray_wraith_death.png`; the story preserves the wraith's small 
 
 **Files:**
 - Create: `src/ui/transformationSequence.ts`
+- Create: `src/ui/presentationSequenceOwner.ts`
 - Create: `tests/m5TransformationSequence.test.ts`
+- Create: `tests/m5PresentationSequenceOwner.test.ts`
 - Modify: `src/ui/gameView.ts:925-976`
 - Modify: `src/styles.css:1105-1131,1463-1475`
 
@@ -54,12 +56,14 @@ Create `tests/m5TransformationSequence.test.ts`:
 ```ts
 import { describe, expect, it } from "vitest";
 import {
+  TRANSFORMATION_SCREEN_CLASS,
   TRANSFORMATION_BEATS,
   resolveTransformationBeat,
 } from "../src/ui/transformationSequence";
 
 describe("변신 결과 순차 연출", () => {
   it("cast, crossfade, complete, result를 한 장씩 연다", () => {
+    expect(TRANSFORMATION_SCREEN_CLASS).toBe("transformation-screen");
     expect(TRANSFORMATION_BEATS).toEqual(["cast", "crossfade", "complete", "result"]);
     expect(resolveTransformationBeat(0)).toEqual({
       id: "cast",
@@ -89,13 +93,38 @@ describe("변신 결과 순차 연출", () => {
 });
 ```
 
+In the same RED step, extend `tests/m5Presentation.test.ts` with a source/wiring contract that requires `GameView.renderTransformationResult()` to call `shell.classList.add(TRANSFORMATION_SCREEN_CLASS)` immediately after creating its shell. This prevents the full-viewport CSS selector from existing without ever matching a rendered screen.
+
+Also create `tests/m5PresentationSequenceOwner.test.ts` in this RED step:
+
+```ts
+import { describe, expect, it, vi } from "vitest";
+import { PresentationSequenceOwner } from "../src/ui/presentationSequenceOwner";
+
+describe("공통 순차 연출 owner", () => {
+  it("commit은 예약 timer와 활성 runner를 함께 취소한다", async () => {
+    vi.useFakeTimers();
+    const owner = new PresentationSequenceOwner();
+    const callback = vi.fn();
+    const runner = { cancel: vi.fn() };
+    owner.schedule(callback, 100);
+    owner.replaceSequence(runner);
+    owner.beginCommit();
+    await vi.runAllTimersAsync();
+    expect(callback).not.toHaveBeenCalled();
+    expect(runner.cancel).toHaveBeenCalledOnce();
+    expect(owner.hasActiveWork()).toBe(false);
+  });
+});
+```
+
 - [ ] **Step 2: Run the focused test and verify RED**
 
 ```powershell
-npm test -- tests/m5TransformationSequence.test.ts
+npm test -- tests/m5TransformationSequence.test.ts tests/m5PresentationSequenceOwner.test.ts tests/m5Presentation.test.ts
 ```
 
-Expected: FAIL because the sequence module does not exist.
+Expected: FAIL because the beat resolver, shared sequence owner, transformation screen constant, and actual shell-class wiring do not exist.
 
 - [ ] **Step 3: Implement the pure beat resolver**
 
@@ -103,6 +132,7 @@ Create `src/ui/transformationSequence.ts`:
 
 ```ts
 export const TRANSFORMATION_BEATS = ["cast", "crossfade", "complete", "result"] as const;
+export const TRANSFORMATION_SCREEN_CLASS = "transformation-screen";
 export type TransformationBeatId = (typeof TRANSFORMATION_BEATS)[number];
 
 export interface TransformationBeat {
@@ -123,37 +153,58 @@ export function resolveTransformationBeat(index: number): TransformationBeat {
 }
 ```
 
-- [ ] **Step 4: Add one cancellable presentation-timer owner**
+- [ ] **Step 4: Add the one shared cancellable sequence owner**
 
-Add these members to `GameView`; call `clearPresentationTimers()` at the beginning of `commit()` before mounting the next shell. Transformation and battle share this owner, so leaving a scene cannot mutate detached DOM later:
+Create `src/ui/presentationSequenceOwner.ts`. Transformation timers and the battle runner must both register with this one owner; do not add a second timer `Set` or a separate GameView cancellation field:
 
 ```ts
-private readonly presentationTimers = new Set<number>();
-
-private schedulePresentationStep(callback: () => void, delayMs: number): void {
-  const timerId = window.setTimeout(() => {
-    this.presentationTimers.delete(timerId);
-    callback();
-  }, delayMs);
-  this.presentationTimers.add(timerId);
+export interface CancellablePresentationSequence {
+  cancel(): void;
 }
 
-private clearPresentationTimers(): void {
-  for (const timerId of this.presentationTimers) window.clearTimeout(timerId);
-  this.presentationTimers.clear();
+export class PresentationSequenceOwner {
+  private activeSequence: CancellablePresentationSequence | null = null;
+  private readonly timerIds = new Set<ReturnType<typeof globalThis.setTimeout>>();
+
+  replaceSequence(sequence: CancellablePresentationSequence): void {
+    this.activeSequence?.cancel();
+    this.activeSequence = sequence;
+  }
+
+  schedule(callback: () => void, delayMs: number): void {
+    const timerId = globalThis.setTimeout(() => {
+      this.timerIds.delete(timerId);
+      callback();
+    }, delayMs);
+    this.timerIds.add(timerId);
+  }
+
+  beginCommit(): void {
+    this.activeSequence?.cancel();
+    this.activeSequence = null;
+    for (const timerId of this.timerIds) globalThis.clearTimeout(timerId);
+    this.timerIds.clear();
+  }
+
+  hasActiveWork(): boolean {
+    return this.activeSequence !== null || this.timerIds.size > 0;
+  }
 }
 ```
+
+Add `private readonly sequenceOwner = new PresentationSequenceOwner();` to `GameView` and call `this.sequenceOwner.beginCommit()` as the first line of every `commit()`. In the owner test, schedule a callback, call `replaceSequence()` with a fake cancellable runner, call `beginCommit()`, advance fake timers, and assert the callback did not fire, the fake runner's `cancel()` fired once, and `hasActiveWork() === false`.
 
 - [ ] **Step 5: Replace the two-cut collage with one full-bleed cut**
 
 In `renderTransformationResult()`:
 
+- immediately after `const shell = this.createShell(...)`, add `shell.classList.add(TRANSFORMATION_SCREEN_CLASS)`;
 - remove the duplicate `doyun.magical_pose` sprite;
 - remove the two-child `transform-cut-stage`;
 - keep one `transformation-cut-layer` in ordinary beats;
 - during `crossfade` only, keep the cast as an outgoing layer and place complete above it as an incoming layer;
 - keep the result card in the `dialogue` slot hidden until the result beat;
-- use a local `beatIndex` and `window.setTimeout` sequence of `900ms`, `420ms`, `900ms`, then result;
+- use a local `beatIndex` and `this.sequenceOwner.schedule()` sequence of `900ms`, `420ms`, `900ms`, then result;
 - on reduced motion, mount the result beat immediately.
 
 Use this renderer helper inside the method:
@@ -184,7 +235,7 @@ const renderBeat = (): void => {
 };
 ```
 
-Call `this.commit(shell)` once before timers, then mutate only the two slots. For normal motion, render beat `0`, then chain delays from `[900, 420, 900]` through `schedulePresentationStep()` until beat `3`. The crossfade beat temporarily has exactly two role-labelled layers; the complete beat immediately removes outgoing cast and returns to one. Add a fake-timer DOM assertion for `crossfade: 2 layers` and `complete/result: 1 layer`. For reduced motion, set `beatIndex = 3` and call `renderBeat()` once. Any later `commit()` cancels the chain through the shared timer owner.
+Call `this.commit(shell)` once before timers, then mutate only the stage/dialogue slots. For normal motion, render beat `0`, then chain delays from `[900, 420, 900]` through the shared owner's `schedule()` until beat `3`. The crossfade beat temporarily has exactly two role-labelled layers; the complete beat immediately removes outgoing cast and returns to one. Add fake-timer DOM assertions for `crossfade: 2 layers`, `complete/result: 1 layer`, and a later unrelated commit cancelling the pending transform beat. For reduced motion, set `beatIndex = 3` and call `renderBeat()` once.
 
 - [ ] **Step 6: Replace card styling with full-bleed styling**
 
@@ -193,8 +244,14 @@ Delete `.transform-cut` border, border-radius, box-shadow, rotate, and two-colum
 ```css
 .transformation-cut-layer {
   position: absolute;
-  inset: calc(-1 * var(--safe-top)) calc(-1 * var(--safe-inline)) calc(-1 * var(--safe-bottom));
+  inset: 0;
   overflow: hidden;
+}
+
+.transformation-screen .scene-slot-stage {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-character);
 }
 
 .transformation-cut-layer .asset-image {
@@ -230,16 +287,16 @@ Delete `.transform-cut` border, border-radius, box-shadow, rotate, and two-colum
 - [ ] **Step 7: Verify GREEN**
 
 ```powershell
-npm test -- tests/m5TransformationSequence.test.ts tests/m5Presentation.test.ts
+npm test -- tests/m5TransformationSequence.test.ts tests/m5PresentationSequenceOwner.test.ts tests/m5Presentation.test.ts
 npm run check
 ```
 
-Browser-check reduced-motion off/on. Expected: ordinary beats have one cut; only the 420ms crossfade overlaps outgoing cast and incoming complete; no white card borders, no duplicate Doyun sprite, result card appears last.
+Browser-check reduced-motion off/on at 1280×720 and 1920×1080. Assert the stage and cut bounding rectangles equal the shell viewport (`left/top=0`, width/height exact) before and after the result card mounts. Expected: ordinary beats have one cut; only the 420ms crossfade overlaps outgoing cast and incoming complete; no white card borders, no duplicate Doyun sprite, result card appears last without resizing the cut.
 
 - [ ] **Step 8: Commit**
 
 ```powershell
-git add src/ui/transformationSequence.ts src/ui/gameView.ts src/styles.css tests/m5TransformationSequence.test.ts
+git add src/ui/transformationSequence.ts src/ui/presentationSequenceOwner.ts src/ui/gameView.ts src/styles.css tests/m5TransformationSequence.test.ts tests/m5PresentationSequenceOwner.test.ts tests/m5Presentation.test.ts
 git commit -m "feat(ui): sequence transformation cuts"
 ```
 
@@ -336,17 +393,26 @@ git commit -m "feat(assets): adopt gray wraith battle actions"
 - Create: `tests/m5BattleSequence.test.ts`
 - Modify: `tests/m5SceneBackground.test.ts:62-78`
 - Modify: `src/assets/presentationBackground.ts:22-31`
+- Modify: `src/dev/scenePreview.ts`
+- Modify: `tests/m5DevScenePreview.test.ts`
 
 - [ ] **Step 1: Write the failing background continuity test**
 
 Change the p2 assertion:
 
 ```ts
-expect(resolveBattle("p1_defend")).toBe("bg_battle_wide");
-expect(resolveBattle("p2_attack")).toBe("bg_battle_wide");
+expect(resolveBattle("p1_defend")).toBe("bg_office_wide");
+expect(resolveBattle("p2_attack")).toBe("bg_office_wide");
 expect(resolveBattle("p3_answer")).toBe("bg_mind_archive");
 expect(resolveBattle("p3_answer", "spell")).toBe("bg_battle_core");
+
+const previewBackground = (id: string): string | undefined =>
+  M5_SCENE_PREVIEWS.find((preview) => preview.id === id)?.backgroundId;
+expect(previewBackground("battle-p1")).toBe("bg_office_wide");
+expect(previewBackground("battle-p2")).toBe("bg_office_wide");
 ```
+
+Import `M5_SCENE_PREVIEWS` in the existing preview test; do not add a second preview resolver only for this assertion.
 
 - [ ] **Step 2: Write the failing battle-sequence tests**
 
@@ -478,10 +544,10 @@ describe("전투 순차 연출", () => {
 - [ ] **Step 3: Run focused tests and verify RED**
 
 ```powershell
-npm test -- tests/m5SceneBackground.test.ts tests/m5BattleSequence.test.ts
+npm test -- tests/m5SceneBackground.test.ts tests/m5BattleSequence.test.ts tests/m5DevScenePreview.test.ts
 ```
 
-Expected: p2 returns `bg_hall_void`; battle sequence module does not exist.
+Expected: p1 returns `bg_battle_wide`, p2 returns `bg_hall_void`, and the battle sequence module does not exist.
 
 - [ ] **Step 4: Implement background continuity**
 
@@ -490,7 +556,7 @@ Change `resolvePresentationBackground()`:
 ```ts
 if (cue.kind === "battle") {
   if (cue.phaseId === "p1_defend" || cue.phaseId === "p2_attack") {
-    return "bg_battle_wide";
+    return "bg_office_wide";
   }
   if (cue.phaseId === "p3_answer") {
     return cue.beat === "spell" ? "bg_battle_core" : "bg_mind_archive";
@@ -498,6 +564,10 @@ if (cue.kind === "battle") {
   return cue.baseBackground;
 }
 ```
+
+`bg_office_wide` is the first reusable clean-background trial required by the approved design: it keeps the late-night frozen coworkers but has no baked blue barrier. Task 3 changes only the background resolver and dev-preview IDs. The p1/p2 grayscale/time-stop/corruption presentation class, `GameView` wiring, CSS, and visible-blue-rectangle assertion belong exclusively to Task 4; that overlay must not draw a rectangular shield. At 1280×720 and 1920×1080, the acceptance gate is **visible blue rectangle count 0**. If the clean reusable background still fails composition, stop before any binary edit and present a separate masked-background comparison for user approval.
+
+In `src/dev/scenePreview.ts`, change only `battle-p1` and `battle-p2` preview `backgroundId` to `bg_office_wide`. Keep separate background-only previews for `bg_battle_wide` and `bg_hall_void` so the existing 16-background coverage test remains valid. Defer the p1/p2 grayscale/time-stop/corruption overlay class and its `GameView`/CSS tests to Task 4, which already owns those files.
 
 - [ ] **Step 5: Implement the pure battle sequence module**
 
@@ -602,7 +672,7 @@ const beatDelayMs: Partial<Record<BattleBeatId, number>> = {
 };
 
 export class BattleBeatRunner {
-  private timerId: number | null = null;
+  private timerId: ReturnType<typeof globalThis.setTimeout> | null = null;
   private beats: readonly BattleBeatId[] = [];
   private index = 0;
 
@@ -627,7 +697,7 @@ export class BattleBeatRunner {
   }
 
   cancel(): void {
-    if (this.timerId !== null) window.clearTimeout(this.timerId);
+    if (this.timerId !== null) globalThis.clearTimeout(this.timerId);
     this.timerId = null;
   }
 
@@ -637,7 +707,7 @@ export class BattleBeatRunner {
     this.onBeat(beat);
     const delay = beatDelayMs[beat];
     if (delay === undefined) return;
-    this.timerId = window.setTimeout(() => {
+    this.timerId = globalThis.setTimeout(() => {
       this.timerId = null;
       this.index += 1;
       this.emitCurrent();
@@ -653,7 +723,7 @@ The facing table is deliberately logical-ID-specific. The inspected attack sourc
 - [ ] **Step 6: Verify GREEN**
 
 ```powershell
-npm test -- tests/m5SceneBackground.test.ts tests/m5BattleSequence.test.ts
+npm test -- tests/m5SceneBackground.test.ts tests/m5BattleSequence.test.ts tests/m5DevScenePreview.test.ts
 npm run check
 ```
 
@@ -662,7 +732,7 @@ Expected: focused tests and TypeScript PASS.
 - [ ] **Step 7: Commit**
 
 ```powershell
-git add src/assets/presentationBackground.ts src/ui/battleSequence.ts tests/m5SceneBackground.test.ts tests/m5BattleSequence.test.ts
+git add src/assets/presentationBackground.ts src/dev/scenePreview.ts src/ui/battleSequence.ts tests/m5SceneBackground.test.ts tests/m5BattleSequence.test.ts tests/m5DevScenePreview.test.ts
 git commit -m "feat(battle): define continuous office beats"
 ```
 
@@ -670,8 +740,8 @@ git commit -m "feat(battle): define continuous office beats"
 
 **Files:**
 - Modify: `tests/m5Presentation.test.ts:209-280`
-- Create: `src/ui/presentationSequenceOwner.ts`
-- Create: `tests/m5PresentationSequenceOwner.test.ts`
+- Modify: `src/ui/presentationSequenceOwner.ts`
+- Modify: `tests/m5PresentationSequenceOwner.test.ts`
 - Modify: `src/main.ts:285-578`
 - Modify: `src/ui/gameView.ts:132-223,978-1168,1451-1507`
 - Modify: `src/styles.css:2679-3168`
@@ -703,33 +773,17 @@ it("reduced motion은 최종 dialogue 상태를 즉시 연다", () => {
 
 Add a DOM assertion that the dialogue/actions slots are empty through prepare/action/hit and mounted only at dialogue. For a completed battle, make `outro` a user-readable gated state: show the black scrim and an `정화 계속` button; clicking it opens the final dialogue/result controls. Do not auto-advance outro after 650ms.
 
-Create `src/ui/presentationSequenceOwner.ts` and cover it in `tests/m5PresentationSequenceOwner.test.ts` before GameView wiring:
+Add a presentation assertion that p1/p2 shells receive `battle-frozen-office` and p3 does not. In `GameView`, add that class when the phase is `p1_defend` or `p2_attack`. In CSS, apply the time-stop look to the existing full background image, not a box:
 
-```ts
-export interface CancellablePresentationSequence {
-  cancel(): void;
-}
-
-export class PresentationSequenceOwner {
-  private battleRunner: CancellablePresentationSequence | null = null;
-
-  replaceBattleRunner(runner: CancellablePresentationSequence): void {
-    this.battleRunner?.cancel();
-    this.battleRunner = runner;
-  }
-
-  beginCommit(): void {
-    this.battleRunner?.cancel();
-    this.battleRunner = null;
-  }
-
-  hasActiveBattleRunner(): boolean {
-    return this.battleRunner !== null;
-  }
+```css
+.battle-frozen-office .scene-background {
+  filter: grayscale(0.45) saturate(0.65) brightness(0.78);
 }
 ```
 
-Add `private readonly sequenceOwner = new PresentationSequenceOwner();` to `GameView`. Start a real owned `BattleBeatRunner`, call the same `beginCommit()` hook used at the first line of `GameView.commit()`, advance fake timers, and assert no later beat fires and `hasActiveBattleRunner()` is false. Also stub `matchMedia` and assert the runner factory receives the actual `matchMedia("(prefers-reduced-motion: reduce)").matches` value; a direct unit call to `runner.cancel()` is not sufficient. Transformation timers remain in `clearPresentationTimers()`; `commit()` calls both owners before any DOM mutation.
+Do not add a rectangular pseudo-element or shield. The browser blue-rectangle count remains the final visual gate.
+
+Extend the shared `PresentationSequenceOwner` created in Task 1; do not redefine it or add a battle-only owner. Start a real `BattleBeatRunner`, pass it to `replaceSequence()`, call the same `beginCommit()` hook used at the first line of `GameView.commit()`, advance fake timers, and assert no later beat fires and `hasActiveWork()` is false. Also stub `matchMedia` and assert the runner factory receives the actual `matchMedia("(prefers-reduced-motion: reduce)").matches` value; a direct unit call to `runner.cancel()` is not sufficient. The same owner already covers transformation timers.
 
 Extend `BattleActionPresentation` assertions:
 
@@ -817,7 +871,7 @@ For `renderBattle()` prompt, track the previous phase ID in `GameView`. On the f
 
 Compute `actionAssetsAvailable` only from registered catalog IDs (`resolveImageAsset("gray_wraith.attack") !== null && resolveImageAsset("gray_wraith.hit") !== null`), never by reading untracked docs candidates. Pass `resolveBattleSprite(beat, battleState.enemyState, actionAssetsAvailable)` and `resolveBattleDoyunSprite(phaseId, beat, false)` into `createBattleStage()`. When Task 2 was skipped, the resolver returns registered normal/weakened IDs and the same beat classes provide attack/hit motion. Prompt rendering passes `prompt: true`, so all three phases begin in `doyun.magical_pose`; only the visible action beat swaps to defend/attack/finish.
 
-Before starting a reply sequence, create the runner with `window.matchMedia("(prefers-reduced-motion: reduce)").matches`, pass it to `this.sequenceOwner.replaceBattleRunner(runner)`, and start the resolved beats. `commit()` calls `this.sequenceOwner.beginCommit()` and `clearPresentationTimers()` at its first lines, so every unrelated render cancels/nulls the active runner before touching the DOM. Since the reply must commit its shell before starting its own runner, store/start the new runner only after that initial commit returns.
+Before starting a reply sequence, create the runner with `window.matchMedia("(prefers-reduced-motion: reduce)").matches`, pass it to `this.sequenceOwner.replaceSequence(runner)`, and start the resolved beats. `commit()` calls `this.sequenceOwner.beginCommit()` at its first line, so every unrelated render cancels/nulls the active runner and scheduled transform timers before touching the DOM. Since the reply must commit its shell before starting its own runner, store/start the new runner only after that initial commit returns.
 
 For prompt screens, keep `activeSpeaker = "gray_wraith"` because the enemy prompt is speaking. For result action beats, do not leave it permanently on the wraith.
 
@@ -883,11 +937,11 @@ Browser-check `battle-p1`, `battle-p2`, `battle-p3-question`, `battle-p3-spell` 
 - Juno/wand overlap 0;
 - BGM/HUD gap at least 16px;
 - dialogue/actions gap at least 16px;
-- p1/p2 frozen coworkers remain visible;
+- p1/p2 reuse clean `bg_office_wide`; frozen coworkers remain visible and visible blue rectangle count is 0;
 - rights-approved attack/hit sprites appear in sequence, or normal/weakened fallback sprites carry the same CSS action/hit beats;
 - cast/impact cues occur when their player-action/enemy-action/enemy-hit beats become visible, with no duplicate immediate cue;
 - p3 first entry has one space-transition beat; same-phase rerenders do not repeat it;
-- visible blue rectangle from `bg_battle_wide` is not covered by new CSS; if still judged intrusive, stop and request separate background-edit approval.
+- no CSS rectangle is used to hide a defect; if any visible blue rectangle remains, this task is not complete and must stop for a separately approved masked-background comparison.
 
 - [ ] **Step 8: Commit**
 
@@ -1031,9 +1085,11 @@ git commit -m "feat(ui): add battle outro and ending safe zones"
 
 - [ ] **Step 1: Update asset and mapping SSOTs**
 
-If the rights gate passed and adoption occurred, record attack/hit exact paths, bytes, SHA-256, 1200×2000, alpha, source/runtime identity, generation job IDs, and the confirmation evidence. Mark them `ready`, not `approved`, until remaining human composite QA passes. If the rights gate did not pass, record only that docs candidates remain unadopted and the runtime uses normal/weakened + CSS motion; do not claim source/runtime identity. In both cases, `death` remains unadopted.
+If the rights gate passed and adoption occurred, record attack/hit exact paths, bytes, SHA-256, 1200×2000, alpha, source/runtime identity, generation job IDs, and the confirmation evidence. Mark them `ready`, not `approved`, until remaining human composite QA passes. If the gate did not pass, record only that docs candidates remain unadopted and the **local demo** uses the already-registered normal/weakened + CSS motion; do not call that a public-distribution rights fallback. In both cases, `death` remains unadopted.
 
-Update p1/p2 to `bg_battle_wide`; p3 question/archive and final spell/core remain unchanged. Record the approved left Doyun/Juno-right wraith composition, full-bleed transform sequence, and outro text.
+The existing normal/weakened, Doyun, Juno, backgrounds, cuts, and BGM are also `ready` with rights pending. Therefore the entire public deployment gate remains closed until every runtime asset in the chosen route is `approved` or replaced by a code-only/black/quiet approved fallback. This plan may verify local desktop presentation; it must not push, deploy, or describe the build as public-release safe.
+
+Update p1/p2 to the clean reusable `bg_office_wide`; p3 question/archive and final spell/core remain unchanged. Record visible blue rectangle count 0, the approved left Doyun/Juno-right wraith composition, full-bleed transform sequence, and outro text.
 
 - [ ] **Step 2: Run complete automated verification**
 
@@ -1062,7 +1118,7 @@ At both 1280×720 and 1920×1080, complete GOOD/NORMAL/BAD paths and inspect all
 - console warnings/errors 0;
 - source/runtime hash identity only if the two assets passed the hard rights gate and were actually adopted.
 
-If the embedded blue barrier remains visually unacceptable, do not edit it in this plan. Capture the exact scene and request separate user approval for a masked background edit.
+Visible blue rectangle count must be 0 on all battle routes. If the reusable clean-background trial cannot meet that gate, do not edit a binary in this plan; capture the exact scene and request separate user approval for a masked background comparison.
 
 - [ ] **Step 4: Record implementation and learning evidence**
 

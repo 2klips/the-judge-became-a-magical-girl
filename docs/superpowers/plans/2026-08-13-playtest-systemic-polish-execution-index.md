@@ -76,14 +76,15 @@ Why last: it depends on `SceneFrame`, shared speaker focus, stable BGM/SFX trigg
 Exit gate:
 
 - transform ordinary cast/complete/result beats show one full-bleed layer; only the labelled 420ms crossfade overlaps outgoing cast and incoming complete layers, then returns to one;
-- wraith attack/hit are adopted only after explicit service-plan/reference/public-distribution rights confirmation, with source/runtime identity and provenance; otherwise existing normal/weakened + CSS motion remains the completed fallback; `death` stays excluded;
+- wraith attack/hit are adopted only after explicit service-plan/reference/public-distribution rights confirmation, with source/runtime identity and provenance; otherwise the local demo keeps existing normal/weakened + CSS motion; `death` stays excluded and the whole public deployment gate remains closed while any runtime asset is only `ready`;
 - p1/p2 keep the same frozen late-night office;
+- p1/p2 first trial the clean reusable office background and finish only when visible blue rectangle count is 0;
 - Doyun/Juno left, wraith right, both sides facing inward, Juno/wand overlap 0;
 - prepare/action/hit/dialogue/outro beats are serial and cancellable;
 - purification explanation precedes convergence;
 - all three endings keep one card per beat in safe zones.
 
-Visual binary gate: do not generate a Juno pose or edit `bg_battle_wide.webp`. If CSS/anchor/sequence work still leaves the blue barrier or Juno pose unacceptable, stop and present a separate comparison for approval.
+Visual binary gate: do not generate a Juno pose or edit a battle background in this wave. If the clean reusable office background cannot reach visible blue rectangle count 0, or the Juno pose remains unacceptable, stop and present a separate comparison for approval.
 
 ## Subagent ownership contract
 
