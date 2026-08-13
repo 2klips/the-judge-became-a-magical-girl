@@ -3,5 +3,5 @@ export function enterGameFromTitle(
   disconnectMicrophone: () => Promise<void>,
 ): void {
   enterGame();
-  void disconnectMicrophone();
+  void disconnectMicrophone().catch(() => undefined);
 }
