@@ -50,6 +50,7 @@ import { DIALOGUE_ADVANCE_DELAY_MS, DelayedActionGate } from "./advanceGate";
 import { applySceneEffect } from "./effects";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
+import { enterGameFromTitle } from "./titleStart";
 
 export const VOICE_TITLE_SUBTITLE =
   "마이크를 누른 채 말하고 놓아, 정체불명의 목소리와 호흡을 맞춰 보자.";
@@ -757,17 +758,19 @@ export class GameView {
       const acceptedCalibration = calibration;
       if (!acceptedCalibration) return;
       startButton.disabled = true;
-      void options
-        .disconnectMicrophone()
-        .finally(() => options.onNewGame(acceptedCalibration));
+      enterGameFromTitle(
+        () => options.onNewGame(acceptedCalibration),
+        options.disconnectMicrophone,
+      );
     });
     resumeButton?.addEventListener("click", () => {
       const acceptedCalibration = calibration;
       if (!acceptedCalibration) return;
       resumeButton!.disabled = true;
-      void options
-        .disconnectMicrophone()
-        .finally(() => options.onResume(acceptedCalibration));
+      enterGameFromTitle(
+        () => options.onResume(acceptedCalibration),
+        options.disconnectMicrophone,
+      );
     });
 
     shell.append(titleBlock);
