@@ -8,19 +8,19 @@ import {
 } from "../src/input/voiceTurnRecovery";
 
 describe("음성 실패 복구 정책", () => {
-  it("첫 실패는 같은 턴 음성을 유지하고 누적 실패를 올리지 않는다", () => {
-    expect(resolveVoiceTurnFailure(0, 4)).toEqual({
+  it("첫 실제 실패는 누적 실패를 올리고 같은 턴 음성을 유지한다", () => {
+    expect(resolveVoiceTurnFailure(0, 0)).toEqual({
       nextAttemptInTurn: 1,
-      countFailedTurn: false,
+      countInputFailure: true,
       forceClickForTurn: false,
       forceGlobalClick: false,
     });
   });
 
-  it("두 번째 실패는 현재 턴 클릭으로 전환하고 실패한 턴을 한 번 센다", () => {
-    expect(resolveVoiceTurnFailure(1, 3)).toEqual({
+  it("같은 턴 두 번째 실제 실패도 누적하고 현재 턴 클릭으로 전환한다", () => {
+    expect(resolveVoiceTurnFailure(1, 1)).toEqual({
       nextAttemptInTurn: 0,
-      countFailedTurn: true,
+      countInputFailure: true,
       forceClickForTurn: true,
       forceGlobalClick: false,
     });
@@ -36,10 +36,10 @@ describe("음성 실패 복구 정책", () => {
     expect(second).not.toMatch(/한 번 더|다시 시도/);
   });
 
-  it("다섯 번째 실패 턴의 두 번째 실패에서만 전체 클릭 모드가 된다", () => {
-    expect(resolveVoiceTurnFailure(1, 4)).toEqual({
+  it("다섯 번째 실제 실패는 같은 턴 첫 실패여도 즉시 전체 클릭 모드가 된다", () => {
+    expect(resolveVoiceTurnFailure(0, 4)).toEqual({
       nextAttemptInTurn: 0,
-      countFailedTurn: true,
+      countInputFailure: true,
       forceClickForTurn: true,
       forceGlobalClick: true,
     });
@@ -49,10 +49,12 @@ describe("음성 실패 복구 정책", () => {
     "%s permission/device-open 실패는 1회 재시도 후 현재 턴 click이다",
     () => {
       expect(resolveUnavailableVoiceFailure(true, 0, 0)).toMatchObject({
+        countInputFailure: true,
         forceClickForTurn: false,
         forceGlobalClick: false,
       });
-      expect(resolveUnavailableVoiceFailure(true, 1, 0)).toMatchObject({
+      expect(resolveUnavailableVoiceFailure(true, 1, 1)).toMatchObject({
+        countInputFailure: true,
         forceClickForTurn: true,
         forceGlobalClick: false,
       });
@@ -61,6 +63,7 @@ describe("음성 실패 복구 정책", () => {
 
   it("브라우저 녹음 API 자체 미지원만 즉시 전역 click이다", () => {
     expect(resolveUnavailableVoiceFailure(false, 0, 0)).toMatchObject({
+      countInputFailure: false,
       forceClickForTurn: true,
       forceGlobalClick: true,
       capabilityUnavailable: true,

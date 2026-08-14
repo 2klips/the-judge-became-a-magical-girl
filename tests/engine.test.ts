@@ -170,4 +170,44 @@ describe("M5 node runner", () => {
     engine.setInputMode("voice");
     expect(engine.getState().inputMode).toBe("voice");
   });
+
+  it("새 게임은 누적 음성 입력 실패를 초기화한다", () => {
+    const engine = createEngine();
+    engine.startNewGame("voice");
+    engine.recordSttTurnFailure();
+    engine.recordSttTurnFailure();
+    expect(engine.getState().sttFailCount).toBe(2);
+
+    engine.startNewGame("voice");
+
+    expect(engine.getState().sttFailCount).toBe(0);
+    expect(engine.getState().inputMode).toBe("voice");
+  });
+
+  it("이어하기는 저장된 누적 음성 입력 실패를 보존한다", () => {
+    const source = createEngine();
+    source.startNewGame("voice");
+    source.recordSttTurnFailure();
+    source.recordSttTurnFailure();
+    const savedState = source.getState();
+    const resumed = createEngine();
+
+    resumed.resume(savedState);
+
+    expect(resumed.getState().sttFailCount).toBe(2);
+    expect(resumed.getState().inputMode).toBe("voice");
+  });
+
+  it("성공·노드 이동·수동 click 전환은 누적 음성 입력 실패를 줄이지 않는다", () => {
+    const engine = createEngine();
+    reachDialogue(engine);
+    engine.setInputMode("voice");
+    engine.recordSttTurnFailure();
+
+    engine.submitTranscript("집에 가고 싶어.");
+    expect(engine.getState().sttFailCount).toBe(1);
+
+    engine.setInputMode("click");
+    expect(engine.getState().sttFailCount).toBe(1);
+  });
 });

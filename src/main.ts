@@ -39,6 +39,7 @@ import {
   formatVoiceTurnFailureMessage,
   resolveUnavailableVoiceFailure,
   resolveVoiceTurnFailure,
+  type VoiceTurnFailureDecision,
 } from "./input/voiceTurnRecovery";
 import {
   createWorkerRealtimeVoicePort,
@@ -181,22 +182,24 @@ async function bootstrap(): Promise<void> {
     const handleVoiceFailure = (
       turnKey: string,
       message: string,
+      decision: VoiceTurnFailureDecision,
     ): { readonly forceClickForTurn: boolean; readonly forceGlobalClick: boolean } => {
-      const state = engine.getState();
-      const attempt = voiceFailureAttempts.get(turnKey) ?? 0;
-      const decision = resolveVoiceTurnFailure(attempt, state.sttFailCount);
-      if (!decision.countFailedTurn) {
+      let forcedClickMode = false;
+      if (decision.countInputFailure) {
+        forcedClickMode = engine.recordSttTurnFailure().forcedClickMode;
+      }
+      if (decision.forceGlobalClick || forcedClickMode) {
+        voiceFailureAttempts.delete(turnKey);
+        engine.setInputMode("click");
+        renderCurrent("음성 입력 실패가 5회 누적돼 클릭 모드로 전환했어.");
+        return { ...decision, forceGlobalClick: true };
+      }
+      if (!decision.forceClickForTurn) {
         voiceFailureAttempts.set(turnKey, decision.nextAttemptInTurn);
         renderCurrent(formatVoiceTurnFailureMessage(message, "retry"));
         return decision;
       }
       voiceFailureAttempts.delete(turnKey);
-      const failure = engine.recordSttTurnFailure();
-      if (failure.forcedClickMode || decision.forceGlobalClick) {
-        engine.setInputMode("click");
-        renderCurrent("음성 인식에 실패한 턴이 5회 누적돼 클릭 모드로 전환했어.");
-        return { ...decision, forceGlobalClick: true };
-      }
       renderCurrent(formatVoiceTurnFailureMessage(message, "click"), true);
       return decision;
     };
@@ -206,19 +209,18 @@ async function bootstrap(): Promise<void> {
       failure: VoiceInputFailure,
     ): void => {
       const baseMessage = formatVoiceInputError(failure);
-      if (failure.kind === "permission" || failure.kind === "recording") {
-        const decision = resolveUnavailableVoiceFailure(
-          recordingSupported,
-          voiceFailureAttempts.get(turnKey) ?? 0,
-          engine.getState().sttFailCount,
-        );
-        if (decision.capabilityUnavailable) {
-          engine.setInputMode("click");
-          renderCurrent("이 브라우저에서는 음성 입력을 사용할 수 없어. 클릭으로 진행해 줘.");
-          return;
-        }
+      const attempt = voiceFailureAttempts.get(turnKey) ?? 0;
+      const state = engine.getState();
+      const decision =
+        failure.kind === "permission" || failure.kind === "recording"
+          ? resolveUnavailableVoiceFailure(recordingSupported, attempt, state.sttFailCount)
+          : resolveVoiceTurnFailure(attempt, state.sttFailCount);
+      if ("capabilityUnavailable" in decision && decision.capabilityUnavailable) {
+        engine.setInputMode("click");
+        renderCurrent("이 브라우저에서는 음성 입력을 사용할 수 없어. 클릭으로 진행해 줘.");
+        return;
       }
-      handleVoiceFailure(turnKey, baseMessage);
+      handleVoiceFailure(turnKey, baseMessage, decision);
     };
 
     const pendingDebugVoiceFailure = createPendingDebugVoiceFailure(

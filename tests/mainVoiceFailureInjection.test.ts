@@ -1,5 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import {
+  consumeDebugVoiceFailure,
+  createPendingDebugVoiceFailure,
+} from "../src/input/voiceFailureInjection";
 
 const mainSource = readFileSync(new URL("../src/main.ts", import.meta.url), "utf8");
 
@@ -12,6 +16,24 @@ function sourceSection(start: string, end: string): string {
 }
 
 describe("main debug 음성 실패 주입 wiring", () => {
+  it.each([
+    "permission",
+    "recording",
+    "no-speech",
+    "timeout",
+    "http",
+    "schema",
+    "network",
+  ] as const)("DEV %s 주입을 실제 typed failure로 소비한다", (kind) => {
+    const pending = createPendingDebugVoiceFailure(
+      `?debug=1&voiceFailure=${kind}`,
+      true,
+      true,
+    );
+
+    expect(consumeDebugVoiceFailure(pending)).toMatchObject({ kind });
+  });
+
   it("DEV와 debug가 모두 켜진 bootstrap에서 pending holder를 한 번 만든다", () => {
     expect(mainSource).toContain("consumeDebugVoiceFailure");
     expect(mainSource).toContain("createPendingDebugVoiceFailure");

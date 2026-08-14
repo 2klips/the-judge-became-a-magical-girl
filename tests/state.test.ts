@@ -49,7 +49,7 @@ describe("GameState 중앙 갱신", () => {
 
   it("스냅샷을 Set 포함 상태로 왕복하고 비허용 플래그를 거부한다", () => {
     const data = loadFixtureData();
-    const initial = createInitialGameState(data.config);
+    const initial = { ...createInitialGameState(data.config), sttFailCount: 3 };
     initial.flags.add("promise");
     const snapshot = serializeState(initial);
     const nodeIds = new Set(data.scenario.map((node) => node.nodeId));
@@ -57,6 +57,7 @@ describe("GameState 중앙 갱신", () => {
     const restored = parseStateSnapshot(snapshot, new Set(["promise"]), nodeIds);
     expect(restored?.flags.has("promise")).toBe(true);
     expect(restored?.currentNodeId).toBe(initial.currentNodeId);
+    expect(restored?.sttFailCount).toBe(3);
     expect(restored).not.toHaveProperty("schemaVersion");
 
     expect(
@@ -68,7 +69,7 @@ describe("GameState 중앙 갱신", () => {
     ).toBeNull();
   });
 
-  it("STT가 두 번 실패한 턴만 한 번씩 기록해 다섯 번째 실패 턴에서 강등한다", () => {
+  it("실제 음성 입력 실패를 한 번씩 기록해 다섯 번째 실패에서 강등한다", () => {
     const data = loadFixtureData();
     let state: GameState = {
       ...createInitialGameState(data.config),

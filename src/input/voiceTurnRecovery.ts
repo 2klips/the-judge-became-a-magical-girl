@@ -1,6 +1,6 @@
 export interface VoiceTurnFailureDecision {
   readonly nextAttemptInTurn: number;
-  readonly countFailedTurn: boolean;
+  readonly countInputFailure: boolean;
   readonly forceClickForTurn: boolean;
   readonly forceGlobalClick: boolean;
 }
@@ -16,40 +16,48 @@ export function formatVoiceTurnFailureMessage(
 
 export function resolveVoiceTurnFailure(
   attemptInTurn: number,
-  accumulatedFailedTurns: number,
+  accumulatedInputFailures: number,
 ): VoiceTurnFailureDecision {
+  if (accumulatedInputFailures + 1 >= 5) {
+    return {
+      nextAttemptInTurn: 0,
+      countInputFailure: true,
+      forceClickForTurn: true,
+      forceGlobalClick: true,
+    };
+  }
   if (attemptInTurn <= 0) {
     return {
       nextAttemptInTurn: 1,
-      countFailedTurn: false,
+      countInputFailure: true,
       forceClickForTurn: false,
       forceGlobalClick: false,
     };
   }
   return {
     nextAttemptInTurn: 0,
-    countFailedTurn: true,
+    countInputFailure: true,
     forceClickForTurn: true,
-    forceGlobalClick: accumulatedFailedTurns + 1 >= 5,
+    forceGlobalClick: false,
   };
 }
 
 export function resolveUnavailableVoiceFailure(
   recordingSupported: boolean,
   attemptInTurn: number,
-  accumulatedFailedTurns: number,
+  accumulatedInputFailures: number,
 ): VoiceTurnFailureDecision & { readonly capabilityUnavailable: boolean } {
   if (!recordingSupported) {
     return {
       nextAttemptInTurn: 0,
-      countFailedTurn: false,
+      countInputFailure: false,
       forceClickForTurn: true,
       forceGlobalClick: true,
       capabilityUnavailable: true,
     };
   }
   return {
-    ...resolveVoiceTurnFailure(attemptInTurn, accumulatedFailedTurns),
+    ...resolveVoiceTurnFailure(attemptInTurn, accumulatedInputFailures),
     capabilityUnavailable: false,
   };
 }
