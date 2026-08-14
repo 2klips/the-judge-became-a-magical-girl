@@ -1626,3 +1626,41 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 | `git diff --check` | PASS | 문서 patch 공백 오류 없음 |
 
 기능 코드·테스트·시나리오·에셋은 변경하지 않았고, 수동 Gate 근거만 이 문서에 추가했다.
+
+## Phase B — PTT 버튼 내부 Live Meter
+
+- 작업일: 2026-08-15 KST
+- 브랜치: `codex/ptt-live-meter`
+- 시작 기준: Phase A 승인 tip `651781c103c669fc6592b5349c65c1b5197454df`
+- 기능 커밋: `f77baa3` `feat(voice): show live level in ptt`
+- 상태: 구현·자동 검증 PASS. 일반 Chrome의 새 QA origin에서 microphone permission 호출이 반환되지 않아 실제 장치 PTT 시각 QA는 `PENDING`
+
+### 구현 결과
+
+- 한 capture의 단일 `getUserMedia()` stream을 `MediaRecorder`와 Web Audio analyser가 함께 사용한다. 두 번째 stream, TITLE tester, Settings tester, 별도 meter panel은 추가하지 않았다.
+- 기존 microphone meter의 percent·`quiet`/`good`/`loud` 정책을 `resolvePttLiveLevelPresentation()`으로 재사용한다.
+- dialogue, incantation, battle spell, battle freeform은 같은 PTT 내부 fill·label helper를 사용한다. fill은 `aria-hidden` 장식 layer이며 dBFS 숫자나 frame별 screen-reader 알림을 추가하지 않았다.
+- finish, abort, cancel, recorder error, recorder construct/start 실패, render replacement에서 RAF·source·analyser·AudioContext·observer·track을 분리 소유하고 멱등 정리한다.
+- AudioContext, source, analyser, connect, RAF, sample, observer 오류는 meter만 no-fill로 강등한다. recording, BGM duck, SFX suppression, STT 실패 횟수에는 영향을 주지 않는다.
+- pointer hold/release, global `T`, focused `Space`/`Enter`, battle focused button 우선 규칙은 기존 binding을 유지한다.
+
+### 자동 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| Phase B focused | PASS | 7 files·61 tests |
+| `npm run check` | PASS | `tsc --noEmit`, 오류 0 |
+| `npm test` | PASS | 51 files·314 tests |
+| `npm run build` | PASS | Vite 8.2.0, 150 modules. 기존 Transformers 516.22 kB warning만 유지 |
+| `npm run build:qa` | PASS | QA build 120 modules·183.92 kB JS |
+| `git diff --check` | PASS | feature staged diff와 worktree diff 공백 오류 0 |
+
+자동 테스트는 quiet/good/loud percent, 단일 stream 공유, meter 7종 fail-soft, finish/abort/error/setup/render cleanup, controller/main observer forwarding, 4개 PTT surface, keyboard 계약을 보호한다.
+
+### 일반 Chrome QA와 PENDING
+
+- 일반 Google Chrome에서 `http://127.0.0.1:5176/the-judge-became-a-magical-girl/?debug=1`을 사용했다. Phase A와 같은 설치 Chrome profile이며, 당시 기록된 버전은 `151.0.7922.138`이다.
+- 새 5176 origin에서 `마이크 연결`을 누른 뒤 permission·device 요청이 `연결 중`에서 반환되지 않았다. 10초 이상 기다린 뒤에도 장치 목록, TITLE meter, Start가 활성화되지 않았고 console warning/error는 0이었다.
+- 이를 Phase B 제품 결함 PASS/FAIL로 단정하지 않는다. 실제 dialogue/incantation/battle PTT에 도달하지 못했으므로 CORSAIR/QHD Webcam의 내부 fill 반응, pointer/T/Space/Enter 실제 hold, release/cancel/error/scene replacement 시각 reset은 `PENDING`이다. 자동 테스트 PASS를 실제 장치 PASS로 바꾸지 않는다.
+- viewport 관찰: 1920×1080은 `scrollHeight=1080`, 1366×768은 `scrollHeight=768`; 1600×900 TITLE은 기존 `scrollHeight=931`이었다. 후자는 승인된 Phase C TITLE no-scroll 과제로 남기며 Phase B PTT 코드에서 수정하지 않았다.
+- Phase C/TITLE worktree와 코드는 시작하지 않았다. 실제 Chrome microphone 호출이 정상 반환되는 환경에서 네 surface의 live fill QA를 다시 실행해야 Phase B manual gate를 닫을 수 있다.
