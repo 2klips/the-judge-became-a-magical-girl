@@ -16,7 +16,7 @@
 ## 1. 게임 전체 플로우
 
 ```
-타이틀 (마이크 연결·입력 장치 선택·실시간 dBFS 테스트 통과 후 시작 활성화)
+타이틀 (새 게임·이어하기·설정, 선택형 마이크 설정과 click 완주 폴백)
  → 프롤로그 (고정 연출, 입력 없음)
  → [일상 파트] 챕터1: 자유 대화 노드 2개 — 호감도 적립
  → 분기점① (호감도 3구간: ≥60 / 40~59 / <40)
@@ -56,7 +56,7 @@
 | `nodeTurn` / `totalTurn` | int | 매 사이클 +1 (노드 이동 시 nodeTurn=0) | 수렴 규칙 |
 | `currentNodeId` / `history[]` | string / string[] | 분기 이동 시 | 진행 위치, 디버그 |
 | `inputMode` | `voice` \| `click` | 실패 누적 시 전환, 토글 복귀 가능 | 대체 입력 경로 |
-| `sttFailCount` / `llmFailCount` | int | 실패 +1, 성공 시 0 | 폴백 트리거 |
+| `sttFailCount` / `llmFailCount` | int | STT 실제 typed 입력 실패는 누적 +1, LLM 실패는 기존 연속 정책 | 폴백 트리거. STT 총계는 성공·노드 이동으로 줄지 않고 save resume에서 보존 |
 
 ### 2.2 전투 한정 상태 (battle 노드 진입 시 생성, 종료 시 등급으로 환산 후 폐기)
 
@@ -79,11 +79,11 @@
 
 v1과 동일하되 다음을 확정 보강한다.
 
-- **시작 마이크 게이트:** 게임 최초 화면은 `마이크가 연결되어야 플레이 가능해요` 타이틀의 마이크 테스트다. 권한 허용, 입력 장치 연결, 실시간 레벨 테스트를 통과하기 전에는 새 게임·이어하기 버튼을 활성화하지 않는다. 테스트 통과 뒤에는 플레이 중 클릭 모드 전환과 기존 실패 폴백을 유지한다.
-- **실시간 자막:** `SpeechRecognition`의 `interimResults: true`로 플레이어 발화를 화면에 실시간 표시한다. 심사위원이 "내 말이 인식되고 있다"를 즉각 확인 — 시연 임팩트의 핵심.
+- **선택형 마이크 TITLE `[확정, DEC-071]`:** 새 게임은 마이크 상태와 무관하게 항상 가능하며 `voice` 또는 `click` 시작을 명시적으로 고른다. 권한 요청은 `마이크 설정`·`음성으로 시작` 같은 사용자 action 뒤에만 수행한다. save 없는 `이어하기`는 `aria-disabled`로 남겨 이유를 설명하고, voice save에 마이크가 준비되지 않았으면 음성 설정 또는 해당 세션만 click로 이어하기를 고른다.
+- **본편 음성 상태 `[확정, DEC-054·055·073]`:** production 본편은 interim/final transcript 원문을 표시하지 않는다. 기존 PTT 버튼의 문구·ARIA 상태와 같은 버튼 내부 live level fill로 입력·처리 상태를 전달한다.
 - **오프라인 고정 응답:** 각 의도에 `offlineReply`(고정 대사 1줄)를 필수화한다. 로컬 모드(LLM 불능)에서 키워드 매칭 → 이 대사를 재생해 완주를 보장한다.
 - **판정 우선순위(재확인):** ① intent에 `next` 있으면 즉시 이동 → ② `nodeTurn ≥ maxTurns`면 exit 조건표 강제 이동 → ③ 같은 노드 루프.
-- 실패 처리: STT 같은 턴 2회 실패 → 그 턴 클릭 선택지 / 누적 5회 → `inputMode=click` 전환 / LLM 3연속 실패 → 로컬 모드 강등. (v1 §5 그대로)
+- 실패 처리 `[확정, DEC-072]`: 실제 시도 뒤 typed 입력 실패 7종은 매번 전역 총계에 먼저 +1한다. 총 5번째는 같은 턴 시도 차수보다 우선해 `inputMode=click`로 전환한다. 1~4회는 같은 턴 첫 실패 재시도, 두 번째 실패 현재 턴 클릭을 유지한다. `cancelled`, 수동 click, API 미지원, debug preview 자체, LLM 폴백, battle dBFS too-quiet/too-loud는 총계에서 제외한다.
 
 ---
 
@@ -209,7 +209,7 @@ momentum 게이지(호감도 게이지 스킨 교체 재사용), 적 이미지 2
 | 시나리오 데이터 | JSON (`public/scenario/`) + **zod 런타임 검증** | 작가가 쓴 JSON의 오타·참조 오류를 로드 시점에 전부 잡아 에러 메시지로 출력 — 비개발자 작가 협업의 안전망 |
 | 음성 입력·판정 | **PTT + Worker 서버 측 OpenAI Realtime** | 버튼 release까지 녹음한 24kHz mono WAV를 Worker `/voice/realtime`에 한 번 전송. `gpt-realtime-2.1-mini`가 transcript와 대화·전투 판정을 한 function call로 반환한다. 변신·전투 주문은 transcript-only 결과를 기존 키워드·dBFS 판정에 사용. 비교 모델은 debug에서만 한 번에 하나씩 호출 |
 | 주문/키워드 판정 | 자체 모듈 (외부 의존 없음) | 정규화(공백·문장부호 제거) → 키워드 부분 포함 검사. 스트레치: 자모 분해 유사도 |
-| 마이크 테스트·음량 판정 | Web Audio `AnalyserNode` + PCM RMS/peak 분석 | 타이틀에서 입력 장치 선택·실시간 dBFS 미터·적응형 기준을 만들고, 전투 주문 녹음의 RMS·peak·clipping을 같은 기준으로 판정 |
+| 마이크 테스트·음량 판정 | Web Audio `AnalyserNode` + PCM RMS/peak 분석 | 선택형 TITLE 설정/테스트와 PTT 버튼 내부 live meter가 기존 stream 분석을 공유한다. 전투 주문 녹음의 RMS·peak·clipping 판정은 별도 규칙으로 유지 |
 | LLM | **OpenAI `gpt-realtime-2.1-mini`** | 음성을 직접 받아 전사+대화/전투 판정을 한 번에 수행. Worker가 필수 function tool, `reasoning.effort: low`, 출력 256 token을 고정하고 양 경계에서 zod·whitelist·clamp 검증 |
 | API 프록시 | **Cloudflare Workers** (wrangler 배포) | OpenAI 키는 Worker Secret. 브라우저는 OpenAI에 직접 연결하지 않는다. 정확한 Origin·WAV 14MB·문맥 32KB를 검증하고 서버 측 Realtime WebSocket을 생성 |
 | TTS | `speechSynthesis` | 스트레치. OS별 한국어 음성 품질 확인 필요 |
@@ -284,9 +284,9 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 
 ## 10. 최소 기능 범위 (MVP 경계, v2 갱신)
 
-**필수:** 노드 엔진+로더(zod 검증) / **타이틀 마이크 연결·dBFS 테스트 선행 게이트** / PTT 음성 + 실시간 자막 / 로컬 키워드 + LLM 판정 / **플레이 진입 후 클릭 폴백 전 노드 + 오프라인 로컬 모드** / 변신 주문 게이트(3등급) / 전투 주문 음량 실패 분기 / 전투 1회(3페이즈, S/A/B) / 호감도·기세 게이지 / 분기점 3 + 엔딩 3종(GOOD/NORMAL/BAD) / NPC 표정 5종·적 2상태 스왑 / 마이크 상태 표시 / 타이틀·엔딩 화면 / Workers 프록시 / Chrome 기준 / **완주 시연 영상**
+**필수:** 노드 엔진+로더(zod 검증) / **선택형 TITLE 마이크 FSM과 처음부터 가능한 click 완주** / transcript 원문 비노출 PTT 음성 + 버튼 내부 live 입력 meter / 로컬 키워드 + LLM 판정 / 변신 주문 게이트(3등급) / 전투 주문 음량 실패 분기 / 전투 1회(3페이즈, S/A/B) / 호감도·기세 게이지 / 분기점 3 + 엔딩 3종(GOOD/NORMAL/BAD) / NPC 표정 5종·적 2상태 스왑 / 타이틀·엔딩 화면 / 기존 기능을 집약한 TITLE Settings / Workers 프록시 / Chrome PC 기준 / **완주 시연 영상**
 
-**컷 (우선순위 순):** HIDDEN 엔딩 → 자모 유사도 채점 → TTS → 추가 포즈·컷씬 일러 3장째 → BGM 3곡 이상 → 세이브/로드 UI → 대화 로그·스킵 → 설정 화면 → 모바일/사파리 대응 → 캐릭터 추가
+**컷 (우선순위 순):** HIDDEN 엔딩 → 자모 유사도 채점 → TTS → 추가 포즈·컷씬 일러 3장째 → BGM 3곡 이상 → 별도 세이브 관리 UI → 대화 로그·스킵 → 모바일/사파리 대응 → 캐릭터 추가
 
 ---
 
@@ -295,7 +295,7 @@ Codex에는 **본 문서의 해당 절 + 저장소 구조 + 완료 기준**을 �
 | 리스크 | 대응 |
 |---|---|
 | 마이크 권한/소음/브라우저/네트워크/키·쿼터/LLM 이탈 | v1 §10 그대로 유지 (PTT, confidence 임계, Chromium 고지+기능 감지, 4초 타임아웃+3단 폴백, 프록시+상한+로테이션, responseSchema+화이트리스트) |
-| **타이틀 마이크 테스트 실패** | 새 게임·이어하기를 비활성화하고 권한·장치·입력 크기별 해결 문구를 표시. 테스트 통과 전 플레이 진입 금지 |
+| **TITLE 마이크 권한 거부·장치 없음·API 미지원** | `DENIED`·`NO_DEVICE`·`UNSUPPORTED`를 구분해 정확히 안내하고, 가짜 재요청 없이 click 시작·이어하기를 유지 |
 | **브라우저별 입력 레벨 차이** | 절대 dB SPL로 표시하지 않고 dBFS로 명시. 시작 시 평소 목소리를 보정 기준으로 저장하고 RMS 허용 범위와 peak clipping을 함께 판정 |
 | **Realtime 음성 정확도·지연·형식 편차** | `gpt-realtime-2.1-mini` 실발화의 transcript·첫 delta·전체 지연·schema reject를 기록한다. Worker·클라이언트 이중 검증을 유지하고 실패 시 해당 턴 클릭·로컬 폴백. debug에서 파일/live 전사 모델과 비교 |
 | **주문 낭독 인식 실패 (변신·전투)** | 주문 전문 화면 표시(읽기 발화는 인식률 높음), 키워드 순서 무관·부분 포함의 관대한 채점, 2회 미달 시 무페널티 자동 진행 |

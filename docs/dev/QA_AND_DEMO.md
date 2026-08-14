@@ -30,20 +30,35 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 
 | ID | 절차 | 기대 결과 |
 |---|---|---|
-| QD-01 | 새 프로필로 타이틀 진입→마이크 테스트 통과→새 게임→게임 내 클릭 진행→ending | 테스트 전 시작 차단, 통과 뒤 로드·분기·엔딩 정상, 미처리 예외 없음 |
+| QD-01 | 새 프로필로 TITLE 진입→마이크 없이 시작→click→ending | 권한 popup 없이 시작 가능, 로드·분기·엔딩 정상, 미처리 예외 없음 |
 | QD-02 | 음성 모드로 일상 대화→변신→전투→ending | 별도 음성 입력 영역 없이 PTT 버튼이 청취·판정 상태를 전달하고 완주 |
-| QD-03 | 온라인에서 마이크 테스트 통과→DevTools Offline→새 게임→클릭/로컬 완주 | LLM 없이 중단 없음 |
+| QD-03 | 온라인 TITLE에서 DevTools Offline→새 게임→click/로컬 완주 | 마이크 성공을 선행하지 않아도 LLM 없이 중단 없음 |
 | QD-04 | 빠른 연속 클릭·PTT 연타 | 중복 턴·중복 전이·유령 콜백 없음 |
 | QD-05 | 게임 내 대화·주문·battle에서 `T`를 누른 채 발화 후 놓기 | 버튼 포커스 없이도 녹음 시작·release 종료. 입력창 편집 중 `T`는 정상 입력 |
 | QD-06 | 대사·응답·엔딩 페이지 직후 진행 버튼 연타 | 1.5초 전 비활성·진행 0회, 1.5초 뒤 활성·진행 1회 |
+
+### 2.1 PC TITLE 계약
+
+| ID | 조건/절차 | 기대 결과 |
+|---|---|---|
+| QTITLE-01 | 1920×1080, 1600×900, 1366×768에서 TITLE·Settings open 측정 | 가로/세로 scroll 0, `document.documentElement.scrollHeight <= viewport height`, title/menu/mic/BGM/modal 겹침·잘림 없음, NHN banner 핵심 영역 가림 최소 |
+| QTITLE-02 | 게임 시작·이어하기·설정에 mouse hover/exit, Tab focus, Enter/Space active | default는 투명·흰 글자·glow 없음. hover/focus만 soft pink·설명 표시, active scale 약 0.98, focus visible |
+| QTITLE-03 | save 없음 상태에서 이어하기 hover/focus/click/Enter/Space | button이 보이고 Tab 접근 가능, `aria-disabled="true"`, `아직 저장된 이야기가 없습니다.` 표시, 모든 activation에서 state 변화 없음 |
+| QTITLE-04 | save 있음/없음, voice/click save 조합 | save 있으면 정상 복구. voice save + mic not READY는 음성 설정/클릭 이어하기 선택, click은 복사 state로 node·history·affinity·flags·실패 총계를 보존하고 runtime inputMode만 변경. resume 직후 저장소 bytes는 불변 |
+| QTITLE-05 | Settings를 버튼으로 열고 X·닫기·ESC로 각각 닫기 | BGM mute/volume·실제 입력 장치·mic test만 표시, focus가 modal 안에 머물고 닫은 뒤 trigger로 복귀, 뒤 메뉴 입력 차단 |
+| QTITLE-06 | 새 저장소·유효 저장값·손상 저장값에서 TITLE 첫 gesture 전후 관찰 | 로드 즉시 재생하지 않음. 첫 gesture 뒤 `bgm_daily` 1채널, 신규/손상 20%·unmuted, 유효 volume/mute 보존, autoplay 거부는 기존 retry로 복구 |
+| QTITLE-07 | `prefers-reduced-motion` on/off에서 최초 진입 | off는 정해진 120~400ms 단발 등장, on은 즉시 표시, 반복 깜빡임 없음 |
 
 ## 3. 마이크·STT
 
 | ID | 조건/절차 | 기대 결과 |
 |---|---|---|
-| QP-01 | 타이틀에서 마이크 연결→입력 장치 선택→`심사를 시작합니다.` 발화 | 실시간 dBFS·진행률 표시, 통과 뒤 시작·이어하기 활성 |
-| QP-02 | 권한 거부·장치 없음 | 재요청 루프 없이 오류와 재시도 안내, 시작·이어하기 비활성 유지 |
-| QP-03 | 마이크 연결 전·테스트 도중 시작/이어하기 시도 | 버튼이 비활성이고 게임 상태·저장 상태 변화 없음 |
+| QP-01 | TITLE에서 최초 진입→마이크 설정→허용/장치 확인→테스트→정상 발화 | `UNKNOWN→REQUESTING_PERMISSION→READY→TESTING→TEST_SUCCESS`; 성공은 자동 READY 복귀 없이 유지 |
+| QP-02 | 권한 거부·장치 없음·필수 API 미지원·그 외 초기화 예외를 각각 주입 | `DENIED`·`NO_DEVICE`·`UNSUPPORTED`·`ERROR` 분리, 재요청 루프·가짜 성공 없음, click 시작 항상 가능 |
+| QP-03 | READY/TEST_SUCCESS에서 장치 변경·재테스트·게임 시작 | 실제 변경에서 상태/수치 초기화, 재테스트는 TESTING, 시작은 선택 mode로 진입, 두 mic stream 없음 |
+| QP-04 | dialogue·incantation·battle에서 PTT를 pointer와 T/Space/Enter로 hold | 버튼 내부 live fill이 실제 입력에 반응하고 release 뒤 사라짐. 별도 대형 meter·두 번째 `getUserMedia`·중복 턴 없음 |
+| QP-05 | 실제 typed 실패 7종을 턴·노드에 걸쳐 1~5회 주입 | 각 실패에서 전역 총계 +1. 1~4회는 첫 실패 재시도/두 번째 현재 턴 click, 5번째는 차수보다 우선해 즉시 전체 click |
+| QP-06 | 성공·node 이동·수동 click·cancelled·UNSUPPORTED·LLM fallback·battle dBFS 범위 실패·DEV preview와 save resume/new/restart 검사 | 제외 사건은 총계 불변. 성공/node/manual click도 감소 없음. resume 보존, new/ending restart만 0. transient attempt map은 new/resume/restart/prune에서 정리 |
 | QS-01 | 명확한 `ko-KR` intent 발화 | transcript 화면 노출 없이 예상 intent 판정 |
 | QS-02 | `(T)`가 표시된 PTT 홀드→발화→release | 같은 버튼이 `듣는 중… 놓으면 전송`→`목소리 전달 중…`으로 바뀌고 별도 interim/final 영역 없음 |
 | QS-03 | 무음/오류 2회 | 해당 턴 클릭 선택지 |
@@ -67,7 +82,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 
 | ID | 절차 | 기대 결과 |
 |---|---|---|
-| QC-01 | 타이틀 마이크 테스트 통과 뒤 게임에서 클릭 모드 선택 | 모든 dialogue·변신·battle에 클릭 경로 존재 |
+| QC-01 | TITLE에서 마이크 설정 없이 클릭 모드로 시작 | 모든 dialogue·변신·battle에 클릭 경로가 있고 ending 도달 |
 | QC-02 | 음성 중간에 클릭 전환 | 현재 턴 중복 없이 다음 입력부터 클릭 |
 | QC-03 | 클릭에서 음성 복귀 | 지원·권한 확인 후만 복귀, 상태 보존 |
 
@@ -141,7 +156,7 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 
 - [ ] 다른 마이크 앱 종료, 입력 장치·레벨 확인
 - [ ] Chrome에서 Pages 탭만 열고 캐시/버전 확인
-- [ ] 타이틀에서 마이크 1회 테스트 후 상태 초기화
+- [ ] TITLE 음성/클릭 시작과 TEST_SUCCESS 유지 상태를 각각 확인
 - [ ] Workers·최종 선택 STT 공급자·해당 환경 LLM 쿼터 확인
 - [ ] `?debug=1` 비상 탭과 일반 시연 탭 준비
 
@@ -155,7 +170,7 @@ HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOO
 
 ## 12. 녹화 영상 체크리스트
 
-- [ ] 타이틀 마이크 허용 뒤 PTT 버튼의 청취·판정 상태가 보이고 별도 음성 입력 영역은 없음
+- [ ] TITLE에서 마이크 선택 기능과 click 시작 가능성이 보이고, 본편 PTT 버튼 내부 live meter·청취·판정 상태가 보임
 - [ ] 자유 발화와 LLM 반응 최소 1회
 - [ ] 클릭/오프라인 폴백이 있다는 짧은 증거
 - [ ] 변신 주문과 완창 또는 성공 연출
@@ -268,7 +283,7 @@ npm run build
 
 | 입력 경로 | GOOD | NORMAL | BAD |
 |---|---|---|---|
-| 타이틀 마이크 통과 후 게임 내 클릭 | [ ] | [ ] | [ ] |
+| TITLE에서 마이크 없이 click 시작 | [ ] | [ ] | [ ] |
 | 실제 음성 | [ ] | [ ] | [ ] |
 | DevTools Offline + 로컬 폴백 | [ ] | [ ] | [ ] |
 
@@ -337,7 +352,7 @@ npm run build
 - [ ] 게임 내 공급자 표기는 없고 일반 URL의 Network 요청은 `/voice/realtime`만 사용한다.
 - [ ] Network에서 음성 요청이 QA Worker의 `/voice/realtime`로 턴당 1회 전송되고 `/transcribe/openai`·`/transcribe/gemini` 요청은 0회다.
 - [ ] 타이틀, JS, CSS, scenario JSON, 첫 배경이 404 없이 표시된다.
-- [ ] `마이크 테스트 통과 → 새 게임 → 게임 내 클릭 모드`로 대사·선택지·변신 구제·전투·엔딩까지 진행된다.
+- [ ] `TITLE → 마이크 없이 click 시작`으로 대사·선택지·변신 구제·전투·엔딩까지 진행된다.
 - [ ] 새로고침 뒤 저장 이어하기가 동작한다.
 - [ ] 390×844와 데스크톱에서 가로 스크롤·가려진 핵심 버튼이 없다.
 - [ ] DevTools Console에 Vite 오류 overlay, 처리되지 않은 예외, asset MIME 오류가 없다.

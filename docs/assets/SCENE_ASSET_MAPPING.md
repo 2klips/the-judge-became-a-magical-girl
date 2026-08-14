@@ -105,7 +105,7 @@
 
 | 우선순위 | 논리 ID | 정확한 파일명 | 길이/재생 | 감정·편곡 방향 | 장면 |
 |---|---|---|---|---|---|
-| `[확정·M5 필수]` | `bgm_daily` | `bgm_daily.mp3` | 60~90초 seamless loop | 야근의 피로와 아직 남은 작은 설렘. 가벼운 전자음·맑은 포인트, 과도한 활기 금지 | N0~N2, 수렴/엔딩 폴백 |
+| `[확정·M5 필수]` | `bgm_daily` | `bgm_daily.mp3` | 60~90초 seamless loop | 야근의 피로와 아직 남은 작은 설렘. 가벼운 전자음·맑은 포인트, 과도한 활기 금지 | TITLE 첫 gesture 이후, N0~N2, 수렴/엔딩 폴백 |
 | `[확정·M5 필수]` | `bgm_battle` | `bgm_battle.mp3` | 60~90초 seamless loop | 말과 주문이 중심인 긴장감. 리듬은 명확하되 음성 대역을 가리지 않음 | battle p1~p3, crisis 폴백 |
 | `[확정·M5 필수]` | `bgm_transform` | `bgm_transform.mp3` | 10~20초 one-shot | 짧고 상승하는 변신 징글. production 파일은 보컬·주문 콜 없음 | N5 영창 성공~변신 완료 |
 | `[컷 가능]` | `bgm_crisis` | `bgm_crisis.mp3` | 30~60초 loop | 회색 안개, 정지한 모니터, 망령 등장. 저역 압박은 쓰되 대사를 덮지 않음 | N3~N5. 없으면 `bgm_battle` |
@@ -129,7 +129,7 @@
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
-| 타이틀 | 마이크 연결·테스트 후 시작 | `bg_title` | 없음 | 무음 | `마이크가 연결되어야 플레이 가능해요` 안내, 입력 장치 선택, 실시간 dBFS 미터, 테스트 진행률을 DOM/CSS로 표시한다. 테스트 통과 전 시작·이어하기 비활성. baked NHN/HACKATHON 문구·로고는 DEC-037 임시 승인 |
+| 타이틀 | 작품 소개·새 게임·이어하기·설정 | `bg_title` | 없음 | 최초 사용자 gesture 뒤 `bgm_daily` | 왼쪽 CSS gradient 위 local MaruBuri 제목·Pretendard 메뉴, 오른쪽 NHN/HACKATHON 핵심 영역 보존. 마이크는 선택형 9-state FSM이고 click 시작은 항상 가능하다. baked NHN/HACKATHON 문구·로고는 DEC-037 임시 승인 |
 | N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. 3~4번째 `doyun.normal_tired`, 5번째 이후 `doyun.normal_startled` | `bgm_daily` | 첫 두 대사만 1인칭 독백 클리셰로 숨기고 곧바로 도윤을 표시한다. 평가 문장·커서는 DOM/CSS |
 | N1 `n1_first_voice` | 모니터 속 첫 목소리 | `bg_hall_time_stop` | `doyun.normal_startled`. **주노 실물 미노출** | 계속 `bgm_daily` | NPC가 주노여도 N2 전까지 주노 스프라이트는 숨긴다. 사원증 빛·시간 정지는 배경+CSS |
 | N2 `n2_juno_intro` | 주노가 키보드 위로 등장 | `bg_hall_day` | 도윤 `normal_startled` + 주노 `surprised → happy`; 반응에 따라 `neutral/upset` | 계속 `bgm_daily` | 등장 순간 짧은 CSS 빛·낙하. 자유 대화 결과 표정 사용 |
@@ -205,7 +205,7 @@
 - `[구현·자동 QA PASS·시각 채택]` 2026-08-13 야근 연속성 배경 5종과 변신 컷 2종을 source/runtime 동일 바이트로 채택했다. 사용자가 사전 지적된 미세한 구도·가시성 차이를 수용했다. 데스크톱 16:9 교체 후 브라우저 QA와 권리·배포 확인은 대기며, 모바일은 범위 제외다.
 - `[구현, DEC-059]` N3~N5 도입은 `bgm_crisis`, 수렴~GOOD/NORMAL/BAD는 `bgm_ending`을 사용한다. 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백과 무음 완주를 유지한다.
 - `[구현, DEC-060]` `gray_wraith.weakened` 실파일 로딩에 실패하면 `normal` + CSS 균열 빛 파생으로 표시하고, normal도 실패하면 검은 presentation으로 강등한다. `attack/hit/death`는 미등록 상태다.
-- `[구현]` BGM controller는 기본 음량 `0.62`, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.
+- `[구현]` BGM controller는 신규/손상 설정 기본 음량 `0.20`, 유효 저장 volume/mute 우선, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.
 - `[구현]` 도윤 11종을 `assets/runtime/char/`에 계약명으로 배치하고 N0 세 번째 대사부터 N5·battle·수렴·3엔딩에 연결했다. 원본은 `assets/source/doyun/delivery/`에 보존한다.
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.
@@ -218,7 +218,7 @@
 - `[구현·자동 QA PASS, DEC-064]` Web Audio SFX 9종을 다층 tone으로 연결했다. PTT 녹음 중 전 cue 억제, 같은 cue 40ms throttle, AudioContext 실패 무음 강등을 적용했다.
 - `[source ready·runtime 대기, DEC-065]` 선택 SFX 5종은 `assets/source/sfx/delivery/`에 보존했다. Web Audio 교체·신규 cue·중복 방지·PTT 격리는 개발자 후속 통합이다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
-- `[구현]` 타이틀에서 마이크 연결·장치 선택·실시간 dBFS 테스트를 통과해야 시작·이어하기가 열린다. 게임 진입 뒤 STT 실패 시 클릭 폴백은 유지한다.
+- `[계획 승인·구현 대기, DEC-071]` TITLE의 마이크 필수 게이트를 폐기하고 선택형 9-state FSM, Settings, voice/click start·resume, 접근 가능한 save 없음 Continue, 첫 gesture `bgm_daily`, PC 3 viewport no-scroll 계약으로 교체한다. 현재 구현은 아직 이전 gate이므로 완료로 판정하지 않는다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
 - `[구현·QA PASS, DEC-036~039]` 배경 원본 16장을 `1920×1080 WebP ≤500KB` runtime 파일로 변환하고 catalog·node line·변신 stage·battle phase/p3 spell·ending line 고정 전환을 연결했다. `?debug=1` 장면 선택기와 22개 비파괴 프리뷰가 16개 배경을 모두 검수한다.
 - `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 사람 청각·권리 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 계속 planned다.
@@ -255,7 +255,9 @@
 - [ ] N4 관계별 주노 표정이 N5 도입까지 이어진다.
 - [ ] 전투에서 도윤·망령·주노의 위치가 페이즈 전환 때 튀지 않는다.
 - [ ] 같은 배경 ID에서 전환이 없고 다른 ID에서만 420ms crossfade가 발생한다.
-- [ ] 제목 마이크 테스트를 통과하기 전 시작·이어하기가 불가능하다.
+- [ ] TITLE은 마이크 없이 click 시작·완주 가능하고, save 없음 Continue 설명·voice save의 설정/클릭 선택이 접근 가능하다.
+- [ ] TITLE `bgm_daily`는 첫 gesture 뒤 재생되고 20% 기본·저장 volume/mute를 보존한다.
+- [ ] 1920×1080, 1600×900, 1366×768에서 scroll·TITLE 요소 겹침·Settings 잘림이 없다.
 - [ ] battle 주문의 너무 작음·너무 큼이 각각 무료 1회 재시도 후 두 번째에 턴을 소비한다.
 - [ ] `bgm_transform`이 반복 재생되지 않는다.
 - [ ] N2·N5 파일 SFX가 장면당 한 번만 재생되고 rerender·재시도에서 중복되지 않는다.
@@ -284,7 +286,7 @@
 | AR-12 | `ready·교체 요청` | 배경 16개 runtime 규격·장면 로드 PASS. TITLE baked 문구·로고는 DEC-037 임시 승인, `BG-02`는 4:3 원본에서 16:9 crop | 제출 정책 변경 시 clean TITLE 필요. N2→N3 camera hard cut은 유지 | 원본 보존, clean TITLE 요청 유지. contact sheet·Playwright에서 BG-02 핵심 피사체와 hard cut 확인 |
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
 | AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
-| AR-15 | `구현·실기기 QA 대기` | 제목 마이크 필수 게이트와 적응형 dBFS battle 판정 | 브라우저·마이크별 입력 편차로 오판 가능 | fake mic 자동 QA + 실제 심사 PC에서 장치 선택·보정·저/고음량 수동 QA |
+| AR-15 | `교체 계획 승인·구현 대기` | DEC-071의 선택형 TITLE 마이크 FSM과 DEC-073의 PTT 내부 live meter는 아직 현재 필수 gate 구현을 대체하지 않았다. battle 적응형 dBFS 판정은 유지 | 권한·장치·API 상태 오분류, 두 stream, PC 1600×900 overflow, 입력 level 오표시 가능 | fake mic 9-state·단일 stream 자동 QA + 3 viewport no-scroll + 실제 심사 PC 장치/보정/PTT meter·저/고음량 수동 QA |
 | AR-16 | `source ready·runtime 대기` | 선택 SFX 5종은 규격·해시 확인됐지만 코드 cue·중복 방지·PTT 격리 미연결 | 잘못 연결하면 N5 치명타 오사용, 장면 중복음, STT 오염 가능 | [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)대로 runtime 채택 후 자동·청감 QA |
 
 ### 다음 단계 순서

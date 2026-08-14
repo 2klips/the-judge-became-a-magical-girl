@@ -1,5 +1,7 @@
 # UI Foundation Implementation Plan
 
+> **실행 상태 — 2026-08-14:** Task 4와 TITLE 전용 acceptance/file scope는 DEC-071과 새 PC TITLE 계획으로 교체됐다. 중앙/오른쪽 대형 마이크 카드, 필수 마이크 gate, Pretendard 단일 font, 1280×720 TITLE 기준은 현재 계약이 아니다. Task 1~3·5~6은 폐기하지 않았지만 현재 실행을 중지하며, 새 branch 기준으로 별도 rebase·승인하기 전에는 이 문서의 오래된 지시를 실행하지 않는다. 새 TITLE 계획은 local Pretendard, scoped CSS 등 필요한 조각을 독립적으로 다시 정의한다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 데스크톱 16:9 전체 화면이 같은 글꼴·안전영역·레이어 계약을 사용하도록 통합하고 승인된 타이틀 배치를 구현한다.

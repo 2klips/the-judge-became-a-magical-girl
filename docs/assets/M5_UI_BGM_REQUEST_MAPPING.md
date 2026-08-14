@@ -21,15 +21,15 @@
 | UI | 구현 | 표시 위치·상태 | 완료 기준 |
 |---|---|---|---|
 | `mic.idle` | SVG/CSS | 입력 대기 | 정지 상태, 클릭 가능 여부 식별 |
-| `mic.setup` | DOM/SVG/CSS | 타이틀 필수 테스트 | 장치 선택, 실시간 dBFS 막대, 테스트 진행률, 통과 상태 |
+| `mic.setup` | DOM/SVG/CSS | TITLE 선택형 설정·테스트 | 9-state FSM, 장치 선택, 테스트 상태. 성공은 사용자 action/장치 변경 전까지 유지 |
 | `mic.tooQuiet` | DOM/CSS | 타이틀·battle 주문 | 너무 작은 입력을 수치와 함께 안내 |
 | `mic.tooLoud` | DOM/CSS | 타이틀·battle 주문 | 너무 큰 입력을 수치와 함께 안내 |
-| `mic.listening` | SVG/CSS pulse | PTT 누르는 동안 | 맥동·청취 문구·interim 자막 동시 표시 |
+| `mic.listening` | SVG/CSS | PTT 누르는 동안 | 버튼 문구·ARIA pressed와 같은 버튼 내부 live level fill 표시 |
 | `mic.processing` | SVG/CSS | release 뒤 판정 중 | 처리 상태 표시, 중복 입력 차단 |
 | 호감도 게이지 | CSS | 대화·엔딩 수렴 | affinity 변화가 즉시 보임 |
 | 기세 게이지 | CSS | battle p1~p3 | momentum 변화가 즉시 보임 |
-| 실시간 자막 | CSS/DOM | 음성 입력 | interim 뒤 final로 교체 |
-| 클릭 폴백 | CSS button | 게임 진입 뒤 대화·변신·battle | 타이틀 마이크 테스트 통과 후 음성 실패와 오프라인에서도 완주 |
+| transcript 비노출 | DOM 계약 | 본편 음성 입력 | interim/final 원문을 production UI에 표시하지 않고 PTT 버튼 상태만 유지 |
+| 클릭 폴백 | CSS button | TITLE부터 대화·변신·battle | 마이크 상태와 무관하게 처음부터 ending까지 완주 |
 | 장면 dev selector | DOM/CSS | `?debug=1` | 22개 장면·16개 배경 직접 검수 |
 
 검은 화면 placeholder에서도 모든 UI는 유지한다. 검은 presentation이 입력 상태나 대사를 가리면 실패다.
@@ -64,7 +64,7 @@
 
 | 우선순위 | 논리 ID·파일명 | 길이·재생 | 장면 | 음악 방향 | 폴백 |
 |---:|---|---|---|---|---|
-| P0 | `bgm_daily` / `bgm_daily.mp3` | 60~90초 seamless loop | N0~N2, 수렴, 엔딩 기본 | 야근의 피로 + 작은 설렘. 가벼운 전자음·맑은 포인트, 과도한 활기 금지 | 무음 |
+| P0 | `bgm_daily` / `bgm_daily.mp3` | 60~90초 seamless loop | TITLE 첫 gesture 이후, N0~N2, 수렴, 엔딩 기본 | 야근의 피로 + 작은 설렘. 가벼운 전자음·맑은 포인트, 과도한 활기 금지 | 무음 |
 | P0 | `bgm_battle` / `bgm_battle.mp3` | 60~90초 seamless loop | N3~N5 위기 폴백, battle p1~p3 | 말과 주문 중심 긴장. 명확한 리듬, 음성 대역을 가리지 않음 | 무음 |
 | P0 | `bgm_transform` / `bgm_transform.mp3` | 10~20초 one-shot | N5 주문 성공→변신 완료 | 짧게 상승하고 확정되는 마법소녀 변신 징글 | 무음 + Web Audio SFX |
 | P2 | `bgm_crisis` / `bgm_crisis.mp3` | 30~60초 seamless loop | N3~N5 사건 | daily와 battle 사이의 불안·회색 침식 | `bgm_battle` |
@@ -86,14 +86,14 @@
 
 | 구간 | 재생 | 전환·duck |
 |---|---|---|
-| TITLE | 기본 무음 | 사용자 입력 전 autoplay 금지 |
+| TITLE | 첫 사용자 gesture 뒤 `bgm_daily` | load 즉시 autoplay 금지, 기존 controller/retry 사용 |
 | N0~N2 | `bgm_daily` | PTT 청취 중 duck |
 | N3~N5 도입 | `bgm_crisis`, 없으면 `bgm_battle` | 장면 진입 crossfade, PTT duck |
 | N5 변신 결과 | `bgm_transform` | 결과 뒤 한 번만 재생, loop 금지 |
 | battle p1~p3 | `bgm_battle` | phase 이동 때 재시작 금지, PTT duck |
 | 전투 후 수렴·엔딩 | `bgm_ending`, 없으면 `bgm_daily` | ending 진입 crossfade |
 
-`[구현]` 기본 BGM 음량은 `0.62`, PTT duck은 기본값의 `0.18배`다. 로드 실패 경로는 세션에서 다시 요청하지 않으며, 브라우저 autoplay 거부는 다음 `pointerdown`에서 최신 요청을 한 번 재시도한다. `bgm_transform` 동일 ID 재렌더는 중복 재생하지 않는다.
+`[구현]` 신규·손상 설정의 기본 BGM 음량은 `0.20`, 유효한 저장 volume/mute는 우선하며 PTT duck은 사용자 음량의 `0.18배`다. 로드 실패 경로는 세션에서 다시 요청하지 않으며, 브라우저 autoplay 거부는 다음 사용자 gesture에서 최신 요청을 한 번 재시도한다. `bgm_transform` 동일 ID 재렌더는 중복 재생하지 않는다.
 
 ## 7. 청감 인수 기준
 

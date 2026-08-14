@@ -48,6 +48,19 @@
 - N0~N8 전체 본편, 변신, 전투, 엔딩 통합
 - TTS, 모바일·Safari, GitHub Pages 배포
 
+## 1.2 PC TITLE·선택형 마이크 계약
+
+`[확정, DEC-071]` TITLE은 마이크 보정 관문이 아니라 새 게임·이어하기·설정의 진입점이다. 마이크가 없거나 권한을 거부해도 `click`로 처음부터 ending까지 완주할 수 있다.
+
+- TITLE 마이크 표현 상태는 `UNKNOWN`, `REQUESTING_PERMISSION`, `READY`, `TESTING`, `TEST_SUCCESS`, `DENIED`, `NO_DEVICE`, `UNSUPPORTED`, `ERROR` 아홉 가지다. `UNSUPPORTED`는 브라우저 API 자체 부재이며 다른 초기화 예외인 `ERROR`와 합치지 않는다.
+- `TEST_SUCCESS`는 자동으로 `READY`로 돌아가지 않는다. 시작·재테스트·실제 장치 상태 변경까지 유지한다.
+- 권한은 TITLE 진입 때 요청하지 않는다. `마이크 설정` 또는 `음성으로 시작` 사용자 action 뒤에만 요청하며, 브라우저가 재요청을 막으면 설정 변경 방법을 안내한다.
+- save 없는 `이어하기`는 실제 button과 `aria-disabled="true"`를 사용해 Tab·hover/focus 설명을 유지하되 click·Enter·Space action을 막는다.
+- voice save + mic not READY는 `음성 설정 후 이어하기`와 `클릭 모드로 이어하기`를 제공한다. click 선택은 `{ ...loadedState, inputMode: "click" }` 복사본으로 resume해 해당 세션만 바꾸며 원본 save를 즉시 다시 쓰지 않고 저장 schema도 늘리지 않는다.
+- TITLE `bgm_daily`는 페이지 로드에서 강제 재생하지 않고 최초 사용자 gesture 뒤 기존 `BgmController`와 autoplay retry 경로로 시작한다. 신규/손상 설정은 20%·음소거 해제, 유효한 저장 volume/mute는 우선한다.
+- `src/ui/titleView.ts`, `src/ui/titleMicState.ts`, `src/ui/title.css`가 TITLE DOM·표현 상태·스타일을 소유하고, `gameView.ts`는 shell 위임, `main.ts`는 기존 Engine/Save/BGM/microphone 의존성 주입만 담당한다. TITLE과 Settings는 같은 `BrowserMicrophoneTester`를 공유한다.
+- 1920×1080, 1600×900, 1366×768 모두 horizontal/vertical scroll, title 잘림, menu/mic/BGM 겹침, Settings modal 잘림이 없어야 한다. 모바일은 이 계약 범위가 아니다.
+
 ## 2. FSM
 
 ```text
@@ -212,12 +225,13 @@ interface SaveRepository {
 
 | 실패 | 즉시 처리 | 누적 처리 |
 |---|---|---|
-| 같은 턴 STT 1회 실패 | 재시도 안내 | 없음 |
-| 같은 턴 STT 2회 실패 | 해당 턴 클릭 선택지 | 전역 실패 수 증가 |
-| STT 누적 5회 | `inputMode = "click"` | 사용자가 지원 환경에서 음성 복귀 가능 |
-| LLM 타임아웃/오류 | 4초 후 1회 재시도 | 실패 카운트 증가 |
+| 실제 typed 음성 입력 실패 1~4회 | 전역 총계를 먼저 +1. 같은 턴 첫 실패는 재시도, 두 번째는 해당 턴 클릭 | 성공·노드 이동·수동 click으로 총계 감소 없음 |
+| 실제 typed 음성 입력 총 5회 | 같은 턴 차수보다 우선해 `inputMode = "click"` | 저장 총계 max 5, save resume 보존 |
+| `cancelled`·수동 click·`UNSUPPORTED`·debug preview 자체·LLM 폴백·battle dBFS 범위 실패 | 기존 동작 | STT 총계 증가 없음. DEV injection이 실제 typed handler를 통과할 때만 정책 테스트로 증가 |
+| LLM 타임아웃/오류 | 4초 후 1회 재시도 | `llmFailCount`만 증가, STT 총계와 분리 |
 | 재시도도 실패 | `fallbackReplies` + 중립 판정 | 3연속이면 로컬 모드 |
-| 마이크 미지원/권한 거부 | 클릭 모드 | 설정 변경 후 명시적 재시도만 |
+| 마이크 API 미지원 | 즉시 클릭 모드 | `UNSUPPORTED`, STT 총계 증가 없음 |
+| 권한 거부·장치 없음·기타 초기화 실패 | TITLE에서 `DENIED`·`NO_DEVICE`·`ERROR` 분리, 본편은 클릭 진행 | 명시적 사용자 action 또는 설정 변경 뒤만 재확인 |
 | Worker가 HTML·비 JSON 응답 반환 | 서비스별 한국어 연결 오류 | 원문 HTML·`Unexpected token '<'` 미노출, 기존 클릭·로컬 폴백 |
 | 시나리오 검증 실패 | 진단 화면, 게임 시작 차단 | 자동 수정 없음 |
 | 저장 데이터 검증 실패 | 손상 스냅샷 무시, 새 게임 제공 | 원인 로그 |
@@ -264,8 +278,13 @@ main(composition root)
 - `[확정, DEC-067]` 모든 장면에서 현재 미연시 HUD와 같은 glass/rose 스타일의 음소거 버튼·0~100 슬라이더를 제공한다.
 - `BgmController`의 내부 볼륨은 `0..1`로 clamp한다. mute는 재생 볼륨 0을 우선하지만 저장된 사용자 볼륨을 바꾸지 않는다.
 - PTT 중 duck은 `사용자 볼륨 × BGM_DUCK_MULTIPLIER`, mute 중에는 항상 0이다.
-- 사용자 설정만 전용 `localStorage` 키에 저장한다. 저장소 파싱·쓰기 실패는 기본 62%·음소거 해제로 안전 복구하며 게임 진행을 막지 않는다.
+- 사용자 설정만 전용 `localStorage` 키에 저장한다. 저장소 파싱·쓰기 실패는 기본 20%·음소거 해제로 안전 복구하며 게임 진행을 막지 않는다. 유효한 저장 volume/mute는 보존한다.
 - UI는 44px 이상 조작 영역, 키보드 range 입력, `aria-label`·`aria-pressed`·현재 퍼센트 출력을 제공하고 모바일 safe area와 debug selector를 가리지 않는다.
+- TITLE Settings는 이 controller를 재사용한다. TITLE `bgm_daily`는 최초 사용자 gesture 뒤 재생하며 autoplay 차단은 기존 retry 경로로 복구한다.
+
+## 8.2 PTT live level
+
+`[확정, DEC-073]` 대화·변신·전투의 PTT 버튼은 녹음 중 기존 capture `MediaStream`을 분석한 live level fill을 버튼 내부에 표시한다. 별도 `getUserMedia`, 두 번째 stream, 상시 대형 meter를 만들지 않는다. `RecordingSession`/recording port가 level callback 또는 구독을 제공하고 release·cancel·error·unmount에서 analyser·RAF·AudioContext 자원을 정리한다. fill은 장식이며 버튼 문구·disabled·ARIA 상태가 청취·처리 의미를 계속 전달한다.
 
 ## 9. 자산 해석
 
@@ -276,7 +295,7 @@ main(composition root)
 - `[확정, DEC-019·040]` `bg_hall_dark`는 정확한 물리 파일을 우선하고, 로드 실패 시 `bg_hall_day.webp` 기반 CSS 파생, 이후 검은 presentation 순으로 강등한다.
 - `[확정, DEC-034]` resolver는 실패한 논리 ID·기대 경로를 진단한다. 외부 원본은 자동 이동·변환·rename하지 않고, 채택 파일의 runtime 복사본만 계약명으로 정규화하며 원본명→계약명을 기록한다.
 - `[확정, DEC-036·039]` node line, 변신 stage, battle phase/p3 spell, ending line의 세부 배경은 scenario 스키마를 늘리지 않고 presentation 고정 cue resolver가 해석한다.
-- `[확정]` 타이틀은 마이크 연결·입력 장치 선택·실시간 dBFS 테스트를 통과해야 새 게임/이어하기를 허용한다. 시작 뒤 STT 실패는 기존 클릭·로컬 폴백으로 완주한다.
+- `[확정, DEC-071]` TITLE은 마이크를 선택 기능으로 제공하고 새 게임의 click 완주를 항상 허용한다. save 없음 Continue, voice save의 설정/클릭 resume, 아홉 상태 FSM은 §1.2를 따른다.
 - `[확정]` battle의 `spell` 입력만 보정된 dBFS 범위를 검사한다. 너무 작거나 큰 첫 실패는 턴을 보존하고, 같은 턴 두 번째 실패는 `failed-spell` `+0`으로 턴을 소비한다. `freeform`에는 음량 게이트를 적용하지 않는다.
 - `[확정]` 동일 배경 논리 ID는 재렌더만 하고 애니메이션하지 않는다. 논리 ID 변경에만 420ms crossfade를 적용한다.
 - `[확정, DEC-038]` `?debug=1&scene=<장면ID>`는 저장·FSM과 격리된 장면 프리뷰다. 정상 URL에는 선택기·프리뷰가 없다.

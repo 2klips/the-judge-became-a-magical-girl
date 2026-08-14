@@ -317,7 +317,8 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 - 대화 8~10, 컷씬 2, battle 1, GOOD/NORMAL/BAD 본편 통합.
 - NPC 표정 5종, 적 2상태, 플레이어/변신 컷, 필수 배경·BGM.
 - N1 주노 미노출, N3 복수 인물, N4→N5 표정 연속성, battle phase별 인물 상태를 장면 매핑대로 적용.
-- 타이틀 마이크 장치 선택·dBFS 테스트 통과 전 시작/이어하기 차단. 게임 진입 뒤 클릭·로컬 폴백 유지.
+- `[확정, DEC-071]` PC TITLE은 새 게임·이어하기·Settings를 제공하고 마이크를 선택 기능으로 둔다. click 모드는 마이크 상태와 무관하게 처음부터 ending까지 가능하다. 아홉 상태 FSM, voice/click start·resume 선택, 접근 가능한 save 없음 상태, 첫 gesture 뒤 `bgm_daily`를 포함한다.
+- `[확정, DEC-072·073]` 실제 typed 음성 입력 실패 총 5회 전환과 기존 PTT stream 기반 버튼 내부 live meter를 dialogue·incantation·battle에 공통 적용한다.
 - battle 주문 음량은 보정 범위로 판정. 첫 음량 실패는 무료 재시도, 같은 턴 두 번째는 `+0`으로 턴 소비.
 - 같은 배경 ID는 전환 없음. 다른 ID만 420ms crossfade, 감소 모션은 즉시 전환.
 - CSS 타이핑·페이드·셰이크·플래시, Canvas 2D 파티클 1모듈.
@@ -328,7 +329,7 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 ### 비범위
 
-- 컷 우선순위 항목: 자모 유사도, TTS, 추가 포즈/컷, 세이브 UI, 로그/스킵, 설정, 모바일/Safari, 캐릭터 추가.
+- 컷 우선순위 항목: 자모 유사도, TTS, 추가 포즈/컷, 별도 세이브 관리 UI, 로그/스킵, 모바일/Safari, 캐릭터 추가. TITLE Settings의 기존 기능 집약은 범위에 포함한다.
 - 전면 UI 프레임워크 도입.
 
 ### 변경 예상 파일
@@ -337,7 +338,10 @@ GPT/Gemini STT 각각의 정상 경로, 정상 LLM, 완전 오프라인 경로 �
 
 ### 완료 조건
 
-- 마이크 테스트를 통과한 뒤 실제 본편이 음성·게임 내 클릭·오프라인 각 경로로 완주.
+- 새 게임은 마이크 없이 click 완주 가능하고, 마이크 준비 시 voice 완주 가능하다. voice save는 마이크 미준비 상태에서 설정 후 voice 또는 진행값 보존 click 이어하기가 가능하다.
+- TITLE `UNKNOWN`~`ERROR` 아홉 상태, 지속되는 `TEST_SUCCESS`, Settings focus/ESC, `aria-disabled` Continue, BGM 20%·저장값·autoplay gesture 계약이 통과한다.
+- 1920×1080, 1600×900, 1366×768에서 `document.documentElement.scrollHeight <= viewport height`이고 가로 scroll·title/menu/mic/BGM 겹침·Settings 잘림이 없다.
+- 실제 typed 입력 실패는 1~5회 총계·reset/save 계약대로 동작하고, PTT 버튼 내부 meter는 추가 stream 없이 dialogue·incantation·battle에서 동작한다.
 - GOOD/NORMAL/BAD 도달. 포함 시 HIDDEN도 도달.
 - JSON 참조와 파일명이 일치, 필수 에셋 누락 없음.
 - 모든 M5 node/phase의 화면 인물·표정·BGM이 장면별 에셋 매핑과 일치.

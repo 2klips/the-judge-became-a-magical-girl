@@ -1,0 +1,414 @@
+# PC Title UI/UX Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 데스크톱 PC TITLE을 작품명·세 메뉴·선택형 마이크·공유 BGM 설정이 있는 접근 가능한 첫 화면으로 교체하고, click/voice 새 게임과 저장 상태 보존 이어하기를 N0까지 연결한다.
+
+**Architecture:** `titleView.ts`가 TITLE DOM·메뉴·설명·dialog를, `titleMicState.ts`가 아홉 상태 순수 FSM과 문구를 소유한다. `gameView.ts`는 기존 `bg_title` shell 생성과 TITLE 위임만, `main.ts`는 기존 Engine/Save/BGM/단일 `BrowserMicrophoneTester` 주입만 담당하며 GameState·시나리오·Worker는 바꾸지 않는다.
+
+**Tech Stack:** TypeScript 7, Vite 8, Vanilla DOM/CSS, Vitest 4, Web Media/Web Audio API, local static WOFF2
+
+---
+
+## 실행 경계와 파일 지도
+
+- Phase B 검토·승인 완료 tip을 checkout한 worktree에서 다음 명령으로만 시작한다. 이 계획을 쓴 dirty worktree나 `main`에서 구현하지 않는다.
+
+```powershell
+git status --short
+git rev-parse HEAD
+git worktree add -b codex/pc-title-ui-ux 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux' HEAD
+git -C 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux' branch --show-current
+```
+
+Expected: 첫 status는 clean, HEAD는 승인된 Phase B tip, 마지막 출력은 `codex/pc-title-ui-ux`. 승인 tip 불일치·dirty 상태·이미 존재하는 branch/worktree면 중단하고 보고한다. push, `main` merge, branch 변경, reset, revert, amend를 하지 않는다.
+
+### Phase C 소유 파일
+
+- Create: `src/ui/titleView.ts` — TITLE semantic DOM, 메뉴/설명, compact BGM, visual settings skeleton
+- Create: `src/ui/title.css` — `[data-presentation-context="title"]` 아래 전용 데스크톱 스타일
+- Create: `tests/m5TitleView.test.ts` — copy/DOM/CSS/asset/static interaction 계약
+- Add only after font gate passes: `assets/source/fonts/maruburi/MaruBuri-SemiBold.woff2`, `assets/runtime/fonts/maruburi/MaruBuri-SemiBold.woff2`
+- Add only after font gate passes: `assets/source/fonts/pretendard/Pretendard-Regular.woff2`, `assets/source/fonts/pretendard/Pretendard-SemiBold.woff2`, `assets/runtime/fonts/pretendard/Pretendard-Regular.woff2`, `assets/runtime/fonts/pretendard/Pretendard-SemiBold.woff2`
+- Add only after font gate passes: `docs/assets/provenance/MARUBURI_LICENSE.txt`, `docs/assets/provenance/PRETENDARD_LICENSE.txt`
+- Modify: `tests/m5Assets.test.ts`, `tests/m5Presentation.test.ts`, `vite.config.ts`, `src/main.ts`, `src/ui/gameView.ts`
+
+### Phase D 소유 파일
+
+- Create: `src/ui/titleMicState.ts`, `tests/titleMicState.test.ts`
+- Modify: `src/ui/titleView.ts`, `src/ui/titleStart.ts`, `src/main.ts`
+- Modify only if the listed adapter methods are necessary: `src/input/microphoneSetup.ts`
+- Modify tests: `tests/m5TitleView.test.ts`, `tests/m5TitleStart.test.ts`, `tests/m5Microphone.test.ts`, `tests/m5Audio.test.ts`, `tests/mainVoiceLifecycle.test.ts`
+
+### Phase E 소유 파일
+
+- Modify only with observed results: `docs/assets/ASSET_MANIFEST.md`, `docs/assets/PROVENANCE.md`, `docs/dev/IMPLEMENTATION_LOG.md`, `docs/dev/LEARNING_LOG.md`
+- Modify `docs/dev/DECISIONS.md` only if implementation forces a new accepted decision; DEC-071 반복 기록은 금지한다.
+
+Do not change `src/state.ts`, `src/engine/nodeRunner.ts`, scenario JSON/schema, battle, Worker, background/BGM binaries, SFX, mobile CSS, or broad `GameView`/`styles.css` ownership. `bg_title.webp` remains byte-identical. Existing `src/styles.css` TITLE selectors may be neutralized only where they conflict with the new scoped owner; unrelated scene selectors remain untouched.
+
+## 고정 제품 계약
+
+- Desktop only: 1920×1080, 1600×900, 1366×768. `scrollWidth <= innerWidth`, `scrollHeight <= innerHeight`, and `document.documentElement.scrollHeight <= innerHeight` in TITLE and settings-open states.
+- Keep `bg_title`; add only a CSS left dark-to-transparent overlay. Left title/menu, no center panel. NHN banner is covered only as much as necessary for text contrast.
+- Title uses local MaruBuri SemiBold at weight 600. UI uses local Pretendard Regular/SemiBold. No CDN, variable font, mirror, synthesized weight, font modification, or TTF/OTF conversion.
+- TITLE subtitle is `목소리로 이어지는 이야기`. One `h1` contains block spans on two lines, first `심사역은`, second `마법소녀가 되었다`; only `마법소녀` may use soft pink while preserving one accessible heading.
+- Menu labels: `게임 시작`, `이어하기`, `설정`. Exact descriptions:
+  - `목소리로 이어지는 이야기를 처음부터 시작합니다.`
+  - save present: `마지막으로 저장된 장면부터 이야기를 이어갑니다.`
+  - save absent: `아직 저장된 이야기가 없습니다.`
+  - `음량과 마이크 등 플레이 환경을 설정합니다.`
+- Default menu is transparent white with no glow. Hover/focus only: soft pink fill, dark navy text, thin border, subtle glow and one decorative sparkle; 120–180ms. Active scale is `.98`. Reduced motion removes movement/entrance transitions.
+- TITLE entry runs once only: background fade 400ms, subtitle fade 300ms, h1 fade with a small upward offset 400ms, menu at +100ms, and mic affordance at +150ms. No repeating animation. `prefers-reduced-motion: reduce` displays the final state immediately.
+- `이어하기` always uses a real focusable button. No save means `aria-disabled="true"`, never native `disabled`; pointer, Enter, and Space do nothing except retain the no-save description.
+- `설정` is a real modal dialog containing only existing BGM mute/volume, input device, microphone test, and options actually supported by current code. X, `닫기`, Escape close it; focus is trapped, background is inert/blocked, and focus returns to `설정`.
+- No permission request on entry. Only explicit `마이크 설정`/test or voice start/resume may call `getUserMedia`. Mic never prevents a click start.
+- Mic states are exactly `UNKNOWN`, `REQUESTING_PERMISSION`, `READY`, `TESTING`, `TEST_SUCCESS`, `DENIED`, `NO_DEVICE`, `UNSUPPORTED`, `ERROR`. `TEST_SUCCESS` persists until start, retest, or real device change.
+- `UNKNOWN` `게임 시작` offers voice/click; `DENIED`/`NO_DEVICE`/`UNSUPPORTED`/`ERROR` still offers click; `READY`/`TEST_SUCCESS` voice starts directly. A browser-confirmed denied permission gets settings guidance, not a fake retry prompt.
+- No-save `이어하기` blocks. Click save resumes unchanged. Voice save with mic not voice-capable offers exact buttons `음성 설정 후 이어하기` and `클릭 모드로 이어하기`; click choice calls `engine.resume({ ...loaded.state, inputMode: "click" })` once. It must not call `engine.setInputMode`, because that writes the override back to the repository immediately. Existing localStorage bytes and every other state field stay unchanged until a later normal game save.
+- `bgm_daily` is not requested on load. First pointer/keyboard user gesture invokes the existing `BgmController.play("bgm_daily")`; its existing NotAllowedError retry remains the only retry. New/corrupt preferences remain 20% unmuted; valid stored volume/mute wins. Mockup 30% is not a runtime default.
+
+## Phase C — PC TITLE visual skeleton
+
+### Task C1: Establish clean Phase B base and run the official-font gate
+
+**Files:** font source/runtime/license files listed above; `tests/m5Assets.test.ts`; `vite.config.ts`
+
+- [ ] **Step 1: Confirm baseline and record pre-change tests**
+
+```powershell
+Set-Location 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux'
+git status --short
+npm run check
+npm test
+npm run build
+```
+
+Expected: clean status and all three commands PASS. A Phase B failure blocks Phase C; do not hide or repair unrelated failures.
+
+- [ ] **Step 2: Inspect official archives before writing a font test or copying bytes**
+
+MaruBuri authority is `https://hangeul.naver.com/font` / its official `마루 부리 글꼴 다운로드`; Pretendard authority is `https://github.com/orioncactus/pretendard` tag `v1.3.9` and its OFL `LICENSE`. Download official archives to an OS temp directory, list archive entries, and inspect bundled license/copyright. Do not use `fonts-archive`, CDN files, npm repacks, third-party mirrors, or another tag.
+
+Gate:
+
+1. MaruBuri must contain an official unmodified static SemiBold WOFF2 plus its official license.
+2. Pretendard v1.3.9 must contain official unmodified static Regular and SemiBold WOFF2 plus OFL 1.1.
+3. If either official package lacks required static WOFF2, stop the font step before creating repository files. Report archive URL, entry list, license, and two choices: approve original TTF/OTF format exception, or compare another official webfont. Do not convert, subset, rename bytes from a mirror, or continue C commit until user approval.
+
+- [ ] **Step 3: Write the failing asset contract after the gate passes**
+
+Add one table-driven test in `tests/m5Assets.test.ts` for the three exact source/runtime pairs. Assert file magic `wOF2`, nonzero size, source/runtime `Buffer.equals`, SHA-256 equality, and license text identifying NAVER MaruBuri and Pretendard SIL OFL 1.1. Assert runtime font count is exactly three and `vite.config.ts` maps `.woff2` to `font/woff2`.
+
+```powershell
+npm test -- tests/m5Assets.test.ts
+```
+
+Expected RED: exact local font files are missing.
+
+- [ ] **Step 4: Copy only approved official bytes**
+
+Create the exact source/runtime paths from the file map. Copy SemiBold MaruBuri and Regular/SemiBold Pretendard without conversion or modification; copy official license text. Add `".woff2": "font/woff2"` to `contentTypes`. Record byte counts and SHA-256 for Phase E, but do not write outcome docs yet.
+
+```powershell
+npm test -- tests/m5Assets.test.ts
+npm run check
+```
+
+Expected GREEN: three font contracts and MIME contract PASS; each pair has identical hashes.
+
+### Task C2: Extract TITLE DOM and lock the visual contract
+
+**Files:** `src/ui/titleView.ts`, `src/ui/title.css`, `src/main.ts`, `src/ui/gameView.ts`, `tests/m5TitleView.test.ts`, `tests/m5Presentation.test.ts`
+
+- [ ] **Step 1: Write RED copy/ownership tests**
+
+Create `tests/m5TitleView.test.ts`. Import these constants from `titleView.ts` and assert their exact values:
+
+```ts
+export const TITLE_MENU_COPY = {
+  start: { label: "게임 시작", description: "목소리로 이어지는 이야기를 처음부터 시작합니다." },
+  continueWithSave: { label: "이어하기", description: "마지막으로 저장된 장면부터 이야기를 이어갑니다." },
+  continueWithoutSave: { label: "이어하기", description: "아직 저장된 이야기가 없습니다." },
+  settings: { label: "설정", description: "음량과 마이크 등 플레이 환경을 설정합니다." },
+} as const;
+```
+
+Static assertions must require `button`, `input type="range"`, `select`, and `dialog`; `이어하기` `aria-disabled`; shared description `aria-describedby`; and reject a central `.title-block` microphone gate. Read `title.css` and require title-scoped selectors, MaruBuri SemiBold `@font-face`/h1 at weight 600, only Pretendard 400/600 faces, overlay, 120–180ms interaction transition, the one-shot 300/400ms entry timings with +100/+150ms delays, `scale(.98)`, `:focus-visible`, and reduced-motion final-state override. Reject infinite/repeating animation, `http`, `@import`, variable fonts, x/y `overflow:auto|scroll`, and mobile media rules. Phase D adds activation, focus-trap, and Escape assertions.
+
+```powershell
+npm test -- tests/m5TitleView.test.ts tests/m5Presentation.test.ts
+```
+
+Expected RED: `titleView.ts`/`title.css` do not exist and GameView still owns `renderTitle()` internals.
+
+- [ ] **Step 2: Create the stable TitleView boundary**
+
+Export these interfaces from `titleView.ts`; keep event effects behind callbacks so save/engine/BGM remain in `main.ts`:
+
+```ts
+export type TitleInputMode = "voice" | "click";
+export interface TitleAudioOptions {
+  getVolume(): number; isMuted(): boolean;
+  onVolumeChange(volume: number): void; onMutedChange(muted: boolean): void;
+}
+export interface TitleViewOptions {
+  hasSave: boolean;
+  savedInputMode: TitleInputMode | null;
+  warning: string | null;
+  audio: TitleAudioOptions;
+  onFirstUserGesture(): void;
+  onNewGame(mode: TitleInputMode, calibration: MicrophoneCalibration | null): void;
+  onResume(mode: TitleInputMode, calibration: MicrophoneCalibration | null): void;
+}
+export class TitleView {
+  constructor(private readonly shell: HTMLElement, private readonly options: TitleViewOptions) {}
+  render(): void;
+  destroy(): void;
+}
+```
+
+C skeleton renders left `header` with subtitle `목소리로 이어지는 이야기`, one `h1` split into block lines `심사역은`/`마법소녀가 되었다`, `nav` with three real buttons and one shared `aria-live` description, top-right compact BGM controls using `options.audio`, and a closed settings `dialog`. Keep interaction callbacks safe but defer mic/start/resume state logic to Phase D.
+
+- [ ] **Step 3: Make GameView a minimal delegate**
+
+In `main.ts`, add `import "./ui/title.css";` immediately after `import "./styles.css";`. In `gameView.ts`, import `TitleView`/`TitleViewOptions`, replace monolithic `renderTitle()` with shell creation plus `new TitleView(shell, options).render()`, and let `commit` skip its generic BGM panel for TITLE so the compact control is not duplicated. Destroy the prior title view before replacing its shell. Do not touch non-title renderer structure.
+
+- [ ] **Step 4: Implement scoped desktop layout**
+
+Use `@font-face` with the configured Vite base `/the-judge-became-a-magical-girl/assets/fonts/...`; the static test must match `vite.config.ts` base and forbid remote URLs. `.game-shell[data-presentation-context="title"]` owns fixed 100dvh, hidden overflow, the dark-to-transparent `::after` overlay, safe insets, left title/menu, top-right BGM, and modal layer. All title children sit above the overlay. At 1366×768 use height/width clamps only; add no mobile layout.
+
+- [ ] **Step 5: Verify GREEN and three visual skeletons**
+
+```powershell
+npm test -- tests/m5TitleView.test.ts tests/m5Presentation.test.ts tests/m5Assets.test.ts
+npm run check
+npm run build
+npm run dev -- --host 127.0.0.1
+```
+
+At 1920×1080, 1600×900, 1366×768 verify: unchanged background, readable left title/menu, banner minimally covered, compact BGM top-right, no central panel, no clipping/overlap, and both scroll axes zero. Verify the entry sequence runs once with the exact timings and reduced motion skips to the final state. Capture one screenshot and viewport measurement per size for Phase E.
+
+- [ ] **Step 6: Commit Phase C once**
+
+```powershell
+git add src/ui/titleView.ts src/ui/title.css src/ui/gameView.ts src/main.ts vite.config.ts tests/m5TitleView.test.ts tests/m5Presentation.test.ts tests/m5Assets.test.ts assets/source/fonts assets/runtime/fonts docs/assets/provenance/MARUBURI_LICENSE.txt docs/assets/provenance/PRETENDARD_LICENSE.txt
+git diff --cached --check
+git commit -m "feat(ui): rebuild pc title screen"
+```
+
+## Phase D — PC TITLE interaction
+
+### Task D1: Implement the pure nine-state microphone model
+
+**Files:** `src/ui/titleMicState.ts`, `tests/titleMicState.test.ts`
+
+- [ ] **Step 1: Write exhaustive RED reducer tests**
+
+Define and test this public contract:
+
+```ts
+export const TITLE_MIC_STATES = ["UNKNOWN", "REQUESTING_PERMISSION", "READY", "TESTING", "TEST_SUCCESS", "DENIED", "NO_DEVICE", "UNSUPPORTED", "ERROR"] as const;
+export type TitleMicState = (typeof TITLE_MIC_STATES)[number];
+export type TitleMicEvent =
+  | { type: "REQUEST_SETUP" } | { type: "PERMISSION_GRANTED" }
+  | { type: "START_TEST" } | { type: "TEST_PASSED" }
+  | { type: "PERMISSION_DENIED"; canRequestAgain: boolean }
+  | { type: "NO_DEVICE" } | { type: "UNSUPPORTED" } | { type: "FAILED" }
+  | { type: "DEVICE_CHANGED" } | { type: "RETEST" } | { type: "STARTED_GAME" };
+export function reduceTitleMic(state: TitleMicState, event: TitleMicEvent): TitleMicState;
+export function isTitleMicVoiceCapable(state: TitleMicState): boolean;
+export function presentTitleMic(state: TitleMicState, canRequestAgain?: boolean): { heading: string; body: string; action: string | null; live: "polite" | "assertive" };
+```
+
+Table-test all nine presentations and every approved transition. Required sequences: `UNKNOWN→REQUESTING_PERMISSION→READY→TESTING→TEST_SUCCESS`; success stays on irrelevant samples; retest gives `TESTING`; real device change gives `READY`; game start resets/destroys it. `UNSUPPORTED` differs from `ERROR`. Denied with `canRequestAgain=false` contains browser address-bar/site-settings guidance and no `다시 요청` action. Voice-capable is true only for `READY` and `TEST_SUCCESS`.
+
+```powershell
+npm test -- tests/titleMicState.test.ts
+```
+
+Expected RED: module missing.
+
+- [ ] **Step 2: Implement minimal reducer/presentation and verify GREEN**
+
+Implement only the tested state/event matrix; invalid events return the current state. Do not put navigator, DOM, stream, save, or engine access in this file.
+
+```powershell
+npm test -- tests/titleMicState.test.ts
+npm run check
+```
+
+### Task D2: Share one microphone tester and connect settings
+
+**Files:** `src/input/microphoneSetup.ts` only if needed, `src/ui/titleView.ts`, `tests/m5Microphone.test.ts`, `tests/m5TitleView.test.ts`
+
+- [ ] **Step 1: Add RED ownership/resource tests**
+
+Assert `main.ts` constructs `new BrowserMicrophoneTester()` exactly once and passes that instance to TITLE/settings. Assert first explicit setup/voice action calls `connect/getUserMedia` once and the callback continues receiving metrics. After connect resolves and at least one audio input is confirmed, state becomes `READY`, but READY samples do not enter the calibration accumulator. Pressing `마이크 테스트` resets the accumulator and enters `TESTING` without reconnecting or increasing `getUserMedia` count; the same callback then updates meter/calibration and a passing sample sequence enters persistent `TEST_SUCCESS`. Real `devicechange` alone disconnects/reconnects the same tester. Test settings-open/render makes zero permission/connect calls, retest count stays one, start/destroy cleanup runs, and no concurrent stream exists. Test DOMException mapping: `NotAllowedError→DENIED`, `NotFoundError→NO_DEVICE`, `API absence→UNSUPPORTED`, `other failures→ERROR`. Add TitleView source contracts for click/Enter/Space no-save guards, X/닫기/Escape, focus trap/return, background inert, and cleanup.
+
+- [ ] **Step 2: Add only the adapters TitleView cannot own safely**
+
+If required, add to the existing tester—not a second abstraction—`queryPermission(): Promise<PermissionState | "unknown">` and `subscribeDeviceChange(listener: () => void): () => void`. Unsupported Permissions API returns `"unknown"`; the unsubscribe removes the exact listener. Keep `connect`/`disconnect` and stream ownership unchanged.
+
+Extend, rather than replace, the Phase C view contract:
+
+```ts
+export interface TitleMicrophoneOptions {
+  supported: boolean;
+  connect(deviceId: string | undefined, onLevel: (metrics: AudioLevelMetrics) => void): Promise<MicrophoneConnection>;
+  disconnect(): Promise<void>;
+  queryPermission(): Promise<PermissionState | "unknown">;
+  subscribeDeviceChange(listener: () => void): () => void;
+}
+// Add `microphone: TitleMicrophoneOptions` to TitleViewOptions.
+```
+
+- [ ] **Step 3: Render one functional settings dialog**
+
+TitleView uses the same audio callbacks as compact BGM and the same microphone callbacks as start/resume. Dialog contains BGM mute, 0–100 range/current output, actual `audioinput` select, mic test button/meter/status, X and `닫기`. Opening it does not request permission. An explicit mic setup connects once; connect resolution plus a confirmed device enters READY while metrics are ignored for calibration. Test starts by resetting the accumulator only, reuses the live callback/stream, and enters TEST_SUCCESS on pass. Device change uses the same tester's disconnect/reconnect; retest never reconnects. Implement a focus trap over enabled focusables, Escape close, `inert` on the title content behind the dialog, and trigger focus restoration. Closing/destroying unsubscribes devicechange; start/destroy disconnects the tester through the existing entry helper. Never render unsupported fake options as working controls.
+
+```powershell
+npm test -- tests/titleMicState.test.ts tests/m5Microphone.test.ts tests/m5TitleView.test.ts
+npm run check
+```
+
+Expected GREEN: all FSM, error, single-stream, modal and accessibility contracts PASS.
+
+### Task D3: Connect new game, resume, BGM gesture, and Title→N0
+
+**Files:** `src/ui/titleStart.ts`, `src/ui/titleView.ts`, `src/main.ts`, listed Phase D tests
+
+- [ ] **Step 1: Write RED decision and gesture tests**
+
+Extend `titleStart.ts` with pure/testable policy, preserving `enterGameFromTitle` synchronous-enter-then-async-disconnect behavior:
+
+```ts
+export type TitleActivation =
+  | { kind: "offer-start-modes" } | { kind: "start"; mode: "voice" | "click" }
+  | { kind: "blocked-no-save" } | { kind: "resume"; mode: "voice" | "click" }
+  | { kind: "offer-voice-resume-modes" };
+export function resolveTitleStart(state: TitleMicState): TitleActivation;
+export function resolveTitleResume(hasSave: boolean, savedMode: InputMode | null, state: TitleMicState): TitleActivation;
+export function withTitleResumeMode(state: GameState, mode: InputMode): GameState;
+export function installFirstTitleGesture(target: TitleGestureTarget, play: () => void): () => void;
+```
+
+Test UNKNOWN offers modes; READY/TEST_SUCCESS starts voice; failure states permit click; no-save blocks; click save resumes click; voice save + non-capable mic offers two resume modes; voice-capable resumes voice. `withTitleResumeMode` must return a runtime copy whose only changed field is `inputMode`, leave the source snapshot untouched, and preserve node/history/affinity/flags/sttFailCount. Gesture test fires pointerdown/keydown repeatedly and expects one `play` call plus listener cleanup; installation alone expects zero.
+
+- [ ] **Step 2: Wire exact actions in TitleView**
+
+`게임 시작` mode dialog always retains `클릭 모드로 시작`; `음성으로 시작` is the only branch that may request permission. No-save `이어하기` guards pointer/click and key activation. Voice-save choice dialog uses the two exact labels; its click branch never touches mic. READY/TEST_SUCCESS voice activation enters immediately. 설정 description/status updates through one `aria-live` region.
+
+- [ ] **Step 3: Inject existing services in main**
+
+Pass `savedInputMode: loaded.state?.inputMode ?? null`, existing audio callbacks, single tester callbacks, and `onFirstUserGesture: () => { void bgm.play("bgm_daily"); }`. New game callback resets recent turns/voice failure session then calls `engine.startNewGame(mode)`. Resume callback resets only transient voice failure attempts and calls `engine.resume(withTitleResumeMode(loaded.state!, mode))`; it never calls `engine.setInputMode`. Assign calibration/device only when present. Call `enterGameFromTitle` so engine transition happens before tester disconnect cleanup.
+
+- [ ] **Step 4: Add regression assertions**
+
+`m5Audio.test.ts`: no title-load `play`, first gesture one `bgm_daily`, stored 37%/mute unchanged, fresh/corrupt 20%, controller NotAllowedError retry unchanged. `mainVoiceLifecycle.test.ts`: reset before new/resume, resume preserves saved `sttFailCount`, click override is supplied to `engine.resume` and `engine.setInputMode` is absent. `m5TitleStart.test.ts`: all activation tables, no-save click/Enter/Space block, source snapshot equality, and localStorage/repository bytes unchanged immediately after click override. `m5Presentation.test.ts`: `isActBoundaryTransition("title", "n0_review")` remains true. Add a deterministic main/source integration assertion that click `게임 시작` calls `startNewGame("click")` and current node is N0; voice calls `startNewGame("voice")`.
+
+```powershell
+npm test -- tests/titleMicState.test.ts tests/m5TitleView.test.ts tests/m5TitleStart.test.ts tests/m5Microphone.test.ts tests/m5Audio.test.ts tests/mainVoiceLifecycle.test.ts tests/m5Presentation.test.ts tests/engine.test.ts
+npm run check
+npm run build
+```
+
+Expected: targeted suite, TypeScript, and build PASS; no new GameState field or scenario change.
+
+- [ ] **Step 5: Commit Phase D once**
+
+```powershell
+git add src/ui/titleMicState.ts src/ui/titleView.ts src/ui/titleStart.ts src/input/microphoneSetup.ts src/main.ts tests/titleMicState.test.ts tests/m5TitleView.test.ts tests/m5TitleStart.test.ts tests/m5Microphone.test.ts tests/m5Audio.test.ts tests/mainVoiceLifecycle.test.ts tests/m5Presentation.test.ts
+git diff --cached --check
+git commit -m "feat(ui): connect title interactions"
+```
+
+If `src/input/microphoneSetup.ts` stayed unchanged, omit it from `git add`; do not manufacture a change.
+
+## Phase E — verification and factual documentation
+
+### Task E1: Run automated and browser matrices
+
+**Files:** no production changes
+
+- [ ] **Step 1: Run full automated gate**
+
+```powershell
+npm run check
+npm test
+npm run build
+npm run build:qa
+git diff --check
+```
+
+Expected: all commands PASS. `build:qa` exists in current `package.json`; do not mark N/A. Record counts, duration, and exact warnings without converting warnings into PASS claims.
+
+- [ ] **Step 2: Run the three-viewport layout matrix**
+
+At each viewport, test TITLE default, each menu hover/focus/active, no-save/save `이어하기`, compact BGM, `설정` open, mic status, and modal close paths. In DevTools evaluate:
+
+```js
+({
+  viewport: [innerWidth, innerHeight],
+  xScroll: document.documentElement.scrollWidth - innerWidth,
+  yScroll: document.documentElement.scrollHeight - innerHeight,
+  bodyYScroll: document.body.scrollHeight - innerHeight,
+})
+```
+
+Expected for 1920×1080, 1600×900, 1366×768: all scroll deltas `<= 0`; title/menu/mic/BGM/modal pairwise rectangle intersections are zero; banner remains materially visible. Record screenshots and numeric results, not visual guesses.
+
+- [ ] **Step 3: Run interaction/accessibility matrix**
+
+Cover mouse and keyboard; no-save and click/voice saves; UNKNOWN, REQUESTING_PERMISSION, READY, TESTING, TEST_SUCCESS, DENIED, NO_DEVICE, UNSUPPORTED, ERROR; X/닫기/Escape; focus trap/return/background block; reduced motion; first-gesture BGM/persistence/autoplay retry; one tester/stream; settings-open permission calls zero; connect/getUserMedia one; READY metrics ignored; test/retest reconnect count unchanged; click `게임 시작` through N0; READY voice start through N0; click save normal resume; voice-save setup resume; voice-save click override with repository bytes and node/history/affinity/flags/sttFailCount unchanged except runtime `inputMode="click"`. Denied with browser-level permanent denial must show settings guidance and make no fake re-request. Mic failures must never block click progress.
+
+- [ ] **Step 4: Inspect forbidden changes and runtime artifacts**
+
+```powershell
+git diff --name-only HEAD~2..HEAD
+git diff --stat HEAD~2..HEAD
+git status --short
+Get-FileHash -Algorithm SHA256 assets\source\fonts\maruburi\MaruBuri-SemiBold.woff2,assets\runtime\fonts\maruburi\MaruBuri-SemiBold.woff2,assets\source\fonts\pretendard\Pretendard-Regular.woff2,assets\runtime\fonts\pretendard\Pretendard-Regular.woff2,assets\source\fonts\pretendard\Pretendard-SemiBold.woff2,assets\runtime\fonts\pretendard\Pretendard-SemiBold.woff2
+```
+
+Expected: only planned files, identical source/runtime pairs, no scenario/Worker/battle/background/BGM/SFX/mobile changes, and clean status before documentation edits.
+
+### Task E2: Record only observed outcomes
+
+**Files:** Phase E documents listed above
+
+- [ ] **Step 1: Update asset facts**
+
+In `ASSET_MANIFEST.md`, add exactly three runtime fonts with family/weight/format/bytes/hash/source/runtime identity and QA state. Update runtime file count/bytes from disk. In `PROVENANCE.md`, record official page/repository, exact archive or tag `v1.3.9`, upstream entry names, copyright/license, download date, local paths, hashes, and the fact that no modification/conversion/CDN occurred. Do not claim approval beyond evidence.
+
+- [ ] **Step 2: Update implementation/learning facts**
+
+In `IMPLEMENTATION_LOG.md`, record Phase C/D commit IDs, exact automated command results, three viewport numbers/screenshots, interaction/mic/save/BGM/Title→N0 results, and any failed/retested case. In `LEARNING_LOG.md`, explain why optional mic, one tester, session-only click override, and first-gesture BGM reduce failure without changing saved story state. Update `DECISIONS.md` only if an actual new user-approved decision occurred.
+
+- [ ] **Step 3: Re-run docs/diff gate and commit Phase E once**
+
+```powershell
+npm run check
+npm test
+npm run build
+npm run build:qa
+git diff --check
+git status --short
+git add docs/assets/ASSET_MANIFEST.md docs/assets/PROVENANCE.md docs/dev/IMPLEMENTATION_LOG.md docs/dev/LEARNING_LOG.md
+git diff --cached --check
+git commit -m "docs(qa): verify pc title experience"
+```
+
+Add `docs/dev/DECISIONS.md` only if Step 2 legitimately changed it. Expected: exact three commits in order: `feat(ui): rebuild pc title screen`, `feat(ui): connect title interactions`, `docs(qa): verify pc title experience`.
+
+## Final acceptance gate
+
+- Local official static WOFF2 only; source/runtime identical; license/provenance complete; no CDN/conversion/variable font.
+- `bg_title` bytes and all scenario/engine schema/Worker/battle/BGM/SFX assets unchanged.
+- Desktop three-viewport scroll deltas zero and no title/menu/mic/BGM/modal overlap; banner minimally covered.
+- Menu copy/styles/keyboard behavior exact; no-save `이어하기` stays focusable and inert.
+- All nine mic states distinct, success persistence correct, denial guidance accurate, one tester/stream, no entry permission prompt.
+- `설정` uses shared BGM/mic state and passes dialog focus/X/닫기/Escape/background blocking.
+- New click/voice starts reach N0. Saves resume correctly; voice-save click override passes a copied state to `engine.resume`, preserves repository bytes/story state, and changes only runtime session input mode without `engine.setInputMode`.
+- `bgm_daily` begins only after first gesture through existing controller/retry; 20% default and valid stored values pass.
+- Full check/test/build/build:qa, browser matrices, factual docs, diff/status pass. No push or `main` merge.
