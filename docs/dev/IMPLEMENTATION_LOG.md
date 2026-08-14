@@ -1527,3 +1527,46 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - `bgm_transform`을 끝까지 1회, 중간 이탈 1회 실행해 surprise restart·orphan channel이 없는지 확인한다.
 
 위 항목은 장치·Secret·실제 음원이 필요한 사람 QA다. 수행 전에는 PASS 또는 Wave 1 완료로 올리지 않는다.
+
+## Phase A — 실제 음성 입력 실패 5회 정책
+
+- 작업일: 2026-08-14 KST
+- 브랜치: `codex/voice-five-failure-policy`
+- 코드 검증 기준 HEAD: `c156ea49bfdb018bc9268bfa45ea0508ccf95734`
+- 상태: 구현·자동 검증·제한된 데스크톱 브라우저 smoke·독립 검토 PASS. 실제 마이크와 전체 수동 matrix는 `PENDING`이며 Phase A 수동 완료로 판정하지 않음
+
+### 구현 결과
+
+- `permission`, `recording`, `no-speech`, `timeout`, `http`, `schema`, `network` 실제 음성 입력 실패는 발생할 때마다 `sttFailCount`를 즉시 1 올린다.
+- 전체 다섯 번째 실패는 같은 턴 재시도보다 우선해 전역 click mode로 전환한다. 전체 1~4회 구간에서는 같은 턴 첫 실패에 재시도하고, 같은 턴 두 번째 실패에 현재 턴만 클릭으로 진행한다.
+- 브라우저 녹음 API 미지원은 실패 횟수에 포함하지 않고 바로 click mode로 전환한다. 취소, 사용자의 수동 클릭 전환, LLM fallback, battle dBFS quiet/loud 판정도 음성 입력 실패 횟수에서 제외한다.
+- 같은 턴 시도 횟수는 임시 세션 기억이다. Resume은 이 임시 기억만 비우고 save의 전체 `sttFailCount`는 보존한다. New Game과 ending 재시작은 전체 횟수와 임시 기억을 모두 초기화한다.
+- 기존 `GameState.sttFailCount`와 저장 경로를 재사용했다. 신규 상태 필드나 저장 schema는 추가하지 않았다.
+
+### 코드 커밋
+
+| 커밋 | 역할 |
+|---|---|
+| `9f2b6d973104e7a61919f968c05158ea6fa5f448` `fix(voice): count every failed input` | 실제 실패 입력 단위 누적, lifecycle·주입·엔진 회귀 테스트 추가 |
+| `65afd503d1000f2a2b1085562ddf1d6667e2d344` `fix(voice): record failures before recovery` | 다섯 번째 실패 우선순위와 공통 handler 순서 보정 |
+| `c156ea49bfdb018bc9268bfa45ea0508ccf95734` `test(voice): guard failure exclusions` | 취소·수동 클릭·LLM fallback·battle dBFS 제외 계약 강화 |
+
+### fresh 자동 검증과 독립 검토
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| `npm run check` | PASS | TypeScript 오류 0 |
+| `npm test` | PASS | 48 files·289 tests |
+| `npm run build` | PASS | production build 성공. 기존 `transformers.web` 516.22 kB chunk·plugin timing 경고만 유지 |
+| `git diff --check` | PASS | Phase A 누적 diff에 공백·patch 오류 없음 |
+| 독립 요구사항 검토 | APPROVED | Phase A 계약과 Phase B·TITLE 비착수 경계 확인 |
+| 독립 품질 검토 | APPROVED | 공통 실패 handler, 저장·초기화, 제외 경로 테스트 확인 |
+
+문서 기록 직전 worktree는 clean이었다. 위 검증은 코드 HEAD `c156ea4`에서 fresh 실행했으며, docs-only 기록 뒤 코드 테스트는 재실행하지 않는다.
+
+### 데스크톱 브라우저 smoke와 남은 수동 게이트
+
+- Codex in-app browser에서 `http://127.0.0.1:5174/the-judge-became-a-magical-girl/?debug=1&voiceFailure=network&voiceFailureCount=5`를 열었다. TITLE DOM이 정상 표시됐고 Vite overlay와 console warning/error는 0, BGM 기본 표시는 20%, debug 모드는 `실제 플레이` 선택 상태였다.
+- `마이크 연결` 클릭 뒤 `연결 중` 상태와 입력·시작 disabled를 확인했다. 브라우저 마이크 권한 요청이 완료되지 않아 실제 capture와 game-mode 실패 주입 소비는 확인하지 못했다.
+- 따라서 실제 마이크 capture, dialogue·incantation·battle의 실패 7종 end-to-end matrix, 실제 unsupported 브라우저, save 전체 4회→Resume→5회 UI 흐름은 `PENDING`이다.
+- 취소·수동 클릭·LLM fallback·battle dBFS 제외는 자동 테스트로 보호되지만 실제 브라우저 수동 확인은 `PENDING`이다. 자동 테스트를 실제 장치 QA의 대체 근거로 사용하지 않는다.
