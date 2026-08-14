@@ -134,9 +134,9 @@
 | 논리 ID | 파일명/구현 | 종류 | 규격 | 용량 상한 | 우선순위 | 상태 | 생성 도구 | 라이선스 | 참조 위치 | QA |
 |---|---|---|---|---:|---|---|---|---|---|---|
 | `mic.idle` | DOM/CSS | UI 상태 | 코드 | 0 | 필수 | ready | Codex | N/A | mic indicator | 자동 상태 전환 PASS, 시각 QA 대기 |
-| `mic.listening` | DOM/CSS | UI 상태 | 코드 + CSS 맥동 | 0 | 필수 | ready | Codex | N/A | mic indicator | 자동 상태 전환 PASS, 시각 QA 대기 |
+| `mic.listening` | DOM/CSS | UI 상태 | 현행: 버튼 문구 + CSS 맥동 / 교체 목표: 기존 PTT 버튼 내부 live fill, DEC-073 | 0 | 필수 | ready(현행) / planned(교체) | Codex | N/A | mic indicator | 현행 구현 자동 상태 전환 PASS. DEC-073 단일 stream meter는 구현 대기이며 ready로 간주하지 않음 |
 | `mic.processing` | DOM/CSS | UI 상태 | 코드 | 0 | 필수 | ready | Codex | N/A | mic indicator | 자동 상태 전환 PASS, 시각 QA 대기 |
-| `mic.setup` | DOM/SVG/CSS + Web Audio | 타이틀 필수 테스트 | 장치 선택·dBFS 미터·보정 | 0 | 필수 | ready | Codex | N/A | title | 단위 테스트 PASS, 실제 장치 QA 대기 |
+| `mic.setup` | DOM/SVG/CSS + Web Audio | TITLE 마이크 설정 | 현행: 시작 차단형 장치 선택·dBFS 테스트 / 교체 목표: 선택형 9-state FSM, DEC-071 | 0 | 필수 | ready(현행) / planned(교체) | Codex | N/A | title | 현행 단위 테스트 PASS. DEC-071 optional mic/Settings 계약은 구현 대기이며 ready로 간주하지 않음 |
 | `sfx.confirm` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 선택 확정 | 자동 트리거 PASS, 청감 대기 |
 | `sfx.cast` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 주문 성공 | 자동 트리거 PASS, 청감 대기 |
 | `sfx.critical` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 완창/크리티컬 | 자동 트리거 PASS, 청감 대기 |

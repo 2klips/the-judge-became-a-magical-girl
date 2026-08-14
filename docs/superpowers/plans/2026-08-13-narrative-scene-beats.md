@@ -1,5 +1,7 @@
 # Narrative Scene Beats Implementation Plan
 
+> **Deferred historical plan — do not execute.** 이 문서의 narrative 작업은 현재 Phase 0 worktree `project-takeover-baseline`에서 실행하거나 commit하지 않는다. Phase A–E가 완료·검토된 뒤 이 narrative 범위에 대한 별도 사용자 승인과 fresh approved stacked worktree/rebase가 다시 확정되기 전에는 아래 Task·명령을 사용하지 않는다. 본문은 과거 제안의 추적 기록으로만 보존한다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 시작 훅, 주노 소개, 회색 망령 전조, 사원증 반응을 기존 분기 구조 안에서 자연스러운 순차 장면으로 연결한다.

@@ -1,5 +1,7 @@
 # Transformation Battle and Ending Implementation Plan
 
+> **Deferred historical plan — do not execute.** 이 문서의 transformation/battle/ending 작업은 현재 Phase 0 worktree `project-takeover-baseline`에서 실행하거나 commit하지 않는다. Phase A–E가 완료·검토된 뒤 이 transformation/battle/ending 범위에 대한 별도 사용자 승인과 fresh approved stacked worktree/rebase가 다시 확정되기 전에는 아래 Task·명령을 사용하지 않는다. 본문은 과거 제안의 추적 기록으로만 보존한다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 변신을 한 컷씩 보여 주고, 전투를 좌측 도윤·주노/우측 망령 구도로 순차 연출하며, 정화 설명을 거쳐 겹침 없는 엔딩으로 연결한다.

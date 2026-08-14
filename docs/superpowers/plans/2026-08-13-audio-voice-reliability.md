@@ -1,5 +1,7 @@
 # Audio and Voice Reliability Implementation Plan
 
+> **Historical Wave 1 record — do not execute.** 이 문서는 완료된 Wave 1 구현 기록을 보존하며 어떤 Task도 재실행하지 않는다. 특히 여기의 failed-turn 누적 정책은 DEC-072와 [2026-08-14 Voice Five-Failure Policy plan](2026-08-14-voice-failure-threshold.md)이 대체한다. 현재 Phase 0 worktree `project-takeover-baseline`에는 이 문서의 feature commit을 만들지 않는다. 후속 구현은 사용자 승인 뒤 지정된 fresh stacked worktree에서 새 계획만 실행한다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 신규 사용자의 BGM 기본값을 20%로 맞추고, 시작 입력에서 재생을 활성화하며, 음성 실패를 한국어 상태로 분류해 같은 턴 재시도와 클릭 복구를 일관되게 제공한다.

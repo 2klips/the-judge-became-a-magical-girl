@@ -45,7 +45,7 @@ Expected: 첫 status는 clean, HEAD는 승인된 Phase B tip, 마지막 출력�
 - Modify only with observed results: `docs/assets/ASSET_MANIFEST.md`, `docs/assets/PROVENANCE.md`, `docs/dev/IMPLEMENTATION_LOG.md`, `docs/dev/LEARNING_LOG.md`
 - Modify `docs/dev/DECISIONS.md` only if implementation forces a new accepted decision; DEC-071 반복 기록은 금지한다.
 
-Do not change `src/state.ts`, `src/engine/nodeRunner.ts`, scenario JSON/schema, battle, Worker, background/BGM binaries, SFX, mobile CSS, or broad `GameView`/`styles.css` ownership. `bg_title.webp` remains byte-identical. Existing `src/styles.css` TITLE selectors may be neutralized only where they conflict with the new scoped owner; unrelated scene selectors remain untouched.
+Do not change `src/state.ts`, `src/engine/nodeRunner.ts`, scenario JSON/schema, battle, Worker, background/BGM binaries, SFX, mobile CSS, or broad `GameView` ownership. `bg_title.webp` remains byte-identical. Phase C의 스타일 변경은 새 `src/ui/title.css`의 TITLE-scoped override만 허용하며 `src/styles.css`는 수정하지 않는다. 기존 전역 selector 때문에 이것이 불가능하면 임의로 ownership을 넓히지 말고 구현을 중단해 충돌 selector와 최소 대안을 보고한다.
 
 ## 고정 제품 계약
 
@@ -98,7 +98,7 @@ Gate:
 
 - [ ] **Step 3: Write the failing asset contract after the gate passes**
 
-Add one table-driven test in `tests/m5Assets.test.ts` for the three exact source/runtime pairs. Assert file magic `wOF2`, nonzero size, source/runtime `Buffer.equals`, SHA-256 equality, and license text identifying NAVER MaruBuri and Pretendard SIL OFL 1.1. Assert runtime font count is exactly three and `vite.config.ts` maps `.woff2` to `font/woff2`.
+Add one table-driven test in `tests/m5Assets.test.ts` for the three exact source/runtime pairs. Assert file magic `wOF2`, nonzero size, source/runtime `Buffer.equals`, SHA-256 equality, and license text identifying NAVER MaruBuri and Pretendard SIL OFL 1.1. Assert runtime font count is exactly three, font 추가 뒤 `assets/runtime/` 전체 재귀 합계가 `30 * 1024 * 1024` bytes 이하이고, `vite.config.ts` maps `.woff2` to `font/woff2`.
 
 ```powershell
 npm test -- tests/m5Assets.test.ts
@@ -218,10 +218,29 @@ export type TitleMicEvent =
   | { type: "DEVICE_CHANGED" } | { type: "RETEST" } | { type: "STARTED_GAME" };
 export function reduceTitleMic(state: TitleMicState, event: TitleMicEvent): TitleMicState;
 export function isTitleMicVoiceCapable(state: TitleMicState): boolean;
-export function presentTitleMic(state: TitleMicState, canRequestAgain?: boolean): { heading: string; body: string; action: string | null; live: "polite" | "assertive" };
+export interface TitleMicPresentationContext {
+  readonly deviceLabel?: string;
+  readonly canRequestAgain?: boolean;
+}
+export function presentTitleMic(state: TitleMicState, context?: TitleMicPresentationContext): { heading: string; body: string; action: string | null; live: "polite" | "assertive" };
 ```
 
-Table-test all nine presentations and every approved transition. Required sequences: `UNKNOWN→REQUESTING_PERMISSION→READY→TESTING→TEST_SUCCESS`; success stays on irrelevant samples; retest gives `TESTING`; real device change gives `READY`; game start resets/destroys it. `UNSUPPORTED` differs from `ERROR`. Denied with `canRequestAgain=false` contains browser address-bar/site-settings guidance and no `다시 요청` action. Voice-capable is true only for `READY` and `TEST_SUCCESS`.
+아래 heading/body/action을 exact string table-test한다. 표의 `\n`은 실제 newline 한 글자이며 `null`은 action button을 렌더하지 않는다는 뜻이다.
+
+| 상태/context | heading | body | action |
+|---|---|---|---|
+| `UNKNOWN` | `음성 플레이` | `목소리로 대답하고 직접 주문을 외칠 수 있습니다.\n마이크 없이도 플레이할 수 있습니다.` | `마이크 설정` |
+| `REQUESTING_PERMISSION` | `마이크 확인 중` | `사용 가능한 입력 장치를 확인하고 있습니다...` | `null` |
+| `READY` + `deviceLabel` | `마이크 준비됨` | `{deviceLabel}\n마이크 없이도 플레이할 수 있습니다.` | `마이크 테스트` |
+| `TESTING` | `목소리를 확인하고 있어요.` | `평소 목소리로 한 문장을 말해주세요.\n“심사를 시작합니다.”` | `null` |
+| `TEST_SUCCESS` | `테스트 완료` | `목소리가 정상적으로 확인되었습니다.` | `다시 테스트` |
+| `DENIED` + `canRequestAgain: true` | `마이크가 꺼져 있습니다.` | `음성 플레이를 사용하려면 마이크 권한이 필요합니다.` | `다시 설정` |
+| `DENIED` + `canRequestAgain: false` | `마이크가 꺼져 있습니다.` | `주소창의 사이트 설정에서 마이크 권한을 허용한 뒤 다시 확인해 주세요.` | `null` |
+| `NO_DEVICE` | `사용 가능한 마이크가 없습니다.` | `마이크를 연결한 뒤 다시 확인하거나 마이크 없이 플레이할 수 있습니다.` | `다시 확인` |
+| `UNSUPPORTED` | `이 브라우저에서는 음성 입력을 사용할 수 없습니다.` | `마이크 없이 클릭으로 플레이해 주세요.` | `null` |
+| `ERROR` | `마이크를 확인할 수 없습니다.` | `잠시 후 다시 시도하거나 마이크 없이 플레이해 주세요.` | `다시 시도` |
+
+Table-test every approved transition. Required sequences: `UNKNOWN→REQUESTING_PERMISSION→READY→TESTING→TEST_SUCCESS`; success stays on irrelevant samples; retest gives `TESTING`; an eligible real device change gives `READY`; game start resets/destroys it. `UNSUPPORTED` differs from `ERROR`. Voice-capable is true only for `READY` and `TEST_SUCCESS`.
 
 ```powershell
 npm test -- tests/titleMicState.test.ts
@@ -244,7 +263,9 @@ npm run check
 
 - [ ] **Step 1: Add RED ownership/resource tests**
 
-Assert `main.ts` constructs `new BrowserMicrophoneTester()` exactly once and passes that instance to TITLE/settings. Assert first explicit setup/voice action calls `connect/getUserMedia` once and the callback continues receiving metrics. After connect resolves and at least one audio input is confirmed, state becomes `READY`, but READY samples do not enter the calibration accumulator. Pressing `마이크 테스트` resets the accumulator and enters `TESTING` without reconnecting or increasing `getUserMedia` count; the same callback then updates meter/calibration and a passing sample sequence enters persistent `TEST_SUCCESS`. Real `devicechange` alone disconnects/reconnects the same tester. Test settings-open/render makes zero permission/connect calls, retest count stays one, start/destroy cleanup runs, and no concurrent stream exists. Test DOMException mapping: `NotAllowedError→DENIED`, `NotFoundError→NO_DEVICE`, `API absence→UNSUPPORTED`, `other failures→ERROR`. Add TitleView source contracts for click/Enter/Space no-save guards, X/닫기/Escape, focus trap/return, background inert, and cleanup.
+Assert `main.ts` constructs `new BrowserMicrophoneTester()` exactly once and passes that instance to TITLE/settings. Assert first explicit setup/voice action calls `connect/getUserMedia` once and the callback continues receiving metrics. After connect resolves and at least one audio input is confirmed, state becomes `READY`, but READY samples do not enter the calibration accumulator. Pressing `마이크 테스트` resets the accumulator and enters `TESTING` without reconnecting or increasing `getUserMedia` count; the same callback then updates meter/calibration and a passing sample sequence enters persistent `TEST_SUCCESS`.
+
+TITLE lifetime owns exactly one `devicechange` subscription. Settings close must retain it; game start and `TitleView.destroy()` must unsubscribe it exactly once. In `UNKNOWN` or whenever no tester connection exists, `devicechange` only invalidates/refreshes the cached device list and must call neither `connect` nor `getUserMedia`. Only `hasActiveConnection === true` and state가 `READY`, `TESTING`, or `TEST_SUCCESS`인 경우에만 same tester를 disconnect/reconnect한 뒤 `READY`로 전환한다. `REQUESTING_PERMISSION`의 in-flight connect는 두 번째 connect를 만들지 않고 list/state만 invalidate한다. 모든 branch는 recorded explicit-permission history를 보존하고 concurrent stream이나 synthetic permission prompt를 만들지 않는다. Add tests for every branch, reconnect-to-READY, unsubscribe ownership, unchanged `canRequestAgain`, and exact connect/getUserMedia counts. Also test settings-open/render makes zero permission/connect calls, retest count stays one, start/destroy cleanup runs, and DOMException mapping is `NotAllowedError→DENIED`, `NotFoundError→NO_DEVICE`, `API absence→UNSUPPORTED`, `other failures→ERROR`. Add TitleView source contracts for click/Enter/Space no-save guards, X/닫기/Escape, focus trap/return, background inert, and cleanup.
 
 - [ ] **Step 2: Add only the adapters TitleView cannot own safely**
 
@@ -265,7 +286,7 @@ export interface TitleMicrophoneOptions {
 
 - [ ] **Step 3: Render one functional settings dialog**
 
-TitleView uses the same audio callbacks as compact BGM and the same microphone callbacks as start/resume. Dialog contains BGM mute, 0–100 range/current output, actual `audioinput` select, mic test button/meter/status, X and `닫기`. Opening it does not request permission. An explicit mic setup connects once; connect resolution plus a confirmed device enters READY while metrics are ignored for calibration. Test starts by resetting the accumulator only, reuses the live callback/stream, and enters TEST_SUCCESS on pass. Device change uses the same tester's disconnect/reconnect; retest never reconnects. Implement a focus trap over enabled focusables, Escape close, `inert` on the title content behind the dialog, and trigger focus restoration. Closing/destroying unsubscribes devicechange; start/destroy disconnects the tester through the existing entry helper. Never render unsupported fake options as working controls.
+TitleView uses the same audio callbacks as compact BGM and the same microphone callbacks as start/resume. Dialog contains BGM mute, 0–100 range/current output, actual `audioinput` select, mic test button/meter/status, X and `닫기`. Opening it does not request permission. An explicit mic setup connects once; connect resolution plus a confirmed device enters READY while metrics are ignored for calibration. Test starts by resetting the accumulator only, reuses the live callback/stream, and enters TEST_SUCCESS on pass. Retest never reconnects. TITLE render/start owns the one `devicechange` subscription; Settings close retains it, while game start/destroy unsubscribes. Apply the `hasActiveConnection && READY|TESTING|TEST_SUCCESS` reconnect-to-READY guard from Step 1; a `REQUESTING_PERMISSION` connect remains single in-flight. Implement a focus trap over enabled focusables, Escape close, `inert` on the title content behind the dialog, and trigger focus restoration. Start/destroy disconnects the tester through the existing entry helper. Never render unsupported fake options as working controls.
 
 ```powershell
 npm test -- tests/titleMicState.test.ts tests/m5Microphone.test.ts tests/m5TitleView.test.ts
@@ -297,7 +318,7 @@ Test UNKNOWN offers modes; READY/TEST_SUCCESS starts voice; failure states permi
 
 - [ ] **Step 2: Wire exact actions in TitleView**
 
-`게임 시작` mode dialog always retains `클릭 모드로 시작`; `음성으로 시작` is the only branch that may request permission. No-save `이어하기` guards pointer/click and key activation. Voice-save choice dialog uses the two exact labels; its click branch never touches mic. READY/TEST_SUCCESS voice activation enters immediately. 설정 description/status updates through one `aria-live` region.
+`UNKNOWN`에서 mode dialog가 표시될 때 `클릭 모드로 시작` 선택을 항상 유지한다. `음성으로 시작` is the only dialog branch that may request permission. `READY`/`TEST_SUCCESS`는 dialog 없이 voice로 바로 시작한다. No-save `이어하기` guards pointer/click and key activation. Voice-save choice dialog uses the two exact labels; its click branch never touches mic. 설정 description/status updates through one `aria-live` region.
 
 - [ ] **Step 3: Inject existing services in main**
 
@@ -358,6 +379,8 @@ At each viewport, test TITLE default, each menu hover/focus/active, no-save/save
 
 Expected for 1920×1080, 1600×900, 1366×768: all scroll deltas `<= 0`; title/menu/mic/BGM/modal pairwise rectangle intersections are zero; banner remains materially visible. Record screenshots and numeric results, not visual guesses.
 
+Then serve the cold QA build with `npm run preview -- --host 127.0.0.1`. For each official viewport, enable DevTools **Disable cache**, use **Empty cache and hard reload**, and capture three independent trials. Every trial must show the three WOFF2 requests returning HTTP 200 with response MIME `font/woff2`; `document.fonts.check("600 1em 'MaruBuri'")`, `document.fonts.check("400 1em 'Pretendard'")`, and `document.fonts.check("600 1em 'Pretendard'")` must all be true. Define cold first-screen time as the maximum of `PerformanceNavigationTiming.loadEventEnd` and the three font `PerformanceResourceTiming.responseEnd` values; each of the three trials at each viewport must be `<= 3000ms`. Record the nine raw timings and network/font evidence. A miss is a failure to investigate, not an average-away result.
+
 - [ ] **Step 3: Run interaction/accessibility matrix**
 
 Cover mouse and keyboard; no-save and click/voice saves; UNKNOWN, REQUESTING_PERMISSION, READY, TESTING, TEST_SUCCESS, DENIED, NO_DEVICE, UNSUPPORTED, ERROR; X/닫기/Escape; focus trap/return/background block; reduced motion; first-gesture BGM/persistence/autoplay retry; one tester/stream; settings-open permission calls zero; connect/getUserMedia one; READY metrics ignored; test/retest reconnect count unchanged; click `게임 시작` through N0; READY voice start through N0; click save normal resume; voice-save setup resume; voice-save click override with repository bytes and node/history/affinity/flags/sttFailCount unchanged except runtime `inputMode="click"`. Denied with browser-level permanent denial must show settings guidance and make no fake re-request. Mic failures must never block click progress.
@@ -371,7 +394,7 @@ git status --short
 Get-FileHash -Algorithm SHA256 assets\source\fonts\maruburi\MaruBuri-SemiBold.woff2,assets\runtime\fonts\maruburi\MaruBuri-SemiBold.woff2,assets\source\fonts\pretendard\Pretendard-Regular.woff2,assets\runtime\fonts\pretendard\Pretendard-Regular.woff2,assets\source\fonts\pretendard\Pretendard-SemiBold.woff2,assets\runtime\fonts\pretendard\Pretendard-SemiBold.woff2
 ```
 
-Expected: only planned files, identical source/runtime pairs, no scenario/Worker/battle/background/BGM/SFX/mobile changes, and clean status before documentation edits.
+Expected: only planned files, identical source/runtime pairs, `assets/runtime/` total `<= 30 MiB`, no `src/styles.css`/scenario/Worker/battle/background/BGM/SFX/mobile changes, and clean status before documentation edits.
 
 ### Task E2: Record only observed outcomes
 
@@ -403,7 +426,7 @@ Add `docs/dev/DECISIONS.md` only if Step 2 legitimately changed it. Expected: ex
 
 ## Final acceptance gate
 
-- Local official static WOFF2 only; source/runtime identical; license/provenance complete; no CDN/conversion/variable font.
+- Local official static WOFF2 only; source/runtime identical; license/provenance complete; no CDN/conversion/variable font; runtime total `<= 30 MiB`.
 - `bg_title` bytes and all scenario/engine schema/Worker/battle/BGM/SFX assets unchanged.
 - Desktop three-viewport scroll deltas zero and no title/menu/mic/BGM/modal overlap; banner minimally covered.
 - Menu copy/styles/keyboard behavior exact; no-save `이어하기` stays focusable and inert.
@@ -411,4 +434,4 @@ Add `docs/dev/DECISIONS.md` only if Step 2 legitimately changed it. Expected: ex
 - `설정` uses shared BGM/mic state and passes dialog focus/X/닫기/Escape/background blocking.
 - New click/voice starts reach N0. Saves resume correctly; voice-save click override passes a copied state to `engine.resume`, preserves repository bytes/story state, and changes only runtime session input mode without `engine.setInputMode`.
 - `bgm_daily` begins only after first gesture through existing controller/retry; 20% default and valid stored values pass.
-- Full check/test/build/build:qa, browser matrices, factual docs, diff/status pass. No push or `main` merge.
+- Full check/test/build/build:qa, all three viewports' three-trial cold-load `<= 3s` with font HTTP/MIME/`document.fonts.check` evidence, browser matrices, factual docs, diff/status pass. No push or `main` merge.

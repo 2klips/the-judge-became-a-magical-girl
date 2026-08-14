@@ -12,8 +12,32 @@
 
 ## Execution contract
 
-- 승인된 A branch tip에서 생성된 branch `codex/ptt-live-meter`와 worktree `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\ptt-live-meter`만 사용한다.
-- 시작 전 `git branch --show-current`가 정확히 `codex/ptt-live-meter`인지 확인한다. 다르면 중단한다. 기존 worktree의 branch를 바꾸지 않는다.
+- 명시적 Phase B 구현 승인이 기록되고 Phase A tip이 승인된 뒤에만 아래 preflight를 실행한다. 승인 전에 HEAD를 미리 고정하거나 branch/worktree를 만들지 않는다.
+- source는 clean한 Phase A worktree `voice-five-failure-policy`의 동적 승인 tip이고 target은 새 branch `codex/ptt-live-meter`와 새 worktree `ptt-live-meter`다. branch 또는 path가 이미 존재하면 재사용·삭제·switch하지 말고 중단해 보고한다.
+
+```powershell
+$phaseAWorktree = 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\voice-five-failure-policy'
+$phaseBWorktree = 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\ptt-live-meter'
+$phaseBBranch = 'codex/ptt-live-meter'
+$phaseAStatus = @(git -C $phaseAWorktree status --short)
+if ($phaseAStatus.Count -ne 0) { throw 'Approved Phase A source worktree is dirty; stop and report.' }
+if ((git -C $phaseAWorktree branch --show-current) -ne 'codex/voice-five-failure-policy') { throw 'Unexpected Phase A source branch; stop and report.' }
+$phaseAHead = git -C $phaseAWorktree rev-parse HEAD
+git -C $phaseAWorktree worktree list
+git -C $phaseAWorktree show-ref --verify --quiet "refs/heads/$phaseBBranch"
+if ($LASTEXITCODE -eq 0) { throw 'Phase B branch already exists; stop and report.' }
+if (Test-Path -LiteralPath $phaseBWorktree) { throw 'Phase B worktree path already exists; stop and report.' }
+git -C $phaseAWorktree worktree add -b $phaseBBranch $phaseBWorktree $phaseAHead
+if ((git -C $phaseBWorktree branch --show-current) -ne $phaseBBranch) { throw 'Phase B branch verification failed.' }
+$phaseBHead = git -C $phaseBWorktree rev-parse HEAD
+if ($phaseBHead -ne $phaseAHead) { throw 'Phase B did not start at the approved Phase A tip.' }
+git -C $phaseAWorktree worktree list
+git -C $phaseAWorktree merge-base --is-ancestor $phaseAHead $phaseBHead
+if ($LASTEXITCODE -ne 0) { throw 'Phase B ancestry verification failed.' }
+git -C $phaseBWorktree status --short
+```
+
+Expected: 두 status 출력은 비어 있고, branch/HEAD/worktree/ancestry 검증이 모두 통과한다. 이후 작업은 생성된 Phase B worktree에서만 한다. 기존 worktree의 branch를 바꾸지 않는다.
 - A의 다섯 실제 실패 정책과 DEC-073, `IMPLEMENTATION_SPEC.md` §8.2, `QA_AND_DEMO.md` QP-04를 기준으로 삼는다.
 - push, main merge, branch 변경, reset, revert, amend 금지. TDD. 명시 파일만 stage한다.
 - title/Settings/microphone setup UI, title 문구·layout·meter를 바꾸지 않는다. 이미지·오디오 binary와 scenario도 바꾸지 않는다.
@@ -80,6 +104,8 @@ expect(track.stop).toHaveBeenCalledTimes(1);
 
 Add separate abort and recorder-error cases. Each must assert listener removal and exactly-once cleanup. The error case rejects `finish()` with `브라우저 녹음 중 오류가 발생했습니다.`. Also assert recorder creation/start failure stops tracks and closes analyser resources.
 
+Add a table-driven decorative-failure matrix for: `AudioContext` constructor throw, `createMediaStreamSource()` throw, `createAnalyser()` throw, source-to-analyser `connect()` throw, initial `requestAnimationFrame()` scheduling throw, and an exception inside a scheduled RAF sample/read/observer callback. In every case `beginBrowserRecording()` still resolves once MediaRecorder starts, `getUserMedia` remains exactly one, and a best-effort reset/no-fill signal is emitted. The fake MediaRecorder must then deliver non-empty bytes and `finish()` must return successful recorded audio. Assert partially created meter resources are disconnected/closed exactly once, but `track.stop` is zero before `finish()` and one after it. A meter-only error must never stop a track, stop MediaRecorder, reject recording, or replace the captured stream. Keep separate RED cases proving MediaRecorder construction/start failure is recording-terminal, rejects, and stops tracks.
+
 - [ ] **Step 3: Add controller forwarding test**
 
 Change the fake `PttRecordingPort.start` signature to accept an observer. Capture it, emit a metric, and assert the observer supplied to `RecordedVoiceTurnController.press(onLevel)` receives the same object. After `cancel()`, late emissions must not mutate UI-facing state.
@@ -116,7 +142,7 @@ This is a thin public alias over the existing meter policy. Do not export privat
 - [ ] **Step 2: Thread the observer through recording/controller APIs**
 
 ```ts
-export type LiveAudioLevelObserver = (metrics: AudioLevelMetrics) => void;
+export type LiveAudioLevelObserver = (metrics: AudioLevelMetrics | null) => void;
 export type BeginRecording = (onLevel?: LiveAudioLevelObserver) => Promise<RecordingSession>;
 
 export interface PttRecordingPort {
@@ -126,13 +152,15 @@ export interface PttRecordingPort {
 }
 ```
 
-`PushToTalkCapture.press(onLevel)`, `BrowserPttRecordingPort.start(onLevel)`, and `RecordedVoiceTurnController.press(onLevel)` each forward the same callback once. In `main.ts`, construct the port with `(onLevel) => beginBrowserRecording(inputDeviceId, onLevel)`.
+`PushToTalkCapture.press(onLevel)`, `BrowserPttRecordingPort.start(onLevel)`, and `RecordedVoiceTurnController.press(onLevel)` each forward the same callback once. In `main.ts`, construct the port with `(onLevel) => beginBrowserRecording(inputDeviceId, onLevel)`. A `null` observation is the decorative reset/no-fill signal; it is not a recording or transcription failure.
 
 - [ ] **Step 3: Attach analyser after the existing one `getUserMedia` call**
 
-In `beginBrowserRecording(deviceId?, onLevel?)`, keep its current constraints and call count. When observer exists, create one `AudioContext`, `MediaStreamAudioSourceNode`, and `AnalyserNode`; set `fftSize = 2048`, connect source to analyser, read `Float32Array` on RAF, and call `calculateAudioLevel(samples)`. Each tick checks the disposed flag before emitting or scheduling another frame. Never call `getUserMedia` from the observer helper.
+In `beginBrowserRecording(deviceId?, onLevel?)`, keep its current constraints and call count. When observer exists, best-effort create one `AudioContext`, `MediaStreamAudioSourceNode`, and `AnalyserNode`; set `fftSize = 2048`, connect source to analyser, read `Float32Array` on RAF, and call `calculateAudioLevel(samples)`. Each tick checks the meter-disposed flag before emitting or scheduling another frame. Never call `getUserMedia` from the observer helper.
 
-Use one idempotent `dispose()` owned by the returned `RecordingSession`: cancel RAF, disconnect source/analyser, remove named `dataavailable`/`stop`/`error` listeners, stop all stream tracks, and close non-closed context. Call it from successful finish, recorder error, abort/cancel, and setup/start catch before rethrow. A second finish/abort must not duplicate cleanup.
+Split cleanup ownership. Idempotent `disposeMeter({ reset: true })` cancels RAF, disconnects only source/analyser, closes only the meter AudioContext, and best-effort emits `null`; it must not remove recorder listeners, stop MediaRecorder, or stop tracks. Wrap AudioContext construction, source/analyser creation and connection, initial RAF scheduling, and every RAF tick in this fail-soft boundary. An exception cleans only partially created meter resources and leaves MediaRecorder recording the same stream. If the observer itself throws, swallow it after meter cleanup; decorative UI must not break capture.
+
+Idempotent `disposeRecording()` owns named `dataavailable`/`stop`/`error` listener removal and track stopping, and calls `disposeMeter()` as child cleanup. Only successful finish, recorder error, abort/cancel, render-replacement cancellation, or MediaRecorder construction/start failure may call it. A second terminal call must not duplicate cleanup. Before one of those recording-terminal paths, a meter error alone leaves all tracks live.
 
 - [ ] **Step 4: Verify GREEN**
 
@@ -141,7 +169,7 @@ npm test -- tests/pttLiveMeter.test.ts tests/m3Recording.test.ts
 npm run check
 ```
 
-Expected: one stream, ordered live samples, and all terminal cleanup assertions PASS.
+Expected: one stream, ordered live samples, every meter setup/RAF failure degrades to no-fill while valid recorded audio still completes, and meter-only versus recording-terminal cleanup assertions PASS.
 
 ### Task 3: RED/GREEN — thread callback through main without audio regressions
 
@@ -217,7 +245,7 @@ Expected: FAIL because PTT live markup/state helper and callback signature are a
 
 - [ ] **Step 3: Implement shared button presentation and render cleanup**
 
-Create each PTT button through one helper that appends decorative `.ptt-level-fill[aria-hidden=true]` and `.ptt-button-label`; change `setPttButtonState()` to update the label without replacing children. `updatePttLiveLevel()` applies `resolvePttLiveLevelPresentation()` as CSS percent/tone only while listening. Both `renderVoiceInput()` and `bindHoldToTalk()` pass that updater into `options.startCapture(onLevel)`.
+Create each PTT button through one helper that appends decorative `.ptt-level-fill[aria-hidden=true]` and `.ptt-button-label`; change `setPttButtonState()` to update the label without replacing children. `updatePttLiveLevel()` treats `null` as an immediate 0%/quiet reset; otherwise it applies `resolvePttLiveLevelPresentation()` as CSS percent/tone only while listening. Both `renderVoiceInput()` and `bindHoldToTalk()` pass that updater into `options.startCapture(onLevel)`.
 
 Track the active capture cancel callback in `GameView`. `commit()` calls and clears it before either root replacement or battle-stage replacement. Clear it before awaiting transcript rendering after a normal finish so a subsequent commit does not abort a completed capture. Reset level to zero before processing and on every catch/error/cancel.
 
@@ -278,7 +306,8 @@ git status --short
 ## Acceptance gate
 
 - One `getUserMedia` and one MediaStream per PTT capture; analyser uses that stream.
-- Finish, abort, error, cancel, and render replacement clean analyser, RAF, source, AudioContext, listeners, and tracks exactly once.
+- AudioContext/source/analyser/connect/RAF setup or callback failure is decorative fail-soft: meter resources clean exactly once, no-fill resets, and MediaRecorder returns successful audio on the same stream.
+- Only recording-terminal finish, abort, recorder error, cancel/render replacement, or MediaRecorder construction/start failure removes recorder listeners and stops tracks exactly once; meter-only failure never stops a track.
 - Dialogue, incantation, battle spell/freeform show the same button-internal quiet/good/loud fill.
 - Idle, processing, error, and cancelled states show 0 level.
 - Pointer, T, Space, Enter, BGM duck, and SFX suppression semantics remain unchanged.

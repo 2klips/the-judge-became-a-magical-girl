@@ -12,8 +12,32 @@
 
 ## Execution contract
 
-- Phase 0 문서 tip에서 생성된 branch `codex/voice-five-failure-policy`와 worktree `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\voice-five-failure-policy`만 사용한다.
-- 시작 전 `git branch --show-current`가 정확히 `codex/voice-five-failure-policy`인지 확인한다. 다르면 작업을 중단한다. 기존 worktree에서 branch를 바꾸지 않는다.
+- 명시적 Phase A 구현 승인이 기록된 뒤에만 아래 preflight를 실행한다. 승인 전에 HEAD를 미리 고정하거나 branch/worktree를 만들지 않는다.
+- source는 clean한 Phase 0 worktree `project-takeover-baseline`의 동적 승인 tip이고 target은 새 branch `codex/voice-five-failure-policy`와 새 worktree `voice-five-failure-policy`다. branch 또는 path가 이미 존재하면 재사용·삭제·switch하지 말고 중단해 보고한다.
+
+```powershell
+$phase0Worktree = 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\project-takeover-baseline'
+$phaseAWorktree = 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\voice-five-failure-policy'
+$phaseABranch = 'codex/voice-five-failure-policy'
+$phase0Status = @(git -C $phase0Worktree status --short)
+if ($phase0Status.Count -ne 0) { throw 'Phase 0 source worktree is dirty; stop and report.' }
+if ((git -C $phase0Worktree branch --show-current) -ne 'codex/p0-required-image-assets') { throw 'Unexpected Phase 0 source branch; stop and report.' }
+$phase0Head = git -C $phase0Worktree rev-parse HEAD
+git -C $phase0Worktree worktree list
+git -C $phase0Worktree show-ref --verify --quiet "refs/heads/$phaseABranch"
+if ($LASTEXITCODE -eq 0) { throw 'Phase A branch already exists; stop and report.' }
+if (Test-Path -LiteralPath $phaseAWorktree) { throw 'Phase A worktree path already exists; stop and report.' }
+git -C $phase0Worktree worktree add -b $phaseABranch $phaseAWorktree $phase0Head
+if ((git -C $phaseAWorktree branch --show-current) -ne $phaseABranch) { throw 'Phase A branch verification failed.' }
+$phaseAHead = git -C $phaseAWorktree rev-parse HEAD
+if ($phaseAHead -ne $phase0Head) { throw 'Phase A did not start at the approved Phase 0 tip.' }
+git -C $phase0Worktree worktree list
+git -C $phase0Worktree merge-base --is-ancestor $phase0Head $phaseAHead
+if ($LASTEXITCODE -ne 0) { throw 'Phase A ancestry verification failed.' }
+git -C $phaseAWorktree status --short
+```
+
+Expected: 두 status 출력은 비어 있고, branch/HEAD/worktree/ancestry 검증이 모두 통과한다. 이후 작업은 생성된 Phase A worktree에서만 한다. 기존 worktree에서 branch를 바꾸지 않는다.
 - 기준 계약은 `docs/dev/DECISIONS.md`의 DEC-072, `docs/dev/IMPLEMENTATION_SPEC.md` 실패 표, `docs/dev/QA_AND_DEMO.md` QP-05·QP-06이다. 계약과 코드가 충돌하면 코드를 계약에 맞추며 기준 문서를 재해석하지 않는다.
 - push, main merge, branch 변경, reset, revert, amend 금지. 명시 파일만 stage하며 실패 테스트 확인 전 production code를 바꾸지 않는다.
 
