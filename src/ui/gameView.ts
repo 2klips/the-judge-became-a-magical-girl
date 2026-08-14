@@ -27,9 +27,11 @@ import { ClickInputPort } from "../input/click";
 import {
   MicrophoneCalibrationAccumulator,
   resolveMicrophoneMeterPresentation,
+  resolvePttLiveLevelPresentation,
   type AudioLevelMetrics,
   type MicrophoneCalibration,
 } from "../input/audioLevel";
+import type { LiveAudioLevelObserver } from "../input/recording";
 import type {
   MicrophoneConnection,
   MicrophoneInputDevice,
@@ -369,7 +371,7 @@ export interface DialogueInputOptions {
   speechSupported: boolean;
   notice?: string;
   forceClickForTurn?: boolean;
-  startCapture(): Promise<void>;
+  startCapture(onLevel: LiveAudioLevelObserver): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
   onTranscript(
@@ -398,7 +400,7 @@ interface SharedVoiceOptions {
   speechSupported: boolean;
   notice?: string;
   forceClickForTurn?: boolean;
-  startCapture(): Promise<void>;
+  startCapture(onLevel: LiveAudioLevelObserver): Promise<void>;
   finishCapture(): Promise<RecordedVoiceResult>;
   cancel(): void;
   onTurnFailed(failure: VoiceInputFailure): void;
@@ -495,6 +497,33 @@ function isEditableKeyboardTarget(target: EventTarget | null): boolean {
 
 type PttButtonState = "idle" | "listening" | "processing";
 
+function updatePttButtonLabel(button: HTMLButtonElement, label: string): void {
+  const labelElement = button.querySelector<HTMLElement>(".ptt-button-label");
+  if (labelElement) labelElement.textContent = label;
+}
+
+function updatePttLiveLevel(
+  button: HTMLButtonElement,
+  metrics: AudioLevelMetrics | null,
+): void {
+  const presentation = metrics
+    ? resolvePttLiveLevelPresentation(metrics)
+    : { percent: 0, tone: "quiet" as const };
+  button.style.setProperty("--ptt-live-level", `${presentation.percent}%`);
+  button.dataset.levelTone = presentation.tone;
+}
+
+function createPttButton(label: string, className = "ptt-button"): HTMLButtonElement {
+  const button = element("button", className);
+  const fill = element("span", "ptt-level-fill");
+  fill.setAttribute("aria-hidden", "true");
+  const labelElement = element("span", "ptt-button-label", label);
+  button.append(fill, labelElement);
+  button.dataset.idleLabel = label;
+  updatePttLiveLevel(button, null);
+  return button;
+}
+
 function setPttButtonState(button: HTMLButtonElement, state: PttButtonState): void {
   const idleLabel = button.dataset.idleLabel ?? "누르고 말하기 (T)";
   button.dataset.voiceState = state;
@@ -502,11 +531,11 @@ function setPttButtonState(button: HTMLButtonElement, state: PttButtonState): vo
   button.disabled = state === "processing";
   if (state === "processing") {
     button.setAttribute("aria-busy", "true");
-    button.textContent = VOICE_PROCESSING_LABEL;
+    updatePttButtonLabel(button, VOICE_PROCESSING_LABEL);
     return;
   }
   button.removeAttribute("aria-busy");
-  button.textContent = state === "listening" ? "듣는 중… 놓으면 전송" : idleLabel;
+  updatePttButtonLabel(button, state === "listening" ? "듣는 중… 놓으면 전송" : idleLabel);
 }
 
 export class GameView {
@@ -516,6 +545,7 @@ export class GameView {
     HTMLButtonElement,
     PushToTalkShortcutBinding
   >();
+  private activeVoiceCaptureCancel: (() => void) | null = null;
   private currentBackgroundId: string | null = null;
   private currentPresentationContext: string | null = null;
   private readonly enteredPresentationContexts = new Set<string>();
@@ -939,7 +969,7 @@ export class GameView {
 
     if (controlContract.showVoiceCapture) {
       const controls = element("div", "voice-controls");
-      const ptt = element("button", "ptt-button", "누르고 주문 읽기 (T)");
+      const ptt = createPttButton("누르고 주문 읽기 (T)");
       ptt.type = "button";
       ptt.setAttribute("aria-pressed", "false");
       controls.append(ptt);
@@ -1059,8 +1089,11 @@ export class GameView {
 
     if (controlContract.showVoiceCapture) {
       const controls = element("div", "battle-actions");
-      const spell = element("button", "ptt-button", "주문 · 누르고 말하기 (T)");
-      const freeform = element("button", "ptt-button freeform-button", "자유 대응 · 누르고 말하기 (T)");
+      const spell = createPttButton("주문 · 누르고 말하기 (T)");
+      const freeform = createPttButton(
+        "자유 대응 · 누르고 말하기 (T)",
+        "ptt-button freeform-button",
+      );
       const guard = element("button", "secondary-button", "버티기");
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
@@ -1824,6 +1857,8 @@ export class GameView {
   }
 
   private commit(shell: HTMLElement): void {
+    this.activeVoiceCaptureCancel?.();
+    this.activeVoiceCaptureCancel = null;
     this.keyboardPtt.cancel();
     this.activeTypewriter?.cancel();
     this.activeTypewriter = null;
@@ -2027,7 +2062,7 @@ export class GameView {
       container.append(element("p", "input-notice", options.notice));
     }
     const controls = element("div", "voice-controls");
-    const ptt = element("button", "ptt-button", presentation.buttonLabel);
+    const ptt = createPttButton(presentation.buttonLabel);
     ptt.type = "button";
     ptt.setAttribute("aria-pressed", "false");
     ptt.setAttribute("aria-keyshortcuts", "T Space Enter");
@@ -2038,15 +2073,24 @@ export class GameView {
       "클릭으로 전환",
     );
     clickButton.type = "button";
-    clickButton.addEventListener("click", () => {
-      options.cancel();
-      options.onModeChange("click");
-    });
     controls.append(ptt);
     controls.append(clickButton);
     container.append(controls);
 
     let capturing = false;
+    const cancelCapture = (): void => {
+      capturing = false;
+      if (this.activeVoiceCaptureCancel === cancelCapture) {
+        this.activeVoiceCaptureCancel = null;
+      }
+      updatePttLiveLevel(ptt, null);
+      options.cancel();
+      if (ptt.isConnected) setPttButtonState(ptt, "idle");
+    };
+    clickButton.addEventListener("click", () => {
+      cancelCapture();
+      options.onModeChange("click");
+    });
     const showClickFallback = (message: string): void => {
       this.renderClickInput(
         container,
@@ -2061,12 +2105,22 @@ export class GameView {
       if (capturing) {
         return;
       }
+      this.activeVoiceCaptureCancel?.();
       capturing = true;
+      this.activeVoiceCaptureCancel = cancelCapture;
       setPttButtonState(ptt, "listening");
+      const onLevel: LiveAudioLevelObserver = (metrics) => {
+        if (!capturing || !ptt.isConnected) return;
+        updatePttLiveLevel(ptt, metrics);
+      };
       try {
-        await options.startCapture();
+        await options.startCapture(onLevel);
       } catch (error) {
         capturing = false;
+        if (this.activeVoiceCaptureCancel === cancelCapture) {
+          this.activeVoiceCaptureCancel = null;
+        }
+        updatePttLiveLevel(ptt, null);
         setPttButtonState(ptt, "idle");
         options.onUnavailable(classifyVoiceInputError(error));
       }
@@ -2076,6 +2130,10 @@ export class GameView {
         return;
       }
       capturing = false;
+      if (this.activeVoiceCaptureCancel === cancelCapture) {
+        this.activeVoiceCaptureCancel = null;
+      }
+      updatePttLiveLevel(ptt, null);
       setPttButtonState(ptt, "processing");
       const result = await options.finishCapture();
       if (!this.root.contains(container)) return;
@@ -2088,7 +2146,7 @@ export class GameView {
       void beginCapture();
     });
     ptt.addEventListener("pointerup", () => void stopCapture());
-    ptt.addEventListener("pointercancel", () => void stopCapture());
+    ptt.addEventListener("pointercancel", cancelCapture);
     ptt.addEventListener("keydown", (event) => {
       if ((event.key === " " || event.key === "Enter") && !event.repeat) {
         event.preventDefault();
@@ -2105,7 +2163,8 @@ export class GameView {
 
     const utilities = element("div", "input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
-      options.cancel();
+      cancelCapture();
+      updatePttLiveLevel(ptt, null);
       setPttButtonState(ptt, "processing");
       const handled = await options.onTranscript(transcript);
       if (!handled && this.root.contains(container)) {
@@ -2153,14 +2212,33 @@ export class GameView {
     let capturing = false;
     button.setAttribute("aria-keyshortcuts", "T Space Enter");
     button.dataset.idleLabel = button.textContent ?? "누르고 말하기 (T)";
+    const cancelCapture = (): void => {
+      capturing = false;
+      if (this.activeVoiceCaptureCancel === cancelCapture) {
+        this.activeVoiceCaptureCancel = null;
+      }
+      updatePttLiveLevel(button, null);
+      options.cancel();
+      if (button.isConnected) setPttButtonState(button, "idle");
+    };
     const begin = async (): Promise<void> => {
       if (capturing) return;
+      this.activeVoiceCaptureCancel?.();
       capturing = true;
+      this.activeVoiceCaptureCancel = cancelCapture;
       setPttButtonState(button, "listening");
+      const onLevel: LiveAudioLevelObserver = (metrics) => {
+        if (!capturing || !button.isConnected) return;
+        updatePttLiveLevel(button, metrics);
+      };
       try {
-        await options.startCapture();
+        await options.startCapture(onLevel);
       } catch (error) {
         capturing = false;
+        if (this.activeVoiceCaptureCancel === cancelCapture) {
+          this.activeVoiceCaptureCancel = null;
+        }
+        updatePttLiveLevel(button, null);
         setPttButtonState(button, "idle");
         options.onUnavailable(classifyVoiceInputError(error));
       }
@@ -2168,6 +2246,10 @@ export class GameView {
     const finish = async (): Promise<void> => {
       if (!capturing) return;
       capturing = false;
+      if (this.activeVoiceCaptureCancel === cancelCapture) {
+        this.activeVoiceCaptureCancel = null;
+      }
+      updatePttLiveLevel(button, null);
       setPttButtonState(button, "processing");
       const result = await options.finishCapture();
       if (result.kind === "error") {
@@ -2193,7 +2275,7 @@ export class GameView {
       void begin();
     });
     button.addEventListener("pointerup", () => void finish());
-    button.addEventListener("pointercancel", () => void finish());
+    button.addEventListener("pointercancel", cancelCapture);
     button.addEventListener("keydown", (event) => {
       if ((event.key === " " || event.key === "Enter") && !event.repeat) {
         event.preventDefault();

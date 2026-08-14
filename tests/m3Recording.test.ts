@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { PttRecordingPort } from "../src/input/recording";
+import type { LiveAudioLevelObserver, PttRecordingPort } from "../src/input/recording";
 import {
   RecordedVoiceTurnController,
   type TranscriptionPort,
@@ -104,5 +104,32 @@ describe("M3 release 기반 녹음", () => {
       kind: "error",
       failure: { kind: "network" },
     });
+  });
+
+  it("press의 live observer를 recording port에 전달하고 cancel 뒤 late level을 막는다", async () => {
+    let forwarded: LiveAudioLevelObserver | undefined;
+    const recording: PttRecordingPort = {
+      start: vi.fn(async (observer) => {
+        forwarded = observer;
+      }),
+      stop: vi.fn(async () => ({
+        wavBlob: new Blob(["voice"], { type: "audio/wav" }),
+        level,
+      })),
+      cancel: vi.fn(),
+    };
+    const transcription: TranscriptionPort = {
+      provider: "openai",
+      transcribe: vi.fn(),
+    };
+    const received: unknown[] = [];
+    const controller = new RecordedVoiceTurnController(recording, transcription);
+
+    await controller.press((metrics) => received.push(metrics));
+    forwarded?.(level);
+    expect(received).toEqual([level]);
+    controller.cancel();
+    forwarded?.({ rmsDbfs: -4, peakDbfs: -0.2, clippingRatio: 0.01 });
+    expect(received).toEqual([level]);
   });
 });

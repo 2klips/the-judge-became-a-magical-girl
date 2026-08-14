@@ -359,6 +359,8 @@ button {
 }
 
 .ptt-button {
+  position: relative;
+  isolation: isolate;
   flex: 1;
   min-height: 52px;
   border: 1px solid rgba(255, 215, 134, 0.32);
@@ -370,6 +372,35 @@ button {
   font-weight: 900;
   touch-action: none;
   user-select: none;
+  overflow: hidden;
+}
+
+.ptt-level-fill {
+  position: absolute;
+  z-index: 0;
+  inset: 0 auto 0 0;
+  height: 100%;
+  pointer-events: none;
+  width: var(--ptt-live-level, 0%);
+  background: var(--ptt-live-fill, rgba(114, 130, 148, 0.28));
+  transition: width 80ms linear, background 120ms ease;
+}
+
+.ptt-button-label {
+  position: relative;
+  z-index: 1;
+}
+
+.ptt-button[data-level-tone="quiet"] {
+  --ptt-live-fill: rgba(114, 130, 148, 0.32);
+}
+
+.ptt-button[data-level-tone="good"] {
+  --ptt-live-fill: rgba(51, 209, 170, 0.5);
+}
+
+.ptt-button[data-level-tone="loud"] {
+  --ptt-live-fill: rgba(240, 135, 120, 0.58);
 }
 
 .ptt-button[aria-pressed="true"] {

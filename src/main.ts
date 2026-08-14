@@ -22,6 +22,7 @@ import {
   beginBrowserRecording,
   BrowserPttRecordingPort,
   decodeWithBrowserAudioContext,
+  type LiveAudioLevelObserver,
 } from "./input/recording";
 import {
   evaluateVoiceLevel,
@@ -236,12 +237,12 @@ async function bootstrap(): Promise<void> {
       voice: RecordedVoiceTurnController,
       turnKey: string,
     ) => ({
-      startCapture: async (): Promise<void> => {
+      startCapture: async (onLevel: LiveAudioLevelObserver): Promise<void> => {
         if (consumeInjectedVoiceFailure(turnKey)) return;
         bgm.setDucked(true);
         sfx.setSuppressed(true);
         try {
-          await voice.press();
+          await voice.press(onLevel);
         } catch (error) {
           bgm.setDucked(false);
           sfx.setSuppressed(false);
@@ -269,7 +270,7 @@ async function bootstrap(): Promise<void> {
     ): RecordedVoiceTurnController =>
       new RecordedVoiceTurnController(
         new BrowserPttRecordingPort(
-          () => beginBrowserRecording(inputDeviceId),
+          (onLevel) => beginBrowserRecording(inputDeviceId, onLevel),
           decodeWithBrowserAudioContext,
           sttSampleRate(selectedSttModel),
         ),

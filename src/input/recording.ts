@@ -5,11 +5,12 @@ export interface RecordingSession {
   abort(): void;
 }
 
-export type BeginRecording = () => Promise<RecordingSession>;
+export type LiveAudioLevelObserver = (metrics: AudioLevelMetrics | null) => void;
+export type BeginRecording = (onLevel?: LiveAudioLevelObserver) => Promise<RecordingSession>;
 export type PushToTalkState = "idle" | "starting" | "recording" | "stopping";
 
 export interface PttRecordingPort {
-  start(): Promise<void>;
+  start(onLevel?: LiveAudioLevelObserver): Promise<void>;
   stop(): Promise<RecordedAudio>;
   cancel(): void;
 }
@@ -44,12 +45,12 @@ export class PushToTalkCapture {
 
   constructor(private readonly beginRecording: BeginRecording) {}
 
-  async press(): Promise<void> {
+  async press(onLevel?: LiveAudioLevelObserver): Promise<void> {
     if (this.state !== "idle") return this.startPromise;
 
     this.cancelRequested = false;
     this.state = "starting";
-    this.startPromise = this.beginRecording()
+    this.startPromise = this.beginRecording(onLevel)
       .then((session) => {
         if (this.cancelRequested) {
           session.abort();
@@ -117,8 +118,8 @@ export class BrowserPttRecordingPort implements PttRecordingPort {
     );
   }
 
-  start(): Promise<void> {
-    return this.capture.press();
+  start(onLevel?: LiveAudioLevelObserver): Promise<void> {
+    return this.capture.press(onLevel);
   }
 
   async stop(): Promise<RecordedAudio> {
@@ -140,7 +141,13 @@ export class BrowserPttRecordingPort implements PttRecordingPort {
   }
 }
 
-export async function beginBrowserRecording(deviceId?: string): Promise<RecordingSession> {
+export async function beginBrowserRecording(
+  deviceIdOrOnLevel?: string | LiveAudioLevelObserver,
+  explicitOnLevel?: LiveAudioLevelObserver,
+): Promise<RecordingSession> {
+  const deviceId = typeof deviceIdOrOnLevel === "string" ? deviceIdOrOnLevel : undefined;
+  const onLevel =
+    typeof deviceIdOrOnLevel === "function" ? deviceIdOrOnLevel : explicitOnLevel;
   if (!BrowserPttRecordingPort.isSupported()) {
     throw new Error("이 브라우저는 마이크 녹음을 지원하지 않습니다.");
   }
@@ -154,45 +161,152 @@ export async function beginBrowserRecording(deviceId?: string): Promise<Recordin
     },
     video: false,
   });
-  const mimeType = selectRecordingMimeType();
-  const recorder = mimeType
-    ? new MediaRecorder(stream, { mimeType })
-    : new MediaRecorder(stream);
-  const chunks: Blob[] = [];
-  recorder.addEventListener("dataavailable", (event) => {
-    if (event.data.size > 0) chunks.push(event.data);
-  });
-  recorder.start();
-
   const stopTracks = (): void => {
     for (const track of stream.getTracks()) track.stop();
   };
+  const mimeType = selectRecordingMimeType();
+  let recorder: MediaRecorder;
+  try {
+    recorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream);
+  } catch (error) {
+    stopTracks();
+    throw error;
+  }
+  const chunks: Blob[] = [];
 
+  let meterDisposed = false;
+  let meterContext: AudioContext | undefined;
+  let meterSource: MediaStreamAudioSourceNode | undefined;
+  let meterAnalyser: AnalyserNode | undefined;
+  let meterFrame: number | undefined;
+
+  const emitLevel = (metrics: AudioLevelMetrics | null): void => {
+    try {
+      onLevel?.(metrics);
+    } catch {
+      // Decorative observer failures must never stop recording.
+    }
+  };
+  const disposeMeter = (reset = true): void => {
+    if (meterDisposed) return;
+    meterDisposed = true;
+    if (meterFrame !== undefined) {
+      try {
+        cancelAnimationFrame(meterFrame);
+      } catch {
+        // Best-effort decorative cleanup.
+      }
+      meterFrame = undefined;
+    }
+    try {
+      meterSource?.disconnect();
+    } catch {
+      // Best-effort decorative cleanup.
+    }
+    try {
+      meterAnalyser?.disconnect();
+    } catch {
+      // Best-effort decorative cleanup.
+    }
+    try {
+      void meterContext?.close().catch(() => undefined);
+    } catch {
+      // Best-effort decorative cleanup.
+    }
+    if (reset) emitLevel(null);
+  };
+
+  if (onLevel) {
+    try {
+      meterContext = new AudioContext();
+      meterSource = meterContext.createMediaStreamSource(stream);
+      meterAnalyser = meterContext.createAnalyser();
+      meterAnalyser.fftSize = 2048;
+      meterSource.connect(meterAnalyser);
+      const samples = new Float32Array(meterAnalyser.fftSize);
+      const sample = (): void => {
+        if (meterDisposed || !meterAnalyser) return;
+        try {
+          meterAnalyser.getFloatTimeDomainData(samples);
+          onLevel(calculateAudioLevel(samples));
+          meterFrame = requestAnimationFrame(sample);
+        } catch {
+          disposeMeter(true);
+        }
+      };
+      meterFrame = requestAnimationFrame(sample);
+    } catch {
+      disposeMeter(true);
+    }
+  }
+
+  let recordingDisposed = false;
+  let finishPromise: Promise<Blob> | undefined;
+  let resolveFinish: ((blob: Blob) => void) | undefined;
+  let rejectFinish: ((error: Error) => void) | undefined;
+
+  const onDataAvailable = (event: BlobEvent): void => {
+    if (event.data.size > 0) chunks.push(event.data);
+  };
+  const disposeRecording = (): void => {
+    if (recordingDisposed) return;
+    recordingDisposed = true;
+    disposeMeter(true);
+    recorder.removeEventListener("dataavailable", onDataAvailable);
+    recorder.removeEventListener("stop", onStop);
+    recorder.removeEventListener("error", onError);
+    stopTracks();
+  };
+  const onStop = (): void => {
+    const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+    disposeRecording();
+    resolveFinish?.(blob);
+  };
+  const onError = (): void => {
+    const error = new Error("브라우저 녹음 중 오류가 발생했습니다.");
+    disposeRecording();
+    rejectFinish?.(error);
+  };
+
+  recorder.addEventListener("dataavailable", onDataAvailable);
+  recorder.addEventListener("stop", onStop);
+  recorder.addEventListener("error", onError);
+  try {
+    recorder.start();
+  } catch (error) {
+    disposeRecording();
+    throw error;
+  }
   return {
     finish() {
-      return new Promise<Blob>((resolve, reject) => {
-        recorder.addEventListener(
-          "stop",
-          () => {
-            stopTracks();
-            resolve(new Blob(chunks, { type: recorder.mimeType || "audio/webm" }));
-          },
-          { once: true },
-        );
-        recorder.addEventListener(
-          "error",
-          () => {
-            stopTracks();
-            reject(new Error("브라우저 녹음 중 오류가 발생했습니다."));
-          },
-          { once: true },
-        );
-        recorder.stop();
+      if (finishPromise) return finishPromise;
+      finishPromise = new Promise<Blob>((resolve, reject) => {
+        resolveFinish = resolve;
+        rejectFinish = reject;
+        try {
+          recorder.stop();
+        } catch (error) {
+          disposeRecording();
+          reject(error);
+        }
       });
+      return finishPromise;
     },
     abort() {
-      if (recorder.state !== "inactive") recorder.stop();
-      stopTracks();
+      if (recordingDisposed) return;
+      if (recorder.state !== "inactive") {
+        try {
+          recorder.stop();
+        } catch {
+          // Recording cancellation still owns terminal cleanup.
+        } finally {
+          disposeRecording();
+        }
+      } else {
+        disposeRecording();
+      }
     },
   };
 }

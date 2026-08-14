@@ -7,7 +7,7 @@ import {
   type DialogueJudgementResult,
 } from "../judge/schema";
 import type { AudioLevelMetrics } from "./audioLevel";
-import type { PttRecordingPort } from "./recording";
+import type { LiveAudioLevelObserver, PttRecordingPort } from "./recording";
 
 export type SttProviderId = "openai" | "gemini";
 export const OpenAiSttModelSchema = z.enum([
@@ -176,11 +176,13 @@ export class RecordedVoiceTurnController {
     private readonly transcription: TranscriptionPort,
   ) {}
 
-  async press(): Promise<void> {
+  async press(onLevel?: LiveAudioLevelObserver): Promise<void> {
     if (this.active) this.cancel();
     const requestId = ++this.requestId;
     this.active = true;
-    await this.recording.start();
+    await this.recording.start((metrics) => {
+      if (requestId === this.requestId && this.active) onLevel?.(metrics);
+    });
     if (requestId !== this.requestId) this.recording.cancel();
   }
 

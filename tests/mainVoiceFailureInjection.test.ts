@@ -61,7 +61,7 @@ describe("main debug 음성 실패 주입 wiring", () => {
       /const voiceCapture = \(\s*voice: RecordedVoiceTurnController,\s*turnKey: string,?\s*\)/,
     );
     expect(capture).toMatch(
-      /startCapture: async \(\): Promise<void> => \{\s*if \(consumeInjectedVoiceFailure\(turnKey\)\) return;\s*bgm\.setDucked\(true\)/,
+      /startCapture: async \(onLevel: LiveAudioLevelObserver\): Promise<void> => \{\s*if \(consumeInjectedVoiceFailure\(turnKey\)\) return;\s*bgm\.setDucked\(true\)/,
     );
   });
 

@@ -21,6 +21,8 @@ export interface MicrophoneMeterPresentation {
   readonly tone: "quiet" | "good" | "loud";
 }
 
+export type PttLiveLevelPresentation = MicrophoneMeterPresentation;
+
 const SILENCE_DBFS = -96;
 const SETUP_MINIMUM_RMS_DBFS = -48;
 const SETUP_MAXIMUM_RMS_DBFS = -7;
@@ -68,6 +70,12 @@ export function resolveMicrophoneMeterPresentation(
           ? "loud"
           : "good",
   };
+}
+
+export function resolvePttLiveLevelPresentation(
+  metrics: AudioLevelMetrics,
+): PttLiveLevelPresentation {
+  return resolveMicrophoneMeterPresentation(metrics, "sampling");
 }
 
 export function evaluateVoiceLevel(
