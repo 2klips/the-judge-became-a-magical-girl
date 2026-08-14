@@ -12,16 +12,34 @@
 
 ## 실행 경계와 파일 지도
 
-- Phase B 검토·승인 완료 tip을 checkout한 worktree에서 다음 명령으로만 시작한다. 이 계획을 쓴 dirty worktree나 `main`에서 구현하지 않는다.
+- 명시적 Phase C 구현 승인과 현재 Phase B tip 승인이 기록된 뒤에만 아래 preflight를 실행한다. 승인 전에 HEAD를 미리 고정하거나 branch/worktree를 만들지 않는다. 이 계획을 쓴 dirty worktree나 `main`에서 구현하지 않는다.
 
 ```powershell
-git status --short
-git rev-parse HEAD
-git worktree add -b codex/pc-title-ui-ux 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux' HEAD
-git -C 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux' branch --show-current
+$phaseBWorktree = 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\ptt-live-meter'
+$titleWorktree = 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux'
+$titleBranch = 'codex/pc-title-ui-ux'
+if (-not (Test-Path -LiteralPath $phaseBWorktree)) { throw 'Approved Phase B source worktree is missing; stop and report.' }
+$phaseBStatus = @(git -C $phaseBWorktree status --short)
+if ($phaseBStatus.Count -ne 0) { throw 'Approved Phase B source worktree is dirty; stop and report.' }
+if ((git -C $phaseBWorktree branch --show-current) -ne 'codex/ptt-live-meter') { throw 'Unexpected Phase B source branch; stop and report.' }
+$phaseBHead = git -C $phaseBWorktree rev-parse HEAD
+git -C $phaseBWorktree worktree list
+git -C $phaseBWorktree show-ref --verify --quiet "refs/heads/$titleBranch"
+if ($LASTEXITCODE -eq 0) { throw 'TITLE branch already exists; stop and report.' }
+if (Test-Path -LiteralPath $titleWorktree) { throw 'TITLE worktree path already exists; stop and report.' }
+git -C $phaseBWorktree worktree add -b $titleBranch $titleWorktree $phaseBHead
+if ((git -C $titleWorktree branch --show-current) -ne $titleBranch) { throw 'TITLE branch verification failed.' }
+$titleHead = git -C $titleWorktree rev-parse HEAD
+if ($titleHead -ne $phaseBHead) { throw 'TITLE did not start at the approved Phase B tip.' }
+git -C $phaseBWorktree worktree list
+git -C $phaseBWorktree merge-base --is-ancestor $phaseBHead $titleHead
+if ($LASTEXITCODE -ne 0) { throw 'TITLE ancestry verification failed.' }
+$titleStatus = @(git -C $titleWorktree status --short)
+if ($titleStatus.Count -ne 0) { throw 'New TITLE worktree is not clean; stop and report.' }
+git -C $titleWorktree status --short
 ```
 
-Expected: 첫 status는 clean, HEAD는 승인된 Phase B tip, 마지막 출력은 `codex/pc-title-ui-ux`. 승인 tip 불일치·dirty 상태·이미 존재하는 branch/worktree면 중단하고 보고한다. push, `main` merge, branch 변경, reset, revert, amend를 하지 않는다.
+Expected: source/target status 출력은 비어 있고, source branch는 `codex/ptt-live-meter`, target branch는 `codex/pc-title-ui-ux`이며 target HEAD가 실행 시점에 승인받은 `$phaseBHead`와 같다. branch/HEAD/worktree/ancestry 검증이 모두 통과해야 한다. 승인 tip 불일치·잘못된 source·dirty 상태·이미 존재하는 branch/worktree면 재사용·삭제·switch하지 말고 중단해 보고한다. 이후 구현은 생성된 TITLE worktree에서만 한다. push, `main` merge, branch 변경, reset, revert, amend를 하지 않는다.
 
 ### Phase C 소유 파일
 
@@ -64,6 +82,7 @@ Do not change `src/state.ts`, `src/engine/nodeRunner.ts`, scenario JSON/schema, 
 - `설정` is a real modal dialog containing only existing BGM mute/volume, input device, microphone test, and options actually supported by current code. X, `닫기`, Escape close it; focus is trapped, background is inert/blocked, and focus returns to `설정`.
 - No permission request on entry. Only explicit `마이크 설정`/test or voice start/resume may call `getUserMedia`. Mic never prevents a click start.
 - Mic states are exactly `UNKNOWN`, `REQUESTING_PERMISSION`, `READY`, `TESTING`, `TEST_SUCCESS`, `DENIED`, `NO_DEVICE`, `UNSUPPORTED`, `ERROR`. `TEST_SUCCESS` persists until start, retest, or real device change.
+- Every TITLE microphone status uses non-critical `aria-live="polite"`. Multi-line bodies retain their exact newline through a `[data-title-mic-body] { white-space: pre-line; }` rule owned only by `title.css`; do not flatten them into one line or promote ordinary status to an assertive alert.
 - `UNKNOWN` `게임 시작` offers voice/click; `DENIED`/`NO_DEVICE`/`UNSUPPORTED`/`ERROR` still offers click; `READY`/`TEST_SUCCESS` voice starts directly. A browser-confirmed denied permission gets settings guidance, not a fake retry prompt.
 - No-save `이어하기` blocks. Click save resumes unchanged. Voice save with mic not voice-capable offers exact buttons `음성 설정 후 이어하기` and `클릭 모드로 이어하기`; click choice calls `engine.resume({ ...loaded.state, inputMode: "click" })` once. It must not call `engine.setInputMode`, because that writes the override back to the repository immediately. Existing localStorage bytes and every other state field stay unchanged until a later normal game save.
 - `bgm_daily` is not requested on load. First pointer/keyboard user gesture invokes the existing `BgmController.play("bgm_daily")`; its existing NotAllowedError retry remains the only retry. New/corrupt preferences remain 20% unmuted; valid stored volume/mute wins. Mockup 30% is not a runtime default.
@@ -134,7 +153,7 @@ export const TITLE_MENU_COPY = {
 } as const;
 ```
 
-Static assertions must require `button`, `input type="range"`, `select`, and `dialog`; `이어하기` `aria-disabled`; shared description `aria-describedby`; and reject a central `.title-block` microphone gate. Read `title.css` and require title-scoped selectors, MaruBuri SemiBold `@font-face`/h1 at weight 600, only Pretendard 400/600 faces, overlay, 120–180ms interaction transition, the one-shot 300/400ms entry timings with +100/+150ms delays, `scale(.98)`, `:focus-visible`, and reduced-motion final-state override. Reject infinite/repeating animation, `http`, `@import`, variable fonts, x/y `overflow:auto|scroll`, and mobile media rules. Phase D adds activation, focus-trap, and Escape assertions.
+Static assertions must require `button`, `input type="range"`, `select`, and `dialog`; `이어하기` `aria-disabled`; shared description `aria-describedby`; and reject a central `.title-block` microphone gate. Read `title.css` and require title-scoped selectors, `[data-title-mic-body] { white-space: pre-line; }`, MaruBuri SemiBold `@font-face`/h1 at weight 600, only Pretendard 400/600 faces, overlay, 120–180ms interaction transition, the one-shot 300/400ms entry timings with +100/+150ms delays, `scale(.98)`, `:focus-visible`, and reduced-motion final-state override. Reject infinite/repeating animation, `http`, `@import`, variable fonts, x/y `overflow:auto|scroll`, and mobile media rules. Phase D adds activation, mic-body DOM/line rendering, focus-trap, and Escape assertions.
 
 ```powershell
 npm test -- tests/m5TitleView.test.ts tests/m5Presentation.test.ts
@@ -222,23 +241,23 @@ export interface TitleMicPresentationContext {
   readonly deviceLabel?: string;
   readonly canRequestAgain?: boolean;
 }
-export function presentTitleMic(state: TitleMicState, context?: TitleMicPresentationContext): { heading: string; body: string; action: string | null; live: "polite" | "assertive" };
+export function presentTitleMic(state: TitleMicState, context?: TitleMicPresentationContext): { heading: string; body: string; action: string | null; live: "polite" };
 ```
 
-아래 heading/body/action을 exact string table-test한다. 표의 `\n`은 실제 newline 한 글자이며 `null`은 action button을 렌더하지 않는다는 뜻이다.
+아래 heading/body/action/live를 exact table-test한다. 표의 `\n`은 실제 newline 한 글자이며 `null`은 action button을 렌더하지 않는다는 뜻이다. 모든 상태는 ordinary status이므로 `live`는 `polite`이며 critical alert처럼 과장하지 않는다.
 
-| 상태/context | heading | body | action |
-|---|---|---|---|
-| `UNKNOWN` | `음성 플레이` | `목소리로 대답하고 직접 주문을 외칠 수 있습니다.\n마이크 없이도 플레이할 수 있습니다.` | `마이크 설정` |
-| `REQUESTING_PERMISSION` | `마이크 확인 중` | `사용 가능한 입력 장치를 확인하고 있습니다...` | `null` |
-| `READY` + `deviceLabel` | `마이크 준비됨` | `{deviceLabel}\n마이크 없이도 플레이할 수 있습니다.` | `마이크 테스트` |
-| `TESTING` | `목소리를 확인하고 있어요.` | `평소 목소리로 한 문장을 말해주세요.\n“심사를 시작합니다.”` | `null` |
-| `TEST_SUCCESS` | `테스트 완료` | `목소리가 정상적으로 확인되었습니다.` | `다시 테스트` |
-| `DENIED` + `canRequestAgain: true` | `마이크가 꺼져 있습니다.` | `음성 플레이를 사용하려면 마이크 권한이 필요합니다.` | `다시 설정` |
-| `DENIED` + `canRequestAgain: false` | `마이크가 꺼져 있습니다.` | `주소창의 사이트 설정에서 마이크 권한을 허용한 뒤 다시 확인해 주세요.` | `null` |
-| `NO_DEVICE` | `사용 가능한 마이크가 없습니다.` | `마이크를 연결한 뒤 다시 확인하거나 마이크 없이 플레이할 수 있습니다.` | `다시 확인` |
-| `UNSUPPORTED` | `이 브라우저에서는 음성 입력을 사용할 수 없습니다.` | `마이크 없이 클릭으로 플레이해 주세요.` | `null` |
-| `ERROR` | `마이크를 확인할 수 없습니다.` | `잠시 후 다시 시도하거나 마이크 없이 플레이해 주세요.` | `다시 시도` |
+| 상태/context | heading | body | action | live |
+|---|---|---|---|---|
+| `UNKNOWN` | `음성 플레이` | `목소리로 대답하고 직접 주문을 외칠 수 있습니다.\n마이크 없이도 플레이할 수 있습니다.` | `마이크 설정` | `polite` |
+| `REQUESTING_PERMISSION` | `마이크 확인 중` | `사용 가능한 입력 장치를 확인하고 있습니다...` | `null` | `polite` |
+| `READY` + `deviceLabel` | `마이크 준비됨` | `{deviceLabel}\n마이크 없이도 플레이할 수 있습니다.` | `마이크 테스트` | `polite` |
+| `TESTING` | `목소리를 확인하고 있어요.` | `평소 목소리로 한 문장을 말해주세요.\n“심사를 시작합니다.”` | `null` | `polite` |
+| `TEST_SUCCESS` | `테스트 완료` | `목소리가 정상적으로 확인되었습니다.` | `다시 테스트` | `polite` |
+| `DENIED` + `canRequestAgain: true` | `마이크가 꺼져 있습니다.` | `음성 플레이를 사용하려면 마이크 권한이 필요합니다.` | `다시 설정` | `polite` |
+| `DENIED` + `canRequestAgain: false` | `마이크가 꺼져 있습니다.` | `주소창의 사이트 설정에서 마이크 권한을 허용한 뒤 다시 확인해 주세요.` | `null` | `polite` |
+| `NO_DEVICE` | `사용 가능한 마이크가 없습니다.` | `마이크를 연결한 뒤 다시 확인하거나 마이크 없이 플레이할 수 있습니다.` | `다시 확인` | `polite` |
+| `UNSUPPORTED` | `이 브라우저에서는 음성 입력을 사용할 수 없습니다.` | `마이크 없이 클릭으로 플레이해 주세요.` | `null` | `polite` |
+| `ERROR` | `마이크를 확인할 수 없습니다.` | `잠시 후 다시 시도하거나 마이크 없이 플레이해 주세요.` | `다시 시도` | `polite` |
 
 Table-test every approved transition. Required sequences: `UNKNOWN→REQUESTING_PERMISSION→READY→TESTING→TEST_SUCCESS`; success stays on irrelevant samples; retest gives `TESTING`; an eligible real device change gives `READY`; game start resets/destroys it. `UNSUPPORTED` differs from `ERROR`. Voice-capable is true only for `READY` and `TEST_SUCCESS`.
 
@@ -265,7 +284,7 @@ npm run check
 
 Assert `main.ts` constructs `new BrowserMicrophoneTester()` exactly once and passes that instance to TITLE/settings. Assert first explicit setup/voice action calls `connect/getUserMedia` once and the callback continues receiving metrics. After connect resolves and at least one audio input is confirmed, state becomes `READY`, but READY samples do not enter the calibration accumulator. Pressing `마이크 테스트` resets the accumulator and enters `TESTING` without reconnecting or increasing `getUserMedia` count; the same callback then updates meter/calibration and a passing sample sequence enters persistent `TEST_SUCCESS`.
 
-TITLE lifetime owns exactly one `devicechange` subscription. Settings close must retain it; game start and `TitleView.destroy()` must unsubscribe it exactly once. In `UNKNOWN` or whenever no tester connection exists, `devicechange` only invalidates/refreshes the cached device list and must call neither `connect` nor `getUserMedia`. Only `hasActiveConnection === true` and state가 `READY`, `TESTING`, or `TEST_SUCCESS`인 경우에만 same tester를 disconnect/reconnect한 뒤 `READY`로 전환한다. `REQUESTING_PERMISSION`의 in-flight connect는 두 번째 connect를 만들지 않고 list/state만 invalidate한다. 모든 branch는 recorded explicit-permission history를 보존하고 concurrent stream이나 synthetic permission prompt를 만들지 않는다. Add tests for every branch, reconnect-to-READY, unsubscribe ownership, unchanged `canRequestAgain`, and exact connect/getUserMedia counts. Also test settings-open/render makes zero permission/connect calls, retest count stays one, start/destroy cleanup runs, and DOMException mapping is `NotAllowedError→DENIED`, `NotFoundError→NO_DEVICE`, `API absence→UNSUPPORTED`, `other failures→ERROR`. Add TitleView source contracts for click/Enter/Space no-save guards, X/닫기/Escape, focus trap/return, background inert, and cleanup.
+TITLE lifetime owns exactly one `devicechange` subscription. Settings close must retain it; game start and `TitleView.destroy()` must unsubscribe it exactly once. In `UNKNOWN` or whenever no tester connection exists, `devicechange` only invalidates/refreshes the cached device list and must call neither `connect` nor `getUserMedia`. Only `hasActiveConnection === true` and state가 `READY`, `TESTING`, or `TEST_SUCCESS`인 경우에만 same tester를 disconnect/reconnect한 뒤 `READY`로 전환한다. `REQUESTING_PERMISSION`의 in-flight connect는 두 번째 connect를 만들지 않고 list/state만 invalidate한다. 모든 branch는 recorded explicit-permission history를 보존하고 concurrent stream이나 synthetic permission prompt를 만들지 않는다. Add tests for every branch, reconnect-to-READY, unsubscribe ownership, unchanged `canRequestAgain`, and exact connect/getUserMedia counts. Also test settings-open/render makes zero permission/connect calls, retest count stays one, start/destroy cleanup runs, and DOMException mapping is `NotAllowedError→DENIED`, `NotFoundError→NO_DEVICE`, `API absence→UNSUPPORTED`, `other failures→ERROR`. TitleView DOM tests require one `[data-title-mic-body]` owned by the presentation, exact newline-preserving `textContent`, computed `white-space: pre-line`, and `aria-live="polite"` for every state; no `assertive` branch exists. Add source contracts for click/Enter/Space no-save guards, X/닫기/Escape, focus trap/return, background inert, and cleanup.
 
 - [ ] **Step 2: Add only the adapters TitleView cannot own safely**
 
@@ -383,7 +402,7 @@ Then serve the cold QA build with `npm run preview -- --host 127.0.0.1`. For eac
 
 - [ ] **Step 3: Run interaction/accessibility matrix**
 
-Cover mouse and keyboard; no-save and click/voice saves; UNKNOWN, REQUESTING_PERMISSION, READY, TESTING, TEST_SUCCESS, DENIED, NO_DEVICE, UNSUPPORTED, ERROR; X/닫기/Escape; focus trap/return/background block; reduced motion; first-gesture BGM/persistence/autoplay retry; one tester/stream; settings-open permission calls zero; connect/getUserMedia one; READY metrics ignored; test/retest reconnect count unchanged; click `게임 시작` through N0; READY voice start through N0; click save normal resume; voice-save setup resume; voice-save click override with repository bytes and node/history/affinity/flags/sttFailCount unchanged except runtime `inputMode="click"`. Denied with browser-level permanent denial must show settings guidance and make no fake re-request. Mic failures must never block click progress.
+Cover mouse and keyboard; no-save and click/voice saves; UNKNOWN, REQUESTING_PERMISSION, READY, TESTING, TEST_SUCCESS, DENIED, NO_DEVICE, UNSUPPORTED, ERROR; every status uses `aria-live="polite"`; the UNKNOWN/READY/TESTING newline bodies are visibly two lines with computed `white-space: pre-line`; X/닫기/Escape; focus trap/return/background block; reduced motion; first-gesture BGM/persistence/autoplay retry; one tester/stream; settings-open permission calls zero; connect/getUserMedia one; READY metrics ignored; test/retest reconnect count unchanged; click `게임 시작` through N0; READY voice start through N0; click save normal resume; voice-save setup resume; voice-save click override with repository bytes and node/history/affinity/flags/sttFailCount unchanged except runtime `inputMode="click"`. Denied with browser-level permanent denial must show settings guidance and make no fake re-request. Mic failures must never block click progress.
 
 - [ ] **Step 4: Inspect forbidden changes and runtime artifacts**
 

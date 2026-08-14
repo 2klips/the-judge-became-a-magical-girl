@@ -15,11 +15,11 @@
 
 ## 작업 브랜치·worktree 전략
 
-Phase 0 문서 commit만 현재 `codex/p0-required-image-assets`에 남긴다. 현재 branch에는 A/B/TITLE 기능 코드를 쌓지 않는다. 문서안 승인 뒤 아래를 순서대로 만들며, 각 다음 branch는 이전 Phase의 사용자 승인 commit을 base로 한다. 이 serial stack은 공유 파일 `src/main.ts`, `src/ui/gameView.ts`, CSS의 cherry-pick 충돌을 줄이면서 각 commit을 독립적으로 rollback할 수 있게 한다.
+Phase 0 문서 전용 rollback commit만 현재 `codex/p0-required-image-assets`에 남긴다. review fix는 별도 docs-only follow-up commit으로 허용하되, 현재 branch의 feature code는 0으로 유지한다. 문서안 승인 뒤 아래를 순서대로 만들며, 각 다음 branch는 이전 Phase의 사용자 승인 commit을 base로 한다. 이 serial stack은 공유 파일 `src/main.ts`, `src/ui/gameView.ts`, CSS의 cherry-pick 충돌을 줄이면서 각 commit을 독립적으로 rollback할 수 있게 한다.
 
 | 단계 | branch | worktree | base | commit 경계 |
 |---|---|---|---|---|
-| Phase 0 | `codex/p0-required-image-assets` | `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\project-takeover-baseline` | `3317eb1efee557163bc62da63117cc6d42de4072` | 문서만 1 commit |
+| Phase 0 | `codex/p0-required-image-assets` | `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\project-takeover-baseline` | `3317eb1efee557163bc62da63117cc6d42de4072` | 문서 전용 rollback commits; review fix 별도 follow-up 허용; feature code 0 |
 | Phase A | `codex/voice-five-failure-policy` | `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\voice-five-failure-policy` | 승인된 Phase 0 tip | A 테스트·구현 1 rollback commit, 검증 사실 문서 follow-up commit 허용 |
 | Phase B | `codex/ptt-live-meter` | `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\ptt-live-meter` | 승인된 Phase A tip | B 테스트·구현 1 rollback commit, browser QA 사실 문서 follow-up commit 허용 |
 | Phase C~E | `codex/pc-title-ui-ux` | `F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\pc-title-ui-ux` | 승인된 Phase B tip | C visual, D interaction, E QA/docs를 각각 commit |
