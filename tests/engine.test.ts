@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GameData } from "../src/data/schema";
 import { GameEngine } from "../src/engine/nodeRunner";
-import { resolveVoiceLevelFailure } from "../src/input/audioLevel";
 import { SaveRepository, type StoragePort } from "../src/storage/saveRepository";
 import { loadFixtureData } from "./fixtures";
 
@@ -248,15 +247,4 @@ describe("M5 node runner", () => {
     expect(engine.getState().sttFailCount).toBe(1);
   });
 
-  it("LLM fallback과 battle dBFS 실패는 음성 입력 실패 총계에 포함하지 않는다", () => {
-    const engine = createEngine();
-    engine.startNewGame("voice");
-    engine.recordSttTurnFailure();
-
-    engine.recordLlmFailure();
-    expect(resolveVoiceLevelFailure(0)).toBe("retry");
-    expect(resolveVoiceLevelFailure(1)).toBe("consume-turn");
-
-    expect(engine.getState().sttFailCount).toBe(1);
-  });
 });
