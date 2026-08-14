@@ -1533,7 +1533,7 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - 작업일: 2026-08-14 KST
 - 브랜치: `codex/voice-five-failure-policy`
 - 코드 검증 기준 HEAD: `c156ea49bfdb018bc9268bfa45ea0508ccf95734`
-- 상태: 구현·자동 검증·제한된 데스크톱 브라우저 smoke·독립 검토 PASS. 실제 마이크와 전체 수동 matrix는 `PENDING`이며 Phase A 수동 완료로 판정하지 않음
+- 상태: 구현·자동 검증·일반 Google Chrome 실제 game-mode 7종 matrix·실제 마이크 smoke·독립 검토 PASS. 실제 재현이 불가능한 일부 제외 경로는 자동 테스트 PASS와 수동 `PENDING`을 분리해 기록하며, Phase A 전체 Gate 판정은 사용자 승인 대기
 
 ### 구현 결과
 
@@ -1570,3 +1570,59 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - `마이크 연결` 클릭 뒤 `연결 중` 상태와 입력·시작 disabled를 확인했다. 브라우저 마이크 권한 요청이 완료되지 않아 실제 capture와 game-mode 실패 주입 소비는 확인하지 못했다.
 - 따라서 실제 마이크 capture, dialogue·incantation·battle의 실패 7종 end-to-end matrix, 실제 unsupported 브라우저, save 전체 4회→Resume→5회 UI 흐름은 `PENDING`이다.
 - 취소·수동 클릭·LLM fallback·battle dBFS 제외는 자동 테스트로 보호되지만 실제 브라우저 수동 확인은 `PENDING`이다. 자동 테스트를 실제 장치 QA의 대체 근거로 사용하지 않는다.
+
+### 2026-08-15 일반 Chrome 실제 game-mode 수동 Gate
+
+#### 환경과 절차
+
+- 브랜치 `codex/voice-five-failure-policy`, 시작 HEAD `acd1320412c3b425e41459d744da73cf8876a9b0`, 시작 status clean을 확인한 뒤 기능 코드를 수정하지 않고 검증했다.
+- 브라우저는 Google Chrome `151.0.7922.138`, OS는 Windows `10.0.19045.0`이다. Codex in-app browser의 `연결 중` 정지는 검증 환경 제한으로 분리하고 제품 실패로 계수하지 않았다.
+- 실제 game-mode URL은 `http://127.0.0.1:5174/the-judge-became-a-magical-girl/?debug=1&voiceFailure=<kind>` 형식이다. `scene=`이 없는 `실제 플레이` 상태에서 TITLE 마이크 테스트를 통과한 뒤 Start 또는 Resume으로 실제 FSM을 진행했다.
+- debug 주입기는 한 페이지 로드에서 1회 또는 2회만 소비한다. `voiceFailureCount=5`를 5회 주입으로 간주하지 않았고, 5회 누적은 단일 주입·실제 짧은 녹음 실패·reload/Resume을 조합해 확인했다.
+
+#### 7종 typed failure matrix
+
+| 실패 종류 | 실제 game-mode surface | 플레이어 안내 | 결과 |
+|---|---|---|---|
+| `permission` | dialogue N1 | `마이크 권한을 사용할 수 없어.` | PASS |
+| `recording` | dialogue N1 | `마이크 녹음을 처리하지 못했어.` | PASS |
+| `no-speech` | dialogue N1 | `녹음에서 목소리를 찾지 못했어.` | PASS |
+| `timeout` | dialogue N1 | `음성 처리가 예상보다 오래 걸렸어.` | PASS |
+| `http` | incantation N5 | 안전한 누적 5회 전역 click 안내 | PASS |
+| `schema` | battle p1 | `음성 서버 응답 형식을 확인하지 못했어.` | PASS |
+| `network` | battle p1 | `음성 서버에 연결하지 못했어.` | PASS |
+
+- 네 종류의 dialogue 실패를 실제 Start 이후 같은 저장 흐름에서 1회씩 소비해 persisted total 1→4를 만들었다. 그 사이 수동 click 전환을 수행한 뒤 incantation의 `http`가 정확히 다섯 번째가 되어 전역 click으로 전환됐으므로 각 typed failure가 1회만 누적되고 수동 click은 누적되지 않는 것을 함께 확인했다.
+- 별도 New Game으로 total을 0으로 되돌린 뒤 battle에서 `schema`가 첫 실패 retry, reload/Resume 후 `network`가 두 번째 저장 실패이자 새 턴의 첫 retry로 표시됐다. battle 공통 handler와 persisted total 보존을 실제 FSM에서 확인했다.
+
+#### 누적 1~5·저장·초기화
+
+- Failure #1은 같은 턴 retry, #2는 같은 턴 두 번째 실패에서 현재 턴 click, #3은 다음 턴 첫 retry, #4는 그 턴 두 번째 current-turn click으로 나타났다.
+- 별도 1~5 우선순위 run에서 total 4 상태로 reload하고 Resume했다. persisted total은 유지되고 transient same-turn attempt는 초기화됐다. 다음 `network` 실패는 그 턴 첫 시도였지만 retry/current-turn UI보다 먼저 `음성 입력 실패가 5회 누적돼 클릭 모드로 전환했어.`가 표시됐다.
+- New Game은 이전 total 5 뒤 첫 `permission` 실패를 retry로 표시해 total 0 초기화를 확인했다.
+- GOOD ending을 실제 클릭 전투로 완료하고 `처음부터`를 실행한 뒤 첫 `timeout` 실패가 retry로 표시돼 ending restart의 total·transient 초기화를 확인했다.
+
+#### 제외·raw 정보·실제 장치
+
+| 항목 | 수동 결과 | 자동 근거/제약 |
+|---|---|---|
+| 사용자의 수동 click 전환 | PASS | total 4 뒤 실행해도 다음 `http`가 정확히 다섯 번째였음 |
+| cancelled recording | `PENDING` | 외부 Chrome 자동 조작에서 실제 pointer cancel을 안정적으로 만들 수 없어 기존 cancellation 회귀 테스트만 PASS |
+| `recordingSupported=false` / UNSUPPORTED | `PENDING` | 사용한 Chrome은 녹음 API 지원 환경이므로 실제 재현 불가. 7종 capability early-return 자동 테스트 PASS |
+| LLM local fallback | `PENDING` | 실제 공급자 장애를 의도적으로 만들지 않아 main 경계 자동 테스트만 PASS |
+| battle dBFS quiet/loud | `PENDING` | 물리 입력 레벨을 재현 가능한 값으로 고정할 수 없어 경계 자동 테스트만 PASS |
+
+- `http`, `schema`, `network` 화면에 `Failed to fetch`, HTTP status, HTML response, provider 내부 문구는 노출되지 않았다. 각 검증 시 Chrome console warning/error는 0이었다.
+- 실제 마이크 권한을 허용하고 `헤드셋 마이크(CORSAIR VOID WIRELESS v2 Gaming Headset)`과 `마이크(QHD Webcam)`을 확인했다. 입력 meter가 실제 dBFS 변화에 반응하고 TITLE `테스트 완료`에 도달했으며, 실제 PTT의 짧은 녹음은 raw 예외가 아니라 typed `recording` 안내로 수렴했다.
+- 따라서 실제 장치·7종 handler·1~5 우선순위·save/Resume·New Game·ending restart·raw 정보 비노출은 PASS다. 위 표의 네 제외 항목은 실제 수동 PASS로 올리지 않고 자동 검증 PASS와 재현 제약을 분리한다.
+
+#### 수동 Gate 뒤 fresh 자동 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 48 files·289 tests, exit 0 |
+| `npm run build` | PASS | Vite 8.2.0, 150 modules, built 4.78s. 기존 Transformers 516.22 kB chunk 경고만 유지 |
+| `git diff --check` | PASS | 문서 patch 공백 오류 없음 |
+
+기능 코드·테스트·시나리오·에셋은 변경하지 않았고, 수동 Gate 근거만 이 문서에 추가했다.
