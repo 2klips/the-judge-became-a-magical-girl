@@ -3,24 +3,21 @@ import { resolveDebugVoiceFailure } from "../src/input/voiceFailureInjection";
 import {
   clearVoiceFailureAttempts,
   formatVoiceTurnFailureMessage,
-  resolveUnavailableVoiceFailure,
   resolveVoiceTurnFailure,
 } from "../src/input/voiceTurnRecovery";
 
 describe("음성 실패 복구 정책", () => {
-  it("첫 실제 실패는 누적 실패를 올리고 같은 턴 음성을 유지한다", () => {
-    expect(resolveVoiceTurnFailure(0, 0)).toEqual({
+  it("기록 후 total 1인 첫 실패는 같은 턴 음성을 유지한다", () => {
+    expect(resolveVoiceTurnFailure(0, 1)).toEqual({
       nextAttemptInTurn: 1,
-      countInputFailure: true,
       forceClickForTurn: false,
       forceGlobalClick: false,
     });
   });
 
-  it("같은 턴 두 번째 실제 실패도 누적하고 현재 턴 클릭으로 전환한다", () => {
-    expect(resolveVoiceTurnFailure(1, 1)).toEqual({
+  it("기록 후 total 2인 같은 턴 두 번째 실패는 현재 턴 클릭으로 전환한다", () => {
+    expect(resolveVoiceTurnFailure(1, 2)).toEqual({
       nextAttemptInTurn: 0,
-      countInputFailure: true,
       forceClickForTurn: true,
       forceGlobalClick: false,
     });
@@ -36,37 +33,25 @@ describe("음성 실패 복구 정책", () => {
     expect(second).not.toMatch(/한 번 더|다시 시도/);
   });
 
-  it("다섯 번째 실제 실패는 같은 턴 첫 실패여도 즉시 전체 클릭 모드가 된다", () => {
-    expect(resolveVoiceTurnFailure(0, 4)).toEqual({
-      nextAttemptInTurn: 0,
-      countInputFailure: true,
-      forceClickForTurn: true,
-      forceGlobalClick: true,
-    });
-  });
-
-  it.each(["dialogue", "incantation", "battle"] as const)(
-    "%s permission/device-open 실패는 1회 재시도 후 현재 턴 click이다",
-    () => {
-      expect(resolveUnavailableVoiceFailure(true, 0, 0)).toMatchObject({
-        countInputFailure: true,
-        forceClickForTurn: false,
-        forceGlobalClick: false,
-      });
-      expect(resolveUnavailableVoiceFailure(true, 1, 1)).toMatchObject({
-        countInputFailure: true,
+  it.each([0, 1])(
+    "기록 후 total 5면 같은 턴 attempt %i에서도 즉시 전체 클릭 모드가 된다",
+    (attemptInTurn) => {
+      expect(resolveVoiceTurnFailure(attemptInTurn, 5)).toEqual({
+        nextAttemptInTurn: 0,
         forceClickForTurn: true,
-        forceGlobalClick: false,
+        forceGlobalClick: true,
       });
     },
   );
 
-  it("브라우저 녹음 API 자체 미지원만 즉시 전역 click이다", () => {
-    expect(resolveUnavailableVoiceFailure(false, 0, 0)).toMatchObject({
-      countInputFailure: false,
+  it("순수 decision은 누적 기록 책임을 갖지 않는다", () => {
+    expect(resolveVoiceTurnFailure(0, 1)).not.toHaveProperty("countInputFailure");
+  });
+
+  it("기록 후 total 5를 넘겨도 전체 click을 유지한다", () => {
+    expect(resolveVoiceTurnFailure(0, 9)).toMatchObject({
       forceClickForTurn: true,
       forceGlobalClick: true,
-      capabilityUnavailable: true,
     });
   });
 

@@ -1,8 +1,18 @@
+import type { VoiceFailureKind } from "./transcription";
+
 export interface VoiceTurnFailureDecision {
   readonly nextAttemptInTurn: number;
-  readonly countInputFailure: boolean;
   readonly forceClickForTurn: boolean;
   readonly forceGlobalClick: boolean;
+}
+
+export interface TypedVoiceFailureDecision extends VoiceTurnFailureDecision {
+  readonly failureKind: VoiceFailureKind;
+  readonly capabilityUnavailable: boolean;
+}
+
+interface RecordedSttFailure {
+  readonly state: { readonly sttFailCount: number };
 }
 
 export function formatVoiceTurnFailureMessage(
@@ -18,10 +28,9 @@ export function resolveVoiceTurnFailure(
   attemptInTurn: number,
   accumulatedInputFailures: number,
 ): VoiceTurnFailureDecision {
-  if (accumulatedInputFailures + 1 >= 5) {
+  if (accumulatedInputFailures >= 5) {
     return {
       nextAttemptInTurn: 0,
-      countInputFailure: true,
       forceClickForTurn: true,
       forceGlobalClick: true,
     };
@@ -29,35 +38,36 @@ export function resolveVoiceTurnFailure(
   if (attemptInTurn <= 0) {
     return {
       nextAttemptInTurn: 1,
-      countInputFailure: true,
       forceClickForTurn: false,
       forceGlobalClick: false,
     };
   }
   return {
     nextAttemptInTurn: 0,
-    countInputFailure: true,
     forceClickForTurn: true,
     forceGlobalClick: false,
   };
 }
 
-export function resolveUnavailableVoiceFailure(
+export function recordTypedVoiceFailure(
+  failureKind: VoiceFailureKind,
   recordingSupported: boolean,
   attemptInTurn: number,
-  accumulatedInputFailures: number,
-): VoiceTurnFailureDecision & { readonly capabilityUnavailable: boolean } {
+  recordFailure: () => RecordedSttFailure,
+): TypedVoiceFailureDecision {
   if (!recordingSupported) {
     return {
+      failureKind,
       nextAttemptInTurn: 0,
-      countInputFailure: false,
       forceClickForTurn: true,
       forceGlobalClick: true,
       capabilityUnavailable: true,
     };
   }
+  const recordedFailure = recordFailure();
   return {
-    ...resolveVoiceTurnFailure(attemptInTurn, accumulatedInputFailures),
+    failureKind,
+    ...resolveVoiceTurnFailure(attemptInTurn, recordedFailure.state.sttFailCount),
     capabilityUnavailable: false,
   };
 }

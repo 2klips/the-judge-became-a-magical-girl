@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameData } from "../src/data/schema";
 import { GameEngine } from "../src/engine/nodeRunner";
+import { resolveVoiceLevelFailure } from "../src/input/audioLevel";
 import { SaveRepository, type StoragePort } from "../src/storage/saveRepository";
 import { loadFixtureData } from "./fixtures";
 
@@ -198,6 +199,42 @@ describe("M5 node runner", () => {
     expect(resumed.getState().inputMode).toBe("voice");
   });
 
+  it("실패를 즉시 저장하고 total 4 이어하기의 다음 실패를 total 5로 저장한다", () => {
+    const data = loadFixtureData();
+    const storage = new MemoryStorage();
+    const createRepository = (): SaveRepository =>
+      new SaveRepository(
+        storage,
+        "save",
+        new Set(data.config.allowedFlags),
+        new Set(data.scenario.map((node) => node.nodeId)),
+      );
+    const source = new GameEngine(data, createRepository());
+    source.startNewGame("voice");
+
+    for (let failure = 0; failure < 4; failure += 1) {
+      source.recordSttTurnFailure();
+      expect(JSON.parse(storage.getItem("save") ?? "null")).toMatchObject({
+        sttFailCount: failure + 1,
+        inputMode: "voice",
+      });
+    }
+
+    const saved = createRepository().load().state;
+    expect(saved).not.toBeNull();
+    if (!saved) throw new Error("저장 상태가 없습니다.");
+    const resumed = new GameEngine(data, createRepository());
+    resumed.resume(saved);
+
+    const fifth = resumed.recordSttTurnFailure();
+
+    expect(fifth.forcedClickMode).toBe(true);
+    expect(JSON.parse(storage.getItem("save") ?? "null")).toMatchObject({
+      sttFailCount: 5,
+      inputMode: "click",
+    });
+  });
+
   it("성공·노드 이동·수동 click 전환은 누적 음성 입력 실패를 줄이지 않는다", () => {
     const engine = createEngine();
     reachDialogue(engine);
@@ -208,6 +245,18 @@ describe("M5 node runner", () => {
     expect(engine.getState().sttFailCount).toBe(1);
 
     engine.setInputMode("click");
+    expect(engine.getState().sttFailCount).toBe(1);
+  });
+
+  it("LLM fallback과 battle dBFS 실패는 음성 입력 실패 총계에 포함하지 않는다", () => {
+    const engine = createEngine();
+    engine.startNewGame("voice");
+    engine.recordSttTurnFailure();
+
+    engine.recordLlmFailure();
+    expect(resolveVoiceLevelFailure(0)).toBe("retry");
+    expect(resolveVoiceLevelFailure(1)).toBe("consume-turn");
+
     expect(engine.getState().sttFailCount).toBe(1);
   });
 });

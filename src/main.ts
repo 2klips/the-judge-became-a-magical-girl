@@ -37,8 +37,7 @@ import {
 import {
   clearVoiceFailureAttempts,
   formatVoiceTurnFailureMessage,
-  resolveUnavailableVoiceFailure,
-  resolveVoiceTurnFailure,
+  recordTypedVoiceFailure,
   type VoiceTurnFailureDecision,
 } from "./input/voiceTurnRecovery";
 import {
@@ -184,15 +183,10 @@ async function bootstrap(): Promise<void> {
       message: string,
       decision: VoiceTurnFailureDecision,
     ): { readonly forceClickForTurn: boolean; readonly forceGlobalClick: boolean } => {
-      let forcedClickMode = false;
-      if (decision.countInputFailure) {
-        forcedClickMode = engine.recordSttTurnFailure().forcedClickMode;
-      }
-      if (decision.forceGlobalClick || forcedClickMode) {
+      if (decision.forceGlobalClick) {
         voiceFailureAttempts.delete(turnKey);
-        engine.setInputMode("click");
         renderCurrent("음성 입력 실패가 5회 누적돼 클릭 모드로 전환했어.");
-        return { ...decision, forceGlobalClick: true };
+        return decision;
       }
       if (!decision.forceClickForTurn) {
         voiceFailureAttempts.set(turnKey, decision.nextAttemptInTurn);
@@ -208,18 +202,19 @@ async function bootstrap(): Promise<void> {
       turnKey: string,
       failure: VoiceInputFailure,
     ): void => {
-      const baseMessage = formatVoiceInputError(failure);
       const attempt = voiceFailureAttempts.get(turnKey) ?? 0;
-      const state = engine.getState();
-      const decision =
-        failure.kind === "permission" || failure.kind === "recording"
-          ? resolveUnavailableVoiceFailure(recordingSupported, attempt, state.sttFailCount)
-          : resolveVoiceTurnFailure(attempt, state.sttFailCount);
-      if ("capabilityUnavailable" in decision && decision.capabilityUnavailable) {
+      const decision = recordTypedVoiceFailure(
+        failure.kind,
+        recordingSupported,
+        attempt,
+        () => engine.recordSttTurnFailure(),
+      );
+      if (decision.capabilityUnavailable) {
         engine.setInputMode("click");
         renderCurrent("이 브라우저에서는 음성 입력을 사용할 수 없어. 클릭으로 진행해 줘.");
         return;
       }
+      const baseMessage = formatVoiceInputError(failure);
       handleVoiceFailure(turnKey, baseMessage, decision);
     };
 
