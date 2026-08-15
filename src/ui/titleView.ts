@@ -223,6 +223,12 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string,
   return element;
 }
 
+function createMicrophonePlaceholderOption(): HTMLOptionElement {
+  const option = node("option", undefined, "마이크 설정 후 장치를 선택할 수 있어요");
+  option.value = "";
+  return option;
+}
+
 function setAriaDisabled(button: HTMLButtonElement, disabled: boolean): void {
   button.setAttribute("aria-disabled", String(disabled));
   button.dataset.inactive = String(disabled);
@@ -380,7 +386,7 @@ export class TitleView {
     deviceSelect.className = "title-mic-device";
     deviceSelect.setAttribute("aria-label", "입력 장치");
     deviceSelect.disabled = true;
-    deviceSelect.append(node("option", undefined, "마이크 설정 후 장치를 선택할 수 있어요"));
+    deviceSelect.append(createMicrophonePlaceholderOption());
     const settingsMicHeading = node("p", "title-settings-mic-heading");
     const settingsMicBody = node("p", "title-settings-mic-body");
     settingsMicBody.setAttribute("data-title-mic-body", "");
@@ -466,7 +472,7 @@ export class TitleView {
       renderedDeviceSignature = signature;
       deviceSelect.replaceChildren();
       if (snapshot.devices.length === 0) {
-        deviceSelect.append(node("option", undefined, "마이크 설정 후 장치를 선택할 수 있어요"));
+        deviceSelect.append(createMicrophonePlaceholderOption());
         deviceSelect.disabled = true;
         return;
       }
@@ -503,10 +509,10 @@ export class TitleView {
     };
     this.microphoneSession = new TitleMicrophoneSession(this.options.microphone, renderMicrophone);
     const runMicAction = (): void => {
-      const state = this.microphoneSession?.snapshot().state;
-      if (!state) return;
-      if (state === "READY" || state === "TEST_SUCCESS") this.microphoneSession?.startTest();
-      else void this.microphoneSession?.requestSetup(deviceSelect.value || undefined);
+      const snapshot = this.microphoneSession?.snapshot();
+      if (!snapshot) return;
+      if (snapshot.state === "READY" || snapshot.state === "TEST_SUCCESS") this.microphoneSession?.startTest();
+      else void this.microphoneSession?.requestSetup(snapshot.selectedDeviceId || undefined);
     };
     micAction.addEventListener("click", runMicAction);
     settingsMicAction.addEventListener("click", runMicAction);

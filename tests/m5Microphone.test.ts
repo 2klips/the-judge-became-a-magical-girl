@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   calculateAudioLevel,
   evaluateVoiceLevel,
@@ -11,12 +11,19 @@ import {
   TitleMicrophoneSession,
   type TitleMicrophoneOptions,
 } from "../src/ui/titleView";
-import { resolveMicrophoneConnection } from "../src/input/microphoneSetup";
+import {
+  BrowserMicrophoneTester,
+  resolveMicrophoneConnection,
+} from "../src/input/microphoneSetup";
 const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 const titleViewSource = readFileSync(new URL("../src/ui/titleView.ts", import.meta.url), "utf8");
 
 const signal = (amplitude: number, length = 1_600): Float32Array =>
   Float32Array.from({ length }, (_, index) => Math.sin(index / 8) * amplitude);
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("M5 마이크 레벨 계약", () => {
   it("PCM에서 RMS·peak dBFS를 계산한다", () => {
@@ -300,5 +307,61 @@ describe("TITLE microphone session", () => {
     await harness.session.requestSetup();
     expect(harness.session.snapshot().state).toBe(expected);
     if (!supported) expect(harness.microphone.connect).not.toHaveBeenCalled();
+  });
+});
+
+describe("BrowserMicrophoneTester device constraint characterization", () => {
+  it.each([
+    [undefined, undefined],
+    ["device-A", { exact: "device-A" }],
+  ] as const)("deviceId=%s일 때 exact constraint를 필요한 경우만 사용한다", async (deviceId, expected) => {
+    const track = {
+      label: "Device A",
+      stop: vi.fn(),
+      getSettings: () => ({ deviceId: "device-A" }),
+    };
+    const stream = {
+      getTracks: () => [track],
+      getAudioTracks: () => [track],
+    };
+    const getUserMedia = vi.fn(async (_constraints: MediaStreamConstraints) => stream);
+    vi.stubGlobal("navigator", {
+      mediaDevices: {
+        getUserMedia,
+        enumerateDevices: vi.fn(async () => [{
+          kind: "audioinput",
+          deviceId: "device-A",
+          label: "Device A",
+        }]),
+      },
+    });
+    const source = { connect: vi.fn(), disconnect: vi.fn() };
+    const analyser = {
+      fftSize: 0,
+      smoothingTimeConstant: 0,
+      disconnect: vi.fn(),
+      getFloatTimeDomainData: vi.fn(),
+    };
+    const context = {
+      state: "running",
+      createMediaStreamSource: vi.fn(() => source),
+      createAnalyser: vi.fn(() => analyser),
+      close: vi.fn(async () => undefined),
+    };
+    vi.stubGlobal("AudioContext", class {
+      constructor() {
+        return context;
+      }
+    });
+    vi.stubGlobal("requestAnimationFrame", vi.fn(() => 1));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+
+    const tester = new BrowserMicrophoneTester();
+    await tester.connect(deviceId, vi.fn());
+
+    const constraints = getUserMedia.mock.calls[0]?.[0] as MediaStreamConstraints;
+    const audio = constraints.audio as MediaTrackConstraints;
+    expect(audio.deviceId).toEqual(expected);
+    await tester.disconnect();
   });
 });

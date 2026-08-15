@@ -97,4 +97,40 @@ describe("PC TITLE visual skeleton", () => {
     expect(titleCss).toMatch(/\[data-title-mic-body\][^{]*\{[^}]*white-space:\s*pre-line/s);
     expect(titleSource).not.toContain('aria-live", "assertive"');
   });
+
+  it("빈 microphone placeholder를 실제 device ID로 전달하지 않는다", () => {
+    const placeholderHelper = titleSource.slice(
+      titleSource.indexOf("function createMicrophonePlaceholderOption"),
+      titleSource.indexOf("function setAriaDisabled"),
+    );
+    const renderDevices = titleSource.slice(
+      titleSource.indexOf("const renderDevices"),
+      titleSource.indexOf("const syncText"),
+    );
+    const micAction = titleSource.slice(
+      titleSource.indexOf("const runMicAction"),
+      titleSource.indexOf('micAction.addEventListener("click"'),
+    );
+
+    expect(placeholderHelper).toContain("마이크 설정 후 장치를 선택할 수 있어요");
+    expect(placeholderHelper).toContain('option.value = ""');
+    expect(titleSource.match(/createMicrophonePlaceholderOption\(\)/g)).toHaveLength(3);
+    expect(renderDevices).toContain("createMicrophonePlaceholderOption()");
+    expect(micAction).toContain("snapshot.selectedDeviceId || undefined");
+    expect(micAction).not.toContain("deviceSelect.value");
+    expect(titleSource).toContain(
+      'deviceSelect.addEventListener("change", () => void this.microphoneSession?.requestSetup(deviceSelect.value || undefined))',
+    );
+  });
+
+  it("READY와 TEST_SUCCESS action은 같은 tester를 재사용해 test/retest만 시작한다", () => {
+    const micAction = titleSource.slice(
+      titleSource.indexOf("const runMicAction"),
+      titleSource.indexOf('micAction.addEventListener("click"'),
+    );
+
+    expect(micAction).toContain('snapshot.state === "READY" || snapshot.state === "TEST_SUCCESS"');
+    expect(micAction).toContain("this.microphoneSession?.startTest()");
+    expect(micAction.match(/requestSetup/g)).toHaveLength(1);
+  });
 });
