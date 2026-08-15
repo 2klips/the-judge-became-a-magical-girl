@@ -10,6 +10,22 @@ export interface MicrophoneConnection {
   readonly selectedDeviceId: string;
 }
 
+export function resolveMicrophoneConnection(
+  devices: readonly MicrophoneInputDevice[],
+  track: Pick<MediaStreamTrack, "label" | "getSettings"> | undefined,
+  requestedDeviceId: string | undefined,
+): MicrophoneConnection {
+  const selectedDeviceId = track?.getSettings().deviceId ?? requestedDeviceId ?? "";
+  if (devices.length > 0 || !track) return { devices, selectedDeviceId };
+  return {
+    devices: [{
+      deviceId: selectedDeviceId,
+      label: track.label || "현재 마이크",
+    }],
+    selectedDeviceId,
+  };
+}
+
 export class BrowserMicrophoneTester {
   private stream: MediaStream | null = null;
   private context: AudioContext | null = null;
@@ -23,6 +39,27 @@ export class BrowserMicrophoneTester {
         typeof navigator.mediaDevices?.getUserMedia === "function" &&
         typeof AudioContext !== "undefined",
     );
+  }
+
+  async queryPermission(): Promise<PermissionState | "unknown"> {
+    if (typeof navigator === "undefined" || !navigator.permissions?.query) {
+      return "unknown";
+    }
+    try {
+      const status = await navigator.permissions.query({
+        name: "microphone" as PermissionName,
+      });
+      return status.state;
+    } catch {
+      return "unknown";
+    }
+  }
+
+  subscribeDeviceChange(listener: () => void): () => void {
+    const mediaDevices = typeof navigator === "undefined" ? null : navigator.mediaDevices;
+    if (!mediaDevices?.addEventListener) return () => undefined;
+    mediaDevices.addEventListener("devicechange", listener);
+    return () => mediaDevices.removeEventListener("devicechange", listener);
   }
 
   async connect(
@@ -61,10 +98,13 @@ export class BrowserMicrophoneTester {
           deviceId: id,
           label: label || `마이크 ${index + 1}`,
         }));
-      const selectedDeviceId =
-        stream.getAudioTracks()[0]?.getSettings().deviceId ?? deviceId ?? "";
+      const connection = resolveMicrophoneConnection(
+        devices,
+        stream.getAudioTracks()[0],
+        deviceId,
+      );
       this.readLevels(onLevel);
-      return { devices, selectedDeviceId };
+      return connection;
     } catch (error) {
       await this.disconnect();
       throw error;

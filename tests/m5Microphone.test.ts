@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   calculateAudioLevel,
   evaluateVoiceLevel,
@@ -7,6 +7,11 @@ import {
   resolveMicrophoneMeterPresentation,
   resolveVoiceLevelFailure,
 } from "../src/input/audioLevel";
+import {
+  TitleMicrophoneSession,
+  type TitleMicrophoneOptions,
+} from "../src/ui/titleView";
+import { resolveMicrophoneConnection } from "../src/input/microphoneSetup";
 const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 const titleViewSource = readFileSync(new URL("../src/ui/titleView.ts", import.meta.url), "utf8");
 
@@ -121,18 +126,14 @@ describe("M5 마이크 레벨 계약", () => {
   });
 
   it("재연결 전에 compact TITLE meter를 waiting 상태로 초기화한다", () => {
-    const connectStart = titleViewSource.indexOf("const connect = async");
-    const connectEnd = titleViewSource.indexOf("connectButton.addEventListener", connectStart);
+    const connectStart = titleViewSource.indexOf("private async connect");
+    const connectEnd = titleViewSource.indexOf("private emit", connectStart);
     const connectSection = titleViewSource.slice(connectStart, connectEnd);
-    const resetLevel = connectSection.indexOf(
-      'meter.style.setProperty("--title-mic-level", "0%")',
-    );
-    const resetTone = connectSection.indexOf('meter.dataset.tone = "quiet"');
-    const connectCall = connectSection.indexOf("this.options.connectMicrophone");
+    const resetLevel = connectSection.indexOf('this.level = { percent: 0, tone: "quiet" }');
+    const connectCall = connectSection.indexOf("this.microphone.connect");
 
     expect(resetLevel).toBeGreaterThan(-1);
-    expect(resetTone).toBeGreaterThan(resetLevel);
-    expect(connectCall).toBeGreaterThan(resetTone);
+    expect(connectCall).toBeGreaterThan(resetLevel);
     expect(titleViewSource).not.toContain("dBFS");
   });
 
@@ -141,5 +142,163 @@ describe("M5 마이크 레벨 계약", () => {
     expect(stylesSource).toContain('.microphone-meter[data-tone="quiet"]');
     expect(stylesSource).toContain('.microphone-meter[data-tone="good"]');
     expect(stylesSource).toContain('.microphone-meter[data-tone="loud"]');
+  });
+});
+
+function createTitleMicrophoneHarness(options?: {
+  supported?: boolean;
+  connectError?: unknown;
+  permission?: PermissionState | "unknown";
+}) {
+  let level: ((metrics: { rmsDbfs: number; peakDbfs: number; clippingRatio: number }) => void) | null = null;
+  let deviceChange: (() => void) | null = null;
+  let now = 0;
+  const microphone: TitleMicrophoneOptions = {
+    supported: options?.supported ?? true,
+    connect: vi.fn(async (_deviceId, onLevel) => {
+      if (options?.connectError) throw options.connectError;
+      level = onLevel;
+      return {
+        devices: [{ deviceId: "corsair", label: "CORSAIR VOID WIRELESS v2" }],
+        selectedDeviceId: "corsair",
+      };
+    }),
+    disconnect: vi.fn(async () => undefined),
+    queryPermission: vi.fn(async () => options?.permission ?? "prompt"),
+    subscribeDeviceChange: vi.fn((listener) => {
+      deviceChange = listener;
+      return vi.fn(() => {
+        deviceChange = null;
+      });
+    }),
+  };
+  const changes = vi.fn();
+  const session = new TitleMicrophoneSession(microphone, changes, () => now);
+  return {
+    microphone,
+    session,
+    changes,
+    emitLevel(metrics = { rmsDbfs: -24, peakDbfs: -18, clippingRatio: 0 }) {
+      now += 50;
+      level?.(metrics);
+    },
+    emitDeviceChange() {
+      deviceChange?.();
+    },
+  };
+}
+
+describe("TITLE microphone session", () => {
+  it("enumerateDevices가 비어도 활성 audio track을 현재 장치로 유지한다", () => {
+    const connection = resolveMicrophoneConnection(
+      [],
+      {
+        label: "헤드셋 마이크(CORSAIR VOID WIRELESS v2)",
+        getSettings: () => ({ deviceId: "corsair" }),
+      },
+      undefined,
+    );
+
+    expect(connection).toEqual({
+      devices: [{ deviceId: "corsair", label: "헤드셋 마이크(CORSAIR VOID WIRELESS v2)" }],
+      selectedDeviceId: "corsair",
+    });
+  });
+
+  it("render/settings open은 연결하지 않고 explicit setup만 한 stream을 연다", async () => {
+    const harness = createTitleMicrophoneHarness();
+    harness.session.start();
+    expect(harness.microphone.connect).not.toHaveBeenCalled();
+    expect(harness.microphone.subscribeDeviceChange).toHaveBeenCalledTimes(1);
+
+    await harness.session.requestSetup();
+    expect(harness.microphone.connect).toHaveBeenCalledTimes(1);
+    expect(harness.session.snapshot()).toMatchObject({
+      state: "READY",
+      selectedDeviceId: "corsair",
+      deviceLabel: "CORSAIR VOID WIRELESS v2",
+    });
+  });
+
+  it("READY sample은 보정하지 않고 test/retest가 같은 callback을 재사용한다", async () => {
+    const harness = createTitleMicrophoneHarness();
+    harness.session.start();
+    await harness.session.requestSetup();
+    harness.emitLevel();
+    expect(harness.session.snapshot()).toMatchObject({ state: "READY", calibration: null });
+
+    harness.session.startTest();
+    for (let index = 0; index < 18; index += 1) harness.emitLevel();
+    expect(harness.session.snapshot().state).toBe("TEST_SUCCESS");
+    expect(harness.session.snapshot().calibration).not.toBeNull();
+    expect(harness.microphone.connect).toHaveBeenCalledTimes(1);
+
+    harness.emitLevel();
+    expect(harness.session.snapshot().state).toBe("TEST_SUCCESS");
+    harness.session.startTest();
+    expect(harness.session.snapshot().state).toBe("TESTING");
+    expect(harness.microphone.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it("devicechange는 active 연결만 재연결하고 destroy가 한 번 해제한다", async () => {
+    const harness = createTitleMicrophoneHarness();
+    harness.session.start();
+    harness.emitDeviceChange();
+    expect(harness.microphone.connect).not.toHaveBeenCalled();
+
+    await harness.session.requestSetup();
+    harness.emitDeviceChange();
+    await vi.waitFor(() => expect(harness.microphone.connect).toHaveBeenCalledTimes(2));
+    expect(harness.session.snapshot().state).toBe("READY");
+
+    await harness.session.destroy();
+    await harness.session.destroy();
+    expect(harness.microphone.disconnect).toHaveBeenCalledTimes(2);
+    const unsubscribe = vi.mocked(harness.microphone.subscribeDeviceChange).mock.results[0]?.value;
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it("연결 대기 중 화면이 교체되면 늦게 열린 TITLE stream도 정리한다", async () => {
+    let resolveConnection!: (connection: {
+      devices: { deviceId: string; label: string }[];
+      selectedDeviceId: string;
+    }) => void;
+    const microphone: TitleMicrophoneOptions = {
+      supported: true,
+      connect: vi.fn(() => new Promise<{
+        devices: { deviceId: string; label: string }[];
+        selectedDeviceId: string;
+      }>((resolve) => {
+        resolveConnection = resolve;
+      })),
+      disconnect: vi.fn(async () => undefined),
+      queryPermission: vi.fn(async () => "prompt" as PermissionState),
+      subscribeDeviceChange: vi.fn(() => vi.fn()),
+    };
+    const session = new TitleMicrophoneSession(microphone, vi.fn());
+    session.start();
+    const setup = session.requestSetup();
+    const destroy = session.destroy();
+    resolveConnection({
+      devices: [{ deviceId: "corsair", label: "CORSAIR" }],
+      selectedDeviceId: "corsair",
+    });
+    await Promise.all([setup, destroy]);
+
+    expect(microphone.disconnect).toHaveBeenCalledTimes(2);
+    expect(session.snapshot().state).toBe("REQUESTING_PERMISSION");
+  });
+
+  it.each([
+    [false, undefined, "unknown", "UNSUPPORTED"],
+    [true, new DOMException("denied", "NotAllowedError"), "denied", "DENIED"],
+    [true, new DOMException("missing", "NotFoundError"), "prompt", "NO_DEVICE"],
+    [true, new Error("boom"), "prompt", "ERROR"],
+  ] as const)("supported=%s failure를 %s로 분리한다", async (supported, error, permission, expected) => {
+    const harness = createTitleMicrophoneHarness({ supported, connectError: error, permission });
+    harness.session.start();
+    await harness.session.requestSetup();
+    expect(harness.session.snapshot().state).toBe(expected);
+    if (!supported) expect(harness.microphone.connect).not.toHaveBeenCalled();
   });
 });

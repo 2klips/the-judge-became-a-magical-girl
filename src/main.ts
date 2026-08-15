@@ -66,6 +66,7 @@ import { installQaPreviewMarker } from "./qaPreview";
 import { resolveWorkerUrl } from "./runtimeConfig";
 import { SaveRepository } from "./storage/saveRepository";
 import { GameView } from "./ui/gameView";
+import { withTitleResumeMode } from "./ui/titleStart";
 
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("#app 루트 요소가 없습니다.");
@@ -891,32 +892,32 @@ async function bootstrap(): Promise<void> {
 
     view.renderTitle({
       hasSave: loaded.state !== null,
-      microphoneSupported: microphoneSetupSupported,
-      connectMicrophone: (deviceId, onLevel) => microphoneTester.connect(deviceId, onLevel),
-      disconnectMicrophone: () => microphoneTester.disconnect(),
-      warning:
-        loaded.warning ??
-        (microphoneSetupSupported
-          ? null
-          : "마이크 테스트 미지원: 지원 브라우저와 입력 장치가 필요합니다."),
-      onNewGame: (calibration) => {
+      savedInputMode: loaded.state?.inputMode ?? null,
+      microphone: {
+        supported: microphoneSetupSupported,
+        connect: (deviceId, onLevel) => microphoneTester.connect(deviceId, onLevel),
+        disconnect: () => microphoneTester.disconnect(),
+        queryPermission: () => microphoneTester.queryPermission(),
+        subscribeDeviceChange: (listener) =>
+          microphoneTester.subscribeDeviceChange(listener),
+      },
+      warning: loaded.warning,
+      onFirstUserGesture: () => {
+        void bgm.play("bgm_daily");
+      },
+      onNewGame: (mode, calibration) => {
         microphoneCalibration = calibration;
         recentTurns.length = 0;
         resetVoiceFailureSession();
-        engine.startNewGame("voice");
+        engine.startNewGame(mode);
         renderCurrent();
       },
-      onResume: (calibration) => {
+      onResume: (mode, calibration) => {
         microphoneCalibration = calibration;
         resetVoiceFailureSession();
-        if (!loaded.state) engine.startNewGame();
-        else engine.resume(loaded.state);
-        if (engine.getState().inputMode === "voice" && !recordingSupported) {
-          engine.setInputMode("click");
-          renderCurrent("저장된 음성 모드를 사용할 수 없어 클릭 모드로 전환했어.");
-        } else {
-          renderCurrent();
-        }
+        if (!loaded.state) engine.startNewGame(mode);
+        else engine.resume(withTitleResumeMode(loaded.state, mode));
+        renderCurrent();
       },
     });
   } catch (error) {

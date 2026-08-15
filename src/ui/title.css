@@ -46,7 +46,7 @@
   inset: 0;
   content: "";
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(8, 15, 35, 0.82) 0%, rgba(8, 15, 35, 0.66) 24%, rgba(8, 15, 35, 0.22) 40%, rgba(8, 15, 35, 0) 52%);
+  background: linear-gradient(90deg, rgba(8, 15, 35, 0.82) 0%, rgba(8, 15, 35, 0.66) 22%, rgba(8, 15, 35, 0.22) 37%, rgba(8, 15, 35, 0) 48%);
 }
 
 .game-shell[data-presentation-context="title"] .scene-grid,
@@ -60,7 +60,8 @@
 
 .title-content,
 .title-bgm,
-.title-settings-dialog {
+.title-settings-dialog,
+.title-mode-dialog {
   position: relative;
   z-index: 2;
 }
@@ -257,7 +258,7 @@
   gap: 7px 14px;
   align-items: center;
   width: min(100%, 430px);
-  margin-top: clamp(16px, 2.2vh, 26px);
+  margin-top: clamp(0px, 0.6vh, 6px);
   color: #f7f4f6;
   opacity: 0;
   animation-name: title-fade-in;
@@ -287,18 +288,26 @@
   margin: 0 0 3px;
   font-size: 0.9375rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .title-mic-body,
-.title-mic-status {
+.title-settings-mic-body {
   margin: 0;
-  color: rgba(244, 242, 246, 0.62);
+  color: rgba(247, 245, 248, 0.7);
   font-size: 0.75rem;
   line-height: 1.45;
 }
 
-.title-mic-status {
-  margin-top: 2px;
+[data-title-mic-body] {
+  white-space: pre-line;
+}
+
+.title-warning {
+  grid-column: 2 / 4;
+  margin: 0;
+  color: rgba(255, 218, 229, 0.76);
+  font-size: 0.7rem;
 }
 
 .title-mic-action {
@@ -356,9 +365,15 @@
   transition: width 70ms linear;
 }
 
-.title-mic[data-state="passed"] .title-mic-mark {
+.title-mic[data-state="READY"] .title-mic-mark,
+.title-mic[data-state="TEST_SUCCESS"] .title-mic-mark {
   border-color: rgba(128, 226, 181, 0.72);
   color: #8fe1b8;
+}
+
+.title-mic[data-state="REQUESTING_PERMISSION"] .title-mic-mark,
+.title-mic[data-state="TESTING"] .title-mic-mark {
+  animation: title-mic-pulse 1s ease-in-out 2 alternate;
 }
 
 .title-bgm {
@@ -423,12 +438,156 @@
   text-align: right;
 }
 
-.title-settings-dialog {
+.title-settings-dialog,
+.title-mode-dialog {
   width: min(560px, calc(100vw - 80px));
+  max-height: calc(100vh - 64px);
+  margin: auto;
+  padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   color: #fff;
-  background: #121526;
+  background: rgba(18, 21, 38, 0.97);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+  font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+}
+
+.title-settings-dialog::backdrop,
+.title-mode-dialog::backdrop {
+  background: rgba(5, 8, 18, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.title-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.title-dialog-header h2,
+.title-mode-dialog h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.title-dialog-x {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 1.25rem;
+}
+
+.title-settings-section {
+  display: grid;
+  gap: 10px;
+  padding: 17px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title-settings-section h3 {
+  margin: 0;
+  color: #ffd1e1;
+  font-size: 0.85rem;
+}
+
+.title-settings-audio {
+  display: grid;
+  grid-template-columns: 84px 1fr 52px;
+  gap: 12px;
+  align-items: center;
+}
+
+.title-settings-mute,
+.title-settings-mic-action,
+.title-dialog-close,
+.title-mode-primary,
+.title-mode-secondary {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 9px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+}
+
+.title-settings-mute:hover,
+.title-settings-mic-action:hover,
+.title-dialog-close:hover,
+.title-mode-secondary:hover {
+  border-color: rgba(244, 169, 199, 0.72);
+  background: rgba(83, 39, 68, 0.42);
+}
+
+.title-settings-slider {
+  width: 100%;
+  accent-color: #f08eb7;
+}
+
+.title-settings-volume {
+  text-align: right;
+}
+
+.title-settings-mic-heading {
+  margin: 2px 0 0;
+  color: #9de5bf;
+  font-weight: 600;
+}
+
+.title-settings-mic-body {
+  min-height: 2.2em;
+}
+
+.title-settings-dialog .title-mic-device {
+  grid-column: auto;
+  width: 100%;
+}
+
+.title-settings-dialog .title-mic-meter {
+  grid-column: auto;
+  width: 100%;
+  height: 6px;
+}
+
+.title-dialog-close {
+  display: block;
+  min-width: 88px;
+  margin: 18px 0 0 auto;
+}
+
+.title-mode-dialog {
+  width: min(430px, calc(100vw - 64px));
+  text-align: center;
+}
+
+.title-mode-dialog .title-dialog-x {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.title-mode-body {
+  margin: 16px 0 22px;
+  color: rgba(247, 245, 248, 0.72);
+  line-height: 1.55;
+}
+
+.title-mode-primary,
+.title-mode-secondary {
+  width: 100%;
+}
+
+.title-mode-primary {
+  border-color: rgba(255, 225, 237, 0.86);
+  color: #171425;
+  background: linear-gradient(105deg, rgba(255, 190, 211, 0.95), rgba(244, 142, 187, 0.9));
+}
+
+.title-mode-secondary {
+  margin-top: 10px;
 }
 
 @keyframes title-fade-in {
@@ -441,6 +600,11 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes title-mic-pulse {
+  from { opacity: 0.58; }
+  to { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .game-shell[data-presentation-context="title"] .scene-background-entering,
   .title-kicker,
@@ -450,6 +614,11 @@
     opacity: 1;
     animation: none;
     transform: none;
+  }
+
+  .title-mic[data-state="REQUESTING_PERMISSION"] .title-mic-mark,
+  .title-mic[data-state="TESTING"] .title-mic-mark {
+    animation: none;
   }
 
   .title-menu-item,

@@ -80,4 +80,21 @@ describe("PC TITLE visual skeleton", () => {
     expect(titleCss).not.toMatch(/overflow-[xy]:\s*(?:auto|scroll)/);
     expect(titleCss).not.toMatch(/@media\s*\([^)]*max-width:\s*760px/);
   });
+
+  it("Phase D dialog와 mic 상태의 접근성 계약을 소유한다", () => {
+    expect(titleSource).toContain('setAttribute("aria-modal", "true")');
+    expect(titleSource).toContain('showModal()');
+    expect(titleSource).toContain('event.key === "Escape"');
+    expect(titleSource).toContain('event.key !== "Tab"');
+    expect(titleSource).toContain('content.inert = inert');
+    expect(titleSource).toContain('audio.inert = inert');
+    expect(titleSource).toContain('settingsButton.focus()');
+    expect(titleSource).toContain("음성으로 시작");
+    expect(titleSource).toContain("마이크 없이 시작");
+    expect(titleSource).toContain("음성 설정 후 이어하기");
+    expect(titleSource).toContain("클릭 모드로 이어하기");
+    expect(titleSource).toContain('data-title-mic-body');
+    expect(titleCss).toMatch(/\[data-title-mic-body\][^{]*\{[^}]*white-space:\s*pre-line/s);
+    expect(titleSource).not.toContain('aria-live", "assertive"');
+  });
 });
