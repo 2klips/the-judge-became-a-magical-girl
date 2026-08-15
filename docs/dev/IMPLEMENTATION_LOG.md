@@ -1705,3 +1705,62 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 | `git diff --check` | PASS | 문서 patch 공백 오류 없음 |
 
 기능 코드·테스트·TITLE·DECISIONS·LEARNING_LOG는 변경하지 않았다. Phase C/TITLE worktree도 생성하지 않았다.
+
+## Phase C — PC TITLE Visual Skeleton
+
+- 작업일: 2026-08-15 KST
+- 브랜치: `codex/pc-title-ui-ux`
+- 시작 기준: Phase B 승인 tip `2addc0ec0b1a37ec1a5f1e89f9e80566e5bfa2cf`
+- 기능 커밋: `2d614b2` `feat(ui): rebuild pc title screen`
+- 상태: visual skeleton·local font·자동 검증·일반 Chrome 3-viewport QA PASS. Phase D interaction은 시작하지 않음
+
+### 구현 결과
+
+- `GameView.renderTitle()`의 인라인 TITLE DOM을 `src/ui/titleView.ts`로 위임하고 TITLE 전용 `src/ui/title.css`를 추가했다. gameplay·PTT·scenario·GameState·Worker는 변경하지 않았다.
+- 전체 중앙 microphone diagnostics panel과 상시 dBFS를 기본 TITLE에서 제거했다. 기존 calibration 연결은 compact mic shell 안에서 compatibility 방식으로 유지했으며 optional 9-state FSM은 Phase D로 남겼다.
+- Game Start 기본은 투명, hover/focus에서만 soft pink panel·설명·sparkle을 표시한다. Continue는 항상 DOM에 있고 save 없음은 native disabled 대신 `aria-disabled=true`와 차단 handler를 사용한다.
+- Settings는 Phase D용 실제 button/dialog hook만 준비했고 modal open/close나 설정 정책을 구현하지 않았다.
+- TITLE BGM은 기존 controller의 20% 기본값·저장값·mute/slider를 compact HUD로 표시한다. `bgm_daily` first-gesture 정책은 Phase D 소유로 유지했다.
+- 오른쪽 NHN 건물·HACKATHON banner를 남기고 왼쪽만 dark navy→transparent gradient로 처리했다.
+
+### 폰트·runtime
+
+- 공식 MaruBuri archive에는 SemiBold WOFF2가 없다. 사용자 예외 승인에 따라 `MaruBuri-SemiBold.otf` 공식 원본을 변환·subset·rename 없이 사용했다.
+- Pretendard 1.3.9 공식 static WOFF2는 Regular·SemiBold만 사용했다. CDN과 외부 font request는 0이다.
+- font HTTP: MaruBuri 742,176B `200 font/otf`; Pretendard 765,892B·785,856B 각각 `200 font/woff2`. Chrome font decode warning/error 0.
+- runtime 전 11,882,465B → 폰트 2,293,924B 추가 → 후 14,176,389B(13.52MiB). 30MiB 상한 PASS.
+- `font-display: swap`과 serif/system-ui fallback으로 font 완료가 bootstrap을 막지 않는다. 새 origin load 뒤 fallback 포함 DOM이 먼저 생성되고 400ms entry transition 후 실제 font가 적용됨을 확인했다.
+
+### 실제 Chrome visual QA
+
+- 브라우저: Phase B와 같은 일반 Google Chrome profile(직전 확인 버전 `151.0.7922.138`). origin `http://127.0.0.1:5174/the-judge-became-a-magical-girl/`.
+- 승인 시안과 구현을 1680×946, Game Start hover 상태의 같은 비교 출력에서 대조했다. 최초 h1 최소 46px를 발견해 52px로 보정한 뒤 재검수했다. 상세 판정은 `design-qa.md`.
+
+| viewport | scrollWidth | scrollHeight | 결과 |
+|---|---:|---:|---|
+| 1920×1080 | 1920 | 1080 | TITLE·menu·mic·BGM 겹침 없음, 건물/banner 보존 |
+| 1600×900 | 1600 | 900 | 기존 `scrollHeight=931` 해소, 전체 핵심 UI viewport 안 |
+| 1366×768 | 1366 | 768 | MaruBuri h1 52px, mic bottom 629.56px, focus outline 잘림 없음 |
+
+- Game Start default→hover→exit: hover만 pink gradient, 설명 표시, exit 뒤 background `none`·설명 opacity 0·glow 잔존 없음.
+- Tab focus: start·continue에 `:focus-visible`과 설명 표시. save 없는 별도 `localhost` origin에서 Continue `aria-disabled=true`, `tabIndex=0`, `아직 저장된 이야기가 없습니다.`를 확인하고 Enter/Space action을 차단했다.
+- 127 origin의 기존 save에서는 Continue 설명이 `마지막으로 저장된 장면부터 이야기를 이어갑니다.`로 표시됐다.
+- Chrome console warning/error 0. MaruBuri·Pretendard `document.fonts.check()` PASS. 외부 font URL 0.
+- reduced-motion은 CSS·semantic 자동 계약으로 보호한다. OS preference를 바꾸는 수동 QA는 하지 않았다.
+
+### fresh 자동 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| Phase C focused | PASS | 4 files·54 tests |
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 52 files·320 tests |
+| `npm run build` | PASS | Vite 8.2.0, 152 modules. local font 3종 emit, 기존 Transformers 516.22kB warning만 유지 |
+| `npm run build:qa` | PASS | QA build 122 modules·186.35kB JS, local font 3종 emit |
+| `git diff --check` | PASS | feature staged diff 공백 오류 0 |
+
+### 남은 범위
+
+- Phase D: optional microphone 9-state FSM, Settings modal interaction, voice/click start·resume 선택, TITLE BGM first-gesture.
+- Phase E에서 실제 OS reduced-motion, Phase B에서 보존한 Space/Enter·loud/강제 scene replacement PENDING을 다시 확인한다.
+- Phase D 코드는 이번 커밋에 포함하지 않았다.
