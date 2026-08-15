@@ -251,3 +251,11 @@ Wi-Fi 순간 끊김이나 짧은 발화 한 번 때문에 곧바로 음성 모�
 화면이 바뀐 뒤에도 analyser와 animation frame이 남으면 보이지 않는 곳에서 계속 CPU를 쓰고, 늦게 도착한 값이 새 버튼을 바꿀 수 있다. finish·cancel·error·장면 교체에서 한 번만 정리하고, 늦은 callback을 무시하면 자원 누수와 화면 간 상태 혼입을 함께 막을 수 있다.
 
 정확한 구현·테스트 결과와 실제 장치 `PENDING` 이유는 [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md)의 Phase B 항목을 따른다.
+
+## 2026-08-16 — 화면용 placeholder와 기계용 값을 분리하기
+
+HTML `<option>`에 `value`를 쓰지 않으면 브라우저는 보이는 문구를 value로 사용할 수 있다. `마이크 설정 후 장치를 선택할 수 있어요`처럼 사람에게 보여 줄 안내가 그대로 microphone device ID가 되면, 브라우저는 존재하지 않는 장치를 정확히 열라는 요청으로 이해한다.
+
+그래서 placeholder는 표시 문구와 별개로 `value=""`를 명시하고, 연결 button은 DOM 문구가 아니라 microphone session이 가진 실제 선택값만 사용한다. 반대로 사용자가 장치 dropdown에서 실제 option을 고른 경우에만 그 option의 device ID를 전달한다. 화면 설명과 기계 식별자를 분리하면 문구를 바꿔도 장치 연결이 깨지지 않는다.
+
+정확한 RED/GREEN 근거, 실제 CORSAIR·QHD Webcam 결과와 Phase E 검증은 [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md)의 Phase D blocker 및 Phase E 항목을 따른다.

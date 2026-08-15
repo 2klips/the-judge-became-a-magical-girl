@@ -1764,3 +1764,59 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - Phase D: optional microphone 9-state FSM, Settings modal interaction, voice/click start·resume 선택, TITLE BGM first-gesture.
 - Phase E에서 실제 OS reduced-motion, Phase B에서 보존한 Space/Enter·loud/강제 scene replacement PENDING을 다시 확인한다.
 - Phase D 코드는 이번 커밋에 포함하지 않았다.
+
+## Phase D blocker 수정 및 Phase E TITLE·음성 통합 QA
+
+- 작업일: 2026-08-16 KST
+- 브랜치: `codex/pc-title-ui-ux`
+- 시작 기준: Phase D 기능 커밋 `f5492814d6d738bc8afae3c4ea6736e1918086b4`
+- blocker 커밋: `2aaf7bb503ad2c2dd4d69b3bc29ab241f475f78d` `fix(title): avoid placeholder microphone device id`
+- Phase B 승인 tip `2addc0ec0b1a37ec1a5f1e89f9e80566e5bfa2cf`는 현재 브랜치의 ancestor이며 Phase A/B production 코드는 수정하지 않았다.
+
+### microphone placeholder blocker
+
+- 원인은 초기 장치 option과 장치 목록 재렌더 option에 명시적인 빈 `value`가 없었던 caller regression이다. 브라우저는 option의 표시 문구 `마이크 설정 후 장치를 선택할 수 있어요`를 value로 사용했고, TITLE mic action이 이를 `deviceId.exact`로 전달해 실제 장치가 있어도 `NO_DEVICE`로 수렴했다.
+- RED는 `m5TitleView`에서 placeholder helper 부재와 non-empty value를 재현했다. GREEN에서는 두 placeholder 모두 `value=""`를 갖고, UNKNOWN·NO_DEVICE action은 DOM 문구가 아니라 session snapshot의 `selectedDeviceId || undefined`를 사용한다. Settings의 실제 장치 change는 선택한 실제 device ID를 그대로 유지한다.
+- `m5Microphone` characterization은 `connect(undefined)`가 `deviceId` constraint를 만들지 않고, `connect("device-A")`만 `{ exact: "device-A" }`를 전달함을 고정한다. stale exact device 복구·별칭 dedupe·device persistence는 이 최소 수정에 포함하지 않았다.
+
+### 실제 Chrome microphone·소유권
+
+- 환경: Google Chrome `151.0.7922.138`, `http://127.0.0.1:5174/the-judge-became-a-magical-girl/`, 기존 허용 origin.
+- UNKNOWN의 `마이크 설정` 뒤 추가 권한 오류 없이 `헤드셋 마이크(CORSAIR VOID WIRELESS v2 Gaming Headset)`이 READY로 연결됐다. Settings에는 CORSAIR, QHD Webcam, browser default, communications가 표시됐다.
+- Settings dropdown에서 CORSAIR → QHD Webcam → CORSAIR 전환이 각각 READY로 수렴했다. 실제 device ID 전체 값은 영구 기록하지 않는다.
+- CORSAIR에서 READY → TESTING → 실제 발화 → TEST_SUCCESS를 확인했다. TEST_SUCCESS는 자동으로 READY로 돌아가지 않고 다음 명시적 action까지 유지됐다.
+- TEST_SUCCESS에서 Game Start는 mode dialog 없이 voice N0로 진입했다. TITLE tester 뒤 gameplay의 첫 dialogue PTT가 새 capture를 열었고 추가 permission prompt 없이 실제 발화에 따라 버튼 내부 fill이 움직였다. 따라서 TITLE tester 종료 뒤 gameplay PTT ownership이 이어지는 실제 smoke를 통과했고, 단일 capture stream 계약은 Phase B 자동 테스트가 계속 보호한다.
+- 사용자가 active fill 증거를 캡처하는 동안 Chrome focus가 첨부 UI로 이동해 pointer release 전달이 늦어졌다. 탭 복귀 뒤 같은 active PTT를 release하자 `목소리 전달 중…`으로 전환되고 fill이 제거됐으며, Worker 부재는 raw 진단이 아니라 `음성 서버에 연결하지 못했어. 같은 턴에서 한 번 더 말해 줘.`로 수렴한 뒤 idle `누르고 말하기 (T)`로 복귀했다. 이는 이전 Phase B QA와 같은 focus 이동 관찰이며 late fill은 남지 않았다.
+
+### Phase E PC TITLE·interaction QA
+
+| viewport | scrollWidth | scrollHeight | 핵심 위치 |
+|---|---:|---:|---|
+| 1920×1080 | 1920 | 1080 | TITLE, menu, compact mic, BGM HUD 모두 viewport 안 |
+| 1600×900 | 1600 | 900 | 과거 931px overflow 재발 없음 |
+| 1366×768 | 1366 | 768 | mic bottom 565.27px, BGM bottom 74.11px, focus outline 잘림 없음 |
+
+- 세 viewport에서 MaruBuri 600과 Pretendard 600 `document.fonts.check()`가 true였다. 오른쪽 NHN 건물·HACKATHON banner가 보존되고 horizontal/vertical scroll은 없었다.
+- Game Start는 default background `none`, hover에서만 pink gradient·dark navy text·설명·4px 이동을 사용하고 pointer exit 뒤 background가 제거됐다. keyboard focus는 동일 panel과 3px visible outline을 표시했다.
+- Settings native dialog는 `aria-modal=true`, X·닫기·ESC를 지원했다. Tab은 X → mute → slider → mic action → 닫기 → X로 dialog 안에서 순환했고 ESC 뒤 focus가 Settings button으로 복귀했다.
+- Settings volume을 20% → 35%로 바꾸면 HUD와 dialog가 함께 35%가 됐고, unmute와 reload 뒤에도 35%·unmute가 유지됐다. 검증 뒤 기존 20%·mute 상태로 UI를 통해 복원했다.
+- UNKNOWN Game Start의 voice/click dialog와 `마이크 없이 시작`의 click N0를 확인했다. click save는 TITLE Continue에서 mode dialog 없이 복구됐다.
+- 실제 voice save는 READY에서 추가 dialog 없이 voice Resume됐다. 같은 voice save를 새 non-voice-capable TITLE session에서 열면 `음성 설정 후 이어하기`/`클릭 모드로 이어하기`가 표시됐고, click 선택은 같은 장면으로 복구됐다. 즉시 persisted voice snapshot을 덮지 않는 계약은 자동 테스트가 보호한다.
+- 실제 확인 상태는 UNKNOWN, REQUESTING_PERMISSION, READY, TESTING, TEST_SUCCESS다. DENIED, NO_DEVICE, UNSUPPORTED, ERROR는 사용한 Chrome/장치에서 의도적으로 만들지 않았으며 9-state 자동 회귀 PASS와 manual PENDING을 구분한다.
+- Phase C의 local font HTTP·MIME·외부 요청 0 증거를 유지하고, Phase E 세 viewport에서 실제 font 적용을 재확인했다. runtime은 44 files·14,176,389B(13.52MiB)로 30MiB 상한을 통과했다. local Chrome 첫 화면은 약 1.3초 안에 entry motion과 font가 적용됐으며 절대 성능 benchmark가 아닌 동일 PC 관찰값이다.
+- OS `prefers-reduced-motion`, focused Space/Enter PTT hold, 물리 loud threshold, capture 중 강제 scene replacement, 실제 `getUserMedia()` 호출 횟수 계측은 수동 PASS로 올리지 않는다. CSS/keyboard/cleanup/one-stream 자동 회귀는 PASS다.
+
+### 최종 fresh 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| blocker focused | PASS | 2 files·29 tests |
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 53 files·362 tests, exit 0 |
+| `npm run build` | PASS | Vite 8.2.0, 153 modules. 기존 Transformers 516.22kB chunk warning만 유지 |
+| `npm run build:qa` | PASS | QA build 123 modules·196.22kB JS |
+| `git diff --check` | PASS | blocker commit과 QA 문서 공백 오류 없음 |
+| `npm audit --omit=dev --audit-level=high` | PASS | production dependency 취약점 0 |
+| `npm audit --audit-level=high` | REVIEW | dev toolchain의 `nanoid`·`undici`/`miniflare`/`wrangler` 경로에 4건(2 moderate, 2 high). 자동 fix는 범위 밖이라 실행하지 않음 |
+
+Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, MILESTONES, design QA, font binary, GameState, save schema, Worker, scenario, Phase A/B production 코드는 변경하지 않았다.
