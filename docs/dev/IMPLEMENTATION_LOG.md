@@ -1633,7 +1633,7 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - 브랜치: `codex/ptt-live-meter`
 - 시작 기준: Phase A 승인 tip `651781c103c669fc6592b5349c65c1b5197454df`
 - 기능 커밋: `f77baa3` `feat(voice): show live level in ptt`
-- 상태: 구현·자동 검증 PASS. 일반 Chrome의 새 QA origin에서 microphone permission 호출이 반환되지 않아 실제 장치 PTT 시각 QA는 `PENDING`
+- 상태: 구현·자동 검증·승인 origin 실제 장치 PTT 핵심 시각 QA PASS. Space/Enter·loud·강제 장면 교체·정확한 `getUserMedia()` 호출 수 실측은 아래와 같이 `PENDING`
 
 ### 구현 결과
 
@@ -1664,3 +1664,44 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 - 이를 Phase B 제품 결함 PASS/FAIL로 단정하지 않는다. 실제 dialogue/incantation/battle PTT에 도달하지 못했으므로 CORSAIR/QHD Webcam의 내부 fill 반응, pointer/T/Space/Enter 실제 hold, release/cancel/error/scene replacement 시각 reset은 `PENDING`이다. 자동 테스트 PASS를 실제 장치 PASS로 바꾸지 않는다.
 - viewport 관찰: 1920×1080은 `scrollHeight=1080`, 1366×768은 `scrollHeight=768`; 1600×900 TITLE은 기존 `scrollHeight=931`이었다. 후자는 승인된 Phase C TITLE no-scroll 과제로 남기며 Phase B PTT 코드에서 수정하지 않았다.
 - Phase C/TITLE worktree와 코드는 시작하지 않았다. 실제 Chrome microphone 호출이 정상 반환되는 환경에서 네 surface의 live fill QA를 다시 실행해야 Phase B manual gate를 닫을 수 있다.
+
+### 승인 origin 재사용 실제 장치 Manual Gate
+
+- 실행 환경: Google Chrome `151.0.7922.138`, `http://127.0.0.1:5174/the-judge-became-a-magical-girl/?debug=1`, `헤드셋 마이크(CORSAIR VOID WIRELESS v2 Gaming Headset)`.
+- Chrome의 `사이트에 있는 동안 허용` 뒤 TITLE 장치 목록과 실제 입력 meter가 활성화됐다. 무입력 `-96.0 dBFS`, 실제 발화 `-27.4 dBFS`, `테스트 완료`를 관찰했다. 5174 서버가 한 번 종료된 뒤 같은 origin으로 재시작했으며 기존 권한이 유지되어 추가 permission prompt 없이 다시 연결됐다.
+- 장면 selector의 격리 preview를 사용하지 않았다. `?debug=1`의 `실제 플레이`에서 N0부터 진행하고 debug transcript는 장면 선택만 단축하는 데 사용했다.
+
+| 항목 | 결과 | 실제 관찰 |
+|---|---|---|
+| dialogue PTT | PASS | pointer hold 중 실제 발화에 따라 버튼 내부 fill이 움직였다. 다른 panel은 생기지 않았다 |
+| incantation PTT | PASS | global `T` hold 중 실제 발화에 따라 `누르고 주문 읽기 (T)` 내부 fill이 움직였다 |
+| battle spell PTT | PASS | spell 버튼만 fill이 움직이고 같은 화면의 freeform 버튼은 idle 상태를 유지했다 |
+| battle freeform PTT | PASS | freeform 버튼만 fill이 움직이고 같은 화면의 spell 버튼은 idle 상태를 유지했다 |
+| release/reset | PASS | dialogue·incantation은 release 뒤 `--ptt-live-level: 0%`, `aria-pressed=false`를 확인했다. battle은 처리/현재 턴 click 재렌더 뒤 이전 active fill이 남지 않았다 |
+| pointer | PASS | dialogue와 두 battle PTT에서 실제 hold/release를 확인했다 |
+| global `T` | PASS | incantation에서 hold→live fill→release 처리 경로를 확인했다 |
+| 실제 음량 반응 | PARTIAL | 무입력 0/낮은 상태와 평상 발화의 가변 fill은 확인했다. 물리 loud threshold의 안정 재현은 하지 않아 자동 테스트 PASS와 수동 `PENDING`을 분리한다 |
+| recording/processing | PASS | meter가 움직이는 동안 녹음이 유지됐고 release 뒤 기존 processing·typed failure 경로로 수렴했다. meter 때문에 capture가 중단된 증거는 없었다 |
+| AudioContext/analyser | PASS | 실제 발화에 따라 4개 surface fill이 실시간 변했으므로 analyser가 0에 고정된 suspended 상태는 아니었다 |
+| 추가 permission | PASS | TITLE 연결 뒤 각 PTT capture에서 추가 permission prompt가 나타나지 않았다 |
+| console | PASS | 전체 실제 game-mode 진행 중 Chrome console warning/error 0 |
+| 화면 안정성 | PASS | 실제 Chrome `1841×1215` game viewport에서 meter로 인한 scroll·버튼 크기 점프·별도 meter panel을 관찰하지 않았다 |
+
+#### 보존한 수동 PENDING
+
+- focused `Space`/`Enter` hold는 실제 키 입력으로 재현하지 않았다. 자동 keyboard 회귀 테스트 PASS를 수동 PASS로 올리지 않는다.
+- 물리 loud threshold는 안정적으로 재현하지 않았다. `quiet`/`good`/`loud` 분류와 percent는 순수 정책 자동 테스트가 보호한다.
+- capture 중 강제 scene replacement는 실제 게임에서 만들지 않았다. render replacement cleanup 자동 테스트 PASS를 수동 PASS로 올리지 않는다.
+- 한 capture의 정확한 `getUserMedia()` 호출 수는 DevTools instrumentation으로 실측하지 않았다. 단일 stream 공유와 호출 1회 자동 테스트 PASS를 실제 수동 횟수 증거로 바꾸지 않는다.
+- battle screenshot을 찍는 동안 Chrome focus가 이동해 key/pointer release 이벤트가 늦어진 경우에는 같은 active PTT를 release해 종료했다. 종료 뒤 processing 또는 현재 턴 click 재렌더로 이동했고 late fill은 남지 않았다.
+
+#### Manual Gate 뒤 fresh 자동 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 51 files·314 tests, exit 0 |
+| `npm run build` | PASS | Vite 8.2.0, 150 modules, built 4.22s. 기존 Transformers 516.22 kB chunk·plugin timing 경고만 유지 |
+| `git diff --check` | PASS | 문서 patch 공백 오류 없음 |
+
+기능 코드·테스트·TITLE·DECISIONS·LEARNING_LOG는 변경하지 않았다. Phase C/TITLE worktree도 생성하지 않았다.
