@@ -7,10 +7,8 @@ import {
   resolveMicrophoneMeterPresentation,
   resolveVoiceLevelFailure,
 } from "../src/input/audioLevel";
-import { resetMicrophoneMeterPresentation } from "../src/ui/gameView";
-
 const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-const gameViewSource = readFileSync(new URL("../src/ui/gameView.ts", import.meta.url), "utf8");
+const titleViewSource = readFileSync(new URL("../src/ui/titleView.ts", import.meta.url), "utf8");
 
 const signal = (amplitude: number, length = 1_600): Float32Array =>
   Float32Array.from({ length }, (_, index) => Math.sin(index / 8) * amplitude);
@@ -122,32 +120,20 @@ describe("M5 마이크 레벨 계약", () => {
     });
   });
 
-  it("재연결 전에 meter와 dB readout을 waiting 상태로 초기화한다", () => {
-    const properties = new Map<string, string>();
-    const attributes = new Map<string, string>();
-    const meter = {
-      style: { setProperty: (name: string, value: string) => properties.set(name, value) },
-      dataset: { tone: "loud" },
-      setAttribute: (name: string, value: string) => attributes.set(name, value),
-    } as unknown as HTMLDivElement;
-    const dbOutput = { textContent: "-5.0 dBFS" } as HTMLOutputElement;
-
-    resetMicrophoneMeterPresentation(meter, dbOutput);
-
-    expect(properties.get("--microphone-level")).toBe("0%");
-    expect(meter.dataset.tone).toBe("quiet");
-    expect(attributes.get("aria-valuenow")).toBe("0");
-    expect(dbOutput.textContent).toBe("-∞ dBFS");
-
-    const connectStart = gameViewSource.indexOf("const connect = async");
-    const connectEnd = gameViewSource.indexOf("connectButton.addEventListener", connectStart);
-    const connectSection = gameViewSource.slice(connectStart, connectEnd);
-    expect(connectSection.indexOf("resetMicrophoneMeterPresentation(meter, dbOutput)")).toBeGreaterThan(
-      -1,
+  it("재연결 전에 compact TITLE meter를 waiting 상태로 초기화한다", () => {
+    const connectStart = titleViewSource.indexOf("const connect = async");
+    const connectEnd = titleViewSource.indexOf("connectButton.addEventListener", connectStart);
+    const connectSection = titleViewSource.slice(connectStart, connectEnd);
+    const resetLevel = connectSection.indexOf(
+      'meter.style.setProperty("--title-mic-level", "0%")',
     );
-    expect(connectSection.indexOf("resetMicrophoneMeterPresentation(meter, dbOutput)")).toBeLessThan(
-      connectSection.indexOf("options.connectMicrophone"),
-    );
+    const resetTone = connectSection.indexOf('meter.dataset.tone = "quiet"');
+    const connectCall = connectSection.indexOf("this.options.connectMicrophone");
+
+    expect(resetLevel).toBeGreaterThan(-1);
+    expect(resetTone).toBeGreaterThan(resetLevel);
+    expect(connectCall).toBeGreaterThan(resetTone);
+    expect(titleViewSource).not.toContain("dBFS");
   });
 
   it("meter tone CSS만 사용하고 고정 red marker는 표시하지 않는다", () => {

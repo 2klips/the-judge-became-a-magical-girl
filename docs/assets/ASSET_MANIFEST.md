@@ -169,3 +169,13 @@
 - `ready` 전 규격·투명도·용량 자동 검사, `approved` 전 사람 시각/청각 QA와 라이선스 확인.
 - 전체 물리 에셋 30MB 이하. 첫 화면 필수분만 preload, 나머지는 lazy load.
 - 생성·편집 이력은 [AI_PRODUCTION_LOG.md](AI_PRODUCTION_LOG.md)에 기록한다.
+
+## PC TITLE 폰트
+
+| runtime 파일 | 용도 | 규격·크기 | 상태 | 라이선스·QA |
+|---|---|---|---|---|
+| `fonts/maruburi/MaruBuri-SemiBold.otf` | TITLE h1 | 공식 OpenType SemiBold 600·742,176B | ready | NAVER 공식 archive 원본·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/otf` |
+| `fonts/pretendard/Pretendard-Regular.woff2` | TITLE 일반 UI | 공식 v1.3.9 static WOFF2 400·765,892B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
+| `fonts/pretendard/Pretendard-SemiBold.woff2` | TITLE 강조 UI | 공식 v1.3.9 static WOFF2 600·785,856B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
+
+CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 폰트 채택 후 runtime은 14,176,389B로 30MiB 상한 이하다.

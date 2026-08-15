@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -184,6 +184,67 @@ afterEach(() => {
 });
 
 describe("M5 에셋 계약", () => {
+  it("TITLE 폰트는 승인된 공식 원본과 runtime 복사본을 그대로 사용한다", () => {
+    const fontContracts = [
+      {
+        source: resolve("assets", "source", "fonts", "maruburi", "MaruBuri-SemiBold.otf"),
+        runtime: resolve("assets", "runtime", "fonts", "maruburi", "MaruBuri-SemiBold.otf"),
+        magic: "OTTO",
+      },
+      {
+        source: resolve("assets", "source", "fonts", "pretendard", "Pretendard-Regular.woff2"),
+        runtime: resolve("assets", "runtime", "fonts", "pretendard", "Pretendard-Regular.woff2"),
+        magic: "wOF2",
+      },
+      {
+        source: resolve("assets", "source", "fonts", "pretendard", "Pretendard-SemiBold.woff2"),
+        runtime: resolve("assets", "runtime", "fonts", "pretendard", "Pretendard-SemiBold.woff2"),
+        magic: "wOF2",
+      },
+    ] as const;
+
+    for (const contract of fontContracts) {
+      const source = readFileSync(contract.source);
+      const runtime = readFileSync(contract.runtime);
+      expect(source.subarray(0, 4).toString("ascii"), contract.source).toBe(contract.magic);
+      expect(source.byteLength, contract.source).toBeGreaterThan(0);
+      expect(runtime.equals(source), contract.runtime).toBe(true);
+      expect(createHash("sha256").update(runtime).digest("hex"), contract.runtime).toBe(
+        createHash("sha256").update(source).digest("hex"),
+      );
+    }
+
+    const runtimeFontFiles = readdirSync(resolve("assets", "runtime", "fonts"), {
+      recursive: true,
+      withFileTypes: true,
+    }).filter((entry) => entry.isFile());
+    expect(runtimeFontFiles).toHaveLength(3);
+
+    const runtimeBytes = readdirSync(resolve("assets", "runtime"), {
+      recursive: true,
+      withFileTypes: true,
+    }).reduce((total, entry) => total + (entry.isFile() ? statSync(resolve(entry.parentPath, entry.name)).size : 0), 0);
+    expect(runtimeBytes).toBeLessThanOrEqual(30 * 1024 * 1024);
+
+    const maruLicense = readFileSync(
+      resolve("docs", "assets", "provenance", "MARUBURI_LICENSE.txt"),
+      "utf8",
+    );
+    const pretendardLicense = readFileSync(
+      resolve("docs", "assets", "provenance", "PRETENDARD_LICENSE.txt"),
+      "utf8",
+    );
+    expect(maruLicense).toMatch(/NAVER Corporation/);
+    expect(maruLicense).toMatch(/MaruBuri/);
+    expect(maruLicense).toMatch(/SIL OPEN FONT LICENSE Version 1\.1/);
+    expect(pretendardLicense).toMatch(/Reserved Font Name '?Pretendard'?/);
+    expect(pretendardLicense).toMatch(/SIL OPEN FONT LICENSE Version 1\.1/);
+
+    const viteConfig = readFileSync(resolve("vite.config.ts"), "utf8");
+    expect(viteConfig).toContain('".otf": "font/otf"');
+    expect(viteConfig).toContain('".woff2": "font/woff2"');
+  });
+
   it("확정 배경 16개를 runtime 논리 ID와 파일명으로 해석한다", () => {
     for (const logicalId of confirmedBackgrounds) {
       expect(resolveBackgroundAsset(logicalId)?.primaryPath).toBe(

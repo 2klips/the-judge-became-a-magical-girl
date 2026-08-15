@@ -25,17 +25,10 @@ import {
 } from "../dev/scenePreview";
 import { ClickInputPort } from "../input/click";
 import {
-  MicrophoneCalibrationAccumulator,
-  resolveMicrophoneMeterPresentation,
   resolvePttLiveLevelPresentation,
   type AudioLevelMetrics,
-  type MicrophoneCalibration,
 } from "../input/audioLevel";
 import type { LiveAudioLevelObserver } from "../input/recording";
-import type {
-  MicrophoneConnection,
-  MicrophoneInputDevice,
-} from "../input/microphoneSetup";
 import type {
   OpenAiSttModel,
   RecordedVoiceResult,
@@ -55,7 +48,7 @@ import { DIALOGUE_ADVANCE_DELAY_MS, DelayedActionGate } from "./advanceGate";
 import { applySceneEffect } from "./effects";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
-import { enterGameFromTitle } from "./titleStart";
+import { TitleView, type TitleViewOptions } from "./titleView";
 
 export const VOICE_TITLE_SUBTITLE =
   "마이크를 누른 채 말하고 놓아, 정체불명의 목소리와 호흡을 맞춰 보자.";
@@ -354,18 +347,7 @@ export function resolveEndingVisual(
   return null;
 }
 
-interface TitleOptions {
-  hasSave: boolean;
-  warning: string | null;
-  microphoneSupported: boolean;
-  connectMicrophone(
-    deviceId: string | undefined,
-    onLevel: (metrics: AudioLevelMetrics) => void,
-  ): Promise<MicrophoneConnection>;
-  disconnectMicrophone(): Promise<void>;
-  onNewGame: (calibration: MicrophoneCalibration) => void;
-  onResume: (calibration: MicrophoneCalibration) => void;
-}
+type TitleOptions = Omit<TitleViewOptions, "audio">;
 
 export interface DialogueInputOptions {
   speechSupported: boolean;
@@ -478,16 +460,6 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-export function resetMicrophoneMeterPresentation(
-  meter: Pick<HTMLElement, "style" | "dataset" | "setAttribute">,
-  dbOutput: Pick<HTMLOutputElement, "textContent">,
-): void {
-  meter.style.setProperty("--microphone-level", "0%");
-  meter.dataset.tone = "quiet";
-  meter.setAttribute("aria-valuenow", "0");
-  dbOutput.textContent = "-∞ dBFS";
-}
-
 function isEditableKeyboardTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
@@ -556,6 +528,7 @@ export class GameView {
   } | null = null;
   private debugSttModel: OpenAiSttModel;
   private latestTranscription: TranscriptionObservation | null = null;
+  private activeTitleView: TitleView | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -655,192 +628,13 @@ export class GameView {
   renderTitle(options: TitleOptions): void {
     const shell = this.createShell("bg_title", "title");
     shell.classList.add("title-screen");
-
-    const titleBlock = element("section", "title-block");
-    titleBlock.append(
-      element("p", "eyebrow", "목소리로 이어지는 이야기"),
-      element("h1", "game-title", "심사역은 마법소녀가 되었다"),
-      element("p", "title-subtitle", "마이크가 연결되어야 플레이 가능해요"),
-    );
-
-    const setup = element("section", "microphone-setup");
-    setup.dataset.state = options.microphoneSupported ? "waiting" : "unsupported";
-    const setupHeader = element("div", "microphone-setup-header");
-    setupHeader.append(
-      element("span", "microphone-step", "마이크 준비"),
-      element("h2", "microphone-title", "마이크 테스트"),
-      element("p", "microphone-copy", "마이크를 연결하고 평소 목소리로 한 문장을 말해 주세요."),
-    );
-    const deviceLabel = element("label", "microphone-device");
-    deviceLabel.append(element("span", undefined, "입력 장치"));
-    const deviceSelect = element("select", "microphone-device-select");
-    deviceSelect.disabled = true;
-    const defaultDevice = element("option", undefined, "연결 후 장치를 선택할 수 있어요");
-    defaultDevice.value = "";
-    deviceSelect.append(defaultDevice);
-    deviceLabel.append(deviceSelect);
-
-    const meter = element("div", "microphone-meter");
-    meter.setAttribute("role", "meter");
-    meter.setAttribute("aria-label", "마이크 입력 레벨");
-    meter.setAttribute("aria-valuemin", "0");
-    meter.setAttribute("aria-valuemax", "100");
-    meter.setAttribute("aria-valuenow", "0");
-    const meterFill = element("div", "microphone-meter-fill");
-    meter.append(meterFill);
-    const readout = element("div", "microphone-readout");
-    const dbOutput = element("output", "microphone-db", "-∞ dBFS");
-    const progressOutput = element("span", "microphone-progress", "테스트 대기");
-    readout.append(dbOutput, progressOutput);
-    const status = element(
-      "p",
-      "microphone-status",
-      options.microphoneSupported
-        ? "연결을 누르면 브라우저가 마이크 권한을 요청해요."
-        : "이 환경에서는 마이크 테스트를 사용할 수 없어 게임을 시작할 수 없어요.",
-    );
-    status.setAttribute("aria-live", "polite");
-    const testPrompt = element("p", "microphone-test-prompt", "테스트 문장 · “심사를 시작합니다.”");
-    const connectButton = element(
-      "button",
-      "secondary-button microphone-connect",
-      "마이크 연결",
-    );
-    connectButton.type = "button";
-    connectButton.disabled = !options.microphoneSupported;
-    setup.append(setupHeader, deviceLabel, meter, readout, testPrompt, status, connectButton);
-
-    const actions = element("div", "title-actions");
-    const startButton = element("button", "primary-button", "시작");
-    startButton.type = "button";
-    startButton.disabled = true;
-    actions.append(startButton);
-
-    let resumeButton: HTMLButtonElement | null = null;
-    if (options.hasSave) {
-      resumeButton = element("button", "secondary-button", "이어하기");
-      resumeButton.type = "button";
-      resumeButton.disabled = true;
-      actions.append(resumeButton);
-    }
-    titleBlock.append(setup, actions);
-
-    if (options.warning) {
-      titleBlock.append(element("p", "warning-message", options.warning));
-    }
-
-    let accumulator = new MicrophoneCalibrationAccumulator();
-    let calibration: MicrophoneCalibration | null = null;
-    let lastReadingAt = performance.now();
-    let connectionSequence = 0;
-
-    const setDevices = (
-      devices: readonly MicrophoneInputDevice[],
-      selectedDeviceId: string,
-    ): void => {
-      deviceSelect.replaceChildren();
-      for (const device of devices) {
-        const option = element("option", undefined, device.label);
-        option.value = device.deviceId;
-        option.selected = device.deviceId === selectedDeviceId;
-        deviceSelect.append(option);
-      }
-      deviceSelect.disabled = devices.length < 2;
-    };
-    const updateLevel = (metrics: AudioLevelMetrics): void => {
-      if (!this.root.contains(shell)) return;
-      const now = performance.now();
-      const state = accumulator.add(metrics, Math.min(100, Math.max(16, now - lastReadingAt)));
-      lastReadingAt = now;
-      const presentation = resolveMicrophoneMeterPresentation(metrics, state);
-      meter.style.setProperty("--microphone-level", `${presentation.percent}%`);
-      meter.dataset.tone = presentation.tone;
-      meter.setAttribute("aria-valuenow", String(presentation.percent));
-      dbOutput.textContent = `${metrics.rmsDbfs.toFixed(1)} dBFS`;
-      setup.dataset.state = state;
-      if (state === "too-quiet") {
-        status.textContent = "입력 신호가 너무 작아요. 마이크를 가까이 두고 말해 주세요.";
-        progressOutput.textContent = "신호 부족";
-      } else if (state === "too-loud") {
-        status.textContent = "입력이 너무 커서 소리가 깨져요. 거리를 벌리거나 입력 볼륨을 낮춰 주세요.";
-        progressOutput.textContent = "입력 과다";
-      } else if (state === "sampling") {
-        status.textContent = "목소리를 확인하고 있어요. 테스트 문장을 끝까지 말해 주세요.";
-        progressOutput.textContent = `${Math.round(accumulator.progress * 100)}%`;
-      } else if (state === "passed") {
-        const measured = accumulator.calibration();
-        calibration = measured
-          ? { ...measured, inputDeviceId: deviceSelect.value || undefined }
-          : null;
-        status.textContent = "마이크 테스트 완료. 이제 게임을 시작할 수 있어요.";
-        progressOutput.textContent = "테스트 완료";
-        startButton.disabled = calibration === null;
-        if (resumeButton) resumeButton.disabled = calibration === null;
-        connectButton.textContent = "다시 테스트";
-      }
-    };
-    const connect = async (deviceId?: string): Promise<void> => {
-      const sequence = ++connectionSequence;
-      accumulator = new MicrophoneCalibrationAccumulator();
-      calibration = null;
-      startButton.disabled = true;
-      if (resumeButton) resumeButton.disabled = true;
-      connectButton.disabled = true;
-      deviceSelect.disabled = true;
-      resetMicrophoneMeterPresentation(meter, dbOutput);
-      setup.dataset.state = "connecting";
-      status.textContent = "마이크 권한과 입력 장치를 확인하고 있어요…";
-      progressOutput.textContent = "연결 중";
-      lastReadingAt = performance.now();
-      try {
-        const connection = await options.connectMicrophone(deviceId, updateLevel);
-        if (sequence !== connectionSequence || !this.root.contains(shell)) return;
-        setDevices(connection.devices, connection.selectedDeviceId);
-        if (accumulator.state === "passed") {
-          const measured = accumulator.calibration();
-          calibration = measured
-            ? { ...measured, inputDeviceId: connection.selectedDeviceId || undefined }
-            : null;
-          connectButton.textContent = "다시 테스트";
-        } else {
-          connectButton.textContent = "테스트 초기화";
-          status.textContent = "연결 완료. 테스트 문장을 평소 목소리로 말해 주세요.";
-          progressOutput.textContent = "듣는 중";
-          setup.dataset.state = "listening";
-        }
-      } catch (error) {
-        if (sequence !== connectionSequence || !this.root.contains(shell)) return;
-        setup.dataset.state = "error";
-        status.textContent = microphoneSetupErrorMessage(error);
-        progressOutput.textContent = "연결 차단";
-      } finally {
-        if (sequence === connectionSequence) connectButton.disabled = false;
-      }
-    };
-
-    connectButton.addEventListener("click", () => void connect(deviceSelect.value || undefined));
-    deviceSelect.addEventListener("change", () => void connect(deviceSelect.value || undefined));
-    startButton.addEventListener("click", () => {
-      const acceptedCalibration = calibration;
-      if (!acceptedCalibration) return;
-      startButton.disabled = true;
-      enterGameFromTitle(
-        () => options.onNewGame(acceptedCalibration),
-        options.disconnectMicrophone,
-      );
+    const titleView = new TitleView(shell, {
+      ...options,
+      audio: this.audioControlOptions,
     });
-    resumeButton?.addEventListener("click", () => {
-      const acceptedCalibration = calibration;
-      if (!acceptedCalibration) return;
-      resumeButton!.disabled = true;
-      enterGameFromTitle(
-        () => options.onResume(acceptedCalibration),
-        options.disconnectMicrophone,
-      );
-    });
-
-    shell.append(titleBlock);
+    titleView.render();
     this.commit(shell);
+    this.activeTitleView = titleView;
   }
 
   renderLine(options: LineViewOptions): void {
@@ -1857,13 +1651,17 @@ export class GameView {
   }
 
   private commit(shell: HTMLElement): void {
+    this.activeTitleView?.destroy();
+    this.activeTitleView = null;
     this.activeVoiceCaptureCancel?.();
     this.activeVoiceCaptureCancel = null;
     this.keyboardPtt.cancel();
     this.activeTypewriter?.cancel();
     this.activeTypewriter = null;
     this.applySpriteContinuity(shell);
-    shell.append(this.audioControlPanel());
+    if (shell.dataset.presentationContext !== "title") {
+      shell.append(this.audioControlPanel());
+    }
     const currentShell = this.root.firstElementChild;
     if (
       currentShell instanceof HTMLElement &&
@@ -2399,21 +2197,4 @@ export class GameView {
     });
     container.append(form);
   }
-}
-
-function microphoneSetupErrorMessage(error: unknown): string {
-  if (error instanceof DOMException) {
-    if (error.name === "NotAllowedError") {
-      return "마이크 권한이 차단됐어요. 브라우저 주소창의 권한 설정에서 마이크를 허용해 주세요.";
-    }
-    if (error.name === "NotFoundError") {
-      return "연결된 마이크를 찾지 못했어요. 입력 장치를 연결한 뒤 다시 시도해 주세요.";
-    }
-    if (error.name === "OverconstrainedError") {
-      return "선택한 입력 장치를 사용할 수 없어요. 다른 마이크를 선택해 주세요.";
-    }
-  }
-  return error instanceof Error
-    ? `마이크 테스트를 시작하지 못했어요: ${error.message}`
-    : "마이크 테스트를 시작하지 못했어요. 장치 연결과 브라우저 권한을 확인해 주세요.";
 }

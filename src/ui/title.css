@@ -1,0 +1,462 @@
+@font-face {
+  font-family: "MaruBuri";
+  src: url("../../assets/runtime/fonts/maruburi/MaruBuri-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("../../assets/runtime/fonts/pretendard/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("../../assets/runtime/fonts/pretendard/Pretendard-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+.game-shell[data-presentation-context="title"] {
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding:
+    clamp(44px, 7.4vh, 82px)
+    clamp(54px, 5.4vw, 104px);
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+
+.game-shell[data-presentation-context="title"]::before {
+  background: none;
+  box-shadow: none;
+}
+
+.game-shell[data-presentation-context="title"]::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(8, 15, 35, 0.82) 0%, rgba(8, 15, 35, 0.66) 24%, rgba(8, 15, 35, 0.22) 40%, rgba(8, 15, 35, 0) 52%);
+}
+
+.game-shell[data-presentation-context="title"] .scene-grid,
+.game-shell[data-presentation-context="title"] .ambient {
+  display: none;
+}
+
+.game-shell[data-presentation-context="title"] .scene-background-entering {
+  animation-duration: 400ms;
+}
+
+.title-content,
+.title-bgm,
+.title-settings-dialog {
+  position: relative;
+  z-index: 2;
+}
+
+.title-content {
+  display: flex;
+  width: min(39vw, 650px);
+  min-width: 520px;
+  height: 100%;
+  flex-direction: column;
+}
+
+.title-hero {
+  flex: 0 0 auto;
+}
+
+.title-kicker {
+  width: max-content;
+  margin: 0 0 clamp(18px, 2.5vh, 28px);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 157, 192, 0.78);
+  color: #f1bfd2;
+  font-size: clamp(0.875rem, 1vw, 1.0625rem);
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  opacity: 0;
+  animation: title-fade-in 300ms ease-out forwards;
+}
+
+.title-heading {
+  margin: 0;
+  color: #fff9f7;
+  font-family: "MaruBuri", "Noto Serif KR", Georgia, serif;
+  font-size: clamp(3.25rem, 3.35vw, 4rem);
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: -0.045em;
+  text-shadow: 0 3px 24px rgba(0, 0, 0, 0.46);
+  opacity: 0;
+  animation-name: title-rise-in;
+  animation-duration: 400ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.title-heading-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.title-heading-accent {
+  color: #ffd5e5;
+  text-shadow: 0 0 22px rgba(255, 167, 201, 0.22);
+}
+
+.title-menu {
+  display: grid;
+  grid-template-rows: 54px 24px 54px 24px 54px 24px;
+  gap: 2px;
+  width: min(100%, 430px);
+  margin-top: clamp(28px, 4.2vh, 46px);
+  opacity: 0;
+  animation-name: title-fade-in;
+  animation-duration: 400ms;
+  animation-delay: 100ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.title-menu-item {
+  display: grid;
+  grid-template-columns: 42px 1fr 28px;
+  align-items: center;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 16px 0 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #fffaf8;
+  background: rgba(9, 14, 30, 0.02);
+  box-shadow: none;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, color 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.title-menu-item[data-menu="start"] {
+  grid-row: 1;
+}
+
+.title-menu-item[data-menu="continue"] {
+  grid-row: 3;
+}
+
+.title-menu-item[data-menu="settings"] {
+  grid-row: 5;
+}
+
+.title-menu-item::after {
+  color: transparent;
+  content: "✦";
+  font-size: 1rem;
+  text-align: right;
+}
+
+.title-menu-icon {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 1.45rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.title-menu-label {
+  font-size: clamp(1.125rem, 1.35vw, 1.375rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.title-menu-item:hover,
+.title-menu-item:focus-visible {
+  border-color: rgba(255, 225, 237, 0.86);
+  color: #171425;
+  background: linear-gradient(105deg, rgba(255, 190, 211, 0.95), rgba(244, 142, 187, 0.9));
+  box-shadow: 0 0 0 1px rgba(255, 209, 227, 0.25), 0 8px 24px rgba(241, 130, 181, 0.18);
+  transform: translateX(4px);
+}
+
+.title-menu-item:hover::after,
+.title-menu-item:focus-visible::after {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.title-menu-item:hover .title-menu-icon,
+.title-menu-item:focus-visible .title-menu-icon {
+  color: #332035;
+}
+
+.title-menu-item:focus-visible {
+  outline: 3px solid #fff2ad;
+  outline-offset: 3px;
+}
+
+.title-menu-item:active {
+  box-shadow: 0 3px 12px rgba(241, 130, 181, 0.12);
+  transform: scale(0.98);
+}
+
+.title-menu-item[data-no-save="true"] {
+  color: rgba(255, 255, 255, 0.42);
+  cursor: default;
+}
+
+.title-menu-item[data-no-save="true"]:hover,
+.title-menu-item[data-no-save="true"]:focus-visible {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(11, 16, 32, 0.28);
+  box-shadow: none;
+  transform: none;
+}
+
+.title-menu-description {
+  align-self: center;
+  margin: 0 0 0 58px;
+  color: rgba(246, 244, 248, 0.66);
+  font-size: clamp(0.75rem, 0.86vw, 0.875rem);
+  line-height: 1.35;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.title-menu-description[data-for="start"] {
+  grid-row: 2;
+}
+
+.title-menu-description[data-for="continue"] {
+  grid-row: 4;
+}
+
+.title-menu-description[data-for="settings"] {
+  grid-row: 6;
+}
+
+.title-menu-description[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.title-mic {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 7px 14px;
+  align-items: center;
+  width: min(100%, 430px);
+  margin-top: clamp(16px, 2.2vh, 26px);
+  color: #f7f4f6;
+  opacity: 0;
+  animation-name: title-fade-in;
+  animation-duration: 400ms;
+  animation-delay: 150ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.title-mic-mark {
+  display: grid;
+  grid-row: 1 / 3;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.2rem;
+}
+
+.title-mic-copy {
+  min-width: 0;
+}
+
+.title-mic-heading {
+  margin: 0 0 3px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.title-mic-body,
+.title-mic-status {
+  margin: 0;
+  color: rgba(244, 242, 246, 0.62);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.title-mic-status {
+  margin-top: 2px;
+}
+
+.title-mic-action {
+  min-width: 116px;
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  border-radius: 8px;
+  color: #fff9fb;
+  background: rgba(14, 20, 39, 0.48);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.title-mic-action:hover,
+.title-mic-action:focus-visible {
+  border-color: #f4a9c7;
+  background: rgba(83, 39, 68, 0.42);
+}
+
+.title-mic-action:active {
+  transform: scale(0.98);
+}
+
+.title-mic-action:disabled {
+  opacity: 0.45;
+}
+
+.title-mic-device {
+  grid-column: 2 / 4;
+  min-width: 0;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 7px;
+  color: #f8f4f6;
+  background: rgba(12, 17, 34, 0.82);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.title-mic-meter {
+  grid-column: 2 / 4;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.title-mic-meter-fill {
+  display: block;
+  width: var(--title-mic-level, 0%);
+  height: 100%;
+  background: #8fd2b2;
+  transition: width 70ms linear;
+}
+
+.title-mic[data-state="passed"] .title-mic-mark {
+  border-color: rgba(128, 226, 181, 0.72);
+  color: #8fe1b8;
+}
+
+.title-bgm {
+  position: absolute;
+  top: clamp(22px, 3.4vh, 38px);
+  right: clamp(28px, 4vw, 72px);
+  display: grid;
+  grid-template-columns: auto minmax(88px, 136px) 44px;
+  gap: 10px;
+  align-items: center;
+  min-height: 48px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(12, 15, 29, 0.84);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.title-bgm:hover,
+.title-bgm:focus-within {
+  border-color: rgba(255, 223, 235, 0.48);
+  background: rgba(12, 15, 29, 0.92);
+}
+
+.title-bgm-mute {
+  min-width: 48px;
+  min-height: 34px;
+  padding: 0 4px;
+  border: 0;
+  color: #fff9fb;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.title-bgm-mute[data-muted="true"] {
+  color: rgba(255, 255, 255, 0.54);
+  text-decoration: line-through;
+}
+
+.title-bgm-slider {
+  width: 100%;
+  accent-color: #f08eb7;
+}
+
+.title-bgm-slider::-webkit-slider-thumb {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.title-bgm-slider:hover::-webkit-slider-thumb,
+.title-bgm-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 8px rgba(240, 142, 183, 0.36);
+  transform: scale(1.1);
+}
+
+.title-bgm-volume {
+  color: #fff9fb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.title-settings-dialog {
+  width: min(560px, calc(100vw - 80px));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  color: #fff;
+  background: #121526;
+}
+
+@keyframes title-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes title-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-shell[data-presentation-context="title"] .scene-background-entering,
+  .title-kicker,
+  .title-heading,
+  .title-menu,
+  .title-mic {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
+  .title-menu-item,
+  .title-menu-description,
+  .title-mic-action,
+  .title-bgm,
+  .title-bgm-slider::-webkit-slider-thumb {
+    transition: none;
+  }
+}

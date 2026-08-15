@@ -54,6 +54,13 @@ describe("M5 장면 표시 계약", () => {
     expect(VOICE_TITLE_SUBTITLE).not.toContain("주노");
   });
 
+  it("TITLE renderer는 전용 TitleView에 시각 골격을 위임한다", () => {
+    const renderer = rendererSection("renderTitle(", "renderLine(");
+    expect(renderer).toMatch(/new TitleView\(shell,/);
+    expect(renderer).not.toContain("microphone-meter");
+    expect(renderer).not.toContain("dBFS");
+  });
+
   it("N0와 N1은 익명 링크, N2부터 주노 링크를 표시한다", () => {
     expect(resolveSceneBrand("n0_review")).toBe("VOICE // LINK");
     expect(resolveSceneBrand("n1_first_voice")).toBe("VOICE // LINK");

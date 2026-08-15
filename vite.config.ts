@@ -9,8 +9,10 @@ const runtimeAssets = fileURLToPath(new URL("./assets/runtime", import.meta.url)
 
 const contentTypes: Readonly<Record<string, string>> = {
   ".mp3": "audio/mpeg",
+  ".otf": "font/otf",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".woff2": "font/woff2",
 };
 
 function runtimeAssetsPlugin(): Plugin {

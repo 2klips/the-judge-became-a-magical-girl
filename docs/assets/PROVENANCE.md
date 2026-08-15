@@ -155,3 +155,32 @@
 | Cute Character Pop-out From A CRT Monitor | `sfx_juno_appear.wav` | `C2A0B50743E1FC9C99D86F5A818438ED361AAB494A875EB16777F3CBABEE70EF` |
 
 장면별 통합 계약은 [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md), 생성 후보·미반영 기록은 [SFX_PRODUCTION_EVIDENCE.md](provenance/SFX_PRODUCTION_EVIDENCE.md)를 따른다.
+
+## 2026-08-15 PC TITLE 로컬 폰트
+
+### MaruBuri SemiBold
+
+- 공식 배포처: NAVER 한글한글 아름답게 `https://hangeul.naver.com/maruproject_11`.
+- 공식 archive: `maruburi.zip` (`https://hangeul.pstatic.net/hangeul_static/webfont/zips/maruburi.zip`), 내부 `MaruBuriOTF.zip`.
+- 공식 archive에는 해당 weight의 WOFF2가 없다. 사용자 예외 승인에 따라 임의 변환·subset·rename 없이 공식 원본 `MaruBuri-SemiBold.otf` 바이트를 그대로 채택했다.
+- source/runtime: `assets/source/fonts/maruburi/MaruBuri-SemiBold.otf` ↔ `assets/runtime/fonts/maruburi/MaruBuri-SemiBold.otf`.
+- 규격·크기·SHA-256: OpenType OTF, 742,176B, `18DFD1167D44877A5AFC1386DB5F09C3EA494AB83A5ADF0A64953C43C208DD21`.
+- 저작권·라이선스: Copyright © NAVER Corporation, SIL Open Font License 1.1. 배포 notice는 [MARUBURI_LICENSE.txt](provenance/MARUBURI_LICENSE.txt)에 포함한다.
+- 다운로드·바이트 검증일: 2026-08-15 KST.
+
+### Pretendard 1.3.9
+
+- 공식 배포처: `orioncactus/pretendard` GitHub release `v1.3.9`.
+- 공식 archive: `Pretendard-1.3.9.zip`. archive의 `web/static/woff2/`에서 필요한 Regular·SemiBold만 채택했다.
+- `Pretendard-Regular.woff2`: 765,892B, SHA-256 `FAD853F7F47C6C8B103171E7193FA095708CDCD70850A71D93AA5379E8A61D63`.
+- `Pretendard-SemiBold.woff2`: 785,856B, SHA-256 `C863F76A7DE5C1DDC1ED8B2FA794964530774592C4F31407A84E2A2AE93F17F0`.
+- source/runtime은 각각 `assets/source/fonts/pretendard/`와 `assets/runtime/fonts/pretendard/`에서 동일 바이트다. CDN·외부 font request·variable font·Bold weight는 추가하지 않았다.
+- 저작권·라이선스: Copyright © 2021 Kil Hyung-jin, SIL Open Font License 1.1. 공식 archive의 notice 원문은 [PRETENDARD_LICENSE.txt](provenance/PRETENDARD_LICENSE.txt)에 포함한다.
+- 다운로드·바이트 검증일: 2026-08-15 KST.
+
+### runtime budget
+
+- 폰트 전 runtime: 11,882,465B (11.33MiB).
+- 채택 폰트: 2,293,924B.
+- 폰트 후 runtime: 14,176,389B (13.52MiB).
+- 30MiB 상한을 유지한다.
