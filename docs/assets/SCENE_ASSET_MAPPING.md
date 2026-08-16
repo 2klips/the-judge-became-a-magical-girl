@@ -36,7 +36,7 @@
 
 | 우선순위 | 논리 ID | 정확한 파일명 | 제작 내용 | 장면 |
 |---|---|---|---|---|
-| `[확정·M5 필수]` | `bg_title` | `bg_title.webp` | NHN 사옥 외경 타이틀 베이스. 작품명·시작 버튼은 DOM/CSS. 현재 원본의 대형 NHN/HACKATHON 문구·로고는 `[임시 승인, DEC-037]`; clean 교체 요청 유지 | 타이틀 |
+| `[확정·M5 필수]` | `bg_title` | `bg_title.webp` | NHN 사옥 외경 타이틀 베이스. 작품명·시작 버튼은 DOM/CSS. baked NHN/HACKATHON 표시는 `[DEC-037 임시 승인·2026-08-16 ACCEPTED SUBMISSION RISK]`; 상표 허가·license approved 아님. 일반 공개·개인 상업판은 clean 교체 또는 별도 허가 필요 | 타이틀 |
 | `[확정·M5 폴백 가능]` | `bg_office_wide` | `bg_office_wide.webp` | 늦은 밤, 심사 핵심 팀이 야근하는 메인 사무실 전경. 창밖·조명은 심야 자체 표현 | N0 도입 establishing |
 | `[확정·M5 필수]` | `bg_hall_day` | `bg_hall_day.webp` | **이름은 호환용 레거시 ID다. 실제 내용은 도윤 책상 1인칭 기본 배경.** 모니터·키보드·사원증이 보이는 구도 | N0 심사, N2 주노 등장·대화 |
 | `[확정·M5 폴백 가능]` | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | 정면 책상 구도에 푸른 정지광과 빛나는 사원증. 없으면 `bg_hall_day` + CSS 정지 효과 | N1 첫 목소리 |
@@ -129,7 +129,7 @@
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
-| 타이틀 | 작품 소개·새 게임·이어하기·설정 | `bg_title` | 없음 | 최초 사용자 gesture 뒤 `bgm_daily` | 왼쪽 CSS gradient 위 local MaruBuri 제목·Pretendard 메뉴, 오른쪽 NHN/HACKATHON 핵심 영역 보존. 마이크는 선택형 9-state FSM이고 click 시작은 항상 가능하다. baked NHN/HACKATHON 문구·로고는 DEC-037 임시 승인 |
+| 타이틀 | 작품 소개·새 게임·이어하기·설정 | `bg_title` | 없음 | 최초 사용자 gesture 뒤 `bgm_daily` | 왼쪽 CSS gradient 위 local MaruBuri 제목·Pretendard 메뉴, 오른쪽 NHN/HACKATHON 핵심 영역 보존. 마이크는 선택형 9-state FSM이고 click 시작은 항상 가능하다. baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용 상태이며 공식 상표 허가가 아니다 |
 | N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. 3~4번째 `doyun.normal_tired`, 5번째 이후 `doyun.normal_startled` | `bgm_daily` | 첫 두 대사만 1인칭 독백 클리셰로 숨기고 곧바로 도윤을 표시한다. 평가 문장·커서는 DOM/CSS |
 | N1 `n1_first_voice` | 모니터 속 첫 목소리 | `bg_hall_time_stop` | `doyun.normal_startled`. **주노 실물 미노출** | 계속 `bgm_daily` | NPC가 주노여도 N2 전까지 주노 스프라이트는 숨긴다. 사원증 빛·시간 정지는 배경+CSS |
 | N2 `n2_juno_intro` | 주노가 키보드 위로 등장 | `bg_hall_day` | 도윤 `normal_startled` + 주노 `surprised → happy`; 반응에 따라 `neutral/upset` | 계속 `bgm_daily` | 등장 순간 짧은 CSS 빛·낙하. 자유 대화 결과 표정 사용 |
@@ -280,10 +280,10 @@
 | AR-06 | `부분 PASS` | battle 주노 보조 위치와 도윤 우측 상반신 구도 구현 | 페이즈 전환 전체 플레이에서 위치가 튈 수 있음 | p1 dev 합성 PASS. p1→p2→p3 실제 전환 수동 QA 유지 |
 | AR-07 | `runtime ready·청각 QA 대기` | `bgm_transform` 실음원과 one-shot 훅은 연결됐으나 사람 청각 검증 전 | 징글 반복·타이밍 오류 가능 | N5 재시도·결과 재렌더·battle 진입 청각 QA |
 | AR-08 | `부분 해소·비차단` | `bgm_crisis`, `bgm_ending` runtime 채택. 검은 마법소녀 컷만 미제작/미연결 | 음악 연출은 검사 가능, GOOD 후속 시각 밀도 감소 | 장면 BGM 연결·청각 QA. 컷은 문서 지정 폴백 사용 |
-| AR-09 | `OPEN` | 생성물 라이선스·대회 제출 허용 확인 미완료 | `approved` 승격·제출 차단 | 제작 도구 플랜·약관·대회 규정 사람 확인 |
+| AR-09 | `부분 해소·OPEN` | BGM 5곡·source SFX 5종의 생성 당시 Suno Pro와 저장소/제출 사용 권리 근거는 `USER ATTESTED`; 배경·도윤의 OpenAI 직접 생성·유료 플랜도 `USER ATTESTED`. 그러나 배경·도윤 최초 input, 주노 첨부 reference, 회색 망령 master anchor가 `UNKNOWN`이고 변신 컷·연속성 편집이 upstream 공백을 상속 | Suno 권리와 이미지 제작 도구 공백은 해소. 남은 image reference 권리 때문에 전체 `approved`·AR-09 종료 불가 | 배경·도윤 최초 input/reference, 주노 첨부 원본, 회색 망령 master 권리 확인 |
 | AR-10 | `부분 해소` | 현재 `assets/runtime/` 총합은 30MB 이하이나 목표 환경 첫 화면 3초 실측 전 | 현장 장비에서 초기 로딩 목표 초과 가능 | preload/lazy load 유지, 최종 에셋 통합 후 Chrome 성능 실측 |
-| AR-11 | `임시 통합·교체 대기` | 전달된 도윤 세트는 장면 표시를 지원하지만 생성 도구·라이선스가 미확인이고 `char_doyun_magical.png`은 정면 포즈다 | 제출 승인 차단, 전투 구도 약화 가능 | 현 runtime 사용. 증빙과 교체본 도착 후 같은 계약 경로에서 재검수 |
-| AR-12 | `ready·교체 요청` | 배경 16개 runtime 규격·장면 로드 PASS. TITLE baked 문구·로고는 DEC-037 임시 승인, `BG-02`는 4:3 원본에서 16:9 crop | 제출 정책 변경 시 clean TITLE 필요. N2→N3 camera hard cut은 유지 | 원본 보존, clean TITLE 요청 유지. contact sheet·Playwright에서 BG-02 핵심 피사체와 hard cut 확인 |
+| AR-11 | `임시 통합·권리/교체 대기` | 도윤 세트는 팀의 OpenAI 직접 생성·당시 유료 Pro 이상 사용을 `USER ATTESTED`로 기록했지만 최초 input/reference는 `UNKNOWN`이고 `char_doyun_magical.png`은 정면 포즈다 | reference 권리 확인 전 전체 승인 불가, 전투 구도 약화 가능 | 현 runtime 사용. 최초 input/reference 확인과 교체본 도착 후 같은 계약 경로에서 재검수 |
+| AR-12 | `ready·제출 위험 수용` | 배경 16개 runtime 규격·장면 로드 PASS. OpenAI 직접 생성·당시 유료 Pro 이상은 `USER ATTESTED`; 최초 input/reference는 `UNKNOWN`. TITLE baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용, `BG-02`는 4:3 원본에서 16:9 crop | 상표 허가·license approved가 아니다. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요. N2→N3 camera hard cut은 유지 | 제출판 현 배경 유지. 최초 input/reference 확인; 범용 공개판은 clean TITLE/별도 허가 검토 |
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
 | AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
 | AR-15 | `PASS·일부 수동 QA PENDING` | DEC-071 optional TITLE microphone FSM과 DEC-073 PTT 내부 live meter를 구현했다. 9-state fake microphone·one-stream·3 viewport no-scroll 자동 QA, CORSAIR·QHD Webcam TITLE QA, CORSAIR gameplay live fill QA는 PASS다. battle 적응형 dBFS 판정은 유지 | 자동 검증 밖의 권한·장치·API 상태, keyboard hold, 극단 음량, 강제 화면 교체에서 회귀 가능 | DENIED/NO_DEVICE/UNSUPPORTED/ERROR, OS reduced-motion, focused Space/Enter PTT, physical loud, 강제 scene replacement, 실제 getUserMedia 횟수 계측은 manual PENDING으로 유지 |
@@ -291,9 +291,9 @@
 
 ### 다음 단계 순서
 
-1. 제작자/사용자: 과거 17번째 배경 식별자와 생성·라이선스 증빙을 전달한다. clean TITLE은 현 임시본 교체용으로 요청 유지한다.
-2. 제작자/사용자: 2026-08-11 채택한 망령 `weakened`와 변신 컷 2장의 장면 합성·화풍·권리 증빙을 확인한다. 주노·BGM·SFX는 재제작하지 않고 권리 증빙과 사람 시청각 QA를 보완한다.
-3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지하고, `SFX_HANDOFF.md`의 선택 5종을 runtime cue로 통합한 뒤 중복·PTT 격리·로드 실패 QA를 수행한다.
+1. 제작자/사용자: 과거 17번째 배경 식별자와 배경·도윤 최초 input/reference, 주노 첨부 원본, 회색 망령 master anchor 권리를 확인한다. clean TITLE은 일반 공개·개인 상업판 또는 제출-context 위험 수용 변경 시 교체 후보로 유지한다.
+2. 제작자/사용자: 2026-08-11 채택한 망령 `weakened`와 변신 컷 2장의 장면 합성·화풍을 확인한다. BGM은 권리 PASS 후보를 유지하되 사람 청각 QA를 보완하고, source SFX runtime 통합은 선택 후속으로 둔다.
+3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지한다. `SFX_HANDOFF.md`의 선택 5종은 optional runtime 후속으로 승인된 경우에만 통합하고 중복·PTT 격리·로드 실패 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.
 5. 문서 담당: 자동 규격 통과분만 `ASSET_MANIFEST.md`를 `ready`로 갱신하고 제작 증빙을 `AI_PRODUCTION_LOG.md`에 연결한다.
 6. 사람 검수: 주노 표정 정렬, 망령 상태 일관성, 배경 합성·전환, BGM loop·duck·crossfade, 라이선스를 확인한 뒤 `approved`로 승격한다.

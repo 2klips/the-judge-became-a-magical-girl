@@ -47,6 +47,17 @@
 | 2026-08-11 | `transform.cast` 사원증·발화·기도 포즈 수정 | Codex 내장 OpenAI 이미지 편집, FFmpeg 정규화 | 현재 `cut_transform_01.webp`, 도윤 `normal_shy`, 주노 `surprised`; 사용자 입 모양 1번·A 균형형 선택 | 평상복 도윤이 무문자 사원증 하나를 손에 들고 전경으로 내밀며 보이는 입으로 말하고, 눈 감은 주노가 세운 별 지팡이 주위로 두 날개를 모아 기도하는 데스크톱 16:9 WebP | 첫 수정 후보는 데스크톱 전체 구도를 통과했지만 당시 요구한 정확한 중앙 모바일 crop에서 실패해 commit `2b99e2327c1a752751a614bc6003456dbb5f816e` 이력에 보존했다. 이후 사용자가 모바일을 제외해 데스크톱 16:9 중앙 후보를 최종 선택했다. 최종 source/runtime은 동일 바이트 1920×1080 WebP, 200,470B, SHA-256 `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152`다. 기술 실행 검증은 [IMPLEMENTATION_LOG의 `transform.cast` 데스크톱 포즈 수정 채택 절](../dev/IMPLEMENTATION_LOG.md#transformcast-데스크톱-포즈-수정-채택)을 단일 근거로 따른다 | final commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f` 사용. 자동 계약 `ready`, `approved` 아님. 사람 미술 품질·참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 확인 대기 | 미측정 | `assets/source/p0-required-images/delivery/cut_transform_01.webp`, `assets/runtime/cut/cut_transform_01.webp`, commits `2b99e23`·`67dbf9f` |
 | 2026-08-13 | 야근 연속성 배경 5종·변신 컷 2종 재편집 | Codex 내장 `image_gen` 이미지 편집, FFmpeg Lanczos | 기존 source/후보를 에셋별 편집 입력으로 1회씩 사용. 핵심 의도는 야근 팀 유지, 마법적 시간·인식 정지, 정지한 동료 보호, 야간 변신·전투, A2 사원증 은백색 내부 별빛·파란 테두리 유지. `cut_transform_01`은 현재본이 아닌 역사적 base SHA-256 `A9AB42...D5152`를 입력으로 사용 | 에셋별 1회 후보, 총 7종. 후보 경로 `C:/Users/user/.codex/visualizations/2026/08/12/019ff64a-8a00-72e3-a26f-020f8215bbe6/late-night-team-overtime-candidates`. 일몰이었던 `cut_transform_02`는 야간으로 변경. 텍스트·UI·로고 없음. 정규화·해시·크기는 [ASSET_MANIFEST.md](ASSET_MANIFEST.md) 현재표를 따름 | 사용자가 2026-08-13 내장 제작 산출물 7종 모두 시각 승인하고 검토자가 지적한 caveat를 명시적으로 수용. 데스크톱만 범위이며 모바일은 제외. 모든 실행 QA 근거는 [IMPLEMENTATION_LOG의 야근 스토리·장면 에셋 연속성 정렬 절](../dev/IMPLEMENTATION_LOG.md#야근-스토리장면-에셋-연속성-정렬)을 단일 근거로 따른다 | `ready` 사용. 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 미확인으로 `approved` 아님 | 미측정 | commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`, `assets/source/background/delivery/`, `assets/source/p0-required-images/delivery/`, `assets/runtime/{bg,cut}/` |
 
+## 2026-08-16 사용자 권리 확인 기록
+
+위 기존 행은 각 작업 당시의 확인 상태를 보존한다. 아래 사용자 확인이 생성 도구·플랜·권리의 현재 상태를 갱신하며, 과거 `미확인` 문구를 현재 판정으로 사용하지 않는다.
+
+| 날짜 | 대상 | 사용자 확인 | 저장소 lineage 감사 | 결과 |
+|---|---|---|---|---|
+| 2026-08-16 | 배경 16장·도윤 원본/납품본 | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성했으며 생성 당시 유료 ChatGPT Pro 이상 계정을 사용 | 정확한 모델·버전·작업 ID는 기록 없음. 최초 생성 input/reference도 기록이 없어 `E. UNKNOWN`; Git 업로더를 제작자로 간주하지 않음 | 제작 주체·도구·플랜 `USER ATTESTED`; reference 권리 PENDING |
+| 2026-08-16 | 주노·회색 망령·변신 컷·2026-08-13 연속성 편집 | 새 사용자 권리 확인 없음 | 주노 최초 첨부 reference와 회색 망령 master anchor는 `E. UNKNOWN`. 변신 컷·연속성 편집의 직접 input은 저장소 project asset뿐이어서 `A/C. internal project lineage`지만 upstream 공백 상속 | 주노·망령·upstream image rights PENDING |
+| 2026-08-16 | BGM 5곡·source SFX 5종 | 생성 당시와 현재 모두 Suno Pro 사용. 타인 lyrics/audio/reference 사용 사실 없음 | BGM source/final hash와 SFX source hash·일부 작업 URL은 기존 증빙 유지. 없는 exact 곡 ID·모델은 `UNKNOWN` | 저장소·제출 사용 권리 근거 `USER ATTESTED`; BGM 사람 청각 QA와 SFX runtime 통합은 별도 |
+| 2026-08-16 | `bg_title.webp` baked NHN/HACKATHON branding | NHN 해커톤 제출 맥락에 한정해 현재 표시 위험을 명시적으로 수용. 개인적 상업 사용 계획 없음 | 상표권자의 공식 허가·라이선스 문서는 저장소에서 발견되지 않음 | `ACCEPTED SUBMISSION RISK`; 상표 허가 확인·license approved로 기록하지 않음. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요 |
+
 ## 기록 규칙
 
 - 프롬프트 전문이 길면 별도 파일/도구 대화 ID를 참조하고 입력 자료 핵심만 적는다.

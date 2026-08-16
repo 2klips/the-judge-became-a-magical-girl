@@ -6,14 +6,32 @@
 
 | 묶음 | 보관 위치 | Git 업로드 근거 | 제작 도구·모델 | 라이선스·공개 사용 | 상태 |
 |---|---|---|---|---|---|
-| 배경 원본 16장 | `assets/source/background/심사역은_마법소녀가_되었다_최종확정_배경세트.zip` | commit `c2e3e1a`, 2026-08-03, 업로드자 `lj33126` | 미확인 | 미확인 | 규격·장면 QA `ready`, 출처 승인 대기 |
-| 도윤 외부 원본 6장 | `assets/source/doyun/doyoon-hero-sprites.zip` | commit `af26039`, 2026-08-03, 업로드자 `2klips` | 미확인 | 미확인 | 원본 추적용 |
-| 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 미확인 | 미확인 | 자동 규격 `ready`, 사용자 장면 사용 승인 |
-| 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 레퍼런스 권한·사용 플랜·공개 사용 미확인 | 자동 규격·runtime 합성 `ready`, 권리 승인 대기 |
-| 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 생성 서비스 플랜·앵커 권한·공개 사용 미확인 | normal 자동 규격·동일 바이트 `ready`; hit/attack/death 미등록 |
-| P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | 최초 commit `438f2f7`, `transform.cast` 최종 commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | 생성 서비스 플랜·참조 이미지 권한·공개 사용 미확인 | 자동 규격·동일 바이트 `ready`, 사람 장면·권리 QA 대기 |
-| 2026-08-13 야근 연속성 재편집 7종 | 배경 source `assets/source/background/delivery/`, 컷 source `assets/source/p0-required-images/delivery/` → runtime 동일 바이트 | commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`, 2026-08-13, Codex | Codex 내장 OpenAI `image_gen` 편집(정확한 모델·버전·작업 ID 미노출), FFmpeg Lanczos | 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용 미확인 | 7종 사용자 시각 채택·자동 규격·동일 바이트 `ready`; 데스크톱 브라우저·권리 QA 대기 |
-| BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1, 현재 Pro 플랜 사용자 확인; 생성 당시 플랜·모델 미확인 | 생성 당시 계정 기록·약관 확인 대기 | 자동 규격·동일 바이트 `ready`, 사람 청각·권리 승인 대기 |
+| 배경 원본 16장 | `assets/source/background/심사역은_마법소녀가_되었다_최종확정_배경세트.zip` | commit `c2e3e1a`, 2026-08-03, 업로드자 `lj33126` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | 최초 생성 input/reference 계보 미확인. TITLE branding은 NHN 제출 맥락 위험 수용 | 규격·장면 QA `ready`, input/reference 권리 확인 대기 |
+| 도윤 외부 원본 6장 | `assets/source/doyun/doyoon-hero-sprites.zip` | commit `af26039`, 2026-08-03, 업로드자 `2klips` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | 최초 생성 input/reference 계보 미확인 | 원본 추적용 |
+| 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | 최초 생성 input/reference 계보 미확인 | 자동 규격 `ready`, 사용자 장면 사용 승인·권리 확인 대기 |
+| 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 최초 첨부 reference 원본·권리 미확인 | 자동 규격·runtime 합성 `ready`, reference 권리 승인 대기 |
+| 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | master anchor 최초 input·권리 미확인 | normal 자동 규격·동일 바이트 `ready`; hit/attack/death 미등록 |
+| P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | 최초 commit `438f2f7`, `transform.cast` 최종 commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | direct input은 internal project asset; upstream 권리 공백 상속 | 자동 규격·동일 바이트 `ready`, 사람 장면·upstream 권리 QA 대기 |
+| 2026-08-13 야근 연속성 재편집 7종 | 배경 source `assets/source/background/delivery/`, 컷 source `assets/source/p0-required-images/delivery/` → runtime 동일 바이트 | commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`, 2026-08-13, Codex | Codex 내장 OpenAI `image_gen` 편집(정확한 모델·버전·작업 ID 미노출), FFmpeg Lanczos | direct input은 internal project asset; base 권리 공백 상속 | 7종 사용자 시각 채택·자동 규격·동일 바이트 `ready`; upstream 권리 QA 대기 |
+| BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1. 생성 당시와 현재 모두 Suno Pro — 2026-08-16 사용자 확인; 정확한 모델·곡 ID는 미확인 | Suno Pro 생성물 권리 근거 `USER ATTESTED`; 사람 청각 QA 별도 | 자동 규격·동일 바이트 `ready`, 권리 PASS 후보·사람 청각 승인 대기 |
+
+## 2026-08-16 사용자 권리 확인·reference lineage 감사
+
+- 사용자 확인일: 2026-08-16 KST.
+- OpenAI 생성 자산은 OpenAI와 사용자 사이의 Output 권리와 Input 권리 책임을 구분한다. 정확한 모델·버전·작업 ID 부재는 provenance 품질 공백으로 유지하되 그 자체만으로 권리 실패로 판정하지 않는다.
+- Git 작성자·업로드자는 제작자 증빙이 아니다. 배경·도윤의 제작 주체는 팀이라는 사용자 확인으로만 기록한다.
+
+| 자산군 | 확인된 생성·편집 input | 계보 분류 | 외부/미확인 reference | 권리 결과 |
+|---|---|---|---|---|
+| 배경 원본 16장 | 원본 생성 input 기록 없음 | `E. UNKNOWN` | 최초 생성에 사용한 reference 유무·권리 미확인 | OpenAI 도구·유료 플랜 `USER ATTESTED`; reference 권리 PENDING |
+| 도윤 원본·납품본 | 최초 생성 input 기록 없음 | `E. UNKNOWN` | 캐릭터 reference 유무·권리 미확인 | OpenAI 도구·유료 플랜 `USER ATTESTED`; reference 권리 PENDING |
+| 주노 5장 | 작업자 임시 경로의 첨부 이미지 1장 → neutral → 표정 4종 | 최초 첨부는 `E. UNKNOWN`; 파생 4종은 `C. OpenAI project asset` | 첨부 이미지 원본·소유권을 저장소에서 재검증 불가 | reference 권리 PENDING |
+| 회색 망령 | 기존 `gray_wraith_normal_transparent.png` master → normal/hit/attack/death; weakened는 normal/hit 참조 | master는 `E. UNKNOWN`; 이후 파생은 `C. OpenAI project asset` | master의 최초 input·권리 미확인 | anchor 권리 PENDING |
+| 변신 컷·weakened 3종 | 배경·도윤·주노·망령 등 저장소 project asset | `A/C. internal project lineage` | 새 외부 reference 없음. 단 upstream 주노·망령·배경·도윤 공백 상속 | 독립 외부 reference 없음; upstream 권리 PENDING |
+| 2026-08-13 연속성 편집 7종 | 각 기존 source/채택본 한 개를 edit target으로 사용 | `A/C. internal project lineage` | 새 외부 reference 없음. base 자산 공백 상속 | 편집 단계 reference는 내부 계보; upstream 권리 PENDING |
+
+- BGM 5곡과 source SFX 5종은 생성 당시와 현재 모두 Suno Pro였음을 사용자가 확인했다. 기록에서 타인 lyrics/audio/reference 사용 흔적은 발견되지 않았다. 정확한 곡 ID·모델이 없는 경우 `UNKNOWN`을 유지하지만 그 부재만으로 권리 blocker를 유지하지 않는다.
+- `bg_title.webp`의 baked NHN/HACKATHON 표시에 대해 사용자는 NHN 해커톤 제출 맥락에 한정해 위험을 명시적으로 수용했다. 이는 상표 허가 확인이나 라이선스 승인 기록이 아니다. 일반 공개·개인 상업판 재사용 시 clean TITLE 또는 별도 허가가 필요하다.
 
 ## 배경 원본
 
@@ -22,8 +40,8 @@
 - 확인 구성: PNG 16장 + `manifest.txt` 1개, CRC 오류 0.
 - `BG-02`는 1448×1086, 나머지 15장은 1672×941.
 - runtime 변환: 16개 채택본을 1920×1080 WebP quality 84로 crop·resize·압축. 원본 식별자→계약명은 [ASSET_MANIFEST.md](ASSET_MANIFEST.md)에 기록한다.
-- `TITLE`에 baked된 NHN/HACKATHON 문구·로고는 사용자 임시 승인. clean 교체 요청 유지.
-- 과거 문서의 `미드저니 추정` 표기는 증빙이 아니므로 제거했다. 제작 도구·모델·프롬프트/작업 ID·생성일·라이선스는 모두 미확인이다.
+- `TITLE`에 baked된 NHN/HACKATHON 문구·로고는 2026-08-16 사용자가 NHN 해커톤 제출 맥락에 한정해 위험을 수용했다. 상표 허가 확인·라이선스 승인이 아니며 일반 공개·개인 상업판은 clean 교체 또는 별도 허가가 필요하다.
+- 과거 문서의 `미드저니 추정` 표기는 증빙이 아니므로 제거했다. 팀이 Codex/ChatGPT OpenAI 서비스와 당시 유료 Pro 이상 계정으로 직접 생성했다는 2026-08-16 사용자 확인을 적용한다. 정확한 모델·버전·프롬프트/작업 ID·생성일과 최초 input/reference 계보는 미확인이다.
 - 작업자 원문: [BACKGROUND_HANDOFF.md](provenance/BACKGROUND_HANDOFF.md).
 
 ## 도윤 원본·납품본
@@ -48,7 +66,7 @@
 ### 정규화 납품 23장
 
 - 23장 모두 1200×2000 8-bit indexed PNG + `tRNS`, 실제 투명 픽셀 존재, 개별 800KB 이하.
-- 제작자·생성 도구·모델·프롬프트/작업 ID·생성일·라이선스는 전달되지 않았다.
+- 팀이 Codex/ChatGPT OpenAI 서비스와 당시 유료 Pro 이상 계정으로 직접 생성했다는 사실은 2026-08-16 사용자가 확인했다. 정확한 모델·버전·프롬프트/작업 ID·생성일과 최초 input/reference 계보는 전달되지 않아 미확인이다.
 - 기존 목록과 실파일명이 다른 항목은 다음과 같이 기록한다.
 
 | 기존 목록명 | 납품·runtime 계약명 |
@@ -84,9 +102,10 @@
 - MP3 5곡, 48kHz stereo, 128kbps, 개별 3MB 이하, 약 -17.5~-17.4 LUFS다.
 - 최종 SHA-256, 소스 구간, 생성폼은 [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md)에 기록한다.
 - 장면별 사용·통합 QA는 [BGM_HANDOFF.md](provenance/BGM_HANDOFF.md)에 기록한다.
-- 현재 Suno Pro 사용은 사용자가 확인했지만 생성 당시 플랜·곡 ID·생성일·모델은 증빙 보완 전 미확인이다.
+- 생성 당시와 현재 모두 Suno Pro였음을 2026-08-16 사용자가 확인했다. 정확한 곡 ID·생성일·모델은 미확인이지만 그 부재만으로 권리 blocker를 유지하지 않는다.
+- [BGM_PRODUCTION_EVIDENCE.md](provenance/BGM_PRODUCTION_EVIDENCE.md)의 생성 당시 플랜 보완 체크는 attestation 이전의 증빙 공백 이력이다. 현재 권리 판정은 이 절과 위 2026-08-16 사용자 확인 절을 따른다.
 - 2026-08-06 최종 5곡을 `assets/runtime/bgm/`에 동일 바이트로 채택했다. source/runtime SHA-256 일치, 전체 runtime 30MB 이하를 확인했다.
-- 사람의 3회 루프·대사 마스킹·PTT duck·장면 전환 청감과 생성 당시 플랜·곡 ID 확인 전 상태는 `ready`이며 `approved` 승격을 금지한다.
+- 기록에서 타인 lyrics/audio/reference 사용 흔적은 발견되지 않았다. Suno Pro 생성물의 저장소·제출 사용 권리 근거는 `USER ATTESTED`로 PASS 후보지만, 사람의 3회 루프·대사 마스킹·PTT duck·장면 전환 청감 전 상태는 `ready`이며 전체 자산 `approved` 승격을 금지한다.
 
 ## 회색 망령 액션 납품
 
@@ -101,7 +120,7 @@
 - 변신 영창 컷의 최초 납품은 `bg_transform_space.webp`, `char_doyun_normal_shy.png`, `char_juno_surprised.png`를 참조했다. 최초 후보가 이미 마법소녀 복장을 입어 장면 순서와 어긋나 폐기됐고, 평상복으로 재생성한 뒤 목걸이형 사원증 중복을 제거해 떠 있는 무문자 사원증 하나를 남겼다. 이 최초 납품은 아래 2026-08-11 포즈 수정으로 대체됐다.
 - 변신 완료 컷은 `bg_transform_space.webp`, `char_doyun_magical_pose.png`, `char_juno_happy.png`를 참조해 도윤의 뒷모습/반측면과 주노가 함께 보이도록 생성했다.
 - 생성 원본의 크로마 배경은 imagegen 보조 스크립트로 알파 처리했다. 컷 2장은 FFmpeg로 WebP 정규화했고, 망령 RGBA PNG는 용량 상한을 넘어서 Pillow로 indexed palette + `tRNS` PNG로 무손실 캔버스·투명도 계약을 유지하며 압축했다.
-- Codex 내장 도구가 정확한 모델명·버전·작업 ID를 노출하지 않아 해당 값은 미확인이다. 생성 서비스 플랜, 참조 이미지 권한, 공개 배포 허용은 사람 확인 전까지 미확인이다.
+- Codex 내장 도구가 정확한 모델명·버전·작업 ID를 노출하지 않아 해당 값은 미확인이다. 참조는 저장소 안의 배경·도윤·주노·망령 project asset으로 한정됐고 새 외부 reference는 발견되지 않았다. 다만 각 upstream 자산의 최초 input/reference 공백을 상속하므로 권리 상태는 PENDING이다.
 
 ### 2026-08-11 `transform.cast` 포즈 수정 이력
 
@@ -111,7 +130,7 @@
 - 이후 사용자가 모바일을 제품 범위에서 제외했다. CSS·코드 변경 없이 데스크톱 16:9 중앙 구도 후보를 final commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`로 source/runtime 두 경로에 동일 바이트 채택했다.
 - 최종본은 평상복 도윤 한 명이 무문자 사원증 하나를 자연스럽게 손에 잡아 전경으로 내밀며 보이는 입으로 말하고, 눈을 감은 주노 한 명이 세운 별 지팡이 주위로 두 날개를 모아 기도한다. 청색·금색 야간 사무실과 마법진을 유지하며 텍스트·UI·로고는 없다.
 - 교체 전 원본 `transform.cast`는 177,098B, SHA-256 `507CA55683BC50CCBB83B3196598DB4D2DCA1CF82B58A5AEF796CD007634140D`였으며 현재는 superseded 이력이다.
-- 최종 `transform.cast`는 200,470B, SHA-256 `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152`다. 자동 계약을 통과한 `ready` 상태이며 사람 미술·권리 QA 전에는 `approved`로 승격하지 않는다. 참조 이미지 권한, 생성 서비스 플랜, 공개 배포 허용도 계속 미확인이다.
+- 최종 `transform.cast`는 200,470B, SHA-256 `A9AB42ACC5394E66244C5E8A9DDD863F9C18E21697A69C42448DD3CFAB0D5152`다. 자동 계약을 통과한 `ready` 상태이며 사람 미술·권리 QA 전에는 `approved`로 승격하지 않는다. 이 편집의 직접 참조는 internal project asset뿐이지만 upstream 도윤·주노 권리 공백을 상속한다.
 
 | runtime 파일 | 규격·크기 | SHA-256 |
 |---|---|---|
@@ -125,7 +144,7 @@
 
 - 각 기존 source/채택본을 Codex 내장 OpenAI `image_gen`으로 한 번씩 편집했다. 후보는 저장소 밖 `C:/Users/user/.codex/visualizations/2026/08/12/019ff64a-8a00-72e3-a26f-020f8215bbe6/late-night-team-overtime-candidates`에 생성됐다.
 - FFmpeg Lanczos 중앙 crop으로 1920×1080 WebP를 만들었다. 배경 quality 82, 컷 quality 84다. 텍스트·UI·로고를 baked하지 않았다.
-- 사용자가 2026-08-13 사전에 지적된 미세한 구도·가시성 차이를 수용하고 7종 모두를 시각 채택했다. 이 검토는 참조 권한·생성 서비스 플랜·공개 배포 허용을 증명하지 않으므로 상태는 `ready`다.
+- 사용자가 2026-08-13 사전에 지적된 미세한 구도·가시성 차이를 수용하고 7종 모두를 시각 채택했다. 편집 input은 각 기존 project source/채택본 한 개뿐이며 새 외부 reference는 발견되지 않았다. base 자산의 최초 input/reference 공백을 상속하므로 상태는 `ready`다.
 
 | source ↔ runtime 동일 바이트 | 입력·편집 계보 | 규격·크기 | SHA-256 |
 |---|---|---|---|
@@ -137,13 +156,14 @@
 | `p0-required-images/delivery/cut_transform_01.webp` ↔ `cut/cut_transform_01.webp` | 역사적 base `A9AB42...D5152`를 편집. A2 사원증 은백색 내부 별빛·파란 테두리 유지 | 1920×1080 WebP, 229,306B | `43E98D673C2DF9989B929A5B4575763CE254248410DEEC02D616E7F2EF80FD74` |
 | `p0-required-images/delivery/cut_transform_02.webp` ↔ `cut/cut_transform_02.webp` | 일몰 변신 완료를 야간으로 편집 | 1920×1080 WebP, 209,748B | `113F777CAA7785171B9CC112175E5D7CCDB1B2CBAE96BC592FF166918C2CFD3A` |
 
-모든 lineage의 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용은 미확인이다. 자동 규격·source/runtime 동일성은 commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`에서 확인했고, 교체 후 데스크톱 16:9 브라우저 QA는 대기다.
+7종 편집 단계의 direct reference는 internal project lineage로 확인됐다. 새 외부 input은 없지만 base 배경·도윤·주노·망령의 최초 reference 권리 공백은 상속한다. 자동 규격·source/runtime 동일성은 commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`에서 확인했고, 교체 후 데스크톱 16:9 브라우저 QA는 대기다.
 
 ## SFX source 인계
 
 - 사용자 청감으로 선택한 Suno Sounds One Shot WAV 5종만 `assets/source/sfx/delivery/`에 계약명으로 복사했다.
 - 모두 생성 WAV와 동일 바이트이며 트림·정규화·재인코딩하지 않았다. 48kHz stereo 16-bit PCM 규격이다.
-- Suno Pro 사용은 사용자가 확인했다. 생성 당시 계정 화면·작업 ID·약관·해커톤 제출 허용 근거는 팀 보존 전 미확인이다.
+- 생성 당시와 현재 모두 Suno Pro였음을 2026-08-16 사용자가 확인했다. 기록에서 타인 lyrics/audio/reference 사용 흔적은 발견되지 않았다. 정확한 작업 ID가 없는 선택본은 `UNKNOWN`을 유지하지만 source 저장소 배포 권리 blocker로 취급하지 않는다.
+- [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)의 생성 당시 플랜 확인 대기는 attestation 이전 이력이다. 현재 권리 판정은 이 절과 위 2026-08-16 사용자 확인 절을 따른다.
 - `assets/runtime/sfx/`와 코드는 수정하지 않았으며 상태는 `ready`, `approved`가 아니다.
 
 | 원본 구분 | 계약 파일명 | SHA-256 |
