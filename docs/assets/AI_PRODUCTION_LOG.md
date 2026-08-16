@@ -53,8 +53,8 @@
 
 | 날짜 | 대상 | 사용자 확인 | 저장소 lineage 감사 | 결과 |
 |---|---|---|---|---|
-| 2026-08-16 | 배경 16장·도윤 원본/납품본 | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성했으며 생성 당시 유료 ChatGPT Pro 이상 계정을 사용 | 정확한 모델·버전·작업 ID는 기록 없음. 최초 생성 input/reference도 기록이 없어 `E. UNKNOWN`; Git 업로더를 제작자로 간주하지 않음 | 제작 주체·도구·플랜 `USER ATTESTED`; reference 권리 PENDING |
-| 2026-08-16 | 주노·회색 망령·변신 컷·2026-08-13 연속성 편집 | 새 사용자 권리 확인 없음 | 주노 최초 첨부 reference와 회색 망령 master anchor는 `E. UNKNOWN`. 변신 컷·연속성 편집의 직접 input은 저장소 project asset뿐이어서 `A/C. internal project lineage`지만 upstream 공백 상속 | 주노·망령·upstream image rights PENDING |
+| 2026-08-16 | 배경 16장·도윤 원본/납품본 | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성했으며 생성 당시 유료 ChatGPT Pro 이상 계정을 사용. text prompt 또는 team/project-owned internally generated asset만 input으로 사용했고 외부 제3자 이미지는 없음 | 정확한 모델·버전·작업 ID는 기록 없음. Git 업로더를 제작자로 간주하지 않음 | 제작 주체·도구·플랜·reference lineage `USER ATTESTED`; image rights PASS 후보, 사람 장면 QA 별도 |
+| 2026-08-16 | 주노·회색 망령·변신 컷·2026-08-13 연속성 편집 | 최초 anchor/reference와 모든 편집 input은 team/project-owned internally generated asset이며 외부 제3자 이미지는 없음 | `USER ATTESTED / INTERNAL PROJECT LINEAGE`. 정확한 모델·버전·일부 작업 ID 공백은 유지 | reference-rights PASS 후보. 법률 자문·제3자 허가 확인이 아니며, variation·continuity·사람 장면 QA는 별도 |
 | 2026-08-16 | BGM 5곡·source SFX 5종 | 생성 당시와 현재 모두 Suno Pro 사용. 타인 lyrics/audio/reference 사용 사실 없음 | BGM source/final hash와 SFX source hash·일부 작업 URL은 기존 증빙 유지. 없는 exact 곡 ID·모델은 `UNKNOWN` | 저장소·제출 사용 권리 근거 `USER ATTESTED`; BGM 사람 청각 QA와 SFX runtime 통합은 별도 |
 | 2026-08-16 | `bg_title.webp` baked NHN/HACKATHON branding | NHN 해커톤 제출 맥락에 한정해 현재 표시 위험을 명시적으로 수용. 개인적 상업 사용 계획 없음 | 상표권자의 공식 허가·라이선스 문서는 저장소에서 발견되지 않음 | `ACCEPTED SUBMISSION RISK`; 상표 허가 확인·license approved로 기록하지 않음. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요 |
 

@@ -316,11 +316,37 @@ npm run build
 
 ### 15.8 성능·배포 전 조건
 
-- [ ] 목표 Chrome에서 첫 화면 3초 이내.
+- [ ] public Pages의 목표 Chrome에서 controlled cold-load 첫 화면 3초 이내.
 - [ ] title 핵심 에셋만 preload, 나머지 lazy load.
 - [ ] Pages base 경로에서 JS/CSS/JSON/에셋 404 없음.
 - [ ] production bundle에 debug 상태 변경 기능과 API 키 없음.
 - [ ] 새로고침·직접 URL 진입·오프라인 폴백 정상.
+
+#### AR-10 GitHub Pages cold-load 측정 체크리스트
+
+측정 URL은 실제 공개 주소 `https://2klips.github.io/the-judge-became-a-magical-girl/`이며 localhost·preview server·warm navigation 결과로 AR-10을 닫지 않는다.
+
+1. **환경 고정**
+   - Google Chrome stable 버전, Windows 버전, CPU/RAM, 유선/무선과 실제 회선명을 기록한다.
+   - viewport는 우선 1920×1080, zoom 100%, 확장 기능 없는 새 Incognito window를 사용한다.
+   - DevTools Network와 Performance를 열고 Preserve log는 끈다. service worker 유무와 측정 시각·commit SHA를 기록한다.
+   - 공식 판정은 목표 현장 회선의 `No throttling`으로 수행한다. 필요하면 Fast 4G는 병목 진단용으로 별도 기록하되 공식 수치와 섞지 않는다.
+2. **cold cache 정책**
+   - 각 공식 run 전에 DevTools `Clear site data`로 cache storage·HTTP cache·local/session storage를 지우고 Incognito tab을 닫는다.
+   - 새 Incognito tab에서 URL을 직접 입력해 navigation한다. DevTools `Disable cache`를 켠 상태로 측정하며, 앞 run의 memory/disk cache를 재사용하지 않는다.
+   - 권한 prompt·DevTools 시작 지연·다른 foreground download가 끼면 환경 이상으로 표시하고 해당 run을 버리지 말고 원인과 함께 남긴다. 재측정은 별도 run 번호로 추가한다.
+3. **실행 횟수**
+   - 공식 cold run을 연속 5회 수행한다. 선택적으로 warm reload 1회를 진단값으로 추가하되 PASS 계산에서 제외한다.
+   - 결과를 고르거나 가장 빠른 값만 보고하지 않는다. 5회 전부와 실패 run trace를 보존한다.
+4. **run별 기록**
+   - `navigationStart → first-screen ready` ms: `bg_title`, 두 줄 TITLE, Game Start·Continue·Settings, compact microphone shell, BGM HUD가 모두 보이고 Game Start가 입력 가능한 최초 시점.
+   - FCP, LCP, DOMContentLoaded, load event, total transferred bytes/request count, cache hit 여부.
+   - `bg_title`, MaruBuri, Pretendard, entry JS/CSS의 status·duration과 required asset 404/failed count.
+   - first screen blank/FOIT 여부, console error/new warning 수, screenshot과 Performance trace 파일 경로.
+5. **판정**
+   - PASS: 공식 cold run 5/5에서 first-screen ready가 `≤ 3,000ms`, required asset 실패 0, console error 0, font 때문에 TITLE이 가려지는 blank/FOIT 없음.
+   - FAIL: 한 run이라도 `> 3,000ms`이거나 required first-screen asset 실패/blank TITLE이 발생. 측정 환경 이상이면 원인을 명시하고 5회 세트를 처음부터 다시 수행하며, 불리한 run을 임의 제외하지 않는다.
+   - AR-10은 위 표·trace·commit SHA가 기록된 뒤에만 CLOSED로 바꾼다. 현재는 `OPEN·실측 대기`다.
 
 ### 15.9 증거 템플릿
 

@@ -200,9 +200,9 @@
 - `[구현]` N4의 마지막 주노 표정은 `GameState.npcEmotion`으로 N5 도입까지 이어지고, N5의 명시 표정 대사에서만 전환한다.
 - `[구현]` `bgm_transform`은 주문 결과 뒤 one-shot으로 재생한다. N5 도입은 `bgm_battle` crisis 폴백을 유지하고, PTT 청취 중 현재 BGM을 duck한다.
 - `[구현]` 물리 파일은 기본 핵심분만 preload하고 나머지는 장면 진입 시 지연 로드한다. 실패는 `physical → 지정 파생 → 검은 presentation`으로 강등하며 `[ASSET_HANDOFF]`를 경로별 한 번 기록한다. BGM 실패는 무음으로 계속한다.
-- `[구현·자동 QA PASS]` BGM 5곡을 `assets/runtime/bgm/`에 source와 동일 바이트로 채택했다. 규격·용량은 통과했으며 3회 루프·대사 마스킹·PTT duck·3엔딩 사람 청감 QA와 권리 확인은 대기한다.
-- `[구현·자동 QA PASS]` 회색 망령 `normal`과 `weakened`를 source와 동일 바이트로 `assets/runtime/char/`에 채택했다. 두 파일 모두 1200×2000 투명 PNG·800KB 이하이며 사람 합성·권리 QA는 대기한다.
-- `[구현·자동 QA PASS·시각 채택]` 2026-08-13 야근 연속성 배경 5종과 변신 컷 2종을 source/runtime 동일 바이트로 채택했다. 사용자가 사전 지적된 미세한 구도·가시성 차이를 수용했다. 데스크톱 16:9 교체 후 브라우저 QA와 권리·배포 확인은 대기며, 모바일은 범위 제외다.
+- `[구현·자동 QA PASS]` BGM 5곡을 `assets/runtime/bgm/`에 source와 동일 바이트로 채택했다. 규격·용량은 통과했고 생성 당시 Suno Pro는 `USER ATTESTED`다. 3회 루프·대사 마스킹·PTT duck·3엔딩 사람 청각 QA는 대기한다.
+- `[구현·자동 QA PASS]` 회색 망령 `normal`과 `weakened`를 source와 동일 바이트로 `assets/runtime/char/`에 채택했다. 두 파일 모두 1200×2000 투명 PNG·800KB 이하이고 reference는 `USER ATTESTED / INTERNAL PROJECT LINEAGE`다. 사람 합성 QA는 대기한다.
+- `[구현·자동 QA PASS·시각 채택]` 2026-08-13 야근 연속성 배경 5종과 변신 컷 2종을 source/runtime 동일 바이트로 채택했다. 사용자가 사전 지적된 미세한 구도·가시성 차이를 수용했고 direct/base reference가 모두 internal project lineage이며 외부 제3자 이미지가 없음을 확인했다. 데스크톱 16:9 전체 continuity QA는 대기며, 모바일은 범위 제외다.
 - `[구현, DEC-059]` N3~N5 도입은 `bgm_crisis`, 수렴~GOOD/NORMAL/BAD는 `bgm_ending`을 사용한다. 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백과 무음 완주를 유지한다.
 - `[구현, DEC-060]` `gray_wraith.weakened` 실파일 로딩에 실패하면 `normal` + CSS 균열 빛 파생으로 표시하고, normal도 실패하면 검은 presentation으로 강등한다. `attack/hit/death`는 미등록 상태다.
 - `[구현]` BGM controller는 신규/손상 설정 기본 음량 `0.20`, 유효 저장 volume/mute 우선, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.
@@ -221,8 +221,8 @@
 - `[구현·자동/Chrome QA PASS, DEC-071·073]` TITLE은 선택형 9-state microphone FSM, Settings, voice/click start·resume, 접근 가능한 save 없음 Continue, 첫 gesture `bgm_daily`, PC 3 viewport no-scroll 계약을 적용한다. gameplay PTT는 같은 capture stream을 공유하는 버튼 내부 live meter를 사용한다. CORSAIR·QHD Webcam TITLE QA와 CORSAIR gameplay live fill은 PASS이며, DENIED/NO_DEVICE/UNSUPPORTED/ERROR 등 일부 실제 상태와 Space/Enter·physical loud·강제 scene replacement·getUserMedia 횟수 계측은 manual PENDING이다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
 - `[구현·QA PASS, DEC-036~039]` 배경 원본 16장을 `1920×1080 WebP ≤500KB` runtime 파일로 변환하고 catalog·node line·변신 stage·battle phase/p3 spell·ending line 고정 전환을 연결했다. `?debug=1` 장면 선택기와 22개 비파괴 프리뷰가 16개 배경을 모두 검수한다.
-- `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 사람 청각·권리 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 계속 planned다.
-- `[대기]` 모든 필수 물리 에셋의 시각·청각·라이선스 QA는 외부 담당자 전달 후 진행한다.
+- `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 생성 당시 Suno Pro는 `USER ATTESTED`지만 사람 청각 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 계속 planned다.
+- `[대기]` 필수 물리 에셋의 사람 시각·청각·scene/style consistency QA를 진행한다. image reference-rights는 `USER ATTESTED / INTERNAL PROJECT LINEAGE`로 PASS 후보지만 법률 자문·제3자 허가 확인은 아니다.
 
 ## 7. 현재 M5에서 제작하지 않을 항목
 
@@ -272,18 +272,18 @@
 
 | ID | 상태 | 위험 | 영향 | 담당·해결 게이트 |
 |---|---|---|---|---|
-| AR-01 | `runtime ready·사람 QA 대기` | 배경 16개·도윤 11개·주노 5개·망령 2개·변신 컷 2개·BGM 5곡은 `ready` | 필수 장면 자동 검사는 가능하나 최종 합성·권리·청각 제출 QA 전 `approved` 불가 | 현 runtime 사람 장면 QA·권리 확인 |
-| AR-02 | `OPEN` | 스타일 앵커와 사람 시각 검수 미완료 | 캐릭터·배경 화풍 불일치 가능 | 팀 스타일 앵커 승인 후 본생산 |
+| AR-01 | `OPEN·사람 QA 대기` | 메인 메뉴는 사람 시각 QA PASS. 그 외 장면은 어색한 전환·부자연스러운 continuity·불완전한 presentation과 BGM loop/masking/duck/scene 청각 QA가 남음 | 자동 검사는 가능하지만 전체 장면 합성·전환·청각 제출 품질 전 `approved` 불가 | 아래 AR-01/AR-02 closure plan에 따라 본편 장면·오디오 사람 QA |
+| AR-02 | `OPEN` | global style anchor와 scene consistency 사람 QA 미완료. 일부 이미지 교체/편집, 추가 scene, Juno variation 확장, 캐릭터/배경 continuity polish가 필요 | 캐릭터·배경 화풍·조명·카메라·스케일 불일치 가능 | style anchor 승인→전수 contact sheet 판정→대상별 keep/edit/replace |
 | AR-03 | `PASS` | N1 정체 마스킹과 `bg_hall_time_stop`→N2 실제 주노 공개 전환 구현 | 회귀 시 주노 등장 연출·대본 모순 | unit + Browser N2 실제 PNG 합성 QA PASS |
 | AR-04 | `구현·QA 대기` | N3~N5 복수 인물과 N4→N5 표정 연속성 구현, 실에셋 사람 검증 전 | 관계 감정선과 망령 위협 약화 가능 | 장면별 인물·표정 수동 QA |
 | AR-05 | `실파일 ready·브라우저 QA 대기` | `gray_wraith.weakened` 물리 파일 우선, normal + CSS 파생 후 black 폴백 유지 | momentum 65 전환의 실제 투명 합성·크기·위치가 미검수면 연출이 어색할 수 있음 | 물리 우선순위·투명 합성·파생 강등 브라우저 QA |
 | AR-06 | `부분 PASS` | battle 주노 보조 위치와 도윤 우측 상반신 구도 구현 | 페이즈 전환 전체 플레이에서 위치가 튈 수 있음 | p1 dev 합성 PASS. p1→p2→p3 실제 전환 수동 QA 유지 |
 | AR-07 | `runtime ready·청각 QA 대기` | `bgm_transform` 실음원과 one-shot 훅은 연결됐으나 사람 청각 검증 전 | 징글 반복·타이밍 오류 가능 | N5 재시도·결과 재렌더·battle 진입 청각 QA |
 | AR-08 | `부분 해소·비차단` | `bgm_crisis`, `bgm_ending` runtime 채택. 검은 마법소녀 컷만 미제작/미연결 | 음악 연출은 검사 가능, GOOD 후속 시각 밀도 감소 | 장면 BGM 연결·청각 QA. 컷은 문서 지정 폴백 사용 |
-| AR-09 | `부분 해소·OPEN` | BGM 5곡·source SFX 5종의 생성 당시 Suno Pro와 저장소/제출 사용 권리 근거는 `USER ATTESTED`; 배경·도윤의 OpenAI 직접 생성·유료 플랜도 `USER ATTESTED`. 그러나 배경·도윤 최초 input, 주노 첨부 reference, 회색 망령 master anchor가 `UNKNOWN`이고 변신 컷·연속성 편집이 upstream 공백을 상속 | Suno 권리와 이미지 제작 도구 공백은 해소. 남은 image reference 권리 때문에 전체 `approved`·AR-09 종료 불가 | 배경·도윤 최초 input/reference, 주노 첨부 원본, 회색 망령 master 권리 확인 |
-| AR-10 | `부분 해소` | 현재 `assets/runtime/` 총합은 30MB 이하이나 목표 환경 첫 화면 3초 실측 전 | 현장 장비에서 초기 로딩 목표 초과 가능 | preload/lazy load 유지, 최종 에셋 통합 후 Chrome 성능 실측 |
-| AR-11 | `임시 통합·권리/교체 대기` | 도윤 세트는 팀의 OpenAI 직접 생성·당시 유료 Pro 이상 사용을 `USER ATTESTED`로 기록했지만 최초 input/reference는 `UNKNOWN`이고 `char_doyun_magical.png`은 정면 포즈다 | reference 권리 확인 전 전체 승인 불가, 전투 구도 약화 가능 | 현 runtime 사용. 최초 input/reference 확인과 교체본 도착 후 같은 계약 경로에서 재검수 |
-| AR-12 | `ready·제출 위험 수용` | 배경 16개 runtime 규격·장면 로드 PASS. OpenAI 직접 생성·당시 유료 Pro 이상은 `USER ATTESTED`; 최초 input/reference는 `UNKNOWN`. TITLE baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용, `BG-02`는 4:3 원본에서 16:9 crop | 상표 허가·license approved가 아니다. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요. N2→N3 camera hard cut은 유지 | 제출판 현 배경 유지. 최초 input/reference 확인; 범용 공개판은 clean TITLE/별도 허가 검토 |
+| AR-09 | `PASS 후보·비차단` | 사용자는 backgrounds·Doyoon·Juno·gray wraith·transform cuts·continuity edits가 text prompt 또는 team/project-owned internally generated asset만 사용했고 외부 제3자 이미지가 없었음을 확인했다. BGM·source SFX 생성 당시 Suno Pro도 확인했다 | upstream reference blocker는 해소. exact 모델·작업 ID 부재는 provenance quality gap이며, 이 사용자 확인은 법률 자문·제3자 허가 확인이 아님 | `USER ATTESTED / INTERNAL PROJECT LINEAGE` 유지. 사람 품질 QA는 AR-01/02에서 별도 수행 |
+| AR-10 | `OPEN·실측 대기` | 현재 `assets/runtime/` 총합은 30MB 이하이나 public Pages controlled cold-load 첫 화면 3초를 아직 측정하지 않음 | 실제 공개망·목표 Chrome에서 초기 로딩 목표 초과 가능 | [QA_AND_DEMO.md §15.8](../dev/QA_AND_DEMO.md)의 5회 cold-run 절차로 실측 |
+| AR-11 | `임시 통합·교체 검토` | 도윤 세트의 OpenAI 직접 생성·당시 유료 Pro 이상과 internal project lineage는 `USER ATTESTED`; `char_doyun_magical.png`은 정면 포즈다 | 권리 blocker는 해소됐으나 전투 구도와 장면 continuity가 약할 수 있음 | 현 runtime 사용. AR-01/02 사람 QA에서 keep/edit/replace 판정 후 같은 계약 경로로 재검수 |
+| AR-12 | `ready·제출 위험 수용` | 배경 16개 runtime 규격·장면 로드 PASS. OpenAI 직접 생성·당시 유료 Pro 이상·internal project lineage는 `USER ATTESTED`. TITLE baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용, `BG-02`는 4:3 원본에서 16:9 crop | image reference blocker는 해소됐지만 상표 허가·license approved가 아니다. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요. N2→N3 camera hard cut은 유지 | 제출판 현 배경 유지. AR-01/02 continuity QA 수행; 범용 공개판은 clean TITLE/별도 허가 검토 |
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
 | AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
 | AR-15 | `PASS·일부 수동 QA PENDING` | DEC-071 optional TITLE microphone FSM과 DEC-073 PTT 내부 live meter를 구현했다. 9-state fake microphone·one-stream·3 viewport no-scroll 자동 QA, CORSAIR·QHD Webcam TITLE QA, CORSAIR gameplay live fill QA는 PASS다. battle 적응형 dBFS 판정은 유지 | 자동 검증 밖의 권한·장치·API 상태, keyboard hold, 극단 음량, 강제 화면 교체에서 회귀 가능 | DENIED/NO_DEVICE/UNSUPPORTED/ERROR, OS reduced-motion, focused Space/Enter PTT, physical loud, 강제 scene replacement, 실제 getUserMedia 횟수 계측은 manual PENDING으로 유지 |
@@ -291,12 +291,24 @@
 
 ### 다음 단계 순서
 
-1. 제작자/사용자: 과거 17번째 배경 식별자와 배경·도윤 최초 input/reference, 주노 첨부 원본, 회색 망령 master anchor 권리를 확인한다. clean TITLE은 일반 공개·개인 상업판 또는 제출-context 위험 수용 변경 시 교체 후보로 유지한다.
-2. 제작자/사용자: 2026-08-11 채택한 망령 `weakened`와 변신 컷 2장의 장면 합성·화풍을 확인한다. BGM은 권리 PASS 후보를 유지하되 사람 청각 QA를 보완하고, source SFX runtime 통합은 선택 후속으로 둔다.
+1. 제작자/사용자: 아래 AR-01/AR-02 closure plan으로 main menu 외 본편 장면을 전수 검수하고 각 대상을 `keep/edit/replace/add`로 판정한다. clean TITLE은 일반 공개·개인 상업판 또는 제출-context 위험 수용 변경 시 교체 후보로 유지한다.
+2. 제작자/사용자: 2026-08-11 채택한 망령 `weakened`와 변신 컷 2장의 장면 합성·화풍을 확인한다. BGM은 생성 당시 Suno Pro `USER ATTESTED`를 유지하되 사람 청각 QA를 보완하고, source SFX runtime 통합은 선택 후속으로 둔다.
 3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지한다. `SFX_HANDOFF.md`의 선택 5종은 optional runtime 후속으로 승인된 경우에만 통합하고 중복·PTT 격리·로드 실패 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.
 5. 문서 담당: 자동 규격 통과분만 `ASSET_MANIFEST.md`를 `ready`로 갱신하고 제작 증빙을 `AI_PRODUCTION_LOG.md`에 연결한다.
 6. 사람 검수: 주노 표정 정렬, 망령 상태 일관성, 배경 합성·전환, BGM loop·duck·crossfade, 라이선스를 확인한 뒤 `approved`로 승격한다.
 7. QA: 음성·클릭·오프라인으로 GOOD/NORMAL/BAD를 완주하고 M5 완료 조건을 판정한다.
 
-AR-01·02·09·10과 필수 장면 QA가 닫히기 전에는 최종 에셋·현장 QA 포함 M5 완료로 보고하지 않는다. AR-08은 승인된 컷 가능 항목이라 열려 있어도 M5 완주를 막지 않는다.
+### AR-01/AR-02 visual closure plan
+
+메인 메뉴는 사람 시각 QA PASS 기준으로 유지하며 재설계하지 않는다. 아래 순서는 새로운 코드·에셋 제작 승인이 아니라, 다음 수정 대상을 확정하기 위한 사람 QA와 제작 backlog다.
+
+| 작업군 | 우선 대상 | 실행 방법 | 완료 증거 |
+|---|---|---|---|
+| scene continuity fixes | N0→N1→N2, N2→N3 hard cut, N4→N5, `transform.cast→complete→battle p1`, battle p1→p2→p3→수렴, 수렴→GOOD/NORMAL/BAD | 1920×1080 full-path 영상을 기준으로 장면 직전/직후의 카메라·시간대·조명·캐릭터 위치/크기·표정·BGM crossfade/duck를 한 쌍씩 비교한다. 어색함을 asset 문제/transition 문제/audio 문제로 분리하고 한 번에 한 원인만 수정 후보로 지정한다 | 경계별 before/after 캡처·영상, 사람 PASS/FAIL, BGM 3회 loop·대사 masking·PTT duck·scene 전환 청각 판정 |
+| image replacement/edit targets | `char_doyun_magical.png` 전투 구도, N2 `bg_hall_day`→N3 `bg_hall_dark` 카메라 불일치, 망령 normal/weakened 합성, 변신 컷 2장, 전수 QA에서 사용자가 지적한 장면 | 22개 scene preset contact sheet에서 `keep/edit/replace`를 먼저 확정한다. edit/replace는 기존 logical ID·source/runtime 규격·fallback을 유지하고, 승인 전 binary나 mapping을 바꾸지 않는다 | 대상별 문제 문장, 선택 후보, 3 desktop viewport 합성, source/runtime hash·규격, 사람 채택 기록 |
+| additional scene needs | 현재 crossfade/CSS만으로 감정 beat가 읽히지 않는 경계. 우선 검토 후보는 N2→N3 위기 진입, N5 변신 bridge, battle→수렴, ending 후속 hook | 새 장면마다 목적·앞/뒤 scene·필수/폴백/컷 가능·logical ID·기존 asset 재사용 가능성을 먼저 문서화한다. transition 조정으로 해결되면 신규 이미지를 만들지 않는다 | 승인된 scene brief와 mapping, 없을 때 완주 가능한 fallback, 추가 후 runtime 30MiB 재검증 |
+| Juno variation expansion | 현재 5종(`neutral/happy/shy/upset/surprised`)으로 구분이 약한 위기·전투 집중/응원·수렴 안도/씁쓸·엔딩 반응 | 대본 beat별 필요 감정을 inventory하고 기존 5종으로 충분한지 먼저 판정한다. 신규 후보는 같은 1200×2000 캔버스·몸/의상/날개/지팡이 좌표를 고정하고 얼굴·손짓 범위만 확장한다 | beat→variation 표, onion-skin 정렬, N2/N3/N5/battle/ending contact sheet, 사람 표정·감정선 PASS |
+| style-anchor consistency pass | backgrounds·Doyoon·Juno·gray wraith·transform cuts 전부 | 승인된 TITLE은 별도 유지한다. 본편 anchor sheet에 선 굵기·얼굴 비율·색상/채도·심야 조명 방향·카메라 높이·캐릭터 스케일·그림자/광원을 고정하고 모든 필수 scene을 `keep/edit/replace`로 분류한다 | anchor sheet 승인, 필수 scene 100% 판정, 캐릭터/배경/cut 간 outlier 0, AR-02 사람 최종 승인 |
+
+AR-09의 upstream reference blocker는 사용자 확인으로 비차단 PASS 후보다. AR-01·02·10과 필수 장면 QA가 닫히기 전에는 최종 에셋·현장 QA 포함 M5 완료로 보고하지 않는다. AR-08은 승인된 컷 가능 항목이라 열려 있어도 M5 완주를 막지 않는다.
