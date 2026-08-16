@@ -218,7 +218,7 @@
 - `[구현·자동 QA PASS, DEC-064]` Web Audio SFX 9종을 다층 tone으로 연결했다. PTT 녹음 중 전 cue 억제, 같은 cue 40ms throttle, AudioContext 실패 무음 강등을 적용했다.
 - `[source ready·runtime 대기, DEC-065]` 선택 SFX 5종은 `assets/source/sfx/delivery/`에 보존했다. Web Audio 교체·신규 cue·중복 방지·PTT 격리는 개발자 후속 통합이다.
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
-- `[계획 승인·구현 대기, DEC-071]` TITLE의 마이크 필수 게이트를 폐기하고 선택형 9-state FSM, Settings, voice/click start·resume, 접근 가능한 save 없음 Continue, 첫 gesture `bgm_daily`, PC 3 viewport no-scroll 계약으로 교체한다. 현재 구현은 아직 이전 gate이므로 완료로 판정하지 않는다.
+- `[구현·자동/Chrome QA PASS, DEC-071·073]` TITLE은 선택형 9-state microphone FSM, Settings, voice/click start·resume, 접근 가능한 save 없음 Continue, 첫 gesture `bgm_daily`, PC 3 viewport no-scroll 계약을 적용한다. gameplay PTT는 같은 capture stream을 공유하는 버튼 내부 live meter를 사용한다. CORSAIR·QHD Webcam TITLE QA와 CORSAIR gameplay live fill은 PASS이며, DENIED/NO_DEVICE/UNSUPPORTED/ERROR 등 일부 실제 상태와 Space/Enter·physical loud·강제 scene replacement·getUserMedia 횟수 계측은 manual PENDING이다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
 - `[구현·QA PASS, DEC-036~039]` 배경 원본 16장을 `1920×1080 WebP ≤500KB` runtime 파일로 변환하고 catalog·node line·변신 stage·battle phase/p3 spell·ending line 고정 전환을 연결했다. `?debug=1` 장면 선택기와 22개 비파괴 프리뷰가 16개 배경을 모두 검수한다.
 - `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 사람 청각·권리 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 계속 planned다.
@@ -286,7 +286,7 @@
 | AR-12 | `ready·교체 요청` | 배경 16개 runtime 규격·장면 로드 PASS. TITLE baked 문구·로고는 DEC-037 임시 승인, `BG-02`는 4:3 원본에서 16:9 crop | 제출 정책 변경 시 clean TITLE 필요. N2→N3 camera hard cut은 유지 | 원본 보존, clean TITLE 요청 유지. contact sheet·Playwright에서 BG-02 핵심 피사체와 hard cut 확인 |
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
 | AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
-| AR-15 | `교체 계획 승인·구현 대기` | DEC-071의 선택형 TITLE 마이크 FSM과 DEC-073의 PTT 내부 live meter는 아직 현재 필수 gate 구현을 대체하지 않았다. battle 적응형 dBFS 판정은 유지 | 권한·장치·API 상태 오분류, 두 stream, PC 1600×900 overflow, 입력 level 오표시 가능 | fake mic 9-state·단일 stream 자동 QA + 3 viewport no-scroll + 실제 심사 PC 장치/보정/PTT meter·저/고음량 수동 QA |
+| AR-15 | `PASS·일부 수동 QA PENDING` | DEC-071 optional TITLE microphone FSM과 DEC-073 PTT 내부 live meter를 구현했다. 9-state fake microphone·one-stream·3 viewport no-scroll 자동 QA, CORSAIR·QHD Webcam TITLE QA, CORSAIR gameplay live fill QA는 PASS다. battle 적응형 dBFS 판정은 유지 | 자동 검증 밖의 권한·장치·API 상태, keyboard hold, 극단 음량, 강제 화면 교체에서 회귀 가능 | DENIED/NO_DEVICE/UNSUPPORTED/ERROR, OS reduced-motion, focused Space/Enter PTT, physical loud, 강제 scene replacement, 실제 getUserMedia 횟수 계측은 manual PENDING으로 유지 |
 | AR-16 | `source ready·runtime 대기` | 선택 SFX 5종은 규격·해시 확인됐지만 코드 cue·중복 방지·PTT 격리 미연결 | 잘못 연결하면 N5 치명타 오사용, 장면 중복음, STT 오염 가능 | [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)대로 runtime 채택 후 자동·청감 QA |
 
 ### 다음 단계 순서
@@ -299,4 +299,4 @@
 6. 사람 검수: 주노 표정 정렬, 망령 상태 일관성, 배경 합성·전환, BGM loop·duck·crossfade, 라이선스를 확인한 뒤 `approved`로 승격한다.
 7. QA: 음성·클릭·오프라인으로 GOOD/NORMAL/BAD를 완주하고 M5 완료 조건을 판정한다.
 
-AR-01·02·09·10·15와 필수 장면 QA가 닫히기 전에는 최종 에셋·현장 QA 포함 M5 완료로 보고하지 않는다. AR-08은 승인된 컷 가능 항목이라 열려 있어도 M5 완주를 막지 않는다.
+AR-01·02·09·10과 필수 장면 QA가 닫히기 전에는 최종 에셋·현장 QA 포함 M5 완료로 보고하지 않는다. AR-08은 승인된 컷 가능 항목이라 열려 있어도 M5 완주를 막지 않는다.

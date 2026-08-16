@@ -9,9 +9,9 @@
 - `ready`: 파일 존재·기본 규격 통과.
 - `approved`: 사람 QA·라이선스 확인까지 완료.
 
-`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04·08-13 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 2장, 변신 컷 2장, BGM 5곡이 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`이며, 사용자가 2026-08-13 시각 후보 7종을 모두 채택했어도 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용을 확인하기 전에는 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
+`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04·08-13 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 2장, 변신 컷 2장, BGM 5곡, 로컬 폰트 3개가 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`이며, 사용자가 2026-08-13 시각 후보 7종을 모두 채택했어도 참조 이미지 권한·생성 서비스 플랜·공개 배포 허용을 확인하기 전에는 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 41개 파일, 총 `11,882,465 bytes`다.
+현재 `assets/runtime/`은 44개 파일, 총 `14,176,389 bytes`(`13.52 MiB`)다. 물리 에셋 30MiB 상한을 통과한다.
 
 ## 이미지
 
@@ -134,9 +134,9 @@
 | 논리 ID | 파일명/구현 | 종류 | 규격 | 용량 상한 | 우선순위 | 상태 | 생성 도구 | 라이선스 | 참조 위치 | QA |
 |---|---|---|---|---:|---|---|---|---|---|---|
 | `mic.idle` | DOM/CSS | UI 상태 | 코드 | 0 | 필수 | ready | Codex | N/A | mic indicator | 자동 상태 전환 PASS, 시각 QA 대기 |
-| `mic.listening` | DOM/CSS | UI 상태 | 현행: 버튼 문구 + CSS 맥동 / 교체 목표: 기존 PTT 버튼 내부 live fill, DEC-073 | 0 | 필수 | ready(현행) / planned(교체) | Codex | N/A | mic indicator | 현행 구현 자동 상태 전환 PASS. DEC-073 단일 stream meter는 구현 대기이며 ready로 간주하지 않음 |
+| `mic.listening` | DOM/CSS + Web Audio | UI 상태 | 기존 PTT 버튼 내부 live fill, DEC-073. 같은 capture stream을 MediaRecorder와 analyser가 공유하며 quiet/good/loud를 장식 fill로 표시한다. 별도 meter panel 없음. meter 실패는 녹음을 중단하지 않고 no-fill로 강등 | 0 | 필수 | ready | Codex | N/A | dialogue/incantation/battle spell/freeform PTT | Phase B 자동 QA PASS. CORSAIR Chrome에서 네 surface live fill, pointer/T, release reset PASS. focused Space/Enter, physical loud, 강제 scene replacement, 실제 getUserMedia 횟수 계측은 manual PENDING |
 | `mic.processing` | DOM/CSS | UI 상태 | 코드 | 0 | 필수 | ready | Codex | N/A | mic indicator | 자동 상태 전환 PASS, 시각 QA 대기 |
-| `mic.setup` | DOM/SVG/CSS + Web Audio | TITLE 마이크 설정 | 현행: 시작 차단형 장치 선택·dBFS 테스트 / 교체 목표: 선택형 9-state FSM, DEC-071 | 0 | 필수 | ready(현행) / planned(교체) | Codex | N/A | title | 현행 단위 테스트 PASS. DEC-071 optional mic/Settings 계약은 구현 대기이며 ready로 간주하지 않음 |
+| `mic.setup` | DOM/SVG/CSS + Web Audio | TITLE 마이크 설정 | DEC-071 optional microphone 9-state FSM, Settings, voice/click Start·Resume, 접근 가능한 save 없음 Continue, click-only 완주, TITLE microphone test·device select | 0 | 필수 | ready | Codex | N/A | title/settings/start/resume | 9-state 자동 회귀 PASS. CORSAIR READY→TESTING→TEST_SUCCESS, QHD Webcam 전환·CORSAIR 복귀, TEST_SUCCESS→voice N0, TITLE tester→gameplay PTT ownership, PC 3 viewport no-scroll PASS. DENIED/NO_DEVICE/UNSUPPORTED/ERROR 실제 브라우저 재현은 manual PENDING |
 | `sfx.confirm` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 선택 확정 | 자동 트리거 PASS, 청감 대기 |
 | `sfx.cast` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 주문 성공 | 자동 트리거 PASS, 청감 대기 |
 | `sfx.critical` | Web Audio 코드 | SFX | oscillator synth | 0 | 필수 | ready | Codex | N/A | 완창/크리티컬 | 자동 트리거 PASS, 청감 대기 |
