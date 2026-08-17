@@ -1820,3 +1820,44 @@ N5 주문 게이트의 `doyun.normal_shy` 평상복 → 평상복 영창 컷 →
 | `npm audit --audit-level=high` | REVIEW | dev toolchain의 `nanoid`·`undici`/`miniflare`/`wrangler` 경로에 4건(2 moderate, 2 high). 자동 fix는 범위 밖이라 실행하지 않음 |
 
 Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, MILESTONES, design QA, font binary, GameState, save schema, Worker, scenario, Phase A/B production 코드는 변경하지 않았다.
+
+## Scenario v3.1 Runtime Composition Phase 1
+
+- 작업일: 2026-08-17 KST
+- 브랜치: `codex/scenario-v31-runtime-composition-p1`
+- 시작 기준: 승인된 Scenario v3.1 tip `e0390957d59f01796b616dcf0bca775d0edcf311`
+- 대본 문서는 immutable baseline으로 유지했으며 신규·편집 image binary는 없다.
+
+### v3.1 data·runtime
+
+- N2의 선택 이유, N3 show-before-explain, N4 관계 확인, N5 관계별 변신 대사, N6 방어/공격 첫 주문과 조건부 두 번째 주문, N7 `BELIEVE`/`POSSIBILITY`/`CYNIC`, N8 default/own/refusal 및 네 ending 수렴을 runtime scenario에 반영했다.
+- 첫 주문 성공과 관계 또는 dual intent가 두 번째 주문 기회를 연다. 기회가 열려도 accept/decline은 플레이어가 결정하며, 첫 주문 실패는 관계와 무관하게 기회를 열지 않는다.
+- 기술적 음성 실패는 기존 retry/click fallback을 따르며 서사적 refusal flag를 쓰지 않는다. `CYNIC` 뒤 최종 주문 성공은 NORMAL, 명시적 narrative refusal만 BAD로 수렴한다.
+- HIDDEN은 perfect transform, second opportunity, 방어·공격 실제 사용, N7 BELIEVE, 최종 주문 성공의 다섯 조건을 모두 요구한다. GOOD과 HIDDEN은 독립 `post_credit` node로 이어진다.
+- schema version은 올리지 않고 v2 저장의 `ch3_gray_answer` node/history만 `n7_gray_answer`로 읽기 시 migration하여 기존 save를 보존한다.
+
+### composition·render ownership
+
+- `conversation`, `confrontation`, `protect`, `battle`, `solo-cut`, `ending` named preset과 left/center/right actor zone을 도입했다. preview에 preset과 `sprite`/`cut` render mode를 노출한다.
+- N3와 battle은 큰 Wraith를 left combat zone, 작은 Juno를 center support zone, Doyun을 right protagonist zone에 두며 actor silhouette·face·staff·wraith core가 교차하지 않게 했다.
+- transform은 live scene → CUT 01 → CUT 02 → transformed live scene으로 렌더한다. cut mode에서는 모든 live actor slot을 숨겨 baked Doyun/Juno와 live sprite 중복을 막는다.
+- 검은 마법소녀 asset은 생성하지 않았다. debug preview는 `ASSET MISSING · 검은 마법소녀 선택 컷`을 명시하고 production gameplay는 opaque rectangle fallback을 표시하지 않는다.
+
+### TDD·Chrome visual evidence
+
+- RED: 신규 3 suite에서 composition preset 부재, fixed 3-phase battle, stale ending/preview 계약으로 10 failures를 먼저 확인했다. v2 `ch3_gray_answer` save 복구 실패도 별도 RED로 재현했다.
+- GREEN: 최종 `npm test`는 58 files·392 tests PASS다. 신규 계약은 v3.1 scenario, conditional battle, engine ending, relationship presentation, composition/cut exclusivity, production missing-asset suppression을 포함한다.
+- Chrome QA는 20개 필수 preview × 3 viewport(1920×1080, 1600×900, 1366×768), 총 60개 조합을 검사했다. duplicate actor, actor overlap, offscreen actor, viewport overflow, mixed cut+sprite가 모두 0이었다.
+- N3 1920×1080에서 Wraith는 x=75, y=258, w=627, h=625(화면 높이 약 58%)였고 Juno/Doyun과 bbox 교차가 없었다. battle도 같은 안전 구역에서 Doyun face/staff와 Juno가 교차하지 않았다.
+- N5 CUT 01/02의 live actor role count는 각각 0이며 transformed live frame에서만 Wraith/Juno/Doyun이 다시 나타났다.
+- console의 `ending.black_magical_girl` 경고는 승인 asset 미납을 알리는 기존 의도된 handoff warning이다. 그 외 신규 console error는 없었다.
+
+### fresh 검증
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 58 files·392 tests, exit 0 |
+| `npm run build` | PASS | Vite 8.2.0, 155 modules. 기존 Transformers 516.22kB chunk warning만 유지 |
+| `npm run build:qa` | PASS | QA build 125 modules |
+| `git diff --check` | PASS | 공백 오류 없음 |
