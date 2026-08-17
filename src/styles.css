@@ -3264,7 +3264,15 @@ html[data-qa-preview="true"] .dev-scene-nav {
     height: min(84vh, 900px);
   }
 
-  .game-shell[data-composition="confrontation"] .dialogue-character,
+  .game-shell[data-composition="confrontation"] .dialogue-character {
+    z-index: 2;
+    right: auto;
+    bottom: clamp(150px, 23vh, 250px);
+    left: clamp(43%, 46vw, 49%);
+    width: min(12vw, 205px);
+    height: min(34vh, 360px);
+  }
+
   .game-shell[data-composition="protect"] .cutscene-character {
     z-index: 2;
     right: auto;
@@ -3318,7 +3326,14 @@ html[data-qa-preview="true"] .dev-scene-nav {
     height: 68%;
   }
 
-  .dev-scene-preview[data-composition="confrontation"] .dev-role-juno,
+  .dev-scene-preview[data-composition="confrontation"] .dev-role-juno {
+    right: auto;
+    bottom: 22%;
+    left: 45%;
+    width: 11%;
+    height: 32%;
+  }
+
   .dev-scene-preview[data-composition="battle"] .dev-role-juno {
     right: auto;
     bottom: 34%;
@@ -3349,7 +3364,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
 
   .dev-scene-preview[data-render-mode="cut"] .dev-preview-stage,
   .transform-cut-stage.transform-cut-single {
-    inset: clamp(70px, 9vh, 105px) clamp(12%, 18vw, 23%);
+    inset: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3360,6 +3375,14 @@ html[data-qa-preview="true"] .dev-scene-nav {
     height: 100%;
     opacity: 1;
     transform: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dev-scene-preview[data-render-mode="cut"] .dev-role-cut .asset-image,
+  .transform-cut-stage.transform-cut-single .transform-cut .asset-image {
+    object-fit: cover;
+    object-position: center;
   }
 }
 

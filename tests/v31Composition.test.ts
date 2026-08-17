@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  compositionByPreset,
   compositionForContext,
   findCompositionViolations,
   type SceneActor,
@@ -9,6 +11,8 @@ import {
   resolveMissingAssetPresentation,
   resolveOptionalAssetFailureBehavior,
 } from "../src/ui/gameView";
+
+const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
 const roles = (id: string): readonly string[] =>
   M5_SCENE_PREVIEWS.find(({ id: previewId }) => previewId === id)?.visuals.map(
@@ -29,7 +33,11 @@ describe("Scenario v3.1 global scene composition", () => {
       mode: "sprite",
       actors: {
         gray_wraith: { zone: "left", scale: "large" },
-        juno: { zone: "center", scale: "small" },
+        juno: {
+          zone: "center",
+          scale: "small",
+          anchor: "center-low-support",
+        },
         doyun: { zone: "right", scale: "large" },
       } satisfies Record<SceneActor, unknown>,
     });
@@ -41,10 +49,35 @@ describe("Scenario v3.1 global scene composition", () => {
       mode: "sprite",
       actors: {
         gray_wraith: { zone: "left" },
-        juno: { zone: "center" },
+        juno: { zone: "center", anchor: "center-mid-support" },
         doyun: { zone: "right" },
       },
     });
+  });
+
+  it("N3 low support와 battle mid support는 서로 다른 responsive anchor를 쓴다", () => {
+    expect(stylesSource).toMatch(
+      /data-composition="confrontation"[^}]*\.dev-role-juno\s*\{[^}]*bottom:\s*22%/s,
+    );
+    expect(stylesSource).toMatch(
+      /data-composition="battle"[^}]*\.dev-role-juno\s*\{[^}]*bottom:\s*34%/s,
+    );
+  });
+
+  it("solo-cut은 16:9 원본을 distortion 없는 full-stage cover로 표시한다", () => {
+    expect(compositionByPreset("solo-cut")).toMatchObject({
+      mode: "cut",
+      cutPresentation: {
+        stage: "full-stage",
+        objectFit: "cover",
+      },
+    });
+    expect(stylesSource).toMatch(
+      /data-render-mode="cut"[^}]*\.dev-preview-stage[^}]*\{[^}]*inset:\s*0/s,
+    );
+    expect(stylesSource).toMatch(
+      /transform-cut-stage\.transform-cut-single[^}]*\.transform-cut\s+\.asset-image\s*\{[^}]*object-fit:\s*cover/s,
+    );
   });
 
   it("transform preview는 cut과 live actor를 같은 frame에 두지 않는다", () => {

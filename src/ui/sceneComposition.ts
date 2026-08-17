@@ -1,6 +1,7 @@
 export type SceneActor = "doyun" | "juno" | "gray_wraith";
 export type ActorZone = "left" | "center" | "right";
 export type ActorScale = "small" | "medium" | "large";
+export type SupportAnchor = "center-low-support" | "center-mid-support";
 export type SceneRenderMode = "sprite" | "cut";
 export type SceneCompositionPreset =
   | "conversation"
@@ -13,12 +14,19 @@ export type SceneCompositionPreset =
 export interface ActorPlacement {
   readonly zone: ActorZone;
   readonly scale: ActorScale;
+  readonly anchor?: SupportAnchor;
+}
+
+export interface CutPresentation {
+  readonly stage: "full-stage";
+  readonly objectFit: "cover";
 }
 
 export interface SceneComposition {
   readonly preset: SceneCompositionPreset;
   readonly mode: SceneRenderMode;
   readonly actors: Partial<Record<SceneActor, ActorPlacement>>;
+  readonly cutPresentation?: CutPresentation;
 }
 
 const compositions: Record<SceneCompositionPreset, SceneComposition> = {
@@ -35,7 +43,11 @@ const compositions: Record<SceneCompositionPreset, SceneComposition> = {
     mode: "sprite",
     actors: {
       gray_wraith: { zone: "left", scale: "large" },
-      juno: { zone: "center", scale: "small" },
+      juno: {
+        zone: "center",
+        scale: "small",
+        anchor: "center-low-support",
+      },
       doyun: { zone: "right", scale: "large" },
     },
   },
@@ -44,7 +56,11 @@ const compositions: Record<SceneCompositionPreset, SceneComposition> = {
     mode: "sprite",
     actors: {
       gray_wraith: { zone: "left", scale: "large" },
-      juno: { zone: "center", scale: "medium" },
+      juno: {
+        zone: "center",
+        scale: "medium",
+        anchor: "center-mid-support",
+      },
       doyun: { zone: "right", scale: "large" },
     },
   },
@@ -53,7 +69,11 @@ const compositions: Record<SceneCompositionPreset, SceneComposition> = {
     mode: "sprite",
     actors: {
       gray_wraith: { zone: "left", scale: "large" },
-      juno: { zone: "center", scale: "small" },
+      juno: {
+        zone: "center",
+        scale: "small",
+        anchor: "center-mid-support",
+      },
       doyun: { zone: "right", scale: "large" },
     },
   },
@@ -61,6 +81,10 @@ const compositions: Record<SceneCompositionPreset, SceneComposition> = {
     preset: "solo-cut",
     mode: "cut",
     actors: {},
+    cutPresentation: {
+      stage: "full-stage",
+      objectFit: "cover",
+    },
   },
   ending: {
     preset: "ending",
