@@ -19,6 +19,8 @@ import {
 import { resolvePresentationBackground } from "../assets/presentationBackground";
 import { resolveDoyunVisual } from "../assets/presentationDoyun";
 import type { BattleGrade, BattleState } from "../battle/state";
+import { resolveDialogueOpening } from "../engine/storyPresentation";
+import { compositionForContext } from "./sceneComposition";
 import {
   M5_SCENE_PREVIEWS,
   type DevScenePreview,
@@ -126,11 +128,11 @@ export function resolveVoiceInputPresentation(): VoiceInputPresentation {
   };
 }
 
-const BATTLE_PHASE_IDS = ["p1_defend", "p2_attack", "p3_answer"] as const;
+const BATTLE_PHASE_IDS = ["p1_defend", "p2_attack"] as const;
 
 export interface BattleStagePresentation {
   readonly phaseIndex: number;
-  readonly phaseTotal: 3;
+  readonly phaseTotal: 2;
   readonly doyunLogicalId: string;
   readonly junoEmotion: Emotion;
 }
@@ -141,7 +143,7 @@ export function resolveBattleStagePresentation(
   const phaseIndex = Math.max(0, BATTLE_PHASE_IDS.indexOf(phaseId as (typeof BATTLE_PHASE_IDS)[number]));
   return {
     phaseIndex,
-    phaseTotal: 3,
+    phaseTotal: 2,
     doyunLogicalId:
       resolveDoyunVisual({ kind: "battle", phaseId }) ?? "doyun.magical_finish",
     junoEmotion: phaseIndex === 1 ? "happy" : "neutral",
@@ -223,19 +225,35 @@ export function resolveBattleActionPresentation(options: {
 }
 
 export interface MissingAssetPresentation {
-  readonly className: "asset-black-placeholder";
+  readonly className: "asset-black-placeholder" | "asset-missing-debug";
   readonly ariaLabel: string;
   readonly preservesInteractiveUi: true;
+  readonly text?: string;
 }
 
 export function resolveMissingAssetPresentation(
   label: string,
+  mode: "default" | "debug" = "default",
 ): MissingAssetPresentation {
+  if (mode === "debug") {
+    return {
+      className: "asset-missing-debug",
+      ariaLabel: `${label} 에셋 누락`,
+      text: `ASSET MISSING · ${label}`,
+      preservesInteractiveUi: true,
+    };
+  }
   return {
     className: "asset-black-placeholder",
     ariaLabel: `${label} 에셋 준비 중`,
     preservesInteractiveUi: true,
   };
+}
+
+export function resolveOptionalAssetFailureBehavior(
+  debugEnabled: boolean,
+): "debug-label" | "hide" {
+  return debugEnabled ? "debug-label" : "hide";
 }
 
 export function resolveSceneBrand(nodeId: string): string {
@@ -270,8 +288,9 @@ export function isActBoundaryTransition(
   return (
     (previousContext === "title" && nextContext === "n0_review") ||
     (previousContext === "n5_transform_result" && nextContext === "battle_wraith") ||
-    (previousContext === "battle_wraith" && nextContext === "ch3_gray_answer") ||
-    (previousContext === "ch3_gray_answer" && nextContext.startsWith("ending_"))
+    (previousContext === "battle_wraith" && nextContext === "n7_gray_answer") ||
+    (previousContext === "n8_final_spell" && nextContext.startsWith("ending_")) ||
+    (previousContext?.startsWith("ending_") === true && nextContext === "post_credit")
   );
 }
 
@@ -329,14 +348,10 @@ export function resolveIncantationCompanionVisual(
 
 export function resolveEndingVisual(
   endingId: string,
-  lineIndex: number,
+  _lineIndex: number,
 ): EndingVisual | null {
-  if (endingId === "good") {
-    if (lineIndex >= 6) return null;
-    return {
-      characterId: "juno",
-      emotion: lineIndex === 5 ? "surprised" : "happy",
-    };
+  if (endingId === "good" || endingId === "hidden") {
+    return { characterId: "juno", emotion: "happy" };
   }
   if (endingId === "normal") {
     return { characterId: "juno", emotion: "neutral" };
@@ -441,6 +456,8 @@ export interface BattleInputOptions extends SharedVoiceOptions {
   onClickSpell(): void;
   onClickResponse(text: string, momentumDelta: number): void;
   onGuard(): void;
+  onAcceptSecondSpell(): void;
+  onDeclineSecondSpell(): void;
   onDebugMomentum(momentum: number): void;
   onDebugGrade(grade: BattleGrade): void;
 }
@@ -573,6 +590,8 @@ export class GameView {
     const shell = this.createShell(preview.backgroundId, `dev:${preview.id}`);
     shell.classList.add("dev-scene-preview", `dev-layout-${preview.layout}`);
     shell.dataset.previewId = preview.id;
+    shell.dataset.composition = preview.composition;
+    shell.dataset.renderMode = preview.renderMode;
 
     if (preview.showVoiceOrb) {
       shell.append(element("div", "first-voice-orb"));
@@ -585,6 +604,8 @@ export class GameView {
           visual.logicalId,
           visual.label,
           `asset-visual dev-preview-visual dev-role-${visual.role}${visual.role === "player" ? " doyun-visual" : ""}`,
+          undefined,
+          visual.role === "ending-cut" ? "debug-label" : "placeholder",
         );
         figure.dataset.logicalId = visual.logicalId;
         stage.append(figure);
@@ -600,6 +621,11 @@ export class GameView {
       element("p", "dev-preview-meta", `node=${preview.nodeId} · beat=${preview.beat}`),
       element("p", "dev-preview-meta", `background=${preview.backgroundId}`),
       element("p", "dev-preview-meta", `bgm=${preview.bgmId ?? "none"}`),
+      element(
+        "p",
+        "dev-preview-meta",
+        `composition=${preview.composition} · mode=${preview.renderMode}`,
+      ),
     );
     if (preview.bgmId && onPlayBgm) {
       const play = element("button", "secondary-button compact", "BGM 테스트");
@@ -793,55 +819,95 @@ export class GameView {
 
   renderTransformationResult(options: {
     sceneId: string;
+    liveSceneId: string;
     outcome: "perfect" | "standard" | "rescued";
     state: GameState;
     lines: readonly string[];
     onContinue(): void;
   }): void {
-    const shell = this.createShell(options.sceneId, "n5_transform_result");
-    shell.dataset.activeSpeaker = "narration";
-    applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
-    shell.append(
-      this.createAssetVisual(
-        resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", stage: "transformation" }) ??
-          "doyun.magical_pose",
-        "마법소녀 도윤",
-        "character-visual transformation-player-visual doyun-visual",
-      ),
-    );
-    const cutStage = element("section", "transform-cut-stage");
-    cutStage.setAttribute("aria-label", "변신 연출");
-    cutStage.append(
-      this.createAssetVisual(
-        "transform.cast",
-        "변신 주문",
-        "asset-visual transform-cut transform-cut-cast",
-      ),
-      this.createAssetVisual(
-        "transform.complete",
-        "변신 완료",
-        "asset-visual transform-cut transform-cut-complete",
-      ),
-    );
-    shell.append(cutStage);
-    mountParticleBurst(shell);
-    const card = element("section", "transformation-result");
-    const title =
-      options.outcome === "perfect"
-        ? "완전한 변신"
-        : options.outcome === "rescued"
-          ? "함께 완성한 변신"
-          : "빛으로 완성한 변신";
-    card.append(element("p", "eyebrow", "변신 완료"), element("h2", "ending-title", title));
-    options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
-    const button = this.delayedAdvanceButton(
-      "primary-button",
-      "언령 배틀 시작",
-      options.onContinue,
-    );
-    card.append(button);
-    shell.append(card);
-    this.commit(shell);
+    let frameIndex = 0;
+    const cutFrames = [
+      { context: "n5_transform_cut-01", logicalId: "transform.cast", label: "변신 주문" },
+      {
+        context: "n5_transform_cut-02",
+        logicalId: "transform.complete",
+        label: "변신 완료",
+      },
+    ] as const;
+    const renderFrame = (): void => {
+      const cut = cutFrames[frameIndex];
+      if (cut) {
+        const shell = this.createShell(options.sceneId, cut.context);
+        shell.dataset.activeSpeaker = "narration";
+        if (frameIndex === 0) {
+          applySceneEffect(shell, options.outcome === "perfect" ? "transform" : "flash");
+        }
+        const cutStage = element("section", "transform-cut-stage transform-cut-single");
+        cutStage.setAttribute("aria-label", cut.label);
+        cutStage.append(
+          this.createAssetVisual(
+            cut.logicalId,
+            cut.label,
+            "asset-visual transform-cut",
+          ),
+        );
+        shell.append(cutStage);
+        mountParticleBurst(shell);
+        const card = element("section", "transformation-result transformation-cut-control");
+        card.append(element("p", "eyebrow", `변신 연출 ${frameIndex + 1}/2`));
+        const next = this.delayedAdvanceButton("primary-button compact", "계속", () => {
+          frameIndex += 1;
+          renderFrame();
+        });
+        card.append(next);
+        shell.append(card);
+        this.commit(shell);
+        return;
+      }
+
+      const shell = this.createShell(options.liveSceneId, "n5_transform_result");
+      shell.dataset.activeSpeaker = "narration";
+      shell.append(
+        this.createAssetVisual(
+          "gray_wraith.normal",
+          "회색 망령",
+          "character-visual scene-enemy-visual",
+        ),
+        this.createCharacterVisual(
+          "juno",
+          options.state.npcEmotion,
+          "주노",
+          "character-visual cutscene-character has-companion",
+        ),
+        this.createAssetVisual(
+          resolveDoyunVisual({
+            kind: "node",
+            nodeId: "n5_transform",
+            stage: "transformation",
+          }) ?? "doyun.magical_pose",
+          "마법소녀 도윤",
+          "character-visual transformation-player-visual doyun-visual",
+        ),
+      );
+      const card = element("section", "transformation-result");
+      const title =
+        options.outcome === "perfect"
+          ? "완전한 변신"
+          : options.outcome === "rescued"
+            ? "함께 완성한 변신"
+            : "빛으로 완성한 변신";
+      card.append(
+        element("p", "eyebrow", "변신 완료"),
+        element("h2", "ending-title", title),
+      );
+      options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
+      card.append(
+        this.delayedAdvanceButton("primary-button", "언령 배틀 시작", options.onContinue),
+      );
+      shell.append(card);
+      this.commit(shell);
+    };
+    renderFrame();
   }
 
   renderBattle(
@@ -875,6 +941,26 @@ export class GameView {
       battleState,
     );
     const command = element("section", "battle-control-dock battle-command");
+    if (battleState.awaitingSecondSpellChoice) {
+      command.classList.add("battle-second-spell-choice");
+      command.append(
+        element("p", "battle-spell-label", "획득한 추가 기회"),
+        element("p", "battle-spell", "도윤, 아직 힘이 남아 있어. 한 번 더 할 수 있어!"),
+      );
+      const choices = element("div", "choice-list battle-choice-list");
+      const accept = element("button", "primary-button", "반대 주문도 사용한다");
+      const decline = element("button", "secondary-button", "첫 선택으로 마무리한다");
+      accept.type = "button";
+      decline.type = "button";
+      accept.addEventListener("click", options.onAcceptSecondSpell, { once: true });
+      decline.addEventListener("click", options.onDeclineSecondSpell, { once: true });
+      choices.append(accept, decline);
+      command.append(choices);
+      stage.append(command);
+      shell.append(stage);
+      this.commit(shell);
+      return;
+    }
     command.append(
       element("p", "battle-spell-label", "이번 언령"),
       element("p", "battle-spell", phase.spell.displayText),
@@ -1077,7 +1163,7 @@ export class GameView {
 
     const panel = this.dialoguePanel(
       identity.speaker,
-      node.opening,
+      resolveDialogueOpening(node, state),
       node.nodeId === "n1_first_voice" ? "voice" : character.id,
     );
     const inputArea = element("section", "dialogue-input");
@@ -1155,6 +1241,7 @@ export class GameView {
     characterNames: ReadonlyMap<string, string>,
     state: GameState,
     onNewGame: () => void,
+    onNext?: () => void,
   ): void {
     const pages = resolveEndingPages(node, state.battleGrade);
     let pageIndex = 0;
@@ -1190,6 +1277,17 @@ export class GameView {
           ),
         );
       }
+      if (node.endingId === "post_credit") {
+        shell.append(
+          this.createAssetVisual(
+            "ending.black_magical_girl",
+            "검은 마법소녀",
+            "asset-visual ending-character ending-black-magical-girl",
+            undefined,
+            resolveOptionalAssetFailureBehavior(this.debugEnabled),
+          ),
+        );
+      }
 
       const card = element("section", "ending-card");
       card.append(
@@ -1206,14 +1304,14 @@ export class GameView {
       }
 
       const button = page.isLast
-        ? element("button", "primary-button", "처음부터")
+        ? element("button", "primary-button", onNext ? "Post-credit" : "처음부터")
         : this.delayedAdvanceButton("primary-button", "계속", () => {
             pageIndex += 1;
             renderPage();
           });
       button.type = "button";
       if (page.isLast) {
-        button.addEventListener("click", onNewGame, { once: true });
+        button.addEventListener("click", onNext ?? onNewGame, { once: true });
       }
       card.append(button);
       shell.append(card);
@@ -1247,6 +1345,9 @@ export class GameView {
 
   private createShell(sceneId: string, presentationContext = sceneId): HTMLElement {
     const shell = element("main", "game-shell");
+    const composition = compositionForContext(presentationContext);
+    shell.dataset.composition = composition.preset;
+    shell.dataset.renderMode = composition.mode;
     if (this.debugEnabled) shell.classList.add("debug-enabled");
     shell.dataset.scene = sceneId;
     shell.dataset.presentationContext = presentationContext;
@@ -1427,7 +1528,11 @@ export class GameView {
     }
 
     const hasWraith =
-      nodeId === "n3_wraith_choice" || nodeId.startsWith("n4_");
+      nodeId === "n3_wraith_choice" ||
+      nodeId.startsWith("n4_") ||
+      nodeId === "n6_first_choice" ||
+      nodeId === "n7_gray_answer" ||
+      nodeId === "n8_final_spell";
     if (hasWraith) {
       shell.append(
         this.createAssetVisual(
@@ -1454,6 +1559,7 @@ export class GameView {
     label: string,
     className: string,
     resolvedPath = resolveImageAsset(logicalId),
+    missingBehavior: "placeholder" | "debug-label" | "hide" = "placeholder",
   ): HTMLElement {
     const figure = element("figure", className);
     figure.dataset.logicalId = logicalId;
@@ -1461,8 +1567,18 @@ export class GameView {
     if (spriteSlot) figure.dataset.spriteSlot = spriteSlot;
     const fallback = resolveImageAssetFallback(logicalId);
     const showPlaceholder = (): void => {
-      const presentation = resolveMissingAssetPresentation(label);
+      if (missingBehavior === "hide") {
+        figure.replaceChildren();
+        figure.hidden = true;
+        figure.dataset.assetMissing = "true";
+        return;
+      }
+      const presentation = resolveMissingAssetPresentation(
+        label,
+        missingBehavior === "debug-label" ? "debug" : "default",
+      );
       const placeholder = element("div", presentation.className);
+      if (presentation.text) placeholder.textContent = presentation.text;
       placeholder.setAttribute("role", "img");
       placeholder.setAttribute("aria-label", presentation.ariaLabel);
       figure.replaceChildren(placeholder);

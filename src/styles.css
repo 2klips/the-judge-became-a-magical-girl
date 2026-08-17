@@ -201,6 +201,20 @@ button {
   background: #000;
 }
 
+.asset-missing-debug {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  place-items: center;
+  border: 2px dashed #ff8fc3;
+  color: #ffd7e9;
+  background: rgba(20, 12, 26, 0.88);
+  font: 800 0.9rem/1.4 monospace;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
 .dialogue-character.is-placeholder,
 .cutscene-character.is-placeholder,
 .ending-character.is-placeholder {
@@ -3203,4 +3217,152 @@ html[data-qa-preview="true"] .dev-scene-nav {
   .battle-purification::before {
     animation: none !important;
   }
+}
+
+/* Scenario v3.1 named composition presets — logical 1920 safe zones.
+   Kept last so legacy per-scene coordinates cannot override the contract. */
+@media (min-width: 761px) {
+  .game-shell[data-composition="conversation"] .scene-player-visual,
+  .game-shell[data-composition="ending"] .ending-player-visual {
+    z-index: 3;
+    right: clamp(-1%, 1vw, 3%);
+    bottom: -10vh;
+    left: auto;
+    width: min(38vw, 730px);
+    height: min(84vh, 900px);
+  }
+
+  .game-shell[data-composition="conversation"] .dialogue-character,
+  .game-shell[data-composition="ending"] .ending-character:not(.ending-black-magical-girl) {
+    z-index: 2;
+    right: auto;
+    bottom: clamp(230px, 29vh, 330px);
+    left: clamp(24%, 28vw, 32%);
+    width: min(15vw, 260px);
+    height: min(42vh, 455px);
+  }
+
+  .game-shell[data-composition="confrontation"] .scene-enemy-visual,
+  .game-shell[data-composition="protect"] .scene-enemy-visual {
+    z-index: 1;
+    right: auto;
+    bottom: clamp(150px, 18vh, 210px);
+    left: clamp(2%, 4vw, 6%);
+    width: min(34vw, 650px);
+    height: min(68vh, 735px);
+    opacity: 0.96;
+  }
+
+  .game-shell[data-composition="confrontation"] .scene-player-visual,
+  .game-shell[data-composition="protect"] .scene-player-visual,
+  .game-shell[data-composition="protect"] .transformation-player-visual {
+    z-index: 3;
+    right: clamp(-1%, 1vw, 3%);
+    bottom: -10vh;
+    left: auto;
+    width: min(38vw, 730px);
+    height: min(84vh, 900px);
+  }
+
+  .game-shell[data-composition="confrontation"] .dialogue-character,
+  .game-shell[data-composition="protect"] .cutscene-character {
+    z-index: 2;
+    right: auto;
+    bottom: clamp(280px, 35vh, 390px);
+    left: clamp(43%, 46vw, 49%);
+    width: min(12vw, 205px);
+    height: min(34vh, 360px);
+  }
+
+  .game-shell[data-composition="battle"] .battle-stage-wraith {
+    z-index: 1;
+    right: auto;
+    bottom: clamp(110px, 13vh, 150px);
+    left: clamp(2%, 4vw, 6%);
+    width: min(35vw, 670px);
+    height: min(70vh, 755px);
+    opacity: 0.96;
+  }
+
+  .game-shell[data-composition="battle"] .battle-stage-juno {
+    z-index: 2;
+    right: auto;
+    bottom: clamp(300px, 38vh, 420px);
+    left: clamp(44%, 47vw, 50%);
+    width: min(11vw, 190px);
+    height: min(31vh, 335px);
+  }
+
+  .game-shell[data-composition="battle"] .battle-stage-doyun {
+    z-index: 3;
+    right: clamp(-1%, 1vw, 3%);
+    bottom: -10vh;
+    left: auto;
+    width: min(38vw, 730px);
+    height: min(88vh, 950px);
+  }
+
+  .dev-scene-preview[data-composition="confrontation"] .dev-preview-stage,
+  .dev-scene-preview[data-composition="battle"] .dev-preview-stage,
+  .dev-scene-preview[data-composition="conversation"] .dev-preview-stage,
+  .dev-scene-preview[data-composition="ending"] .dev-preview-stage {
+    inset: 74px 2% 8% 2%;
+  }
+
+  .dev-scene-preview[data-composition="confrontation"] .dev-role-enemy,
+  .dev-scene-preview[data-composition="battle"] .dev-role-enemy {
+    right: auto;
+    bottom: 12%;
+    left: 2%;
+    width: 34%;
+    height: 68%;
+  }
+
+  .dev-scene-preview[data-composition="confrontation"] .dev-role-juno,
+  .dev-scene-preview[data-composition="battle"] .dev-role-juno {
+    right: auto;
+    bottom: 34%;
+    left: 45%;
+    width: 11%;
+    height: 32%;
+  }
+
+  .dev-scene-preview[data-composition="confrontation"] .dev-role-player,
+  .dev-scene-preview[data-composition="battle"] .dev-role-player,
+  .dev-scene-preview[data-composition="conversation"] .dev-role-player,
+  .dev-scene-preview[data-composition="ending"] .dev-role-player {
+    right: 1%;
+    bottom: -3%;
+    left: auto;
+    width: 37%;
+    height: 82%;
+  }
+
+  .dev-scene-preview[data-composition="conversation"] .dev-role-juno,
+  .dev-scene-preview[data-composition="ending"] .dev-role-juno {
+    right: auto;
+    bottom: 27%;
+    left: 27%;
+    width: 15%;
+    height: 42%;
+  }
+
+  .dev-scene-preview[data-render-mode="cut"] .dev-preview-stage,
+  .transform-cut-stage.transform-cut-single {
+    inset: clamp(70px, 9vh, 105px) clamp(12%, 18vw, 23%);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dev-scene-preview[data-render-mode="cut"] .dev-role-cut,
+  .transform-cut-stage.transform-cut-single .transform-cut {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.game-shell[data-render-mode="cut"] [data-sprite-slot] {
+  display: none !important;
 }

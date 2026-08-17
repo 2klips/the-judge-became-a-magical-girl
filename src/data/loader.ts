@@ -48,7 +48,7 @@ function nodeTargets(node: ScenarioNode): string[] {
       ),
     ];
   }
-  return [];
+  return node.type === "ending" && node.next ? [node.next] : [];
 }
 
 function validateReferences(data: GameData): string[] {
@@ -119,6 +119,11 @@ function validateReferences(data: GameData): string[] {
           issues.push(`${node.nodeId}의 allowedFlags가 전역 사전에 없습니다: ${flag}`);
         }
       }
+      for (const flag of Object.keys(node.openingByFlag ?? {})) {
+        if (!globalFlags.has(flag)) {
+          issues.push(`${node.nodeId}의 openingByFlag가 전역 사전에 없습니다: ${flag}`);
+        }
+      }
 
       for (const intent of node.intents) {
         for (const flag of intent.setFlags) {
@@ -149,8 +154,29 @@ function validateReferences(data: GameData): string[] {
 
     if (node.type === "cutscene" || node.type === "ending") {
       for (const line of node.lines) {
-        if (line.speaker !== "narration" && !characterIds.has(line.speaker)) {
+        if (
+          line.speaker !== "narration" &&
+          line.speaker !== "voice" &&
+          !characterIds.has(line.speaker)
+        ) {
           issues.push(`${node.nodeId} 대사 화자가 characters.json에 없습니다: ${line.speaker}`);
+        }
+      }
+    }
+
+    if (node.type === "cutscene") {
+      for (const [flag, lines] of Object.entries(node.linesByFlag ?? {})) {
+        if (!globalFlags.has(flag)) {
+          issues.push(`${node.nodeId}의 linesByFlag가 전역 사전에 없습니다: ${flag}`);
+        }
+        for (const line of lines) {
+          if (
+            line.speaker !== "narration" &&
+            line.speaker !== "voice" &&
+            !characterIds.has(line.speaker)
+          ) {
+            issues.push(`${node.nodeId}.${flag} 대사 화자가 characters.json에 없습니다: ${line.speaker}`);
+          }
         }
       }
     }
@@ -186,6 +212,28 @@ function validateReferences(data: GameData): string[] {
           issues.push(`${node.nodeId} 전투 에셋 계약이 없습니다: ${logicalId}`);
         }
       }
+      if (node.storyFlow) {
+        const phaseIds = new Set(node.phases.map(({ phaseId }) => phaseId));
+        for (const [flag, order] of Object.entries(node.storyFlow.phaseOrderByFlag)) {
+          if (!globalFlags.has(flag)) {
+            issues.push(`${node.nodeId}의 phase order 플래그가 전역 사전에 없습니다: ${flag}`);
+          }
+          for (const phaseId of order) {
+            if (!phaseIds.has(phaseId)) {
+              issues.push(`${node.nodeId}의 phase order가 없는 phase를 참조합니다: ${phaseId}`);
+            }
+          }
+        }
+        for (const flag of [
+          ...node.storyFlow.secondSpell.eligibleFlags,
+          node.storyFlow.secondSpell.opportunityFlag,
+          ...Object.values(node.storyFlow.secondSpell.usedPhaseFlags),
+        ]) {
+          if (!globalFlags.has(flag)) {
+            issues.push(`${node.nodeId}의 storyFlow 플래그가 전역 사전에 없습니다: ${flag}`);
+          }
+        }
+      }
     }
   }
 
@@ -205,7 +253,7 @@ function validateReferences(data: GameData): string[] {
       }
     }
 
-    for (const endingId of ["good", "normal", "bad"] as const) {
+    for (const endingId of ["good", "normal", "bad", "hidden"] as const) {
       const ending = data.scenario.find(
         (node) => node.type === "ending" && node.endingId === endingId,
       );

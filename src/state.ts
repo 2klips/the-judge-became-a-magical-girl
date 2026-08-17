@@ -68,6 +68,13 @@ export type GameStateSnapshot = z.infer<typeof snapshotSchema>;
 const clamp = (value: number, minimum: number, maximum: number): number =>
   Math.min(maximum, Math.max(minimum, value));
 
+const legacyNodeAliases: Readonly<Record<string, string>> = {
+  ch3_gray_answer: "n7_gray_answer",
+};
+
+const migrateLegacyNodeId = (nodeId: string): string =>
+  legacyNodeAliases[nodeId] ?? nodeId;
+
 export function createInitialGameState(config: GameConfig): GameState {
   return {
     affinity: config.initialAffinity,
@@ -187,6 +194,16 @@ export function applyBattleCompletion(
   };
 }
 
+export function applyStoryFlags(
+  current: GameState,
+  flagsToAdd: readonly string[],
+): GameState {
+  if (flagsToAdd.length === 0) return current;
+  const flags = new Set(current.flags);
+  flagsToAdd.forEach((flag) => flags.add(flag));
+  return { ...current, flags };
+}
+
 export function serializeState(state: GameState): GameStateSnapshot {
   return {
     schemaVersion: 1,
@@ -215,10 +232,12 @@ export function parseStateSnapshot(
     return null;
   }
   const snapshot = result.data;
+  const currentNodeId = migrateLegacyNodeId(snapshot.currentNodeId);
+  const history = snapshot.history.map(migrateLegacyNodeId);
   if (
     snapshot.flags.some((flag) => !allowedFlags.has(flag)) ||
-    !knownNodeIds.has(snapshot.currentNodeId) ||
-    snapshot.history.some((nodeId) => !knownNodeIds.has(nodeId))
+    !knownNodeIds.has(currentNodeId) ||
+    history.some((nodeId) => !knownNodeIds.has(nodeId))
   ) {
     return null;
   }
@@ -230,8 +249,8 @@ export function parseStateSnapshot(
     battleGrade: snapshot.battleGrade,
     nodeTurn: snapshot.nodeTurn,
     totalTurn: snapshot.totalTurn,
-    currentNodeId: snapshot.currentNodeId,
-    history: [...snapshot.history],
+    currentNodeId,
+    history,
     inputMode: snapshot.inputMode,
     sttFailCount: snapshot.sttFailCount,
     llmFailCount: snapshot.llmFailCount,

@@ -395,8 +395,15 @@ describe("M5 에셋 계약", () => {
 
     expect(bgmByNode.get("n3_wraith_choice")).toBe("bgm_crisis");
     expect(bgmByNode.get("n5_transform")).toBe("bgm_crisis");
-    expect(bgmByNode.get("ch3_gray_answer")).toBe("bgm_ending");
-    for (const nodeId of ["ending_good", "ending_normal", "ending_bad"]) {
+    expect(bgmByNode.get("n7_gray_answer")).toBe("bgm_battle");
+    expect(bgmByNode.get("n8_final_spell")).toBe("bgm_battle");
+    for (const nodeId of [
+      "ending_good",
+      "ending_normal",
+      "ending_bad",
+      "ending_hidden",
+      "post_credit",
+    ]) {
       expect(bgmByNode.get(nodeId), nodeId).toBe("bgm_ending");
     }
   });

@@ -59,7 +59,7 @@ describe("M5 장면 배경 presentation 계약", () => {
     ).toBe("bg_transform_space");
   });
 
-  it("battle은 p1·p2·p3 질문·p3 주문 배경을 순서대로 사용한다", () => {
+  it("battle은 방어·공격 2개 주문 배경을 사용한다", () => {
     const resolveBattle = (
       phaseId: string,
       beat: "prompt" | "spell" = "prompt",
@@ -73,11 +73,9 @@ describe("M5 장면 배경 presentation 계약", () => {
 
     expect(resolveBattle("p1_defend")).toBe("bg_battle_wide");
     expect(resolveBattle("p2_attack")).toBe("bg_hall_void");
-    expect(resolveBattle("p3_answer")).toBe("bg_mind_archive");
-    expect(resolveBattle("p3_answer", "spell")).toBe("bg_battle_core");
   });
 
-  it("엔딩은 결과별 책상과 GOOD 후속 복도 두 beat를 구분한다", () => {
+  it("엔딩은 결과별 책상과 독립 post-credit 복도를 구분한다", () => {
     const resolveEnding = (endingId: string, lineIndex: number): string =>
       resolvePresentationBackground({
         kind: "ending",
@@ -88,8 +86,9 @@ describe("M5 장면 배경 presentation 계약", () => {
 
     expect(resolveEnding("good", 0)).toBe("bg_hall_good");
     expect(resolveEnding("good", 4)).toBe("bg_hall_good");
-    expect(resolveEnding("good", 5)).toBe("bg_corridor_day");
-    expect(resolveEnding("good", 6)).toBe("bg_corridor_blacklight");
+    expect(resolveEnding("good", 5)).toBe("bg_hall_good");
+    expect(resolveEnding("hidden", 0)).toBe("bg_hall_good");
+    expect(resolveEnding("post_credit", 0)).toBe("bg_corridor_blacklight");
     expect(resolveEnding("normal", 0)).toBe("bg_hall_normal");
     expect(resolveEnding("bad", 0)).toBe("bg_hall_bad");
   });

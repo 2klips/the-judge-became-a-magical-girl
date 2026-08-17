@@ -10,6 +10,7 @@ type ScenarioIntent = {
 type ScenarioNode = {
   nodeId: string;
   lines?: Array<{ text: string }>;
+  linesByFlag?: Record<string, Array<{ text: string }>>;
   intents?: ScenarioIntent[];
 };
 
@@ -32,16 +33,10 @@ function sectionLines(lines: string[], startHeading: string, endHeading: string)
   return lines.slice(start + 1, end);
 }
 
-function expectAdjacentLines(lines: string[], first: string, second: string): void {
-  const firstIndex = lines.indexOf(first);
-  expect(firstIndex).toBeGreaterThanOrEqual(0);
-  expect(lines[firstIndex + 1]).toBe(second);
-}
-
 const scenario = JSON.parse(
   readText("../public/scenario/scenario.json"),
 ) as ScenarioNode[];
-const script = readText("../docs/심사역은_마법소녀가_되었다_완성대본_v2.md");
+const script = readText("../docs/심사역은_마법소녀가_되었다_완성대본_v3.md");
 const scriptLines = script.split(/\r?\n/).map((line) => line.trimEnd());
 
 describe("심사팀 야근 연속성", () => {
@@ -58,23 +53,17 @@ describe("심사팀 야근 연속성", () => {
       "# N0. 반복되는 심사",
       "# N1. 첫 번째 목소리",
     );
-    expectAdjacentLines(
-      n0Lines,
-      "시간이 흐르며 일부 빈자리가 생기지만,",
-      "핵심 심사팀은 각자의 자리에서 계속 출품작을 확인한다.",
-    );
-    expect(n0Lines).not.toContain("시간이 흐르며 한 명씩 자리를 비운다.");
-    expect(n0Lines).not.toContain("마지막에는 도윤의 자리 주변만 불이 켜져 있다.");
+    expect(n0Lines).toContain("늦은 밤의 사무실. 여러 심사역이 각자 출품작을 확인한다.");
+    expect(n0Lines).toContain("happy_break_v0.3");
   });
 
   it("N4 팀 루트에서 정지한 시간 때문에 동료들이 듣지 못한다고 설명한다", () => {
-    const node = findNode(scenario, "n4_team");
-    const focusAction = node.intents?.find((intent) => intent.id === "focus_action");
+    const node = findNode(scenario, "n5_transform");
+    const relationLines = node.linesByFlag?.relation_team;
 
-    expect(focusAction?.offlineReply).toBe(
-      "좋아, 다들 시간이 멈춰서 듣지 못해. 마음껏 외쳐!",
+    expect(relationLines?.at(-1)?.text).toBe(
+      "다들 시간이 멈춰서 듣지 못해! 마음껏 망가져도 돼!",
     );
-    expect(focusAction?.offlineReply).not.toContain("주변에는 아무도 없어");
     const n5Lines = sectionLines(scriptLines, "# N5. 변신", "# N6. 전투");
     const n5QuoteText = n5Lines.map((line) => line.replace(/^>\s?/, ""));
 
@@ -86,25 +75,18 @@ describe("심사팀 야근 연속성", () => {
   it("GOOD 엔딩에서 멈춘 시간이 흐르고 긴 밤 뒤 아침이 온다", () => {
     const node = findNode(scenario, "ending_good");
 
-    expect(node.lines?.[0]?.text).toBe("GOOD — 한 번 더 플레이");
+    expect(node.lines?.[0]?.text).toBe("GOOD — 끝까지 보고 판단하기");
     expect(node.lines?.[1]?.text).toBe(
-      "멈췄던 시간이 다시 흐른다. 긴 밤 끝에 아침빛이 사무실로 들어온다.",
+      "멈췄던 시간이 흐르고 긴 밤 끝에 아침빛이 사무실로 들어온다.",
     );
 
     const goodLines = sectionLines(
       scriptLines,
-      "# 엔딩 A. GOOD — 한 번 더 플레이",
+      "# 엔딩 A. GOOD — 끝까지 보고 판단하기",
       "# 엔딩 B. NORMAL — 한 번만 더",
     );
-    const sceneHeadingIndex = goodLines.indexOf("## 장면");
-    expect(sceneHeadingIndex).toBeGreaterThanOrEqual(0);
-    const sceneContentLines = goodLines
-      .slice(sceneHeadingIndex + 1)
-      .filter((line) => line.length > 0);
-    expect(sceneContentLines.slice(0, 2)).toEqual([
-      "멈췄던 시간이 다시 흐른다.",
-      "긴 밤 끝에 아침빛이 사무실 안으로 들어온다.",
-    ]);
-    expect(goodLines).not.toContain("아침빛이 사무실 안으로 들어온다.");
+    expect(goodLines).toContain(
+      "멈췄던 시간이 다시 흐른다. 긴 밤 끝에 아침빛이 사무실 안으로 들어온다.",
+    );
   });
 });

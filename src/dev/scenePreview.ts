@@ -21,6 +21,8 @@ export interface DevScenePreview {
   readonly layout: DevSceneLayout;
   readonly visuals: readonly DevSceneVisual[];
   readonly showVoiceOrb?: boolean;
+  readonly composition: SceneCompositionPreset;
+  readonly renderMode: SceneRenderMode;
 }
 
 const juno = (emotion: string): DevSceneVisual => ({
@@ -41,7 +43,7 @@ const doyun = (state: string): DevSceneVisual => ({
   role: "player",
 });
 
-export const M5_SCENE_PREVIEWS = [
+const M5_SCENE_PREVIEW_DRAFTS = [
   {
     id: "title",
     label: "TITLE · 임시 승인본",
@@ -134,6 +136,26 @@ export const M5_SCENE_PREVIEWS = [
     visuals: [doyun("normal_shy"), wraith("normal"), juno("upset")],
   },
   {
+    id: "n4-c-recover",
+    label: "N4-C · 서먹함 회복",
+    backgroundId: "bg_hall_dark",
+    nodeId: "n4_awkward",
+    beat: "relation recovered",
+    bgmId: "bgm_crisis",
+    layout: "dialogue",
+    visuals: [doyun("normal_smile"), wraith("normal"), juno("shy")],
+  },
+  {
+    id: "n4-c-distance",
+    label: "N4-C · 거리 유지",
+    backgroundId: "bg_hall_dark",
+    nodeId: "n4_awkward",
+    beat: "relation distant",
+    bgmId: "bgm_crisis",
+    layout: "dialogue",
+    visuals: [doyun("normal_tired"), wraith("normal"), juno("neutral")],
+  },
+  {
     id: "n5-intro",
     label: "N5 · 변신 도입",
     backgroundId: "bg_hall_dark",
@@ -154,18 +176,44 @@ export const M5_SCENE_PREVIEWS = [
     visuals: [doyun("normal_shy"), juno("surprised")],
   },
   {
-    id: "n5-transformation",
-    label: "N5 · 변신 결과",
+    id: "n5-before-transform",
+    label: "N5 · 변신 직전 live",
+    backgroundId: "bg_hall_dark",
+    nodeId: "n5_transform",
+    beat: "before transform",
+    bgmId: "bgm_crisis",
+    layout: "dialogue",
+    visuals: [doyun("normal_shy"), wraith("normal"), juno("surprised")],
+  },
+  {
+    id: "n5-cut-01",
+    label: "N5 · 변신 CUT 01",
     backgroundId: "bg_transform_space",
     nodeId: "n5_transform",
-    beat: "cast → complete",
+    beat: "transform cut 01",
     bgmId: "bgm_transform",
     layout: "transform",
-    visuals: [
-      doyun("magical_pose"),
-      { logicalId: "transform.cast", label: "변신 영창 컷", role: "cut" },
-      { logicalId: "transform.complete", label: "변신 완료 컷", role: "cut" },
-    ],
+    visuals: [{ logicalId: "transform.cast", label: "변신 영창 컷", role: "cut" }],
+  },
+  {
+    id: "n5-cut-02",
+    label: "N5 · 변신 CUT 02",
+    backgroundId: "bg_transform_space",
+    nodeId: "n5_transform",
+    beat: "transform cut 02",
+    bgmId: "bgm_transform",
+    layout: "transform",
+    visuals: [{ logicalId: "transform.complete", label: "변신 완료 컷", role: "cut" }],
+  },
+  {
+    id: "n5-transformed-live",
+    label: "N5 · 변신 완료 live",
+    backgroundId: "bg_hall_void",
+    nodeId: "n5_transform",
+    beat: "transformed live",
+    bgmId: "bgm_transform",
+    layout: "dialogue",
+    visuals: [doyun("magical_pose"), juno("surprised"), wraith("normal")],
   },
   {
     id: "battle-p1",
@@ -188,34 +236,34 @@ export const M5_SCENE_PREVIEWS = [
     visuals: [doyun("magical_attack"), wraith("weakened"), juno("happy")],
   },
   {
-    id: "battle-p3-question",
-    label: "BATTLE p3 · 핵심 질문",
+    id: "battle-second-spell",
+    label: "BATTLE · 두 번째 주문 기회",
+    backgroundId: "bg_hall_void",
+    nodeId: "battle_wraith",
+    beat: "second spell choice",
+    bgmId: "bgm_battle",
+    layout: "battle",
+    visuals: [doyun("magical_pose"), wraith("weakened"), juno("happy")],
+  },
+  {
+    id: "n7-gray-answer",
+    label: "N7 · 회색 속의 대면",
     backgroundId: "bg_mind_archive",
-    nodeId: "battle_wraith",
-    beat: "p3_answer · prompt",
+    nodeId: "n7_gray_answer",
+    beat: "BELIEVE / POSSIBILITY / CYNIC",
     bgmId: "bgm_battle",
     layout: "battle",
     visuals: [doyun("magical_finish"), wraith("weakened"), juno("neutral")],
   },
   {
-    id: "battle-p3-spell",
-    label: "BATTLE p3 · 마지막 주문",
+    id: "n8-final-spell",
+    label: "N8 · 마지막 주문",
     backgroundId: "bg_battle_core",
-    nodeId: "battle_wraith",
-    beat: "p3_answer · spell",
+    nodeId: "n8_final_spell",
+    beat: "default / own / refusal",
     bgmId: "bgm_battle",
     layout: "battle",
     visuals: [doyun("magical_finish"), wraith("weakened"), juno("neutral")],
-  },
-  {
-    id: "convergence",
-    label: "수렴 · 작은 회색 빛",
-    backgroundId: "bg_hall_dark",
-    nodeId: "ch3_gray_answer",
-    beat: "전투 후 질문",
-    bgmId: "bgm_ending",
-    layout: "dialogue",
-    visuals: [doyun("magical_pose"), juno("neutral")],
   },
   {
     id: "ending-good",
@@ -228,21 +276,31 @@ export const M5_SCENE_PREVIEWS = [
     visuals: [doyun("normal_smile"), juno("happy")],
   },
   {
-    id: "ending-good-corridor",
-    label: "GOOD · 밝은 복도",
+    id: "asset-corridor-day",
+    label: "ASSET QA · 밝은 복도 (v3.1 미사용)",
     backgroundId: "bg_corridor_day",
-    nodeId: "ending_good",
-    beat: "line 6",
-    bgmId: "bgm_ending",
+    nodeId: "asset_catalog",
+    beat: "unmapped background",
+    bgmId: null,
     layout: "ending",
-    visuals: [juno("surprised")],
+    visuals: [],
   },
   {
-    id: "ending-good-blacklight",
-    label: "GOOD · 검은빛 복도",
+    id: "ending-hidden",
+    label: "HIDDEN · 사내 인기 영상",
+    backgroundId: "bg_hall_good",
+    nodeId: "ending_hidden",
+    beat: "전체",
+    bgmId: "bgm_ending",
+    layout: "ending",
+    visuals: [doyun("normal_smile"), juno("happy")],
+  },
+  {
+    id: "post-credit",
+    label: "POST-CREDIT · 검은빛 복도",
     backgroundId: "bg_corridor_blacklight",
-    nodeId: "ending_good",
-    beat: "line 7",
+    nodeId: "post_credit",
+    beat: "canonical stinger",
     bgmId: "bgm_ending",
     layout: "ending",
     visuals: [
@@ -273,7 +331,37 @@ export const M5_SCENE_PREVIEWS = [
     layout: "ending",
     visuals: [doyun("normal_empty"), juno("upset")],
   },
-] as const satisfies readonly DevScenePreview[];
+] as const;
+
+function previewComposition(id: string): Pick<
+  DevScenePreview,
+  "composition" | "renderMode"
+> {
+  if (id === "n5-cut-01" || id === "n5-cut-02") {
+    return { composition: "solo-cut", renderMode: "cut" };
+  }
+  if (id === "n3-wraith" || id.startsWith("n4-") || id === "n5-before-transform") {
+    return { composition: "confrontation", renderMode: "sprite" };
+  }
+  if (
+    id.startsWith("battle-") ||
+    id === "n5-transformed-live" ||
+    id === "n7-gray-answer" ||
+    id === "n8-final-spell"
+  ) {
+    return { composition: "battle", renderMode: "sprite" };
+  }
+  if (id.startsWith("ending-") || id === "post-credit") {
+    return { composition: "ending", renderMode: "sprite" };
+  }
+  return { composition: "conversation", renderMode: "sprite" };
+}
+
+export const M5_SCENE_PREVIEWS: readonly DevScenePreview[] =
+  M5_SCENE_PREVIEW_DRAFTS.map((preview) => ({
+    ...preview,
+    ...previewComposition(preview.id),
+  }));
 
 export type DevSceneRequest =
   | { readonly mode: "game"; readonly debugEnabled: boolean }
@@ -300,3 +388,7 @@ export function resolveDevSceneRequest(search: string): DevSceneRequest {
     ? { mode: "preview", debugEnabled: true, preview }
     : { mode: "invalid", debugEnabled: true, requestedId };
 }
+import type {
+  SceneCompositionPreset,
+  SceneRenderMode,
+} from "../ui/sceneComposition";

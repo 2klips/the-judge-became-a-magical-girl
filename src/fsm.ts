@@ -12,7 +12,7 @@ const allowedTransitions: Record<SceneState, ReadonlySet<SceneState>> = {
   DIALOGUE: new Set(["DIALOGUE", "CUTSCENE", "BATTLE", "ENDING"]),
   CUTSCENE: new Set(["DIALOGUE", "CUTSCENE", "BATTLE", "ENDING"]),
   BATTLE: new Set(["DIALOGUE", "CUTSCENE", "ENDING"]),
-  ENDING: new Set(),
+  ENDING: new Set(["ENDING"]),
 };
 
 export function transitionScene(from: SceneState, to: SceneState): SceneState {

@@ -3,12 +3,27 @@
   "startNodeId": "n0_review",
   "initialAffinity": 50,
   "totalTurnLimit": 55,
-  "finalConvergenceNodeId": "ch3_gray_answer",
+  "finalConvergenceNodeId": "n7_gray_answer",
   "allowedFlags": [
     "promise",
     "perfect_transform",
     "battle_S",
     "battle_A",
-    "battle_B"
+    "battle_B",
+    "relation_team",
+    "relation_cooperate",
+    "relation_awkward",
+    "relation_recovered",
+    "relation_distant",
+    "first_action_defend",
+    "first_action_attack",
+    "dual_intent",
+    "second_spell_opportunity",
+    "defense_used",
+    "attack_used",
+    "n7_believe",
+    "n7_possibility",
+    "n7_cynic",
+    "final_spell_success"
   ]
 }

@@ -17,6 +17,7 @@ import { preloadCoreAssets } from "./assets/catalog";
 import { resolvePresentationBackground } from "./assets/presentationBackground";
 import { GameDataError, loadGameData } from "./data/loader";
 import type { BattleNode, CutsceneNode } from "./data/schema";
+import { resolveCutsceneLines } from "./engine/storyPresentation";
 import { resolveDevSceneRequest } from "./dev/scenePreview";
 import { GameEngine, type TurnResult } from "./engine/nodeRunner";
 import {
@@ -310,6 +311,7 @@ async function bootstrap(): Promise<void> {
           baseBackground: node.scene.bg,
           stage: "transformation",
         }),
+        liveSceneId: "bg_hall_void",
         outcome: result.outcome,
         state: engine.getState(),
         lines,
@@ -369,8 +371,7 @@ async function bootstrap(): Promise<void> {
     ): void => {
       const state = engine.getState();
       const battleState = engine.getBattleState();
-      const phase = node.phases[battleState.phaseIndex];
-      if (!phase) throw new Error("현재 battle phase를 찾을 수 없습니다.");
+      const phase = engine.getCurrentBattlePhase();
       const battleTurnKey = `battle:${phase.phaseId}:${battleState.phaseTurn}`;
       const voice = createVoiceTurn(
         microphoneCalibration?.inputDeviceId,
@@ -609,6 +610,14 @@ async function bootstrap(): Promise<void> {
           ),
         onGuard: () =>
           applyAction({ kind: "guard" }, "버티기", "『계속 버틴다고 달라질까.』", phase.guardLine),
+        onAcceptSecondSpell: () => {
+          engine.submitBattleAction({ kind: "accept-second-spell" });
+          renderCurrent("반대 주문을 선택했어. 두 번째 행동을 이어 가자.");
+        },
+        onDeclineSecondSpell: () => {
+          engine.submitBattleAction({ kind: "decline-second-spell" });
+          renderCurrent();
+        },
         onTurnFailed: (failure) => {
           sfx.play("recognition_fail");
           handleTypedVoiceFailure(battleTurnKey, failure);
@@ -640,7 +649,7 @@ async function bootstrap(): Promise<void> {
             sceneId: resolvePresentationBackground({
               kind: "battle",
               phaseId: phase.phaseId,
-              beat: phase.phaseId === "p3_answer" ? "spell" : "prompt",
+              beat: "spell",
               baseBackground: node.scene.bg,
             }),
             phaseId: phase.phaseId,
@@ -675,7 +684,7 @@ async function bootstrap(): Promise<void> {
           : node.type === "battle"
             ? (() => {
                 const battleState = engine.getBattleState();
-                const phase = node.phases[battleState.phaseIndex];
+                const phase = engine.getCurrentBattlePhase();
                 return phase ? `battle:${phase.phaseId}:${battleState.phaseTurn}` : null;
               })()
             : node.type === "cutscene" &&
@@ -887,6 +896,12 @@ async function bootstrap(): Promise<void> {
           engine.startNewGame(recordingSupported ? "voice" : "click");
           renderCurrent();
         },
+        node.next
+          ? () => {
+              engine.advanceEndingNode();
+              renderCurrent();
+            }
+          : undefined,
       );
     };
 
@@ -934,9 +949,10 @@ function renderCutscene(
   gameView: GameView,
   onComplete: () => void,
 ): void {
+  const lines = resolveCutsceneLines(node, engine.getState());
   let lineIndex = 0;
   const renderLine = (): void => {
-    const line = node.lines[lineIndex];
+    const line = lines[lineIndex];
     if (!line) {
       onComplete();
       return;
@@ -950,7 +966,7 @@ function renderCutscene(
       speakerId: line.speaker,
       emotion: line.emotion,
       text: line.text,
-      continueLabel: nextIndex === node.lines.length ? "다음 장면" : "계속",
+      continueLabel: nextIndex === lines.length ? "다음 장면" : "계속",
       state: engine.getState(),
       onContinue: () => {
         lineIndex = nextIndex;

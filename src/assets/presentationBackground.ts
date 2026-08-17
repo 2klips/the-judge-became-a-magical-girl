@@ -24,17 +24,11 @@ export function resolvePresentationBackground(
 ): string {
   if (cue.kind === "battle") {
     if (cue.phaseId === "p1_defend") return "bg_battle_wide";
-    if (cue.phaseId === "p3_answer") {
-      return cue.beat === "spell" ? "bg_battle_core" : "bg_mind_archive";
-    }
     return cue.baseBackground;
   }
   if (cue.kind === "ending") {
-    if (cue.endingId === "good") {
-      if (cue.lineIndex >= 6) return "bg_corridor_blacklight";
-      if (cue.lineIndex === 5) return "bg_corridor_day";
-      return "bg_hall_good";
-    }
+    if (cue.endingId === "good" || cue.endingId === "hidden") return "bg_hall_good";
+    if (cue.endingId === "post_credit") return "bg_corridor_blacklight";
     if (cue.endingId === "normal") return "bg_hall_normal";
     if (cue.endingId === "bad") return "bg_hall_bad";
     return cue.baseBackground;

@@ -29,10 +29,10 @@ describe("M5 dev 장면 프리뷰 계약", () => {
   });
 
   it("debug에서만 scene 직접 프리뷰를 허용하고 잘못된 ID를 구분한다", () => {
-    expect(resolveDevSceneRequest("?scene=battle-p3-spell").mode).toBe("game");
+    expect(resolveDevSceneRequest("?scene=n8-final-spell").mode).toBe("game");
     expect(resolveDevSceneRequest("?debug=1").mode).toBe("game");
 
-    const valid = resolveDevSceneRequest("?debug=1&scene=battle-p3-spell");
+    const valid = resolveDevSceneRequest("?debug=1&scene=n8-final-spell");
     expect(valid.mode).toBe("preview");
     if (valid.mode === "preview") {
       expect(valid.preview.backgroundId).toBe("bg_battle_core");
@@ -56,7 +56,7 @@ describe("M5 dev 장면 프리뷰 계약", () => {
     expect(logicalIds("n1-first-voice")).toContain("doyun.normal_startled");
     expect(logicalIds("battle-p1")).toContain("doyun.magical_defend");
     expect(logicalIds("battle-p2")).toContain("doyun.magical_attack");
-    expect(logicalIds("battle-p3-spell")).toContain("doyun.magical_finish");
+    expect(logicalIds("n8-final-spell")).toContain("doyun.magical_finish");
     expect(logicalIds("ending-bad")).toContain("doyun.normal_empty");
   });
 
@@ -69,16 +69,17 @@ describe("M5 dev 장면 프리뷰 계약", () => {
       "n4-team",
       "n4-cooperate",
       "n4-awkward",
+      "n4-c-recover",
+      "n4-c-distance",
       "n5-intro",
       "n5-incantation",
     ]) {
       expect(bgm(id), id).toBe("bgm_crisis");
     }
     for (const id of [
-      "convergence",
       "ending-good",
-      "ending-good-corridor",
-      "ending-good-blacklight",
+      "ending-hidden",
+      "post-credit",
       "ending-normal",
       "ending-bad",
     ]) {

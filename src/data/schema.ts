@@ -76,6 +76,13 @@ export const intentSchema = z
   })
   .strict();
 
+const conditionalLineMapSchema = z.record(
+  flagSchema,
+  z.array(lineSchema).min(1),
+);
+
+const conditionalOpeningMapSchema = z.record(flagSchema, dialogueLineSchema);
+
 const conditionalExitSchema = z
   .object({ if: z.string().min(1), next: idSchema })
   .strict();
@@ -98,7 +105,8 @@ export const dialogueNodeSchema = z
     opening: dialogueLineSchema,
     llmContext: z.string().min(1),
     maxTurns: z.number().int().min(1).max(10),
-    intents: z.array(intentSchema).length(3),
+    intents: z.array(intentSchema).min(2).max(4),
+    openingByFlag: conditionalOpeningMapSchema.optional(),
     allowedFlags: z.array(flagSchema),
     fallbackReplies: z.array(dialogueLineSchema).min(2).max(3),
     exitOnMaxTurns: z.array(exitRuleSchema).min(1),
@@ -131,6 +139,7 @@ export const cutsceneNodeSchema = z
     type: z.literal("cutscene"),
     scene: sceneSchema,
     lines: z.array(lineSchema).min(1),
+    linesByFlag: conditionalLineMapSchema.optional(),
     incantationGate: incantationGateSchema.optional(),
     next: idSchema,
   })
@@ -175,7 +184,20 @@ export const battleNodeSchema = z
     enemy: z
       .object({ id: idSchema, name: z.string().min(1).max(30) })
       .strict(),
-    phases: z.array(battlePhaseSchema).length(3),
+    phases: z.array(battlePhaseSchema).min(1).max(3),
+    storyFlow: z
+      .object({
+        phaseOrderByFlag: z.record(flagSchema, z.array(idSchema).min(1)),
+        secondSpell: z
+          .object({
+            eligibleFlags: z.array(flagSchema).min(1),
+            opportunityFlag: flagSchema,
+            usedPhaseFlags: z.record(idSchema, flagSchema),
+          })
+          .strict(),
+      })
+      .strict()
+      .optional(),
     next: idSchema,
   })
   .strict()
@@ -203,9 +225,10 @@ export const endingNodeSchema = z
     nodeId: idSchema,
     type: z.literal("ending"),
     scene: sceneSchema,
-    endingId: z.enum(["good", "normal", "bad", "hidden"]),
+    endingId: z.enum(["good", "normal", "bad", "hidden", "post_credit"]),
     lines: z.array(lineSchema).min(1),
     gradeVariants: gradeVariantsSchema.optional(),
+    next: idSchema.optional(),
   })
   .strict();
 

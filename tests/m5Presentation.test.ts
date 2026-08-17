@@ -35,7 +35,7 @@ function rendererSection(start: string, end: string): string {
 }
 
 describe("M5 장면 표시 계약", () => {
-  it("누락 외부 이미지는 UI를 보존하는 검은 presentation으로 표시한다", () => {
+  it("일반 누락 외부 이미지는 UI를 보존하는 placeholder로 표시한다", () => {
     expect(resolveMissingAssetPresentation("주노 · neutral")).toEqual({
       className: "asset-black-placeholder",
       ariaLabel: "주노 · neutral 에셋 준비 중",
@@ -113,8 +113,9 @@ describe("M5 장면 표시 계약", () => {
   it("암전은 지정된 네 막 경계에서만 실행한다", () => {
     expect(isActBoundaryTransition("title", "n0_review")).toBe(true);
     expect(isActBoundaryTransition("n5_transform_result", "battle_wraith")).toBe(true);
-    expect(isActBoundaryTransition("battle_wraith", "ch3_gray_answer")).toBe(true);
-    expect(isActBoundaryTransition("ch3_gray_answer", "ending_good")).toBe(true);
+    expect(isActBoundaryTransition("battle_wraith", "n7_gray_answer")).toBe(true);
+    expect(isActBoundaryTransition("n8_final_spell", "ending_good")).toBe(true);
+    expect(isActBoundaryTransition("ending_good", "post_credit")).toBe(true);
     expect(isActBoundaryTransition("n2_juno_intro", "n2_juno_followup")).toBe(false);
     expect(isActBoundaryTransition("battle_wraith", "battle_wraith")).toBe(false);
   });
@@ -224,8 +225,8 @@ describe("M5 장면 표시 계약", () => {
       "bg_hall_good",
       "bg_hall_good",
       "bg_hall_good",
-      "bg_corridor_day",
-      "bg_corridor_blacklight",
+      "bg_hall_good",
+      "bg_hall_good",
     ]);
     expect(pages.map(({ isLast }) => isLast)).toEqual([
       false,
@@ -238,16 +239,16 @@ describe("M5 장면 표시 계약", () => {
     ]);
   });
 
-  it("ending 문장별 주노 표정과 GOOD 마지막 인물 미노출을 고정한다", () => {
+  it("ending 문장별 주노 표정과 canonical post-credit 분리를 고정한다", () => {
     expect(resolveEndingVisual("good", 0)).toEqual({
       characterId: "juno",
       emotion: "happy",
     });
     expect(resolveEndingVisual("good", 5)).toEqual({
       characterId: "juno",
-      emotion: "surprised",
+      emotion: "happy",
     });
-    expect(resolveEndingVisual("good", 6)).toBeNull();
+    expect(resolveEndingVisual("post_credit", 0)).toBeNull();
     expect(resolveEndingVisual("normal", 0)?.emotion).toBe("neutral");
     expect(resolveEndingVisual("bad", 0)?.emotion).toBe("upset");
   });
@@ -270,7 +271,7 @@ describe("M5 장면 표시 계약", () => {
   it("전투 명령·결과 화면이 같은 페이즈별 무대 인물 계약을 사용한다", () => {
     expect(resolveBattleStagePresentation("p1_defend")).toEqual({
       phaseIndex: 0,
-      phaseTotal: 3,
+      phaseTotal: 2,
       doyunLogicalId: "doyun.magical_defend",
       junoEmotion: "neutral",
     });
@@ -278,11 +279,6 @@ describe("M5 장면 표시 계약", () => {
       phaseIndex: 1,
       doyunLogicalId: "doyun.magical_attack",
       junoEmotion: "happy",
-    });
-    expect(resolveBattleStagePresentation("p3_answer")).toMatchObject({
-      phaseIndex: 2,
-      doyunLogicalId: "doyun.magical_finish",
-      junoEmotion: "neutral",
     });
   });
 
@@ -307,7 +303,7 @@ describe("M5 장면 표시 계약", () => {
     });
     expect(
       resolveBattleActionPresentation({
-        phaseId: "p3_answer",
+        phaseId: "p2_attack",
         action: "guard",
         delta: 3,
         previousEnemyState: "weakened",

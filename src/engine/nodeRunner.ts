@@ -9,6 +9,7 @@ import {
   applyBattleAction,
   createBattleState,
   overrideBattleMomentum,
+  resolveCurrentPhase,
   type BattleAction,
   type BattleGrade,
   type BattleState,
@@ -31,6 +32,7 @@ import {
 import {
   applyBattleCompletion,
   applyDialogueJudgement,
+  applyStoryFlags,
   applyTransformationOutcome,
   createInitialGameState,
   moveStateToNode,
@@ -303,6 +305,13 @@ export class GameEngine {
     return { ...this.ensureBattleState(node) };
   }
 
+  getCurrentBattlePhase(): BattleNode["phases"][number] {
+    const node = this.requireBattleNode();
+    const phase = resolveCurrentPhase(node, this.ensureBattleState(node));
+    if (!phase) throw new Error("현재 battle phase를 찾을 수 없습니다.");
+    return phase as BattleNode["phases"][number];
+  }
+
   submitBattleAction(action: BattleAction): BattleTurnResult {
     const node = this.requireBattleNode();
     const battleState = applyBattleAction(node, this.ensureBattleState(node), action);
@@ -317,7 +326,7 @@ export class GameEngine {
     }
     if (!battleState.grade) throw new Error("종료된 전투에 등급이 없습니다.");
     this.state = applyBattleCompletion(
-      this.getState(),
+      this.applyBattleStoryFlags(node, battleState),
       battleState.grade,
       battleState.totalTurns,
     );
@@ -339,7 +348,11 @@ export class GameEngine {
   completeBattleForDebug(grade: BattleGrade): GameState {
     const node = this.requireBattleNode();
     const battleState = this.ensureBattleState(node);
-    this.state = applyBattleCompletion(this.getState(), grade, battleState.totalTurns);
+    this.state = applyBattleCompletion(
+      this.applyBattleStoryFlags(node, battleState),
+      grade,
+      battleState.totalTurns,
+    );
     this.moveTo(node.next);
     return this.getState();
   }
@@ -409,13 +422,54 @@ export class GameEngine {
 
   private ensureBattleState(node: BattleNode): BattleState {
     if (!this.battleState) {
+      const storyFlow = node.storyFlow;
+      const selectedPhaseOrder = storyFlow
+        ? Object.entries(storyFlow.phaseOrderByFlag).find(([flag]) =>
+            this.getState().flags.has(flag),
+          )?.[1]
+        : undefined;
+      const phaseOrder = selectedPhaseOrder ?? node.phases.map(({ phaseId }) => phaseId);
+      const offerSecondSpell = storyFlow
+        ? storyFlow.secondSpell.eligibleFlags.some((flag) =>
+            this.getState().flags.has(flag),
+          )
+        : false;
       this.battleState = createBattleState(
         this.getState().flags.has("perfect_transform") ? 60 : 50,
+        storyFlow
+          ? {
+              phaseOrder,
+              offerSecondSpell,
+              requireSecondSpellDecision: true,
+            }
+          : undefined,
       );
     }
-    if (!node.phases[this.battleState.phaseIndex]) {
+    if (!resolveCurrentPhase(node, this.battleState)) {
       throw new Error("현재 전투 페이즈 데이터가 없습니다.");
     }
     return this.battleState;
+  }
+
+  advanceEndingNode(): GameState {
+    const node = this.getCurrentNode();
+    if (node.type !== "ending" || !node.next) {
+      throw new Error("이어지는 post-credit가 있는 엔딩에서만 이동할 수 있습니다.");
+    }
+    this.moveTo(node.next);
+    return this.getState();
+  }
+
+  private applyBattleStoryFlags(node: BattleNode, battleState: BattleState): GameState {
+    if (!node.storyFlow) return this.getState();
+    const flags: string[] = [];
+    if (battleState.secondSpellOpportunity) {
+      flags.push(node.storyFlow.secondSpell.opportunityFlag);
+    }
+    for (const phaseId of battleState.successfulPhaseIds) {
+      const flag = node.storyFlow.secondSpell.usedPhaseFlags[phaseId];
+      if (flag) flags.push(flag);
+    }
+    return applyStoryFlags(this.getState(), flags);
   }
 }

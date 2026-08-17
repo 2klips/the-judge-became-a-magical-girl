@@ -44,20 +44,18 @@ const paths = {
     "curious_magic",
     "ask_why_chosen",
     "protect_others",
-    "match_rhythm",
   ],
   normal: [
     "want_rest",
     "realistic_objection",
     "ask_identity",
     "seek_method",
-    "follow_steps",
   ],
   bad: [
     "want_rest",
     "reject_juno",
     "stay_cold",
-    "withdraw_or_agree",
+    "agree_with_wraith",
     "keep_distance",
   ],
 } as const;
@@ -66,20 +64,29 @@ function completePath(kind: keyof typeof paths): GameEngine {
   const engine = createEngine();
   reachDialogue(engine);
   paths[kind].forEach((intentId) => engine.chooseIntent(intentId));
+  if (["n4_team", "n4_cooperate"].includes(engine.getState().currentNodeId)) {
+    engine.advanceLinearNode();
+  }
   expect(engine.getState().currentNodeId).toBe("n5_transform");
   engine.chooseIncantationFallback();
+  expect(engine.getState().currentNodeId).toBe("n6_first_choice");
+  engine.chooseIntent(kind === "good" ? "defend_first" : "attack_first");
   expect(engine.getState().currentNodeId).toBe("battle_wraith");
-  while (engine.getCurrentNode().type === "battle") {
-    engine.submitBattleAction({ kind: "click-spell" });
+  engine.submitBattleAction({ kind: "click-spell" });
+  if (engine.getCurrentNode().type === "battle") {
+    expect(engine.getBattleState().awaitingSecondSpellChoice).toBe(true);
+    engine.submitBattleAction({ kind: "decline-second-spell" });
   }
-  expect(engine.getState().currentNodeId).toBe("ch3_gray_answer");
+  expect(engine.getState().currentNodeId).toBe("n7_gray_answer");
   engine.chooseIntent(
     kind === "good"
-      ? "allow_one_more_play"
+      ? "believe"
       : kind === "normal"
-        ? "reserve_final_judgement"
-        : "reject_final_hope",
+        ? "possibility"
+        : "cynic",
   );
+  expect(engine.getState().currentNodeId).toBe("n8_final_spell");
+  engine.chooseIntent(kind === "bad" ? "narrative_refusal" : "default_spell");
   return engine;
 }
 
@@ -95,26 +102,27 @@ describe("M5 node runner", () => {
     expect(engine.getState().currentNodeId).toBe("n2_juno_intro");
   });
 
-  it("긍정 경로와 promise로 GOOD 엔딩에 도달한다", () => {
+  it("BELIEVE와 최종 주문 성공으로 GOOD 엔딩에 도달한다", () => {
     const engine = completePath("good");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("good");
-    expect(engine.getState().affinity).toBe(76);
-    expect(engine.getState().flags.has("promise")).toBe(true);
+    expect(engine.getState().flags.has("n7_believe")).toBe(true);
+    expect(engine.getState().flags.has("final_spell_success")).toBe(true);
   });
 
   it("유보 응답은 NORMAL 엔딩으로 직접 이동한다", () => {
     const engine = completePath("normal");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("normal");
-    expect(engine.getState().affinity).toBe(63);
+    expect(engine.getState().flags.has("n7_possibility")).toBe(true);
   });
 
   it("거절 응답은 BAD 엔딩으로 직접 이동한다", () => {
     const engine = completePath("bad");
     const node = engine.getCurrentNode();
     expect(node.type === "ending" ? node.endingId : null).toBe("bad");
-    expect(engine.getState().affinity).toBe(46);
+    expect(engine.getState().flags.has("n7_cynic")).toBe(true);
+    expect(engine.getState().flags.has("final_spell_success")).toBe(false);
   });
 
   it("intent next를 maxTurns 분기보다 우선한다", () => {
@@ -136,7 +144,7 @@ describe("M5 node runner", () => {
 
   it("새 게임은 기존 플래그와 진행 상태를 제거한다", () => {
     const engine = completePath("good");
-    expect(engine.getState().flags.has("promise")).toBe(true);
+    expect(engine.getState().flags.has("n7_believe")).toBe(true);
 
     engine.startNewGame();
     expect([...engine.getState().flags]).toEqual([]);

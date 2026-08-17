@@ -95,7 +95,7 @@ describe("M5 도윤 화면 노출 계약", () => {
       resolveDoyunVisual({
         kind: "node",
         nodeId: "n3_wraith_choice",
-        intentId: "withdraw_or_agree",
+        intentId: "agree_with_wraith",
       }),
     ).toBe("doyun.normal_tired");
   });
@@ -131,23 +131,26 @@ describe("M5 도윤 화면 노출 계약", () => {
     ).toBe("doyun.normal_tired");
   });
 
-  it("전투 페이즈마다 전달된 방어·공격·마무리 이미지를 사용한다", () => {
+  it("전투 페이즈와 N7/N8에 전달된 방어·공격·마무리 이미지를 사용한다", () => {
     expect(resolveDoyunVisual({ kind: "battle", phaseId: "p1_defend" })).toBe(
       "doyun.magical_defend",
     );
     expect(resolveDoyunVisual({ kind: "battle", phaseId: "p2_attack" })).toBe(
       "doyun.magical_attack",
     );
-    expect(resolveDoyunVisual({ kind: "battle", phaseId: "p3_answer" })).toBe(
+    expect(resolveDoyunVisual({ kind: "node", nodeId: "n8_final_spell" })).toBe(
       "doyun.magical_finish",
     );
   });
 
-  it("엔딩 본문은 도윤을 유지하고 GOOD 복도 독백에서만 숨긴다", () => {
+  it("엔딩 본문은 도윤을 유지하고 post-credit에서는 숨긴다", () => {
     expect(resolveDoyunVisual({ kind: "ending", endingId: "good", lineIndex: 4 })).toBe(
       "doyun.normal_smile",
     );
-    expect(resolveDoyunVisual({ kind: "ending", endingId: "good", lineIndex: 5 })).toBeNull();
+    expect(resolveDoyunVisual({ kind: "ending", endingId: "good", lineIndex: 5 })).toBe(
+      "doyun.normal_smile",
+    );
+    expect(resolveDoyunVisual({ kind: "ending", endingId: "post_credit", lineIndex: 0 })).toBeNull();
     expect(resolveDoyunVisual({ kind: "ending", endingId: "bad", lineIndex: 2 })).toBe(
       "doyun.normal_empty",
     );
