@@ -59,4 +59,3 @@
 - Full `npm run check`, `npm test`, `npm run build`, `npm run build:qa`, `git diff --check`.
 - Chrome screenshots for N3, transform frames, battle, and post-credit placeholder at 1920×1080, 1600×900, and 1366×768.
 - Confirm no actor overlap, no duplicate actors, no offscreen actor, and no hidden face/staff/core.
-

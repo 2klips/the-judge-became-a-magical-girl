@@ -78,4 +78,3 @@ describe("Scenario v3.1 global scene composition", () => {
     expect(resolveOptionalAssetFailureBehavior(false)).toBe("hide");
   });
 });
-

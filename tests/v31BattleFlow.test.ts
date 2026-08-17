@@ -113,4 +113,3 @@ describe("Scenario v3.1 conditional second spell reducer", () => {
     });
   });
 });
-
