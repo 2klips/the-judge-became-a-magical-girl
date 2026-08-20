@@ -19,10 +19,11 @@
 | 구현 아키텍처 계약 | [IMPLEMENTATION_SPEC.md](IMPLEMENTATION_SPEC.md) | 모듈 경계·실행 순서·포트 정의 |
 | 단계별 작업 경계 | [MILESTONES.md](MILESTONES.md) | M1~M6 완료·검증 게이트 |
 | 품질과 시연 절차 | [QA_AND_DEMO.md](QA_AND_DEMO.md) | 재현 가능한 테스트 목록 |
+| 사람 장면 QA living backlog | [HUMAN_SCENE_QA_BACKLOG.md](HUMAN_SCENE_QA_BACKLOG.md) | 최신 full-play 시각·음향·UX 판정, 구현·사람 재검수·최종 PASS 상태 |
 | 결정과 열린 쟁점 | [DECISIONS.md](DECISIONS.md) | 기준 문서 빈칸·변경 이력 |
 | 보안과 배포 | [SECURITY_AND_DEPLOYMENT.md](SECURITY_AND_DEPLOYMENT.md) | 비밀·Workers·Pages 운영 계약 |
 | 에셋 추적 | [ASSET_MANIFEST.md](../assets/ASSET_MANIFEST.md) | 논리 ID→실파일→QA 상태 |
-| 캐릭터 이미지-대화 정합 | [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](../assets/CHARACTER_IMAGE_DIALOGUE_AUDIT.md) | 14개 노드 전 라인·intent·전투·엔딩의 계약/실렌더/A·B·C 판정 |
+| 캐릭터 이미지-대화 정합 역사 감사 | [CHARACTER_IMAGE_DIALOGUE_AUDIT.md](../assets/CHARACTER_IMAGE_DIALOGUE_AUDIT.md) | 2026-08-06·v2 기준 계약/실렌더/A·B·C 판정. 충돌 시 최신 human backlog 우선 |
 | Production 표시 문구 점검 | [PRESENTATION_LABEL_AUDIT.md](PRESENTATION_LABEL_AUDIT.md) | 수치·내부 상태·영문 console풍 문구 제거와 debug 유지 목록 |
 | 에셋 출처 | [PROVENANCE.md](../assets/PROVENANCE.md) | Git 이력·납품 경로·확인/미확인 출처 |
 | AI 제작 증빙 | [AI_PRODUCTION_LOG.md](../assets/AI_PRODUCTION_LOG.md) | 입력·생성·사람 검수 기록 |

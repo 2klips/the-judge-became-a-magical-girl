@@ -10,6 +10,7 @@
 - `?debug=1`은 transcript, LLM 결과/오류, state, node, momentum을 결정적으로 주입할 수 있어야 한다.
 - `[확정, DEC-038]` `?debug=1`은 M5 장면 선택기를 표시하고 `?debug=1&scene=<장면ID>`는 저장·FSM을 변경하지 않는 직접 프리뷰를 연다. invalid ID는 게임 예외가 아니라 선택 안내로 처리한다.
 - 실제 마이크 테스트와 debug 주입 테스트를 혼동하지 않는다.
+- 사람 시각·음향 판정과 구현 상태는 [Human Scene QA Backlog](HUMAN_SCENE_QA_BACKLOG.md)를 따른다. 자동 PASS나 과거 `OK`로 최신 human QA를 덮지 않는다.
 
 ## 1.1 MVP-1 주노 음성 자유대화
 
@@ -67,6 +68,25 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 | QS-06 | 같은 기준 WAV·실제 발화를 Realtime/GPT 파일/GPT live 모델로 각각 실행 | 버튼 release에서 녹음 종료, 게임 UI의 transcript 원문 0건, 정확도·p50/p95 지연은 debug/Network에서 기록, 한 턴에는 선택 모델 1회만 호출. 로컬 Whisper 게임 요청 0건 |
 | QS-07 | STT·대화 LLM·battle Worker 경로에서 HTML 응답 주입 | 원문 `Unexpected token '<'` 대신 서비스별 한국어 Worker 연결 오류, 해당 턴 클릭·로컬 폴백 유지 |
 | QS-08 | 일반 URL과 `?debug=1`에서 동일 발화를 각각 실행하고 debug에서 세 음성 모델을 번갈아 선택 | 일반 URL은 `gpt-realtime-2.1-mini` `/voice/realtime` 1회·모델/transcript UI 0건. debug는 선택 모델 하나만 호출하고 모델·전사 결과·왕복/Worker 지연, Realtime 계열 첫 delta 지연을 표시. live와 2.1-mini 요청은 24kHz PCM append·commit |
+
+### 3.1 Canonical local DEV voice recovery
+
+로컬 실제 음성 QA는 APP `http://127.0.0.1:5173`, Worker `http://127.0.0.1:8787` 조합만 canonical configuration으로 사용한다. 포트가 다른 Vite만 실행한 상태를 actual voice QA로 판정하지 않는다.
+
+1. `.env.local`이 Git ignore 대상인지 `git check-ignore .env.local`로 확인한다.
+2. 사용자가 보유한 `OPENAI_API_KEY`를 `.env.local`에 로컬로만 설정한다. 실제 값은 Git, 문서, terminal 출력, screenshot, 완료 보고에 기록하지 않는다.
+3. Worker terminal에서 `npm run dev:m3:worker`를 실행한다.
+4. APP terminal에서 `npm run dev:m3:ui`를 실행한다.
+5. Origin `http://127.0.0.1:5173`을 포함한 `GET http://127.0.0.1:8787/health`가 HTTP 200인지 확인한다. `openaiConfigured=true`, `realtimeVoiceModel=gpt-realtime-2.1-mini`만 기록하고 secret 값은 기록하지 않는다.
+6. 최신 안정 Chrome에서 아래 세 실제 발화를 각각 1회 수행한다.
+
+| Surface | 직접 QA URL | 필수 증거 |
+|---|---|---|
+| dialogue | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice` | 녹음·live fill·release·`POST /voice/realtime` 200·transcript/판정·BGM 복구 |
+| incantation | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation` | 같은 capture stream·release·`POST /voice/realtime` 200·주문 판정·click fallback 유지 |
+| battle | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1` | live fill·release·`POST /voice/realtime` 200·battle 판정·BGM duck/recover |
+
+DevTools Network에서 발화당 `/voice/realtime` 1회, 응답 200, 예상 모델을 확인한다. Console·Network·화면에 API key, raw upstream body, 사용자별 local path가 없어야 한다. 자동 failure injection과 unit test는 이 actual Worker QA를 대체하지 않는다.
 
 ## 4. LLM과 오프라인
 

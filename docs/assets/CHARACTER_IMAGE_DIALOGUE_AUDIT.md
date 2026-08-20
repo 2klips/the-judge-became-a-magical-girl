@@ -1,5 +1,7 @@
 # 장면별 캐릭터 이미지-대화 정합 점검
 
+> **역사적 v2 감사:** 이 문서의 `OK`는 2026-08-06 당시 계약·mapping 정합 판정이다. v3.1 전체 플레이 사람 QA와 충돌하는 N0~N2 감정 progression, facepalm, 변신 얼굴 연속성, 대치 구도 판정은 삭제하지 않고 `SUPERSEDED BY V3.1 HUMAN QA`로 취급한다. 현재 living 판정은 [Human Scene QA Backlog](../dev/HUMAN_SCENE_QA_BACKLOG.md)의 HQ-01·04·05·08을 따른다.
+
 - 점검일: 2026-08-06
 - 범위: `scenario.json` 14개 노드 전 라인·비트·intent, 전투 p1~p3 상태, GOOD/NORMAL/BAD 전 라인
 - 정답 소스: `SCENE_ASSET_MAPPING.md` §4 → 완성대본 v2 §3·N0~엔딩 → `scenario.json`
