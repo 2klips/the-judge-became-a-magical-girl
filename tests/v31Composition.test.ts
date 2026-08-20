@@ -14,6 +14,16 @@ import {
 
 const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 const gameViewSource = readFileSync(new URL("../src/ui/gameView.ts", import.meta.url), "utf8");
+const assetManifestSource = readFileSync(
+  new URL("../docs/assets/ASSET_MANIFEST.md", import.meta.url),
+  "utf8",
+);
+
+const rendererSection = (start: string, end: string): string => {
+  const startIndex = gameViewSource.indexOf(start);
+  const endIndex = gameViewSource.indexOf(end, startIndex + start.length);
+  return gameViewSource.slice(startIndex, endIndex);
+};
 
 const roles = (id: string): readonly string[] =>
   M5_SCENE_PREVIEWS.find(({ id: previewId }) => previewId === id)?.visuals.map(
@@ -65,6 +75,26 @@ describe("Scenario v3.1 global scene composition", () => {
     );
   });
 
+  it("N5 result는 Juno를 center-low-support에 유지한다", () => {
+    expect(compositionForContext("n5_transform_result")).toMatchObject({
+      preset: "protect",
+      actors: {
+        gray_wraith: { zone: "left" },
+        juno: { zone: "center", anchor: "center-low-support" },
+        doyun: { zone: "right" },
+      },
+    });
+    expect(compositionForContext("n5_transform")).toMatchObject({
+      preset: "protect",
+      actors: {
+        juno: { zone: "center", anchor: "center-mid-support" },
+      },
+    });
+    expect(stylesSource).toMatch(
+      /\.game-shell\[data-composition="protect"\]\.n5-transformation-result-scene \.cutscene-character\s*\{[^}]*bottom:\s*clamp\(145px, 20vh, 220px\)/s,
+    );
+  });
+
   it("solo-cut은 16:9 원본을 distortion 없는 full-stage cover로 표시한다", () => {
     expect(compositionByPreset("solo-cut")).toMatchObject({
       mode: "cut",
@@ -96,7 +126,7 @@ describe("Scenario v3.1 global scene composition", () => {
 
   it("CUT02 다음 transformed-live는 짧은 청백 flash 뒤 actor와 card를 fade-in한다", () => {
     expect(gameViewSource).toMatch(
-      /createShell\(options\.liveSceneId, "n5_transform_result"\)[\s\S]*?classList\.add\("transform-scene-handoff"\)/,
+      /createShell\(options\.liveSceneId, "n5_transform_result"\)[\s\S]*?classList\.add\([\s\S]*?"transform-scene-handoff"/,
     );
     expect(stylesSource).toMatch(
       /\.transform-scene-handoff::after\s*\{[^}]*animation:\s*transform-handoff-flash 220ms/s,
@@ -113,6 +143,38 @@ describe("Scenario v3.1 global scene composition", () => {
     expect(stylesSource).toMatch(
       /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.transform-scene-handoff\s*>\s*\.character-visual[\s\S]*?animation:\s*none\s*!important/s,
     );
+  });
+
+  it("N5 result만 compact 청백 presentation variant를 사용한다", () => {
+    const renderer = rendererSection("renderTransformationResult(", "renderBattle(");
+    expect(renderer).toMatch(/classList\.add\([\s\S]*?"n5-transformation-result-scene"/);
+    expect(renderer).toContain("transformation-result transformation-result--n5");
+    expect(stylesSource).toMatch(/\.transformation-result--n5\s*\{[^}]*position:\s*absolute/s);
+    expect(stylesSource).toMatch(
+      /\.transformation-result--n5\s*\{[^}]*width:\s*min\(560px,/s,
+    );
+    expect(stylesSource).toMatch(
+      /\.transformation-result--n5\s*\{[^}]*border-top:\s*4px solid var\(--spell-cyan\)/s,
+    );
+
+    const unrelatedRenderers = gameViewSource.replace(renderer, "");
+    expect(unrelatedRenderers).not.toContain("transformation-result--n5");
+  });
+
+  it("N5 result CTA는 즉시 활성 one-shot 서사 버튼이다", () => {
+    const renderer = rendererSection("renderTransformationResult(", "renderBattle(");
+    expect(renderer).toContain('"망령에게 맞선다"');
+    expect(renderer).toMatch(/addEventListener\([\s\S]*?\{ once: true \},\s*\)/);
+    expect(renderer).not.toContain(
+      'delayedAdvanceButton("primary-button", "망령에게 맞선다"',
+    );
+  });
+
+  it("Doyun magical_pose는 신규 pose 없이 표정 EDIT handoff로 남긴다", () => {
+    expect(assetManifestSource).toContain("`doyun.magical_pose`: `EDIT REQUIRED`");
+    expect(assetManifestSource).toContain("신규 pose 0장, 기존 pose EDIT 1장");
+    expect(assetManifestSource).toContain("heart-hand body pose");
+    expect(assetManifestSource).toContain("고통·패배가 아닌 코믹한 당혹감");
   });
 
   it("모든 v3.1 preview에서 actor role 중복을 허용하지 않는다", () => {

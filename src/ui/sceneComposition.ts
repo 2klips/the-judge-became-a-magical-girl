@@ -109,7 +109,19 @@ export function compositionForContext(context: string): SceneComposition {
   if (context === "n3_wraith_choice" || context.startsWith("n4_")) {
     return compositions.confrontation;
   }
-  if (context === "n5_transform" || context === "n5_transform_result") {
+  if (context === "n5_transform_result") {
+    return {
+      ...compositions.protect,
+      actors: {
+        ...compositions.protect.actors,
+        juno: {
+          ...compositions.protect.actors.juno!,
+          anchor: "center-low-support",
+        },
+      },
+    };
+  }
+  if (context === "n5_transform") {
     return compositions.protect;
   }
   if (

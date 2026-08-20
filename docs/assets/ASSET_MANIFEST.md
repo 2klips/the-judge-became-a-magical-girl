@@ -59,6 +59,14 @@
 | `bg_street_evening` | `bg_street_evening.webp` | 배경 | 1920×1080 WebP | 500KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
 | `bg_ch2_branch` | `[제안] bg_{장소}_{상태}.webp` | 배경 | 1920×1080 WebP | 500KB | 컷 가능 | planned | 미정 | 미확인 | chapter 2 `scene.bg` | 이름·장면 대기 |
 
+### N5 변신 결과 visual-production handoff (2026-08-20)
+
+- `doyun.magical_pose`: `EDIT REQUIRED` — 신규 pose 0장, 기존 pose EDIT 1장.
+- 유지: 현행 costume, heart-hand body pose, 실루엣, 1200×2000 투명 canvas compatibility.
+- 표정 목표: “변신에 성공했지만 당황하고 벅찬 상태”. 눈은 읽히게 유지하고 full-eye 절망 shadow를 제거한다. 눈썹은 약하게 곤란한 인상, 옅은 blush, 작고 어색한 forced smile을 사용한다.
+- 금지: 고통·패배가 아닌 코믹한 당혹감이라는 N5 결과 정서를 절망·심한 괴로움·패배 표정으로 바꾸는 것.
+- binary 생성·편집은 별도 visual-production 단계 소유다. 현재 runtime 파일과 논리 ID는 변경하지 않는다.
+
 ### 2026-08-03 배경 납품·이름 정규화 추적
 
 - 원본: `assets/source/background/심사역은_마법소녀가_되었다_최종확정_배경세트.zip`, commit `c2e3e1a`, SHA-256 `C4F6AD44F38C5CBC680937F01996F1FD145329DA5FF93CB8541DBB828FB887CF`, 33,378,690B.

@@ -866,7 +866,10 @@ export class GameView {
       }
 
       const shell = this.createShell(options.liveSceneId, "n5_transform_result");
-      shell.classList.add("transform-scene-handoff");
+      shell.classList.add(
+        "transform-scene-handoff",
+        "n5-transformation-result-scene",
+      );
       shell.dataset.activeSpeaker = "narration";
       shell.append(
         this.createAssetVisual(
@@ -890,7 +893,10 @@ export class GameView {
           "character-visual transformation-player-visual doyun-visual",
         ),
       );
-      const card = element("section", "transformation-result");
+      const card = element(
+        "section",
+        "transformation-result transformation-result--n5",
+      );
       const title =
         options.outcome === "perfect"
           ? "완전한 변신"
@@ -902,9 +908,24 @@ export class GameView {
         element("h2", "ending-title", title),
       );
       options.lines.forEach((line) => card.append(element("p", "ending-line", line)));
-      card.append(
-        this.delayedAdvanceButton("primary-button", "언령 배틀 시작", options.onContinue),
+      const continueButton = element(
+        "button",
+        "primary-button transformation-result-cta",
+        "망령에게 맞선다",
       );
+      continueButton.type = "button";
+      continueButton.dataset.advanceState = "ready";
+      continueButton.addEventListener(
+        "click",
+        () => {
+          continueButton.disabled = true;
+          continueButton.dataset.advanceState = "used";
+          this.onAdvance?.();
+          options.onContinue();
+        },
+        { once: true },
+      );
+      card.append(continueButton);
       shell.append(card);
       this.commit(shell);
     };
