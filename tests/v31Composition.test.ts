@@ -13,6 +13,7 @@ import {
 } from "../src/ui/gameView";
 
 const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+const gameViewSource = readFileSync(new URL("../src/ui/gameView.ts", import.meta.url), "utf8");
 
 const roles = (id: string): readonly string[] =>
   M5_SCENE_PREVIEWS.find(({ id: previewId }) => previewId === id)?.visuals.map(
@@ -91,6 +92,27 @@ describe("Scenario v3.1 global scene composition", () => {
       expect(preview?.renderMode).toBe("cut");
       expect(preview?.visuals.some(({ role }) => role !== "cut")).toBe(false);
     }
+  });
+
+  it("CUT02 다음 transformed-live는 짧은 청백 flash 뒤 actor와 card를 fade-in한다", () => {
+    expect(gameViewSource).toMatch(
+      /createShell\(options\.liveSceneId, "n5_transform_result"\)[\s\S]*?classList\.add\("transform-scene-handoff"\)/,
+    );
+    expect(stylesSource).toMatch(
+      /\.transform-scene-handoff::after\s*\{[^}]*animation:\s*transform-handoff-flash 220ms/s,
+    );
+    expect(stylesSource).toMatch(
+      /\.transform-scene-handoff\s*>\s*\.character-visual[\s\S]*?animation:\s*transform-live-fade-in 340ms/s,
+    );
+  });
+
+  it("transform handoff는 reduced-motion에서 flash와 live fade를 제거한다", () => {
+    expect(stylesSource).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.transform-scene-handoff::after[\s\S]*?display:\s*none/s,
+    );
+    expect(stylesSource).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.transform-scene-handoff\s*>\s*\.character-visual[\s\S]*?animation:\s*none\s*!important/s,
+    );
   });
 
   it("모든 v3.1 preview에서 actor role 중복을 허용하지 않는다", () => {

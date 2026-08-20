@@ -866,6 +866,7 @@ export class GameView {
       }
 
       const shell = this.createShell(options.liveSceneId, "n5_transform_result");
+      shell.classList.add("transform-scene-handoff");
       shell.dataset.activeSpeaker = "narration";
       shell.append(
         this.createAssetVisual(
