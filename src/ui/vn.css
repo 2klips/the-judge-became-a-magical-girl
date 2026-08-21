@@ -85,18 +85,7 @@
 }
 
 .vn-dialogue-shell:not(.battle-dialogue):has(.vn-advance[data-advance-state="ready"])::after {
-  position: absolute;
-  right: 16px;
-  bottom: 12px;
-  display: block;
-  width: auto;
-  height: auto;
-  color: var(--vn-speaker-accent);
-  background: transparent;
-  box-shadow: none;
-  content: "▾";
-  font-size: 0.8rem;
-  opacity: 0.78;
+  display: none;
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-speaker-name {
@@ -200,17 +189,30 @@
   display: grid;
   width: 100%;
   margin: 0;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-  gap: 7px;
+  counter-reset: vn-choice;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-bottom: 1px solid rgba(224, 226, 236, 0.12);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list:has(> .choice-button:nth-child(4)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 18px;
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button {
+  display: grid;
   min-height: 42px;
-  padding: 9px 13px;
-  border: 1px solid var(--vn-border-subtle);
-  border-radius: var(--vn-radius-sm);
+  padding: 9px 10px 9px 8px;
+  counter-increment: vn-choice;
+  grid-template-columns: 30px minmax(0, 1fr) 14px;
+  gap: 9px;
+  align-items: center;
+  border: 0;
+  border-top: 1px solid rgba(224, 226, 236, 0.12);
+  border-radius: 0;
   color: var(--vn-text-primary);
-  background: var(--vn-surface-subtle);
+  background: transparent;
   box-shadow: none;
   font-size: 0.88rem;
   font-weight: 500;
@@ -218,17 +220,45 @@
   text-align: left;
 }
 
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button::before {
+  color: var(--vn-text-muted);
+  content: counter(vn-choice, decimal-leading-zero);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button::after {
+  color: var(--vn-speaker-accent);
+  content: "›";
+  font-size: 1rem;
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
 .vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:hover:not(:disabled),
 .vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:focus-visible {
   transform: none;
-  border-color: var(--vn-border-active);
-  background: rgba(244, 226, 178, 0.1);
-  box-shadow: none;
+  color: #fffdf8;
+  background: rgba(244, 226, 178, 0.075);
+  box-shadow: inset 2px 0 0 var(--vn-speaker-accent);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:hover:not(:disabled)::after,
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:focus-visible::after {
+  opacity: 0.8;
+  transform: translateX(0);
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:active:not(:disabled) {
-  background: rgba(244, 226, 178, 0.16);
+  background: rgba(244, 226, 178, 0.13);
   transform: translateY(1px);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:disabled::after {
+  display: none;
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-voice-controls {
@@ -283,27 +313,42 @@
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-advance {
-  display: block;
+  display: inline-flex;
   float: none;
   width: fit-content;
   min-height: 36px;
   margin: 12px 0 0 auto;
-  padding: 7px 15px;
-  border: 1px solid var(--vn-border-subtle);
-  border-radius: var(--vn-radius-sm);
-  color: var(--vn-text-primary);
-  background: rgba(255, 255, 255, 0.065);
+  padding: 7px 3px 7px 9px;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  color: var(--vn-text-secondary);
+  background: transparent;
   box-shadow: none;
   font-size: 0.82rem;
   font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance::after {
+  margin-left: 8px;
+  color: var(--vn-speaker-accent);
+  content: "›";
+  font-size: 1rem;
+  transition: transform 120ms ease;
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-advance:hover:not(:disabled),
 .vn-dialogue-shell:not(.battle-dialogue) .vn-advance:focus-visible {
   transform: none;
-  border-color: var(--vn-border-active);
-  background: rgba(244, 226, 178, 0.1);
+  color: var(--vn-text-primary);
+  background: transparent;
   box-shadow: none;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance:hover:not(:disabled)::after,
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance:focus-visible::after {
+  transform: translateX(3px);
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-advance:active:not(:disabled) {
@@ -355,6 +400,59 @@
 .game-shell:not(.title-screen) input:focus-visible {
   outline: 2px solid var(--vn-border-active);
   outline-offset: 2px;
+}
+
+/* Gameplay-only BGM HUD alignment. TITLE keeps its separately approved layer. */
+.game-shell:not(.title-screen) .bgm-controls {
+  top: max(16px, calc(env(safe-area-inset-top) + 1.4vh));
+  left: max(18px, calc(env(safe-area-inset-left) + 2.8vw));
+  right: auto;
+  grid-template-columns: auto minmax(96px, 136px) 42px;
+  gap: 8px;
+  min-height: 48px;
+  padding: 5px 8px;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-secondary);
+  background: rgba(9, 12, 22, 0.88);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(10px);
+}
+
+.game-shell:not(.title-screen) .bgm-mute-button {
+  min-width: 78px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-secondary);
+  background: transparent;
+  box-shadow: none;
+  font: 600 0.78rem/1 "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.game-shell:not(.title-screen) .bgm-mute-button[data-muted="true"] {
+  border-color: transparent;
+  color: var(--vn-text-muted);
+  background: var(--vn-surface-subtle);
+}
+
+.game-shell:not(.title-screen) .bgm-mute-button:hover,
+.game-shell:not(.title-screen) .bgm-mute-button:focus-visible {
+  border-color: var(--vn-border-subtle);
+  color: var(--vn-text-primary);
+  background: var(--vn-surface-subtle);
+  box-shadow: none;
+}
+
+.game-shell:not(.title-screen) .bgm-volume-slider {
+  min-height: 44px;
+  accent-color: var(--vn-accent-doyun);
+}
+
+.game-shell:not(.title-screen) .bgm-volume-output {
+  color: var(--vn-text-muted);
+  font: 600 0.76rem/1 "Pretendard", "Noto Sans KR", sans-serif;
 }
 
 /* Later scene-specific phases consume these tokens without changing geometry here. */

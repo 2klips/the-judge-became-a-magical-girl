@@ -64,6 +64,49 @@ describe("Phase A VN UI design system", () => {
     expect(vnStylesSource).toContain(".vn-input-mode-utility");
   });
 
+  it("renders one to three narrative choices as a numbered response list and caps larger sets at two columns", () => {
+    expect(vnStylesSource).toMatch(
+      /\.vn-choice-list\s*\{[\s\S]*?counter-reset:\s*vn-choice;[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\);/,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.vn-choice-list:has\(> \.choice-button:nth-child\(4\)\)\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.choice-button::before\s*\{[\s\S]*?content:\s*counter\(vn-choice,\s*decimal-leading-zero\);/,
+    );
+    expect(vnStylesSource).not.toMatch(
+      /\.vn-choice-list[^{}]*\{[^{}]*grid-template-columns:\s*repeat\(3,/,
+    );
+  });
+
+  it("uses an editorial borderless progress action without changing its delayed-action wiring", () => {
+    expect(vnStylesSource).toMatch(
+      /\.vn-advance\s*\{[\s\S]*?border:\s*0;[\s\S]*?background:\s*transparent;/,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.vn-advance::after\s*\{[\s\S]*?content:\s*"›";/,
+    );
+    expect(gameViewSource).toContain("delayedAdvanceButton(");
+  });
+
+  it("aligns only the gameplay BGM HUD with the VN layer while preserving audio control callbacks", () => {
+    expect(vnStylesSource).toContain(
+      ".game-shell:not(.title-screen) .bgm-controls",
+    );
+    expect(vnStylesSource).toMatch(
+      /\.game-shell:not\(\.title-screen\) \.bgm-controls\s*\{[\s\S]*?left:\s*max\([\s\S]*?right:\s*auto;[\s\S]*?border-radius:\s*var\(--vn-radius-sm\);/,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.game-shell:not\(\.title-screen\) \.bgm-mute-button\s*\{[\s\S]*?background:\s*transparent;/,
+    );
+    expect(gameViewSource).toContain(
+      "this.audioControlOptions.onMutedChange(muted)",
+    );
+    expect(gameViewSource).toContain(
+      "this.audioControlOptions.onVolumeChange(Number(slider.value) / 100)",
+    );
+  });
+
   it("keeps debug transcript metadata debug-only and visually secondary", () => {
     const start = gameViewSource.indexOf("private appendDebugTranscript(");
     expect(start).toBeGreaterThanOrEqual(0);
