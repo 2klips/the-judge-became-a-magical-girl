@@ -34,10 +34,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 도윤이 계속 기겁한 상태로 보여 사건 강도가 단계적으로 올라가지 않음 |
 | Desired Direction | 피곤함 → 의심/집중 → 약한 당황 → 실제 초현상에서 본격 놀람 |
 | Priority | P0 |
-| Implementation Status | `OPEN` |
+| Implementation Status | `HUMAN_RECHECK` — N0은 `normal_tired`, N1은 `normal`, 실제 주노 등장·망령 reveal부터 `normal_startled`가 나오도록 기존 asset mapping을 재구성 |
 | Human Recheck | 각 비트의 연속 감정선과 반복 sprite 여부를 full play에서 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | 과거 audit의 N0~N2 `OK`는 `SUPERSEDED BY V3.1 HUMAN QA` |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | 과거 audit의 N0~N2 `OK`는 `SUPERSEDED BY V3.1 HUMAN QA`. [v3.1 acting/direction audit](../assets/V31_ACTING_DIRECTION_AUDIT.md) |
 
 ### HQ-02 — Common VN Dialogue UI
 
@@ -49,9 +49,9 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 화면을 과도하게 가리고 generic AI-generated UI처럼 보이며 대사·선택·입력 방식 위계가 약함 |
 | Desired Direction | 낮고 간결한 공통 VN dialogue shell, 작은 speaker accent, compact choice, secondary input-mode control |
 | Priority | P0 |
-| Implementation Status | `HUMAN_RECHECK` — Phase A에서 공통 VN token, compact dialogue/narration shell, integrated speaker accent, choice·progress·input-mode hierarchy를 구현 |
-| Human Recheck | 1920×1080 screenshot과 1600×900·1366×768 actual Chrome bbox에서 no-scroll·text clipping 0·core actor face occlusion 0을 확인했으며, 사용자 actual visual approval 대기 |
-| Final Status | `HUMAN_RECHECK` |
+| Implementation Status | `PASS` — Phase A/A.1 공통 VN token, compact dialogue/narration shell, integrated speaker accent, vertical narrative choice, editorial progress CTA, BGM HUD 정합화를 구현하고 사용자 visual 승인 |
+| Human Recheck | 2026-08-22 사용자 `APPROVED / FREEZE for core VN dialogue UI` 결정. optional narration CTA P2는 비차단 |
+| Final Status | `PASS` |
 | Related SSOT/TODO | HQ-13 공통 foundation과 함께 구현. HQ-06·10·11·12 scene-specific redesign은 계속 `OPEN` |
 
 ### HQ-03 — Floating employee ID Doyun reaction
@@ -64,10 +64,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 핵심 초현상과 도윤 시선·몸동작이 연결되지 않음 |
 | Desired Direction | 사원증을 바라보는 `surprise / disbelief`; 공포·비명·horror 금지 |
 | Priority | P1 ASSET |
-| Implementation Status | `OPEN` — 신규 또는 기존 asset EDIT 후속 판정 |
+| Implementation Status | `OPEN` — 기존 asset 적합 없음. `normal_startled`는 임시 proxy이며 floating-ID 시선 reaction `NEW 1` handoff 확정 |
 | Human Recheck | 시선, 손, 사원증 focal relation과 canvas compatibility 확인 |
 | Final Status | `OPEN` |
-| Related SSOT/TODO | Visual Asset Production Phase 대상 |
+| Related SSOT/TODO | Visual Asset Production Phase 대상. logical ID/파일명 미확정. [v3.1 acting/direction audit](../assets/V31_ACTING_DIRECTION_AUDIT.md#2-hq-03-floating-employee-id-handoff) |
 
 ### HQ-04 — Facepalm mismatch
 
@@ -79,10 +79,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 코미디성 당황과 asset의 고통·패배 인상이 충돌 |
 | Desired Direction | 한숨, 난감함, 관자놀이·이마 짚기, 얼굴과 눈의 판독 유지 |
 | Priority | P1 |
-| Implementation Status | `OPEN` — 기존 asset remap 또는 EDIT 여부 미결정 |
+| Implementation Status | `HUMAN_RECHECK` — 현재 `normal_shy` runtime use를 기존 `normal`/관계별 asset으로 전부 remap해 full facepalm occurrence 0 |
 | Human Recheck | 대사별 감정과 body silhouette 정합 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | HQ-01 감정 progression과 함께 판정 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | mild 관자놀이/이마 pose가 필요하다는 후속 사람 결정이 있을 때만 `normal_shy` EDIT 1 후보. [audit](../assets/V31_ACTING_DIRECTION_AUDIT.md#3-hq-04-facepalm-audit) |
 
 ### HQ-05 — Transformation face continuity
 
@@ -94,10 +94,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 의도된 reveal보다 제작 시점이 다른 asset 불일치처럼 보임 |
 | Desired Direction | 변신 전·CUT·변신 후 얼굴 공개 규칙 하나를 human/art-direction 결정으로 확정 |
 | Priority | P0 ART DIRECTION |
-| Implementation Status | `OPEN` — 결정 전 구현 금지 |
+| Implementation Status | `OPEN / HUMAN DECISION REQUIRED` — A: 변신 후 live 얼굴 공개 유지, B: CUT의 눈 가림 유지안을 asset 영향과 함께 작성; 선택 전 binary 변경 금지 |
 | Human Recheck | CUT와 N5~N8 live sprite 연속성 확인 |
 | Final Status | `OPEN` |
-| Related SSOT/TODO | 변신 이후 얼굴 공개 유지안과 CUT 얼굴 재가림안 비교 필요 |
+| Related SSOT/TODO | [두 option 비교](../assets/V31_ACTING_DIRECTION_AUDIT.md#4-hq-05-transformation-face-continuity--human-decision-required) |
 
 ### HQ-06 — Transform CUT control UI
 
@@ -139,9 +139,9 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | enemy와 hero의 시선·대립축이 약하고 Juno support affiliation이 흐림 |
 | Desired Direction | Wraith LEFT/CENTER-LEFT·대형·RIGHT-facing, Doyun RIGHT·LEFT-facing, Juno는 Doyun 측 center-low/right-low support |
 | Priority | P0 |
-| Implementation Status | `OPEN` — 기존 no-overlap baseline 위 재검수 |
+| Implementation Status | `HUMAN_RECHECK` — Wraith LEFT/CENTER-LEFT·screen-right, Doyun RIGHT·screen-left, Juno Doyun-side center-low support로 metadata/CSS 구도 구현 |
 | Human Recheck | enemy↔hero axis, support triangle, face/staff/core occlusion 0 확인 |
-| Final Status | `OPEN` |
+| Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | 손그림은 비율·디자인이 아니라 `enemy ↔ hero axis + support triangle`만 참조 |
 
 ### HQ-09 — Actor inward-facing rule
@@ -154,10 +154,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | actor placement와 gaze direction이 독립적으로 적용됨 |
 | Desired Direction | 왼쪽 actor는 오른쪽, 오른쪽 actor는 왼쪽을 향함. 의도적 외면 장면만 예외 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `OPEN` — 향후 composition contract 후보 |
+| Implementation Status | `HUMAN_RECHECK` — asset별 mirror safety를 감사하고 Wraith 2종만 safe mirror, Doyun 11종·Juno 5종은 original-only metadata로 구현 |
 | Human Recheck | asset별 비대칭 의상·wand·글자 mirror 부작용까지 장면별 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | 자동 `scaleX` 일괄 적용 금지; Phase B에서 asset별 판정 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | 자동 `scaleX` 일괄 적용 금지. [asset별 판정](../assets/V31_ACTING_DIRECTION_AUDIT.md#5-facing--mirror-safety-audit) |
 
 ### HQ-10 — Battle HUD collision
 
@@ -214,7 +214,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 장면별 독립 component처럼 보여 하나의 VN 제품 언어가 형성되지 않음 |
 | Desired Direction | 공통 navy-black base, 얇은 border, 작은 radius·padding, 제한된 speaker accent, 명확한 대사 > 서사 선택 > 입력 방식 위계 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `HUMAN_RECHECK` — navy-black surface, thin border, small radius, restrained speaker accent, typography·focus·control hierarchy의 Phase A foundation 구현 |
+| Implementation Status | `HUMAN_RECHECK` — core VN foundation은 사용자 승인·freeze. Battle/Ending/Post-credit scene-specific presentation이 남아 global 항목은 유지 |
 | Human Recheck | core dialogue preview에서 장면 간 일관성·keyboard focus·actor occlusion을 사용자 검수. Battle/Ending/Post-credit는 Phase C 뒤 별도 재검수 |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | HQ-02 core migration 완료. HQ-06·HQ-10·HQ-11·HQ-12는 foundation만 공유하고 scene-specific 상태는 `OPEN` 유지 |
@@ -234,8 +234,8 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 
 ## 4. 다음 implementation phases
 
-1. **Phase A — VN UI Design System:** HQ-02·06·10·11·12·13의 공통 shell·hierarchy를 먼저 확정한다.
-2. **Phase B — Doyun Emotion + Actor Direction/Composition:** HQ-01·03·04·05·08·09를 asset 제작 전 mapping·art-direction·composition으로 분리한다.
+1. **Phase A — VN UI Design System:** core VN shell·hierarchy는 사용자 승인·freeze, HQ-02 `PASS`. HQ-13은 scene-specific Phase C 범위 때문에 `HUMAN_RECHECK` 유지.
+2. **Phase B — Doyun Emotion + Actor Direction/Composition:** 기존 asset mapping·facing·composition 구현 완료, HQ-01·04·08·09 사람 재검수와 HQ-03 asset·HQ-05 결정 대기.
 3. **Phase C — Battle / Ending / Post-credit Presentation:** Phase A contract 위에서 battle safe zone, ending editorial layout, post-credit character-first 구도를 구현한다.
 4. **Phase D — Visual Asset Production:** 승인된 slot만 제작·편집한다. 현재 핵심은 Doyun reaction, `magical_pose` EDIT, Juno 행동 variation, black magical girl cut이다.
 5. **Phase E — Full Voice + Click Human QA:** 실제 Worker, mic, BGM, click fallback을 포함해 전체 경로를 사용자 actual QA로 닫는다.

@@ -20,7 +20,11 @@ import { resolvePresentationBackground } from "../assets/presentationBackground"
 import { resolveDoyunVisual } from "../assets/presentationDoyun";
 import type { BattleGrade, BattleState } from "../battle/state";
 import { resolveDialogueOpening } from "../engine/storyPresentation";
-import { compositionForContext } from "./sceneComposition";
+import {
+  compositionByPreset,
+  compositionForContext,
+  type SceneComposition,
+} from "./sceneComposition";
 import {
   M5_SCENE_PREVIEWS,
   type DevScenePreview,
@@ -590,8 +594,7 @@ export class GameView {
     const shell = this.createShell(preview.backgroundId, `dev:${preview.id}`);
     shell.classList.add("dev-scene-preview", `dev-layout-${preview.layout}`);
     shell.dataset.previewId = preview.id;
-    shell.dataset.composition = preview.composition;
-    shell.dataset.renderMode = preview.renderMode;
+    this.applyCompositionMetadata(shell, compositionByPreset(preview.composition));
 
     if (preview.showVoiceOrb) {
       shell.append(element("div", "first-voice-orb"));
@@ -757,7 +760,7 @@ export class GameView {
     shell.append(
       this.createAssetVisual(
         resolveDoyunVisual({ kind: "node", nodeId: node.nodeId, stage: "incantation" }) ??
-          "doyun.normal_shy",
+          "doyun.normal",
         "한도윤",
         "character-visual scene-player-visual incantation-player-visual doyun-visual",
       ),
@@ -1380,8 +1383,7 @@ export class GameView {
   private createShell(sceneId: string, presentationContext = sceneId): HTMLElement {
     const shell = element("main", "game-shell");
     const composition = compositionForContext(presentationContext);
-    shell.dataset.composition = composition.preset;
-    shell.dataset.renderMode = composition.mode;
+    this.applyCompositionMetadata(shell, composition);
     if (this.debugEnabled) shell.classList.add("debug-enabled");
     shell.dataset.scene = sceneId;
     shell.dataset.presentationContext = presentationContext;
@@ -1407,6 +1409,26 @@ export class GameView {
       element("div", "scene-grid"),
     );
     return shell;
+  }
+
+  private applyCompositionMetadata(
+    shell: HTMLElement,
+    composition: SceneComposition,
+  ): void {
+    shell.dataset.composition = composition.preset;
+    shell.dataset.renderMode = composition.mode;
+    const actorKeys = {
+      doyun: "doyun",
+      juno: "juno",
+      gray_wraith: "wraith",
+    } as const;
+    for (const [actor, placement] of Object.entries(composition.actors)) {
+      if (!placement) continue;
+      const key = actorKeys[actor as keyof typeof actorKeys];
+      shell.dataset[`${key}Facing`] = placement.facing;
+      shell.dataset[`${key}Mirror`] = placement.mirrorPolicy;
+      shell.dataset[`${key}Side`] = placement.dramaticSide;
+    }
   }
 
   private appendBackground(

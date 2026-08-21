@@ -4,13 +4,13 @@
 
 ## 1. 문서 책임과 우선순위
 
-- 스토리·감정선·장면 내용: [완성대본 v2](../심사역은_마법소녀가_되었다_완성대본_v2.md)
+- 스토리·감정선·장면 내용: [승인된 완성대본 v3.1](../심사역은_마법소녀가_되었다_완성대본_v3.md)
 - 현재 M5 노드·배경 beat 매핑: [DECISIONS.md](../dev/DECISIONS.md)의 DEC-020·DEC-024·DEC-032·DEC-036
 - 포맷·크기·제작 방식: [별첨2](../별첨2_에셋_제작_가이드라인.md)
 - 논리 ID·실파일·제작/QA 상태: [ASSET_MANIFEST.md](ASSET_MANIFEST.md)
 - **장면별 사용처와 표시 상태: 이 문서**
 
-충돌 시 사용자 최신 결정 → 메인 기획서 → 완성대본 v2 → 별첨2 → 승인된 결정 → 이 문서 → 코드 순서로 처리한다.
+충돌 시 사용자 최신 결정 → 승인된 완성대본 v3.1 → 메인 기획서 → 별첨2 → 승인된 결정 → 이 문서 → 코드 순서로 처리한다. v2 매핑은 역사 기록이며 현재 runtime truth가 아니다.
 
 상태 표기:
 
@@ -72,11 +72,11 @@
 | `[확정·M5 필수]` | `juno.surprised` | `char_juno_surprised.png` | 날갯짓이 멈춘 예상 밖 반응 | N2 등장 직전/등장, N5, GOOD 후속 훅 |
 | `[확정·M5 필수]` | `gray_wraith.normal` | `char_gray_wraith_normal.png` | 거대한 회색 실루엣. 과장된 분노보다 무겁고 체념한 인상 | N3~N6, momentum 64 이하 |
 | `[확정·M5 필수]` | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | normal과 같은 개체·구도. 안개가 갈라지고 내부 게임 캐릭터 빛이 비치는 상태 | momentum 65 이상, N7~N8 우세 연출 |
-| `[확정·M5 필수]` | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 야근으로 지친 평상복 도윤 | N0 3~4번째 대사 |
-| `[확정·M5 필수]` | `doyun.normal_startled` | `char_doyun_normal_startled.png` | 갑작스러운 목소리·주노·망령에 놀란 도윤 | N0 5번째 이후, N1, N2 도입, N3 |
-| `[확정·M5 필수]` | `doyun.normal` | `char_doyun_normal.png` | 평상복 기본 도윤 | N2 후속, N4-B |
+| `[확정·M5 필수]` | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 야근으로 지쳤지만 직접 확인하는 평상복 도윤 | N0 line 2~5, N2 거절·냉담, N3 철수·동조, N4 거리 유지 |
+| `[확정·M5 필수]` | `doyun.normal_startled` | `char_doyun_normal_startled.png` | 실제 초현상에 놀란 도윤 | N2 주노 등장, N3 망령 opening, N5 사원증 부상 임시 proxy |
+| `[확정·M5 필수]` | `doyun.normal` | `char_doyun_normal.png` | 의심·집중 또는 행동하는 평상복 도윤 | N1, N2 후속, N3 보호·방법 확인, N4-B/C, N5 압박·영창 |
 | `[확정·M5 필수]` | `doyun.normal_smile` | `char_doyun_normal_smile.png` | 관계가 회복되거나 결말을 받아들이는 도윤 | N4-A, GOOD·NORMAL 본 장면 |
-| `[확정·M5 필수]` | `doyun.normal_shy` | `char_doyun_normal_shy.png` | 어색함·주문 직전의 도윤 | N4-C, N5 도입·주문 게이트 |
+| `[확정·M5 필수]` | `doyun.normal_shy` | `char_doyun_normal_shy.png` | full facepalm 기존본 | 현재 v3.1 runtime mapping 없음. binary는 보존하고 재사용 전 EDIT·사람 QA |
 | `[확정·M5 필수]` | `doyun.normal_empty` | `char_doyun_normal_empty.png` | 감정과 색이 빠진 도윤 | BAD 엔딩 |
 | `[확정·M5 필수]` | `doyun.magical` | `char_doyun_magical.png` | `[임시 승인, DEC-035]` 정면 변신 완료 기본 포즈 | 변신 완료·전투 공통 폴백 |
 | `[확정·M5 필수]` | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 변신 직후·전투 후 수렴 포즈 | N5 변신 결과, 수렴 |
@@ -130,14 +130,14 @@
 | 순서·런타임 | 장면 | 배경 | 화면 인물 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
 | 타이틀 | 작품 소개·새 게임·이어하기·설정 | `bg_title` | 없음 | 최초 사용자 gesture 뒤 `bgm_daily` | 왼쪽 CSS gradient 위 local MaruBuri 제목·Pretendard 메뉴, 오른쪽 NHN/HACKATHON 핵심 영역 보존. 마이크는 선택형 9-state FSM이고 click 시작은 항상 가능하다. baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용 상태이며 공식 상표 허가가 아니다 |
-| N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. 3~4번째 `doyun.normal_tired`, 5번째 이후 `doyun.normal_startled` | `bgm_daily` | 첫 두 대사만 1인칭 독백 클리셰로 숨기고 곧바로 도윤을 표시한다. 평가 문장·커서는 DOM/CSS |
-| N1 `n1_first_voice` | 모니터 속 첫 목소리 | `bg_hall_time_stop` | `doyun.normal_startled`. **주노 실물 미노출** | 계속 `bgm_daily` | NPC가 주노여도 N2 전까지 주노 스프라이트는 숨긴다. 사원증 빛·시간 정지는 배경+CSS |
+| N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. line 2~5 `doyun.normal_tired` | `bgm_daily` | 실제 초현상 전에는 startled를 쓰지 않는다. 평가 문장·커서는 DOM/CSS |
+| N1 `n1_first_voice` | 모니터 속 첫 목소리 | `bg_hall_time_stop` | 의심·집중의 `doyun.normal`. **주노 실물 미노출** | 계속 `bgm_daily` | NPC가 주노여도 N2 전까지 주노 스프라이트는 숨긴다. 사원증 빛·시간 정지는 배경+CSS |
 | N2 `n2_juno_intro` | 주노가 키보드 위로 등장 | `bg_hall_day` | 도윤 `normal_startled` + 주노 `surprised → happy`; 반응에 따라 `neutral/upset` | 계속 `bgm_daily` | 등장 순간 짧은 CSS 빛·낙하. 자유 대화 결과 표정 사용 |
-| N2 `n2_juno_followup` | 정체·선택 이유 확인 | `bg_hall_day` | 도윤 `normal` + 주노 `neutral`; 선택 이유 질문 `shy`, 냉담 `upset` | 계속 `bgm_daily` | 각 캐릭터는 한 번에 한 표정만 표시 |
-| N3 `n3_wraith_choice` | 회색 망령 등장 | `bg_hall_dark` | 도윤 `normal_startled` + `gray_wraith.normal` 중앙/후면 + `juno.upset` 측면; 시간·인식이 멈춘 핵심 팀은 배경 실루엣 | 선호 `bgm_crisis`; MVP 폴백 `bgm_battle` | 마법의 보호 범위 밖 감각 반응을 추가하지 않는다. 평가표·안개·방어막 균열은 CSS/Canvas |
+| N2 `n2_juno_followup` | 정체·선택 이유 확인 | `bg_hall_day` | 도윤 `normal` + 주노 `neutral`; 냉담만 `normal_tired` | 계속 `bgm_daily` | full facepalm `normal_shy`는 현재 mapping에서 제외. 각 캐릭터는 한 번에 한 표정만 표시 |
+| N3 `n3_wraith_choice` | 회색 망령 등장 | `bg_hall_dark` | opening 도윤 `normal_startled` + LEFT/CENTER-LEFT 대형 `gray_wraith.normal` + Doyun-side center-low `juno.upset`; 시간·인식이 멈춘 핵심 팀은 배경 실루엣 | 선호 `bgm_crisis`; MVP 폴백 `bgm_battle` | `[ WRAITH ] ↔ [ JUNO + DOYUN ]` 대립축. Wraith만 audited mirror로 inward-facing. 평가표·안개·방어막 균열은 CSS/Canvas |
 | N4-A `n4_team` | 죽이 맞는 콤비 | `bg_hall_dark` | 도윤 `normal_smile` + `juno.happy`; 망령 유지 | 계속 crisis/폴백 | 주노 한 바퀴 회전은 CSS |
 | N4-B `n4_cooperate` | 마지못한 협력 | `bg_hall_dark` | 도윤 `normal` + `juno.neutral`; 망령 유지 | 계속 crisis/폴백 | 주노를 N4-A보다 작고 차분하게 배치 |
-| N4-C `n4_awkward` | 서먹함·회복 기회 | `bg_hall_dark` | 도윤 `normal_shy` + 주노 시작 `upset`, 회복 `shy`, 거리 유지 `neutral`; 망령 유지 | 계속 crisis/폴백 | 주노 발광량 감소는 CSS. 별도 어두운 스프라이트 금지 |
+| N4-C `n4_awkward` | 서먹함·회복 기회 | `bg_hall_dark` | 도윤 시작 `normal`, 회복 `normal_smile`, 거리 유지 `normal_tired` + 주노 시작 `upset`, 회복 `shy`, 거리 유지 `neutral`; 망령 유지 | 계속 crisis/폴백 | 주노 발광량 감소는 CSS. 별도 어두운 스프라이트 금지 |
 
 #### 대화 응답 직후 도윤 감정 매핑
 
@@ -146,18 +146,18 @@
 | 노드 | 플레이어 의도 | 도윤 논리 ID | 대본 감정 근거 |
 |---|---|---|---|
 | `n2_juno_intro` | `curious_magic` / `realistic_objection` / `reject_juno` | `normal_smile` / `normal` / `normal_tired` | 호기심 / 현실적 확인 / 피로한 거절 |
-| `n2_juno_followup` | `ask_identity` / `ask_why_chosen` / `stay_cold` | `normal` / `normal_shy` / `normal_tired` | 정체 확인 / 자신이 선택된 이유에 대한 당혹 / 냉담 유지 |
+| `n2_juno_followup` | `ask_identity` / `ask_why_chosen` / `stay_cold` | `normal` / `normal` / `normal_tired` | 정체 확인 / 선택 이유를 집중해 들음 / 냉담 유지 |
 | `n3_wraith_choice` | `protect_others` / `seek_method` / `withdraw_or_agree` | `normal_startled` / `normal` / `normal_tired` | 위기 속 타인 걱정 / 해결법 탐색 / 철수·체념 |
 | `n4_team` | `match_rhythm`, `tease_juno` / `focus_action` | `normal_smile` / `normal` | 콤비 호흡·농담 / 즉시 행동 집중 |
-| `n4_cooperate` | `follow_steps`, `demand_answers` / `complain_then_help` | `normal` / `normal_shy` | 제한적 협력·추궁 / 투덜거리며 주문 수용 |
+| `n4_cooperate` | `follow_steps`, `demand_answers`, `complain_then_help` | `normal` | 제한적 협력·추궁·투덜거림 모두 행동에 집중; full facepalm은 제거 |
 | `n4_awkward` | `repair_relation` / `limited_cooperation` / `keep_distance` | `normal_smile` / `normal` / `normal_tired` | 관계 회복 / 제한적 협력 / 거리 유지 |
 
 ### 4.2 N5 변신·N6~N8 전투
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물·컷 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
-| N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 도윤 `normal_shy` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | `juno.surprised`는 망령 공격 순간에만 사용. 도입은 직전 N4 관계 표정을 이어받음 |
-| N5 주문 게이트 | 두 문장 한 번에 낭독 | `bg_desk_closeup` | 도윤 `normal_shy`; 주문 UI 중심, 주노는 작게 유지 | 입력 중 기존 곡 duck | 주문 전문은 DOM. BGM·SFX가 STT에 섞이지 않도록 입력 중 음량 낮춤 |
+| N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 첫 beat 도윤 `normal_startled` 임시 proxy, 이후 `normal` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | floating ID 전용 시선 reaction `NEW 1` 대기. proxy는 사람 승인 asset이 아님 |
+| N5 주문 게이트 | 두 문장 한 번에 낭독 | `bg_desk_closeup` | 도윤 `normal`; 주문 UI 중심, 주노는 작게 유지 | 입력 중 기존 곡 duck | full facepalm 제거. 주문 전문은 DOM. 입력 중 BGM duck |
 | N5 변신 결과 | 야간 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` + `transform.cast` A2 사원증·야간 → `transform.complete` 심야 완료 | `bgm_transform` one-shot | 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등. 완전/표준/구제는 효과 강도만 다름 |
 | `battle_wraith` / p1 `p1_defend` | 정지한 핵심 팀·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` + `gray_wraith.normal` + `juno.neutral`; 팀은 위협을 인식하지 못한 배경 실루엣 | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void` |
 | `battle_wraith` / p2 `p2_attack` | 망령 중심 공격 | `bg_hall_void` | 도윤 `magical_attack` + momentum별 망령 + `juno.happy` | 계속 `bgm_battle` | 공격 플래시 뒤에도 같은 캔버스 정렬 유지 |
@@ -182,6 +182,7 @@
 - 캐릭터 경로는 `{characterId}.{emotion}`으로 중앙 resolver가 찾는다.
 - 도윤은 `presentationDoyun` 고정 매핑으로 표시한다. 타이틀과 N0 첫 두 대사만 숨기고, 이후 독백을 포함한 본편 장면에서는 위 표의 도윤 상태를 표시한다.
 - `[확정, DEC-049]` 도윤은 화면 오른쪽 영역 안에서 중심 쪽으로 더 옮기고, 확대·하향해 하반신 crop을 허용한다. PNG 상단을 기준으로 상반신을 보존한다. 작은 주노는 도윤 쪽으로 붙여 같은 인물군으로 읽히게 한다. 대화·컷씬·엔딩·battle·dev 프리뷰 모두 같은 좌우 방향을 유지하며 원본 파일을 물리 crop하지 않는다.
+- `[확정, 2026-08-22 human direction]` edge actor는 기본적으로 화면 안쪽을 본다. Wraith 2종만 asset audit 후 `SAFE_TO_MIRROR`; Doyun 11종과 Juno 5종은 소품·handedness·의상 비대칭 때문에 `USE_ORIGINAL_ONLY`다. 일괄 `scaleX(-1)`은 금지하며 의도적 외면만 scene 예외다. 상세 판정은 [V31_ACTING_DIRECTION_AUDIT.md](V31_ACTING_DIRECTION_AUDIT.md)를 따른다.
 - 전투 적 상태는 `momentum >= 65`면 `gray_wraith.weakened`, 아니면 `gray_wraith.normal`이다.
 - N1의 주노 미노출, N3/N4/N5의 주노+망령 동시 표시, battle의 주노 보조 표시는 노드 타입 기본 렌더만으로 추론하지 않는다. 이 문서의 장면 규칙을 presentation 계층에서 적용한다.
 - `[확정, DEC-036]` scenario의 단일 `scene.bg`는 저장·복구용 베이스 ID다. N0 line beat, N5 주문 단계, battle phase/p3 spell, ending 후속 beat의 세부 배경 교체는 새 JSON 필드 없이 presentation 계층의 고정 매핑으로 적용한다.

@@ -3268,8 +3268,8 @@ html[data-qa-preview="true"] .dev-scene-nav {
     z-index: 2;
     right: auto;
     bottom: clamp(150px, 23vh, 250px);
-    left: clamp(43%, 46vw, 49%);
-    width: min(12vw, 205px);
+    left: clamp(47%, 50vw, 53%);
+    width: min(10vw, 180px);
     height: min(34vh, 360px);
   }
 
@@ -3311,6 +3311,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   }
 
   .dev-scene-preview[data-composition="confrontation"] .dev-preview-stage,
+  .dev-scene-preview[data-composition="protect"] .dev-preview-stage,
   .dev-scene-preview[data-composition="battle"] .dev-preview-stage,
   .dev-scene-preview[data-composition="conversation"] .dev-preview-stage,
   .dev-scene-preview[data-composition="ending"] .dev-preview-stage {
@@ -3318,6 +3319,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   }
 
   .dev-scene-preview[data-composition="confrontation"] .dev-role-enemy,
+  .dev-scene-preview[data-composition="protect"] .dev-role-enemy,
   .dev-scene-preview[data-composition="battle"] .dev-role-enemy {
     right: auto;
     bottom: 12%;
@@ -3329,8 +3331,16 @@ html[data-qa-preview="true"] .dev-scene-nav {
   .dev-scene-preview[data-composition="confrontation"] .dev-role-juno {
     right: auto;
     bottom: 22%;
-    left: 45%;
-    width: 11%;
+    left: 49%;
+    width: 10%;
+    height: 32%;
+  }
+
+  .dev-scene-preview[data-composition="protect"] .dev-role-juno {
+    right: auto;
+    bottom: 34%;
+    left: 46%;
+    width: 10%;
     height: 32%;
   }
 
@@ -3343,6 +3353,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   }
 
   .dev-scene-preview[data-composition="confrontation"] .dev-role-player,
+  .dev-scene-preview[data-composition="protect"] .dev-role-player,
   .dev-scene-preview[data-composition="battle"] .dev-role-player,
   .dev-scene-preview[data-composition="conversation"] .dev-role-player,
   .dev-scene-preview[data-composition="ending"] .dev-role-player {
@@ -3384,6 +3395,13 @@ html[data-qa-preview="true"] .dev-scene-nav {
     object-fit: cover;
     object-position: center;
   }
+}
+
+.game-shell[data-composition="confrontation"][data-wraith-facing="screen-right"][data-wraith-mirror="safe-to-mirror"] .scene-enemy-visual .asset-image,
+.game-shell[data-composition="protect"][data-wraith-facing="screen-right"][data-wraith-mirror="safe-to-mirror"] .scene-enemy-visual .asset-image,
+.game-shell[data-composition="battle"][data-wraith-facing="screen-right"][data-wraith-mirror="safe-to-mirror"] .battle-stage-wraith .asset-image,
+.dev-scene-preview[data-wraith-facing="screen-right"][data-wraith-mirror="safe-to-mirror"] .dev-role-enemy .asset-image {
+  transform: scaleX(-1);
 }
 
 .game-shell[data-render-mode="cut"] [data-sprite-slot] {

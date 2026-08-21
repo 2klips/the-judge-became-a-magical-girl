@@ -38,20 +38,44 @@ describe("Scenario v3.1 global scene composition", () => {
     }
   });
 
-  it("N3는 큰 좌측 Wraith, 중앙 Juno, 우측 Doyun 대치 구도다", () => {
+  it("N3는 inward-facing enemy↔hero axis와 Doyun-side support triangle을 고정한다", () => {
     expect(compositionForContext("n3_wraith_choice")).toMatchObject({
       preset: "confrontation",
       mode: "sprite",
       actors: {
-        gray_wraith: { zone: "left", scale: "large" },
+        gray_wraith: {
+          zone: "left",
+          scale: "large",
+          dramaticSide: "enemy",
+          facing: "screen-right",
+          mirrorPolicy: "safe-to-mirror",
+        },
         juno: {
           zone: "center",
           scale: "small",
           anchor: "center-low-support",
+          dramaticSide: "hero",
+          facing: "front",
+          mirrorPolicy: "original-only",
         },
-        doyun: { zone: "right", scale: "large" },
+        doyun: {
+          zone: "right",
+          scale: "large",
+          dramaticSide: "hero",
+          facing: "screen-left",
+          mirrorPolicy: "original-only",
+        },
       } satisfies Record<SceneActor, unknown>,
     });
+  });
+
+  it("N3만 audited-safe Wraith horizontal mirror를 적용하고 Doyun/Juno는 반전하지 않는다", () => {
+    expect(stylesSource).toMatch(
+      /data-composition="confrontation"[^\n]*data-wraith-facing="screen-right"[^\n]*\.scene-enemy-visual \.asset-image,[\s\S]*?\{[^}]*transform:\s*scaleX\(-1\)/s,
+    );
+    expect(stylesSource).not.toMatch(
+      /data-composition="confrontation"[\s\S]*?\.scene-player-visual \.asset-image\s*\{[^}]*scaleX\(-1\)/s,
+    );
   });
 
   it("battle은 좌측 Wraith/중앙 support Juno/우측 Doyun을 고정한다", () => {
@@ -73,6 +97,9 @@ describe("Scenario v3.1 global scene composition", () => {
     expect(stylesSource).toMatch(
       /data-composition="battle"[^}]*\.dev-role-juno\s*\{[^}]*bottom:\s*34%/s,
     );
+    expect(stylesSource).toMatch(
+      /data-composition="confrontation"[^}]*\.dev-role-juno\s*\{[^}]*left:\s*49%/s,
+    );
   });
 
   it("N5 result는 Juno를 center-low-support에 유지한다", () => {
@@ -92,6 +119,18 @@ describe("Scenario v3.1 global scene composition", () => {
     });
     expect(stylesSource).toMatch(
       /\.game-shell\[data-composition="protect"\]\.n5-transformation-result-scene \.cutscene-character\s*\{[^}]*bottom:\s*clamp\(145px, 20vh, 220px\)/s,
+    );
+  });
+
+  it("N5 protect preview는 enemy/hero/support safe zones를 runtime처럼 분리한다", () => {
+    expect(stylesSource).toMatch(
+      /data-composition="protect"[^}]*\.dev-role-enemy,[\s\S]*?\{[^}]*left:\s*2%[^}]*width:\s*34%/s,
+    );
+    expect(stylesSource).toMatch(
+      /data-composition="protect"[^}]*\.dev-role-juno\s*\{[^}]*left:\s*46%[^}]*width:\s*10%/s,
+    );
+    expect(stylesSource).toMatch(
+      /data-composition="protect"[^}]*\.dev-role-player,[\s\S]*?\{[^}]*right:\s*1%[^}]*width:\s*37%/s,
     );
   });
 

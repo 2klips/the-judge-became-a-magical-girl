@@ -34,21 +34,23 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
   if (cue.nodeId === "n0_review") {
     const lineIndex = cue.lineIndex ?? 0;
     if (lineIndex < 2) return null;
-    return lineIndex >= 4 ? "doyun.normal_startled" : "doyun.normal_tired";
+    return "doyun.normal_tired";
   }
-  if (cue.nodeId === "n1_first_voice" || cue.nodeId === "n2_juno_intro") {
+  if (cue.nodeId === "n1_first_voice") return "doyun.normal";
+  if (cue.nodeId === "n2_juno_intro") {
     if (cue.intentId === "curious_magic") return "doyun.normal_smile";
     if (cue.intentId === "realistic_objection") return "doyun.normal";
     if (cue.intentId === "reject_juno") return "doyun.normal_tired";
     return "doyun.normal_startled";
   }
   if (cue.nodeId === "n2_juno_followup") {
-    if (cue.intentId === "ask_why_chosen") return "doyun.normal_shy";
     if (cue.intentId === "stay_cold") return "doyun.normal_tired";
     return "doyun.normal";
   }
   if (cue.nodeId === "n3_wraith_choice") {
-    if (cue.intentId === "seek_method") return "doyun.normal";
+    if (cue.intentId === "protect_others" || cue.intentId === "seek_method") {
+      return "doyun.normal";
+    }
     if (cue.intentId === "withdraw" || cue.intentId === "agree_with_wraith") {
       return "doyun.normal_tired";
     }
@@ -58,15 +60,17 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
     return cue.intentId === "focus_action" ? "doyun.normal" : "doyun.normal_smile";
   }
   if (cue.nodeId === "n4_cooperate") {
-    return cue.intentId === "complain_then_help" ? "doyun.normal_shy" : "doyun.normal";
+    return "doyun.normal";
   }
   if (cue.nodeId === "n4_awkward") {
     if (cue.intentId === "repair_relation") return "doyun.normal_smile";
     if (cue.intentId === "keep_distance") return "doyun.normal_tired";
-    return cue.intentId ? "doyun.normal" : "doyun.normal_shy";
+    return "doyun.normal";
   }
   if (cue.nodeId === "n5_transform") {
-    return cue.stage === "transformation" ? "doyun.magical_pose" : "doyun.normal_shy";
+    if (cue.stage === "transformation") return "doyun.magical_pose";
+    if (cue.stage === "incantation") return "doyun.normal";
+    return cue.lineIndex === 0 ? "doyun.normal_startled" : "doyun.normal";
   }
   if (cue.nodeId === "n6_first_choice") return "doyun.magical_pose";
   if (cue.nodeId === "n7_gray_answer" || cue.nodeId === "n8_final_spell") {

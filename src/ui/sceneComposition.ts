@@ -1,6 +1,9 @@
 export type SceneActor = "doyun" | "juno" | "gray_wraith";
 export type ActorZone = "left" | "center" | "right";
 export type ActorScale = "small" | "medium" | "large";
+export type ActorFacing = "screen-left" | "screen-right" | "front";
+export type DramaticSide = "enemy" | "hero";
+export type MirrorPolicy = "safe-to-mirror" | "original-only";
 export type SupportAnchor = "center-low-support" | "center-mid-support";
 export type SceneRenderMode = "sprite" | "cut";
 export type SceneCompositionPreset =
@@ -15,6 +18,9 @@ export interface ActorPlacement {
   readonly zone: ActorZone;
   readonly scale: ActorScale;
   readonly anchor?: SupportAnchor;
+  readonly dramaticSide: DramaticSide;
+  readonly facing: ActorFacing;
+  readonly mirrorPolicy: MirrorPolicy;
 }
 
 export interface CutPresentation {
@@ -34,47 +40,104 @@ const compositions: Record<SceneCompositionPreset, SceneComposition> = {
     preset: "conversation",
     mode: "sprite",
     actors: {
-      juno: { zone: "left", scale: "small" },
-      doyun: { zone: "right", scale: "large" },
+      juno: {
+        zone: "left",
+        scale: "small",
+        dramaticSide: "hero",
+        facing: "front",
+        mirrorPolicy: "original-only",
+      },
+      doyun: {
+        zone: "right",
+        scale: "large",
+        dramaticSide: "hero",
+        facing: "screen-left",
+        mirrorPolicy: "original-only",
+      },
     },
   },
   confrontation: {
     preset: "confrontation",
     mode: "sprite",
     actors: {
-      gray_wraith: { zone: "left", scale: "large" },
+      gray_wraith: {
+        zone: "left",
+        scale: "large",
+        dramaticSide: "enemy",
+        facing: "screen-right",
+        mirrorPolicy: "safe-to-mirror",
+      },
       juno: {
         zone: "center",
         scale: "small",
         anchor: "center-low-support",
+        dramaticSide: "hero",
+        facing: "front",
+        mirrorPolicy: "original-only",
       },
-      doyun: { zone: "right", scale: "large" },
+      doyun: {
+        zone: "right",
+        scale: "large",
+        dramaticSide: "hero",
+        facing: "screen-left",
+        mirrorPolicy: "original-only",
+      },
     },
   },
   protect: {
     preset: "protect",
     mode: "sprite",
     actors: {
-      gray_wraith: { zone: "left", scale: "large" },
+      gray_wraith: {
+        zone: "left",
+        scale: "large",
+        dramaticSide: "enemy",
+        facing: "screen-right",
+        mirrorPolicy: "safe-to-mirror",
+      },
       juno: {
         zone: "center",
         scale: "medium",
         anchor: "center-mid-support",
+        dramaticSide: "hero",
+        facing: "front",
+        mirrorPolicy: "original-only",
       },
-      doyun: { zone: "right", scale: "large" },
+      doyun: {
+        zone: "right",
+        scale: "large",
+        dramaticSide: "hero",
+        facing: "screen-left",
+        mirrorPolicy: "original-only",
+      },
     },
   },
   battle: {
     preset: "battle",
     mode: "sprite",
     actors: {
-      gray_wraith: { zone: "left", scale: "large" },
+      gray_wraith: {
+        zone: "left",
+        scale: "large",
+        dramaticSide: "enemy",
+        facing: "screen-right",
+        mirrorPolicy: "safe-to-mirror",
+      },
       juno: {
         zone: "center",
         scale: "small",
         anchor: "center-mid-support",
+        dramaticSide: "hero",
+        facing: "front",
+        mirrorPolicy: "original-only",
       },
-      doyun: { zone: "right", scale: "large" },
+      doyun: {
+        zone: "right",
+        scale: "large",
+        dramaticSide: "hero",
+        facing: "screen-left",
+        mirrorPolicy: "original-only",
+      },
     },
   },
   "solo-cut": {
@@ -90,8 +153,20 @@ const compositions: Record<SceneCompositionPreset, SceneComposition> = {
     preset: "ending",
     mode: "sprite",
     actors: {
-      juno: { zone: "left", scale: "small" },
-      doyun: { zone: "right", scale: "large" },
+      juno: {
+        zone: "left",
+        scale: "small",
+        dramaticSide: "hero",
+        facing: "front",
+        mirrorPolicy: "original-only",
+      },
+      doyun: {
+        zone: "right",
+        scale: "large",
+        dramaticSide: "hero",
+        facing: "screen-left",
+        mirrorPolicy: "original-only",
+      },
     },
   },
 };

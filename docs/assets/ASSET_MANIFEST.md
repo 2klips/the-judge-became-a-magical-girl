@@ -24,11 +24,11 @@
 | `juno.surprised` | `char_juno_surprised.png` | 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI 이미지 편집·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | 동일 | source/runtime 동일 바이트·자동 규격·N2 합성 PASS. 사람 variation/장면 QA 대기 |
 | `gray_wraith.normal` | `char_gray_wraith_normal.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle `enemy.id` + state | source/runtime 동일 바이트·413,056B·자동 규격 PASS. 사람 합성 QA 대기 |
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle `enemy.id` + state | source/runtime 동일 바이트·205,779B·자동 규격 PASS. DEC-060 폴백 유지. 사람 합성 QA 대기 |
-| `doyun.normal_tired` | `char_doyun_normal_tired.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 3~4번째, N2 거절·냉담, N3 철수, N4 거리 유지 | 자동 규격·응답 매핑·배치 QA PASS |
-| `doyun.normal_startled` | `char_doyun_normal_startled.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 마지막·N1·N2 도입, N3 도입·타인 보호 | 자동 규격·응답 매핑·배치 QA PASS |
-| `doyun.normal` | `char_doyun_normal.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 현실 확인·정체 질문, N3 해결 탐색, N4 행동 집중·협력 | 자동 규격·응답 매핑·배치 QA PASS |
+| `doyun.normal_tired` | `char_doyun_normal_tired.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 line 2~5, N2 거절·냉담, N3 철수·동조, N4 거리 유지 | 자동 규격 PASS. v3.1 human acting remap은 `HUMAN_RECHECK` |
+| `doyun.normal_startled` | `char_doyun_normal_startled.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 실제 주노 등장, N3 망령 opening, N5 floating ID 임시 proxy | 자동 규격 PASS. 강한 surprise를 실제 초현상 이후로 제한. N5 전용 시선 pose `NEW 1` 대기 |
+| `doyun.normal` | `char_doyun_normal.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N1 mild disbelief, N2 후속, N3 보호·방법 확인, N4 행동·협력, N5 압박·영창 | 자동 규격 PASS. v3.1 human acting remap은 `HUMAN_RECHECK` |
 | `doyun.normal_smile` | `char_doyun_normal_smile.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 호기심, N4-A·관계 회복, GOOD·NORMAL | 자동 규격·응답 매핑·배치 QA PASS |
-| `doyun.normal_shy` | `char_doyun_normal_shy.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 선택 이유, N4-C·투덜대며 협력, N5 영창 | 자동 규격·응답 매핑·배치 QA PASS |
+| `doyun.normal_shy` | `char_doyun_normal_shy.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | 현재 v3.1 runtime mapping 없음; binary 보존 | full facepalm이 절망/고통으로 읽힌다는 human QA로 기존 사용처 superseded. mild facepalm 재사용 시 EDIT·사람 QA 필요 |
 | `doyun.normal_empty` | `char_doyun_normal_empty.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | BAD | 자동 규격 PASS, 장면 QA 대기 |
 | `doyun.magical` | `char_doyun_magical.png` | 마법소녀 대표 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | 전투 fallback | 자동 규격 PASS, 사용자 정면 포즈 임시 승인 DEC-035. 교체·사람 장면 QA 대기 |
 | `doyun.magical_defend` | `char_doyun_magical_defend.png` | 마법소녀 방어 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle p1 | 자동 규격 PASS, 장면 QA 대기 |
@@ -64,6 +64,12 @@
 - `doyun.magical_pose`: `EDIT REQUIRED` — 신규 pose 0장, 기존 pose EDIT 1장.
 - 유지: 현행 costume, heart-hand body pose, 실루엣, 1200×2000 투명 canvas compatibility.
 - 표정 목표: “변신에 성공했지만 당황하고 벅찬 상태”. 눈은 읽히게 유지하고 full-eye 절망 shadow를 제거한다. 눈썹은 약하게 곤란한 인상, 옅은 blush, 작고 어색한 forced smile을 사용한다.
+
+### Phase B acting visual-production handoff (2026-08-22)
+
+- floating employee ID reaction: `NEW pose candidate = 1`. logical ID·파일명은 아직 만들지 않는다. 사원증을 직접 바라보는 surprise/disbelief, 약한 recoil, 사원증/가슴 쪽 손, 작게 열린 입을 요구한다. panic/horror/despair는 금지한다.
+- `doyun.normal_shy`: 현재 v3.1 mapping에서 제거했다. mild 관자놀이/이마 짚기 연기가 후속 승인될 때만 `EDIT 1` 후보이며 현재 필수 제작량에는 포함하지 않는다.
+- HQ-05 얼굴 continuity는 [acting/direction audit](V31_ACTING_DIRECTION_AUDIT.md#4-hq-05-transformation-face-continuity--human-decision-required)의 Option A/B 사람 결정 전까지 asset 변경 금지다.
 - 금지: 고통·패배가 아닌 코믹한 당혹감이라는 N5 결과 정서를 절망·심한 괴로움·패배 표정으로 바꾸는 것.
 - binary 생성·편집은 별도 visual-production 단계 소유다. 현재 runtime 파일과 논리 ID는 변경하지 않는다.
 

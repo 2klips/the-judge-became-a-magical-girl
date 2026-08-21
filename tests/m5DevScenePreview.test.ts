@@ -53,7 +53,12 @@ describe("M5 dev 장면 프리뷰 계약", () => {
 
     expect(logicalIds("n0-office")).not.toContain("doyun.normal_tired");
     expect(logicalIds("n0-desk")).toContain("doyun.normal_tired");
-    expect(logicalIds("n1-first-voice")).toContain("doyun.normal_startled");
+    expect(logicalIds("n1-first-voice")).toContain("doyun.normal");
+    expect(logicalIds("n2-juno")).toContain("doyun.normal_startled");
+    expect(logicalIds("n5-intro")).toContain("doyun.normal_startled");
+    expect(logicalIds("n5-incantation")).toContain("doyun.normal");
+    expect(logicalIds("n4-awkward")).toContain("doyun.normal");
+    expect(logicalIds("n4-awkward")).not.toContain("doyun.normal_shy");
     expect(logicalIds("battle-p1")).toContain("doyun.magical_defend");
     expect(logicalIds("battle-p2")).toContain("doyun.magical_attack");
     expect(logicalIds("n8-final-spell")).toContain("doyun.magical_finish");
@@ -84,6 +89,14 @@ describe("M5 dev 장면 프리뷰 계약", () => {
       "ending-bad",
     ]) {
       expect(bgm(id), id).toBe("bgm_ending");
+    }
+  });
+
+  it("N5 live preview는 runtime과 같은 protect 방향 계약을 노출한다", () => {
+    for (const id of ["n5-intro", "n5-incantation"]) {
+      const preview = M5_SCENE_PREVIEWS.find((candidate) => candidate.id === id);
+      expect(preview?.composition, id).toBe("protect");
+      expect(preview?.renderMode, id).toBe("sprite");
     }
   });
 });

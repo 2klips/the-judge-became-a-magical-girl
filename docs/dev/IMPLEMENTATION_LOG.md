@@ -1883,3 +1883,47 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - browser console에는 Vite 연결 debug 4건만 있었고 warning/error는 0이었다. API key, Bearer 값, raw upstream error body, local secret 내용은 Console·DOM·완료 근거에 노출되지 않았다.
 - voice 관련 targeted regression은 7 files·60 tests PASS, `npm run check`는 PASS다. production code, binary asset, scenario는 변경하지 않았다.
 - Actual Worker·dialogue·incantation·battle·BGM duck/recover 기능 Gate는 PASS다. HUMAN_SCENE_QA_BACKLOG의 HQ-01~HQ-13은 별도 시각/UX 항목이므로 상태를 변경하지 않는다.
+
+## Phase B — Doyun Acting + Actor Direction / Confrontation Composition
+
+- 작업일: 2026-08-22 KST
+- 브랜치·시작 HEAD: `codex/scenario-v31-runtime-composition-p1` · `7e9acabbaa3b762e12684df187b3f8d4270bf901`
+- 범위: 기존 Doyun asset remap, asset별 facing/mirror metadata, N3/N5 confrontation safe zone, visual-production handoff. story·scenario·voice·binary asset 변경 없음.
+
+### Acting·asset audit
+
+- N0 line 2~5는 `normal_tired`, N1 첫 목소리는 `normal`, 실제 Juno 등장과 Wraith reveal부터 `normal_startled`를 사용해 `TIRED → SUSPICIOUS/ATTENTIVE → ACTUAL SURPRISE` 순서를 만들었다.
+- N2 선택 이유, N4-B/C, N5 압박·영창의 `normal_shy` full facepalm을 `normal` 또는 관계별 기존 asset으로 remap했다. 현재 v3.1 runtime에서 `normal_shy` occurrence는 0이며 binary는 삭제하지 않았다.
+- N5 floating employee ID에는 exact gaze asset이 없어 `normal_startled`를 임시 proxy로 사용한다. 시선·torso·손이 사원증을 향하는 surprise/disbelief 전용 pose `NEW 1` handoff를 만들되 logical ID·파일명은 확정하지 않았다.
+- `doyun.magical_pose` facial `EDIT 1`, Juno 3 behavior poses, black magical girl 1 cut의 기존 TODO를 유지했다.
+- HQ-05는 A(변신 후 live 얼굴 공개: 현재 사용 magical live 4장 EDIT, fallback까지 맞추면 +1)와 B(CUT01/02 눈 가림 EDIT 2)로 분리하고 사람 결정 전 구현하지 않았다.
+
+### Direction·composition
+
+- composition metadata에 `dramaticSide`, `facing`, `mirrorPolicy`를 추가하고 runtime/dev shell dataset으로 노출했다.
+- Wraith normal/weakened는 text·고정 소품이 없는 안개형 실루엣이라 `SAFE_TO_MIRROR`; Doyun 11종과 Juno 5종은 사원증·wand·handedness·의상 비대칭 때문에 `USE_ORIGINAL_ONLY`다.
+- N3은 Wraith LEFT/CENTER-LEFT·screen-right, Doyun RIGHT·screen-left, Juno Doyun-side center-low support로 `[ WRAITH ] ↔ [ JUNO + DOYUN ]` 대립축을 고정했다.
+- N5 preview가 runtime `protect` preset 대신 legacy conversation fallback을 써 Juno/Doyun bbox가 겹치는 사각지대를 Chrome에서 발견했다. dev preview도 `protect` safe zone을 사용하게 고쳐 runtime과 QA 화면을 맞췄다. approved battle action layout은 바꾸지 않았다.
+
+### TDD·Chrome evidence
+
+- 첫 RED: acting/facing 계약을 production보다 먼저 추가해 3 files에서 11 failures를 확인했다. 구현 뒤 focused 3 files·29 tests PASS.
+- 추가 RED: N5 `protect` preview safe-zone selector가 없어 `v31Composition` 1 failure를 확인했다. 구현 뒤 최종 focused 3 files·31 tests PASS.
+- Chrome 1920×1080 production/debug OFF에서 N0 `normal_tired`, N1 `normal`, N2 `normal_startled`와 scroll 0을 확인했다. N3, N5 floating ID, transformed-live, battle lead-in은 debug isolated preview로 캡처했다.
+- 1920×1080 N3: Wraith x=75~702, Juno x=941~1125, Doyun x=1181~1863. actor bbox overlap 0, Wraith만 `matrix(-1, 0, 0, 1, 0, 0)`.
+- 1920×1080 N5 floating ID: Wraith x=75~702, Juno x=886~1071, Doyun x=1181~1863. actor bbox overlap 0.
+- 1600×900·1366×768의 N3/N5 intro/N5 transformed/battle 8조합은 scroll size가 viewport와 같고 actor collision·offscreen·face-panel overlap이 모두 0이었다.
+- Chrome console warning/error는 0이었다. dev preview의 DEBUG HUD는 production N0/N1/N2 capture에는 나타나지 않았다.
+
+### fresh verification
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| focused | PASS | 3 files·31 tests |
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 59 files·415 tests |
+| `npm run build` | PASS | Vite 8.2.0, 156 modules; 기존 Transformers 516.22kB chunk warning만 유지 |
+| `npm run build:qa` | PASS | QA build 126 modules |
+| `git diff --check` | PASS | 공백 오류 없음 |
+
+HQ-01·04·08·09는 `HUMAN_RECHECK`, HQ-03·07은 asset 미제작으로 `OPEN`, HQ-05는 `OPEN / HUMAN DECISION REQUIRED`다. Codex 단독으로 `PASS` 처리하지 않았다.

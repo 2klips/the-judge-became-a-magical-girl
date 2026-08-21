@@ -82,7 +82,7 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     beat: "주노 미노출",
     bgmId: "bgm_daily",
     layout: "dialogue",
-    visuals: [doyun("normal_startled")],
+    visuals: [doyun("normal")],
     showVoiceOrb: true,
   },
   {
@@ -133,7 +133,7 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     beat: "upset",
     bgmId: "bgm_crisis",
     layout: "dialogue",
-    visuals: [doyun("normal_shy"), wraith("normal"), juno("upset")],
+    visuals: [doyun("normal"), wraith("normal"), juno("upset")],
   },
   {
     id: "n4-c-recover",
@@ -160,10 +160,10 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     label: "N5 · 변신 도입",
     backgroundId: "bg_hall_dark",
     nodeId: "n5_transform",
-    beat: "도입 line",
+    beat: "floating employee ID · reaction handoff pending",
     bgmId: "bgm_crisis",
     layout: "dialogue",
-    visuals: [doyun("normal_shy"), wraith("normal"), juno("surprised")],
+    visuals: [doyun("normal_startled"), wraith("normal"), juno("surprised")],
   },
   {
     id: "n5-incantation",
@@ -173,7 +173,7 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     beat: "incantation",
     bgmId: "bgm_crisis",
     layout: "dialogue",
-    visuals: [doyun("normal_shy"), juno("surprised")],
+    visuals: [doyun("normal"), juno("surprised")],
   },
   {
     id: "n5-before-transform",
@@ -183,7 +183,7 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     beat: "before transform",
     bgmId: "bgm_crisis",
     layout: "dialogue",
-    visuals: [doyun("normal_shy"), wraith("normal"), juno("surprised")],
+    visuals: [doyun("normal"), wraith("normal"), juno("surprised")],
   },
   {
     id: "n5-cut-01",
@@ -342,6 +342,9 @@ function previewComposition(id: string): Pick<
   }
   if (id === "n3-wraith" || id.startsWith("n4-") || id === "n5-before-transform") {
     return { composition: "confrontation", renderMode: "sprite" };
+  }
+  if (id === "n5-intro" || id === "n5-incantation") {
+    return { composition: "protect", renderMode: "sprite" };
   }
   if (
     id.startsWith("battle-") ||

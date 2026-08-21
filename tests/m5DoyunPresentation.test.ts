@@ -2,27 +2,35 @@ import { describe, expect, it } from "vitest";
 import { resolveDoyunVisual } from "../src/assets/presentationDoyun";
 
 describe("M5 도윤 화면 노출 계약", () => {
-  it("N0 첫 두 문장만 숨기고 세 번째 문장부터 도윤을 노출한다", () => {
+  it("N0 첫 두 문장만 숨기고 게임 실행·프롬프트까지 피곤한 심사 상태를 유지한다", () => {
     expect(resolveDoyunVisual({ kind: "node", nodeId: "n0_review", lineIndex: 0 })).toBeNull();
     expect(resolveDoyunVisual({ kind: "node", nodeId: "n0_review", lineIndex: 1 })).toBeNull();
     expect(resolveDoyunVisual({ kind: "node", nodeId: "n0_review", lineIndex: 2 })).toBe(
       "doyun.normal_tired",
     );
-    expect(resolveDoyunVisual({ kind: "node", nodeId: "n0_review", lineIndex: 4 })).toBe(
+    for (const lineIndex of [3, 4, 5]) {
+      expect(resolveDoyunVisual({ kind: "node", nodeId: "n0_review", lineIndex })).toBe(
+        "doyun.normal_tired",
+      );
+    }
+  });
+
+  it("첫 목소리는 mild disbelief, 실제 Juno 출현부터 startled로 단계 상승한다", () => {
+    expect(resolveDoyunVisual({ kind: "node", nodeId: "n1_first_voice" })).toBe(
+      "doyun.normal",
+    );
+    expect(resolveDoyunVisual({ kind: "node", nodeId: "n2_juno_intro" })).toBe(
       "doyun.normal_startled",
     );
   });
 
-  it("일상·관계·변신 장면에 고정 표정을 배치한다", () => {
-    expect(resolveDoyunVisual({ kind: "node", nodeId: "n1_first_voice" })).toBe(
-      "doyun.normal_startled",
-    );
+  it("관계·변신 장면에 승인된 기존 asset을 배치한다", () => {
     expect(resolveDoyunVisual({ kind: "node", nodeId: "n4_team" })).toBe(
       "doyun.normal_smile",
     );
     expect(
       resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", stage: "incantation" }),
-    ).toBe("doyun.normal_shy");
+    ).toBe("doyun.normal");
     expect(
       resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", stage: "transformation" }),
     ).toBe("doyun.magical_pose");
@@ -66,7 +74,7 @@ describe("M5 도윤 화면 노출 계약", () => {
         nodeId: "n2_juno_followup",
         intentId: "ask_why_chosen",
       }),
-    ).toBe("doyun.normal_shy");
+    ).toBe("doyun.normal");
     expect(
       resolveDoyunVisual({
         kind: "node",
@@ -83,7 +91,7 @@ describe("M5 도윤 화면 노출 계약", () => {
         nodeId: "n3_wraith_choice",
         intentId: "protect_others",
       }),
-    ).toBe("doyun.normal_startled");
+    ).toBe("doyun.normal");
     expect(
       resolveDoyunVisual({
         kind: "node",
@@ -114,7 +122,7 @@ describe("M5 도윤 화면 노출 계약", () => {
         nodeId: "n4_cooperate",
         intentId: "complain_then_help",
       }),
-    ).toBe("doyun.normal_shy");
+    ).toBe("doyun.normal");
     expect(
       resolveDoyunVisual({
         kind: "node",
@@ -129,6 +137,23 @@ describe("M5 도윤 화면 노출 계약", () => {
         intentId: "keep_distance",
       }),
     ).toBe("doyun.normal_tired");
+    expect(resolveDoyunVisual({ kind: "node", nodeId: "n4_awkward" })).toBe(
+      "doyun.normal",
+    );
+  });
+
+  it("N5는 floating ID의 임시 startled proxy 뒤 facepalm 없이 행동으로 수렴한다", () => {
+    expect(
+      resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", lineIndex: 0 }),
+    ).toBe("doyun.normal_startled");
+    for (const lineIndex of [1, 2]) {
+      expect(
+        resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", lineIndex }),
+      ).toBe("doyun.normal");
+    }
+    expect(
+      resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", stage: "incantation" }),
+    ).toBe("doyun.normal");
   });
 
   it("전투 페이즈와 N7/N8에 전달된 방어·공격·마무리 이미지를 사용한다", () => {
