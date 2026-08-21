@@ -1,0 +1,448 @@
+/* Phase A: authored visual-novel UI foundation for core dialogue surfaces. */
+:root {
+  --vn-surface: rgba(9, 12, 22, 0.94);
+  --vn-surface-raised: rgba(15, 19, 31, 0.96);
+  --vn-surface-subtle: rgba(255, 255, 255, 0.055);
+  --vn-text-primary: #f7f5f1;
+  --vn-text-secondary: #d4d1d0;
+  --vn-text-muted: #9697a3;
+  --vn-accent-juno: #e5bd5a;
+  --vn-accent-doyun: #d88ba8;
+  --vn-accent-wraith: #9990b5;
+  --vn-accent-system: #d7a964;
+  --vn-accent-transform: #7bcfe1;
+  --vn-border-subtle: rgba(224, 226, 236, 0.2);
+  --vn-border-active: rgba(244, 226, 178, 0.72);
+  --vn-space-sm: 8px;
+  --vn-space-md: 16px;
+  --vn-space-lg: 24px;
+  --vn-radius-sm: 4px;
+  --vn-radius-md: 8px;
+}
+
+.game-shell:not(.title-screen) {
+  --vn-speaker-accent: var(--vn-accent-system);
+  color: var(--vn-text-primary);
+}
+
+.vn-dialogue-shell--juno {
+  --vn-speaker-accent: var(--vn-accent-juno);
+}
+
+.vn-dialogue-shell--doyun {
+  --vn-speaker-accent: var(--vn-accent-doyun);
+}
+
+.vn-dialogue-shell--wraith {
+  --vn-speaker-accent: var(--vn-accent-wraith);
+}
+
+.vn-dialogue-shell--voice {
+  --vn-speaker-accent: var(--vn-accent-system);
+}
+
+.vn-dialogue-shell--narration {
+  --vn-speaker-accent: rgba(229, 225, 216, 0.68);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) {
+  position: relative;
+  z-index: 10;
+  right: auto;
+  left: auto;
+  align-self: flex-end;
+  width: min(1040px, calc(100vw - clamp(72px, 10vw, 176px)));
+  min-height: clamp(148px, 18vh, 194px);
+  max-height: min(46dvh, 440px);
+  margin: auto auto clamp(18px, 2.8vh, 30px);
+  padding: clamp(17px, 2.2vh, 23px) clamp(22px, 2.4vw, 32px) clamp(16px, 2vh, 22px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-md) var(--vn-radius-md) var(--vn-radius-sm) var(--vn-radius-sm);
+  color: var(--vn-text-primary);
+  background: var(--vn-surface);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+  clip-path: none;
+  transform: none;
+  backdrop-filter: blur(10px);
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue)::before {
+  position: absolute;
+  top: -1px;
+  left: clamp(22px, 2.4vw, 32px);
+  width: 52px;
+  height: 2px;
+  content: "";
+  background: var(--vn-speaker-accent);
+  box-shadow: none;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue)::after {
+  display: none;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue):has(.vn-advance[data-advance-state="ready"])::after {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  display: block;
+  width: auto;
+  height: auto;
+  color: var(--vn-speaker-accent);
+  background: transparent;
+  box-shadow: none;
+  content: "▾";
+  font-size: 0.8rem;
+  opacity: 0.78;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-speaker-name {
+  position: static;
+  display: inline-flex;
+  width: fit-content;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 0 9px;
+  padding: 0;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 0;
+  color: var(--vn-speaker-accent);
+  background: transparent;
+  box-shadow: none;
+  clip-path: none;
+  transform: none;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  font-size: clamp(0.76rem, 0.9vw, 0.84rem);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-speaker-name::before {
+  width: 22px;
+  height: 1px;
+  content: "";
+  background: currentColor;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-dialogue-copy {
+  min-height: 0;
+  margin: 0;
+  color: var(--vn-text-primary);
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  font-size: clamp(1.04rem, 1.35vw, 1.24rem);
+  font-weight: 500;
+  line-height: 1.68;
+  letter-spacing: -0.012em;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.75);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.vn-dialogue-shell--narration:not(.battle-dialogue) {
+  min-height: clamp(132px, 16vh, 172px);
+  background: rgba(9, 12, 22, 0.9);
+}
+
+.vn-dialogue-shell--narration:not(.battle-dialogue) .vn-dialogue-copy {
+  font-family: "MaruBuri", "Noto Serif KR", Georgia, serif;
+  font-size: clamp(1.03rem, 1.32vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.72;
+  letter-spacing: 0.005em;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-player-line {
+  width: fit-content;
+  max-width: 88%;
+  margin: 0 0 10px auto;
+  padding: 2px 0 2px 11px;
+  border: 0;
+  border-left: 2px solid var(--vn-accent-doyun);
+  color: var(--vn-text-secondary);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-dialogue-input {
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vn-border-subtle);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .prompt-label {
+  margin: 0 0 8px;
+  color: var(--vn-text-muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .input-notice {
+  margin: 0 0 9px;
+  padding: 7px 10px;
+  border: 0;
+  border-left: 2px solid var(--vn-accent-system);
+  border-radius: 0;
+  color: var(--vn-text-secondary);
+  background: var(--vn-surface-subtle);
+  font-size: 0.78rem;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 7px;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button {
+  min-height: 42px;
+  padding: 9px 13px;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-primary);
+  background: var(--vn-surface-subtle);
+  box-shadow: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:hover:not(:disabled),
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:focus-visible {
+  transform: none;
+  border-color: var(--vn-border-active);
+  background: rgba(244, 226, 178, 0.1);
+  box-shadow: none;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button:active:not(:disabled) {
+  background: rgba(244, 226, 178, 0.16);
+  transform: translateY(1px);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-voice-controls {
+  display: grid;
+  margin-top: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: stretch;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .ptt-button {
+  min-height: 44px;
+  border: 1px solid rgba(123, 207, 225, 0.58);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-primary);
+  background: rgba(16, 43, 54, 0.92);
+  box-shadow: none;
+  font-size: 0.9rem;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .ptt-button[aria-pressed="true"] {
+  background: rgba(30, 77, 89, 0.96);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-input-utilities {
+  display: flex;
+  margin-top: 8px;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.vn-input-mode-utility {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.vn-input-mode-utility:hover:not(:disabled),
+.vn-input-mode-utility:focus-visible {
+  transform: none;
+  border-color: var(--vn-border-subtle);
+  color: var(--vn-text-secondary);
+  background: var(--vn-surface-subtle);
+  box-shadow: none;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance {
+  display: block;
+  float: none;
+  width: fit-content;
+  min-height: 36px;
+  margin: 12px 0 0 auto;
+  padding: 7px 15px;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-primary);
+  background: rgba(255, 255, 255, 0.065);
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance:hover:not(:disabled),
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance:focus-visible {
+  transform: none;
+  border-color: var(--vn-border-active);
+  background: rgba(244, 226, 178, 0.1);
+  box-shadow: none;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-advance:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript {
+  display: grid;
+  width: min(100%, 430px);
+  margin: 0 0 0 auto;
+  padding: 7px 0 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  border: 0;
+  border-top: 1px dashed rgba(153, 144, 181, 0.3);
+  opacity: 0.78;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript label {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 7px;
+  align-items: center;
+  color: var(--vn-text-muted);
+  font: 500 0.68rem/1.3 "Courier New", monospace;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript input {
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid rgba(153, 144, 181, 0.3);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-secondary);
+  background: rgba(3, 5, 12, 0.48);
+  font-size: 0.72rem;
+}
+
+.vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript button {
+  min-height: 30px;
+  padding: 5px 9px;
+  border-radius: var(--vn-radius-sm);
+  font-size: 0.7rem;
+}
+
+.game-shell:not(.title-screen) button:focus-visible,
+.game-shell:not(.title-screen) select:focus-visible,
+.game-shell:not(.title-screen) input:focus-visible {
+  outline: 2px solid var(--vn-border-active);
+  outline-offset: 2px;
+}
+
+/* Later scene-specific phases consume these tokens without changing geometry here. */
+.game-shell:not(.title-screen) :is(
+    .incantation-card,
+    .transformation-result,
+    .battle-arena,
+    .battle-result-card,
+    .ending-card
+  ) {
+  --vn-component-surface: var(--vn-surface-raised);
+  --vn-component-border: var(--vn-border-subtle);
+  --vn-component-radius: var(--vn-radius-md);
+  color: var(--vn-text-primary);
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+@media (max-height: 920px) {
+  .vn-dialogue-shell:not(.battle-dialogue) {
+    width: min(1020px, calc(100vw - clamp(56px, 8vw, 132px)));
+    min-height: clamp(138px, 17vh, 168px);
+    max-height: 48dvh;
+    margin-bottom: clamp(14px, 2vh, 22px);
+    padding: 15px clamp(19px, 2.2vw, 27px) 14px;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-speaker-name {
+    margin-bottom: 6px;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-dialogue-copy {
+    font-size: clamp(0.98rem, 1.3vw, 1.12rem);
+    line-height: 1.58;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-dialogue-input {
+    margin-top: 10px;
+    padding-top: 9px;
+  }
+}
+
+@media (max-height: 800px) {
+  .vn-dialogue-shell:not(.battle-dialogue) {
+    width: min(1000px, calc(100vw - 52px));
+    min-height: 126px;
+    max-height: 52dvh;
+    margin-bottom: 12px;
+    padding: 13px 20px 12px;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-dialogue-copy {
+    font-size: clamp(0.94rem, 1.25vw, 1.05rem);
+    line-height: 1.52;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-choice-list .choice-button {
+    min-height: 38px;
+    padding: 7px 11px;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .ptt-button {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 760px) {
+  .vn-dialogue-shell:not(.battle-dialogue) {
+    width: calc(100vw - 24px);
+    max-height: 58dvh;
+    margin: auto auto 12px;
+    padding: 14px 16px;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-voice-controls,
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript {
+    grid-template-columns: 1fr;
+  }
+
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-input-mode-utility,
+  .vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript button {
+    justify-self: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vn-dialogue-shell:not(.battle-dialogue) *,
+  .vn-dialogue-shell:not(.battle-dialogue)::after {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
+}

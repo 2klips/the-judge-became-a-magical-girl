@@ -722,7 +722,7 @@ export class GameView {
       options.speakerId ?? "narration",
     );
     const button = this.delayedAdvanceButton(
-      "primary-button compact",
+      "primary-button compact vn-advance",
       options.continueLabel,
       options.onContinue,
     );
@@ -798,7 +798,7 @@ export class GameView {
       this.bindHoldToTalk(ptt, options, async (transcript) => {
         await options.onTranscript(transcript.text, transcript.observation);
       });
-      const utilities = element("div", "input-utilities");
+      const utilities = element("div", "input-utilities vn-input-utilities");
       this.appendDebugTranscript(utilities, async (transcript) => {
         await options.onTranscript(transcript);
       });
@@ -806,7 +806,11 @@ export class GameView {
     } else if (controlContract.showClickActions) {
       inputArea.append(fallback);
       if (controlContract.showVoiceModeSwitch) {
-        const voice = element("button", "secondary-button compact-input", "음성 입력으로 전환");
+        const voice = element(
+          "button",
+          "secondary-button compact-input vn-input-mode-utility",
+          "음성 입력으로 전환",
+        );
         voice.type = "button";
         voice.addEventListener("click", () => options.onModeChange("voice"), { once: true });
         inputArea.append(voice);
@@ -1017,7 +1021,11 @@ export class GameView {
           transcript.observation,
         ),
       );
-      const clickMode = element("button", "secondary-button compact-input", "클릭으로 전환");
+      const clickMode = element(
+        "button",
+        "secondary-button compact-input vn-input-mode-utility",
+        "클릭으로 전환",
+      );
       clickMode.type = "button";
       clickMode.addEventListener("click", () => options.onModeChange("click"), { once: true });
       command.append(clickMode);
@@ -1043,13 +1051,17 @@ export class GameView {
       choices.append(guard);
       command.append(choices);
       if (controlContract.showVoiceModeSwitch) {
-        const voice = element("button", "secondary-button compact-input", "음성 입력으로 전환");
+        const voice = element(
+          "button",
+          "secondary-button compact-input vn-input-mode-utility",
+          "음성 입력으로 전환",
+        );
         voice.type = "button";
         voice.addEventListener("click", () => options.onModeChange("voice"), { once: true });
         command.append(voice);
       }
     }
-    const utilities = element("div", "input-utilities");
+    const utilities = element("div", "input-utilities vn-input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
       await options.onTranscript("spell", transcript);
     });
@@ -1188,7 +1200,7 @@ export class GameView {
       resolveDialogueOpening(node, state),
       node.nodeId === "n1_first_voice" ? "voice" : character.id,
     );
-    const inputArea = element("section", "dialogue-input");
+    const inputArea = element("section", "dialogue-input vn-dialogue-input");
     inputArea.dataset.inputMode = state.inputMode;
     panel.append(inputArea);
     if (controlContract.showVoiceCapture) {
@@ -1245,11 +1257,11 @@ export class GameView {
       options.nodeId === "n1_first_voice" ? "voice" : options.characterId,
     );
     panel.insertBefore(
-      element("p", "player-line", `도윤 · ${options.selectedLabel}`),
+      element("p", "player-line vn-player-line", `도윤 · ${options.selectedLabel}`),
       panel.firstChild,
     );
     const button = this.delayedAdvanceButton(
-      "primary-button compact",
+      "primary-button compact vn-advance",
       options.advanced ? "다음 장면" : "계속 대화",
       options.onContinue,
     );
@@ -1649,12 +1661,14 @@ export class GameView {
     const presentation = resolveDialoguePresentation(speakerId);
     const panel = element(
       "section",
-      `dialogue-panel dialogue-side-${presentation.side} dialogue-tone-${presentation.tone}`,
+      `dialogue-panel vn-dialogue-shell vn-dialogue-shell--${presentation.tone} dialogue-side-${presentation.side} dialogue-tone-${presentation.tone}`,
     );
     panel.dataset.speaker = speakerId;
     panel.setAttribute("aria-live", "off");
-    if (presentation.showName) panel.append(element("div", "nameplate", speaker));
-    const dialogueText = element("p", "dialogue-text");
+    if (presentation.showName) {
+      panel.append(element("div", "nameplate vn-speaker-name", speaker));
+    }
+    const dialogueText = element("p", "dialogue-text vn-dialogue-copy");
     dialogueText.dataset.typewriterText = formatDialogueText(text, speakerId);
     dialogueText.textContent = dialogueText.dataset.typewriterText;
     panel.append(dialogueText);
@@ -1958,16 +1972,16 @@ export class GameView {
       container.append(element("p", "input-notice", notice));
     }
     container.append(element("p", "prompt-label", "클릭할 의도를 골라 줘."));
-    const choices = element("div", "choice-list");
+    const choices = element("div", "choice-list vn-choice-list");
     const input = new ClickInputPort(choices);
     input.render(node.intents, onSelect);
     container.append(choices);
 
-    const utilities = element("div", "input-utilities");
+    const utilities = element("div", "input-utilities vn-input-utilities");
     if (allowVoiceSwitch && options.speechSupported) {
       const voiceButton = element(
         "button",
-        "secondary-button compact-input",
+        "secondary-button compact-input vn-input-mode-utility",
         "음성 입력으로 전환",
       );
       voiceButton.type = "button";
@@ -1997,7 +2011,7 @@ export class GameView {
     if (options.notice) {
       container.append(element("p", "input-notice", options.notice));
     }
-    const controls = element("div", "voice-controls");
+    const controls = element("div", "voice-controls vn-voice-controls");
     const ptt = createPttButton(presentation.buttonLabel);
     ptt.type = "button";
     ptt.setAttribute("aria-pressed", "false");
@@ -2005,7 +2019,7 @@ export class GameView {
     ptt.dataset.idleLabel = presentation.buttonLabel;
     const clickButton = element(
       "button",
-      "secondary-button compact-input",
+      "secondary-button compact-input vn-input-mode-utility",
       "클릭으로 전환",
     );
     clickButton.type = "button";
@@ -2097,7 +2111,7 @@ export class GameView {
     });
     this.registerKeyboardPtt(ptt, beginCapture, stopCapture);
 
-    const utilities = element("div", "input-utilities");
+    const utilities = element("div", "input-utilities vn-input-utilities");
     this.appendDebugTranscript(utilities, async (transcript) => {
       cancelCapture();
       updatePttLiveLevel(ptt, null);
@@ -2316,7 +2330,7 @@ export class GameView {
     if (!this.debugEnabled) {
       return;
     }
-    const form = element("form", "debug-transcript");
+    const form = element("form", "debug-transcript vn-debug-transcript");
     const label = element("label", undefined, "Debug transcript");
     const input = element("input");
     input.type = "text";

@@ -1,4 +1,5 @@
 import "./styles.css";
+import "./ui/vn.css";
 import "./ui/title.css";
 import {
   createDebugBattleLlmPort,

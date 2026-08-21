@@ -49,10 +49,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 화면을 과도하게 가리고 generic AI-generated UI처럼 보이며 대사·선택·입력 방식 위계가 약함 |
 | Desired Direction | 낮고 간결한 공통 VN dialogue shell, 작은 speaker accent, compact choice, secondary input-mode control |
 | Priority | P0 |
-| Implementation Status | `OPEN` — 이번 phase 구현 제외 |
-| Human Recheck | 1920×1080·1600×900·1366×768에서 readability, actor occlusion, hierarchy 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | HQ-13의 global language와 함께 Phase A에서 처리 |
+| Implementation Status | `HUMAN_RECHECK` — Phase A에서 공통 VN token, compact dialogue/narration shell, integrated speaker accent, choice·progress·input-mode hierarchy를 구현 |
+| Human Recheck | 1920×1080 screenshot과 1600×900·1366×768 actual Chrome bbox에서 no-scroll·text clipping 0·core actor face occlusion 0을 확인했으며, 사용자 actual visual approval 대기 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | HQ-13 공통 foundation과 함께 구현. HQ-06·10·11·12 scene-specific redesign은 계속 `OPEN` |
 
 ### HQ-03 — Floating employee ID Doyun reaction
 
@@ -214,10 +214,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 장면별 독립 component처럼 보여 하나의 VN 제품 언어가 형성되지 않음 |
 | Desired Direction | 공통 navy-black base, 얇은 border, 작은 radius·padding, 제한된 speaker accent, 명확한 대사 > 서사 선택 > 입력 방식 위계 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `OPEN` — 별도 VN UI Design System Phase 필요 |
-| Human Recheck | 전체 playthrough에서 장면 간 일관성, keyboard/hover/focus, actor occlusion 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | HQ-02·HQ-06·HQ-10·HQ-11·HQ-12의 상위 design contract |
+| Implementation Status | `HUMAN_RECHECK` — navy-black surface, thin border, small radius, restrained speaker accent, typography·focus·control hierarchy의 Phase A foundation 구현 |
+| Human Recheck | core dialogue preview에서 장면 간 일관성·keyboard focus·actor occlusion을 사용자 검수. Battle/Ending/Post-credit는 Phase C 뒤 별도 재검수 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | HQ-02 core migration 완료. HQ-06·HQ-10·HQ-11·HQ-12는 foundation만 공유하고 scene-specific 상태는 `OPEN` 유지 |
 
 ## 3. Existing TODO 연결
 
