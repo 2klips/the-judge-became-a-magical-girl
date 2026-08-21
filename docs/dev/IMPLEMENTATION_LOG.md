@@ -1861,3 +1861,25 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 | `npm run build` | PASS | Vite 8.2.0, 155 modules. 기존 Transformers 516.22kB chunk warning만 유지 |
 | `npm run build:qa` | PASS | QA build 125 modules |
 | `git diff --check` | PASS | 공백 오류 없음 |
+
+## DEV Voice Actual Recovery Closure
+
+- 작업일: 2026-08-21~22 KST
+- 브랜치·검증 HEAD: `codex/scenario-v31-runtime-composition-p1` · `232384467a9d3c1b23b67620fe21ff41bda2192e`
+- 환경: Windows, Google Chrome `151.0.7922.170`, APP `http://127.0.0.1:5173`, Worker `http://127.0.0.1:8787`
+- `.env.local`은 Git ignore 대상이며 `OPENAI_API_KEY` 설정 여부만 boolean으로 확인했다. 값·일부 문자열·길이는 출력하거나 문서화하지 않았다.
+- Origin `http://127.0.0.1:5173`을 포함한 Worker `/health`는 HTTP 200, `openaiConfigured=true`, `realtimeVoiceModel=gpt-realtime-2.1-mini`였다.
+- `?debug=1&scene=...`는 PTT가 없는 static preview임을 실제 DOM과 기존 문서 근거로 재확인했다. actual QA는 `?debug=1`의 `실제 플레이`에서 TITLE microphone 연결·voice 시작 후 N1 → N5 → battle 순으로 진행했다.
+
+| Surface | 실제 결과 | 모델·관찰 | BGM | Console |
+|---|---|---|---|---|
+| dialogue | 실제 한국어 transcript 수신, 주노 판정·응답 출력, UI 1회 진행 PASS | `gpt-realtime-2.1-mini`; 왕복 3962ms, Worker 1521ms, 첫 delta 1185ms | 사용자 청취 duck/recover YES | warning/error 0 |
+| incantation | 실제 주문 transcript 수신, 주문 판정 후 변신 CUT·battle 진입 PASS | `gpt-realtime-2.1-mini`; 왕복 3572ms, Worker 1343ms, 첫 delta 1193ms | 사용자 청취 duck/recover YES | warning/error 0 |
+| battle | 실제 transcript 수신, 방어 의도 판정·주노 응답, turn 1회 진행 PASS | `gpt-realtime-2.1-mini`; 왕복 3501ms, Worker 1412ms, 첫 delta 1074ms | 사용자 청취 duck/recover YES | warning/error 0 |
+
+- 세 성공 응답은 HTTP non-2xx에서 throw하는 client 계약을 통과해 parse·표시됐으므로 HTTP 200 성공 경로다. 각 발화는 `createWorkerRealtimeVoicePort()`의 단일 `/voice/realtime` fetch 계약, 단일 debug observation, 단일 UI transition/turn으로 완료됐고 duplicate judgement·turn은 관찰되지 않았다.
+- Chrome 제어 환경에서 DevTools Network request row는 별도 artifact로 보존하지 못했다. 따라서 `/voice/realtime` 1회 판정은 위 single-fetch runtime 계약과 단일 결과 관찰에 근거하며, 독립 Network row 계측 근거로 과장하지 않는다. `/transcribe/openai`·`/transcribe/gemini` 결과나 별도 모델 응답은 관찰되지 않았다.
+- Incantation 뒤 battle 진입 시 timeout retry notice 1회가 표시됐다. 입력 mode 재렌더로 transient notice를 정리한 뒤 같은 battle 턴의 실제 발화가 정상 성공했으며, 성공 turn은 한 번만 적용됐다.
+- browser console에는 Vite 연결 debug 4건만 있었고 warning/error는 0이었다. API key, Bearer 값, raw upstream error body, local secret 내용은 Console·DOM·완료 근거에 노출되지 않았다.
+- voice 관련 targeted regression은 7 files·60 tests PASS, `npm run check`는 PASS다. production code, binary asset, scenario는 변경하지 않았다.
+- Actual Worker·dialogue·incantation·battle·BGM duck/recover 기능 Gate는 PASS다. HUMAN_SCENE_QA_BACKLOG의 HQ-01~HQ-13은 별도 시각/UX 항목이므로 상태를 변경하지 않는다.

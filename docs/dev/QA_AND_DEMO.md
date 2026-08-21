@@ -80,11 +80,13 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 5. Origin `http://127.0.0.1:5173`을 포함한 `GET http://127.0.0.1:8787/health`가 HTTP 200인지 확인한다. `openaiConfigured=true`, `realtimeVoiceModel=gpt-realtime-2.1-mini`만 기록하고 secret 값은 기록하지 않는다.
 6. 최신 안정 Chrome에서 아래 세 실제 발화를 각각 1회 수행한다.
 
-| Surface | 직접 QA URL | 필수 증거 |
+| Surface | 실제 플레이 진입 | 필수 증거 |
 |---|---|---|
-| dialogue | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n1-first-voice` | 녹음·live fill·release·`POST /voice/realtime` 200·transcript/판정·BGM 복구 |
-| incantation | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=n5-incantation` | 같은 capture stream·release·`POST /voice/realtime` 200·주문 판정·click fallback 유지 |
-| battle | `http://127.0.0.1:5173/the-judge-became-a-magical-girl/?debug=1&scene=battle-p1` | live fill·release·`POST /voice/realtime` 200·battle 판정·BGM duck/recover |
+| dialogue | `?debug=1`의 `실제 플레이`에서 voice 시작 후 N1 도달 | 녹음·live fill·release·`POST /voice/realtime` 200·transcript/판정·BGM 복구 |
+| incantation | 같은 실제 플레이에서 N5 주문 게이트 도달 | 같은 capture stream·release·`POST /voice/realtime` 200·주문 판정·click fallback 유지 |
+| battle | 같은 실제 플레이에서 battle 첫 행동 도달 | live fill·release·`POST /voice/realtime` 200·battle 판정·BGM duck/recover |
+
+`?debug=1&scene=...` 주소는 visual/static scene preview이며 실제 PTT capture 버튼을 제공하지 않는다. actual voice QA는 반드시 `?debug=1`의 `실제 플레이`에서 TITLE microphone 연결과 voice 시작을 거쳐 해당 surface까지 진행한다.
 
 DevTools Network에서 발화당 `/voice/realtime` 1회, 응답 200, 예상 모델을 확인한다. Console·Network·화면에 API key, raw upstream body, 사용자별 local path가 없어야 한다. 자동 failure injection과 unit test는 이 actual Worker QA를 대체하지 않는다.
 
