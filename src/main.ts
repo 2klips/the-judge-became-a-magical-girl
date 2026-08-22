@@ -713,6 +713,13 @@ async function bootstrap(): Promise<void> {
         ): void => {
           activeVoice = null;
           activeLlm = null;
+          const continueFromReply = (): void => {
+            if (node.nodeId === "n1_first_voice" && result.advanced) {
+              view.renderJunoMonitorEmergence(() => renderCurrent());
+              return;
+            }
+            renderCurrent();
+          };
           view.renderDialogueReply({
             nodeId: node.nodeId,
             sceneId: node.scene.bg,
@@ -724,7 +731,7 @@ async function bootstrap(): Promise<void> {
             reply: result.reply,
             state: engine.getState(),
             advanced: result.advanced,
-            onContinue: () => renderCurrent(),
+            onContinue: continueFromReply,
           });
         };
 

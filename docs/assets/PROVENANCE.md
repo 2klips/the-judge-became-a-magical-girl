@@ -13,7 +13,21 @@
 | 회색 망령 액션 4장 | `docs/gray-wraith-action-v2/delivery/char/` → normal만 `assets/runtime/char/` 채택 | 2026-08-05 납품 문서·Git 이력 | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | master anchor도 team/project-owned internally generated asset, 외부 제3자 이미지 없음 — `USER ATTESTED` | normal 자동 규격·동일 바이트 `ready`; 권리 계보 PASS 후보·사람 장면 QA 대기, hit/attack/death 미등록 |
 | P0 필수 이미지 3장 | `assets/source/p0-required-images/delivery/` → `assets/runtime/char/`, `assets/runtime/cut/` 동일 바이트 채택 | 최초 commit `438f2f7`, `transform.cast` 최종 commit `67dbf9f1a25e81dcc49e4cbfd56b22a6106bd28f`, 2026-08-11, Codex | Codex 내장 OpenAI 이미지 생성·편집 도구(모델·버전·작업 ID 미노출), FFmpeg 8.1.1, Pillow | direct/upstream 모두 internal project lineage, 외부 제3자 이미지 없음 — `USER ATTESTED` | 자동 규격·동일 바이트 `ready`, 권리 계보 PASS 후보·사람 장면 QA 대기 |
 | 2026-08-13 야근 연속성 재편집 7종 | 배경 source `assets/source/background/delivery/`, 컷 source `assets/source/p0-required-images/delivery/` → runtime 동일 바이트 | commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`, 2026-08-13, Codex | Codex 내장 OpenAI `image_gen` 편집(정확한 모델·버전·작업 ID 미노출), FFmpeg Lanczos | direct/base 모두 internal project lineage, 외부 제3자 이미지 없음 — `USER ATTESTED` | 7종 사용자 시각 채택·자동 규격·동일 바이트 `ready`; 권리 계보 PASS 후보·전체 continuity QA 대기 |
+| 2026-08-22 초반 장면 승인 4종 | `assets/source/early-scene-2026-08-22/originals/` → `delivery/` → `assets/runtime/{char,cut}/` | 사용자 직접 제공·2/3/4/5 사용 승인. commit은 본 작업 완료 후 기록 | 사용자가 생성한 PNG를 직접 제공; exact 생성 서비스·모델·작업 ID 미확인. Codex는 Pillow로 분리 punctuation 제거·비율 유지 canvas/WebP 정규화만 수행 | 신규 납품본의 exact reference/input 증빙 미확인. 기존 2026-08-16 attestation을 자동 확대하지 않으며 법률 자문·제3자 허가 확인이 아님 | 4종 원본 보존·자동 규격 `ready`; runtime 사람 장면 QA 대기. IMAGE 1은 미수입 `P2 OPTIONAL` |
 | BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1. 생성 당시와 현재 모두 Suno Pro — 2026-08-16 사용자 확인; 정확한 모델·곡 ID는 미확인 | Suno Pro 생성물 권리 근거 `USER ATTESTED`; 사람 청각 QA 별도 | 자동 규격·동일 바이트 `ready`, 권리 PASS 후보·사람 청각 승인 대기 |
+
+## 2026-08-22 초반 장면 사용자 승인 납품 4종
+
+- 원본은 변경하지 않고 `originals/`에 보존했다. IMAGE 2·3의 `?`·`!`는 인물 alpha와 분리된 독립 component임을 확인한 뒤 해당 component만 제거했다. 인물은 비율을 유지해 1200×2000 투명 canvas에 배치했다.
+- IMAGE 4·5는 원본 camera를 유지해 1920×1080 WebP quality 84로 비율 crop했다. IMAGE 5의 baked 문구는 이 asset에만 사용자 승인된 scene-specific 예외이며 같은 visible DOM 문구를 중복하지 않고 hidden semantic만 유지한다.
+- 아래 사용자 제공 원본의 exact 생성 서비스·모델·작업 ID·reference/input은 `UNKNOWN`이다. 이 기록은 사람의 사용 선택과 기계 정규화 이력이며 법률 승인 기록이 아니다.
+
+| 대상 | 원본 SHA-256·크기 | runtime SHA-256·크기 | 변환·사용 |
+|---|---|---|---|
+| IMAGE 2 `doyun.normal_suspicious` | `08662799D6B155D977AFEAEB04D4623BAD7AE1AA39480EB42303E9510B24B23E`, 1,243,086B, 1024×1536 RGBA | `ED7D6632B6E20CC202EE57AA0213FC0406EBD86E90DCDE0444A600FF120B3078`, 263,523B, 1200×2000 transparent PNG | 분리 `?` 제거·비율 유지. N1/N2 의심·집중 |
+| IMAGE 3 `doyun.employee_id_surprised` | `4905B29148236DA0BDF0F7D6E8624CF99C557E294624D9F6CBF7AB5215A2E353`, 1,306,799B, 1024×1536 RGBA | `2442E7970DE74AFF8578E5B77FD3C98EF8569B4E28004E84030B77190B3A7CC3`, 291,025B, 1200×2000 transparent PNG | 분리 `!` 제거·비율 유지. N5 사원증 첫 beat 전용 |
+| IMAGE 4 `cut.juno_monitor_emerge` | `F35267D8DA8CCB44CF9F8838D39C15B4A487F479665245B34A0BCE0436BE498B`, 1,828,710B, 1672×941 RGB | `922E52FA06D72DB3CF2ECF70B3FF511AE76927D494F949C85EE312B2B0C24CB3`, 141,288B, 1920×1080 WebP | 비율 crop. N1→N2 1,000ms solo CUT, live actor 0 |
+| IMAGE 5 `cut.monitor_direct_wish_prompt` | `043B5AF715E8C30658D79BE687130D10CEEF00B0C789A5C691BE815DED81CED6`, 2,707,422B, 1672×941 RGBA(opaque) | `E99CC6F3719E8063CEB873ADD0559EDC9E27063D7E36321365B17E2CDD616AF2`, 119,738B, 1920×1080 WebP | 비율 crop·baked 문구 보존. N0 final/N1 opening |
 
 ## 2026-08-16 사용자 권리 확인·reference lineage 감사
 
@@ -203,5 +217,5 @@
 
 - 폰트 전 runtime: 11,882,465B (11.33MiB).
 - 채택 폰트: 2,293,924B.
-- 폰트 후 runtime: 14,176,389B (13.52MiB).
+- 2026-08-22 초반 장면 4종 채택 후 현재 runtime: 14,991,963B (14.30MiB), 48 files.
 - 30MiB 상한을 유지한다.

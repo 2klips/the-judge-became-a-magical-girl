@@ -34,7 +34,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 도윤이 계속 기겁한 상태로 보여 사건 강도가 단계적으로 올라가지 않음 |
 | Desired Direction | 피곤함 → 의심/집중 → 약한 당황 → 실제 초현상에서 본격 놀람 |
 | Priority | P0 |
-| Implementation Status | `HUMAN_RECHECK` — N0은 `normal_tired`, N1은 `normal`, 실제 주노 등장·망령 reveal부터 `normal_startled`가 나오도록 기존 asset mapping을 재구성 |
+| Implementation Status | `HUMAN_RECHECK` — N0은 `normal_tired`, N1 opening/question과 N2 identity/chosen은 신규 `doyun.normal_suspicious`, N1 `want_rest`는 tired, `seek_new_fun`은 smile로 선택 매핑했다. 실제 주노 등장·망령 reveal부터 `normal_startled`를 사용한다. seated IMAGE 1은 `P2 OPTIONAL`로 import하지 않음 |
 | Human Recheck | 각 비트의 연속 감정선과 반복 sprite 여부를 full play에서 확인 |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | 과거 audit의 N0~N2 `OK`는 `SUPERSEDED BY V3.1 HUMAN QA`. [v3.1 acting/direction audit](../assets/V31_ACTING_DIRECTION_AUDIT.md) |
@@ -64,10 +64,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 핵심 초현상과 도윤 시선·몸동작이 연결되지 않음 |
 | Desired Direction | 사원증을 바라보는 `surprise / disbelief`; 공포·비명·horror 금지 |
 | Priority | P1 ASSET |
-| Implementation Status | `OPEN` — 기존 asset 적합 없음. `normal_startled`는 임시 proxy이며 floating-ID 시선 reaction `NEW 1` handoff 확정 |
-| Human Recheck | 시선, 손, 사원증 focal relation과 canvas compatibility 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | Visual Asset Production Phase 대상. logical ID/파일명 미확정. [v3.1 acting/direction audit](../assets/V31_ACTING_DIRECTION_AUDIT.md#2-hq-03-floating-employee-id-handoff) |
+| Implementation Status | `HUMAN_RECHECK` — 사용자 승인 `doyun.employee_id_surprised`를 1200×2000 투명 runtime asset으로 import하고 N5 첫 beat 전용으로 매핑했다. 기존 `normal_startled` proxy와 `NEW 1` handoff는 superseded |
+| Human Recheck | 실제 N5 합성에서 시선·손·사원증 focal relation과 surprise/disbelief가 읽히는지 확인 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | [v3.1 acting/direction audit](../assets/V31_ACTING_DIRECTION_AUDIT.md#2-hq-03-floating-employee-id-handoff), [asset manifest](../assets/ASSET_MANIFEST.md) |
 
 ### HQ-04 — Facepalm mismatch
 
@@ -154,7 +154,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | actor placement와 gaze direction이 독립적으로 적용됨 |
 | Desired Direction | 왼쪽 actor는 오른쪽, 오른쪽 actor는 왼쪽을 향함. 의도적 외면 장면만 예외 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `HUMAN_RECHECK` — asset별 mirror safety를 감사하고 Wraith 2종만 safe mirror, Doyun 11종·Juno 5종은 original-only metadata로 구현 |
+| Implementation Status | `HUMAN_RECHECK` — asset별 mirror safety를 감사하고 Wraith 2종만 safe mirror, Doyun 13종·Juno 5종은 original-only metadata로 구현 |
 | Human Recheck | asset별 비대칭 의상·wand·글자 mirror 부작용까지 장면별 확인 |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | 자동 `scaleX` 일괄 적용 금지. [asset별 판정](../assets/V31_ACTING_DIRECTION_AUDIT.md#5-facing--mirror-safety-audit) |

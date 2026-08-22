@@ -58,6 +58,12 @@
 | 2026-08-16 | BGM 5곡·source SFX 5종 | 생성 당시와 현재 모두 Suno Pro 사용. 타인 lyrics/audio/reference 사용 사실 없음 | BGM source/final hash와 SFX source hash·일부 작업 URL은 기존 증빙 유지. 없는 exact 곡 ID·모델은 `UNKNOWN` | 저장소·제출 사용 권리 근거 `USER ATTESTED`; BGM 사람 청각 QA와 SFX runtime 통합은 별도 |
 | 2026-08-16 | `bg_title.webp` baked NHN/HACKATHON branding | NHN 해커톤 제출 맥락에 한정해 현재 표시 위험을 명시적으로 수용. 개인적 상업 사용 계획 없음 | 상표권자의 공식 허가·라이선스 문서는 저장소에서 발견되지 않음 | `ACCEPTED SUBMISSION RISK`; 상표 허가 확인·license approved로 기록하지 않음. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요 |
 
+## 2026-08-22 초반 장면 사용자 납품 통합
+
+| 날짜 | 작업 | 사용 AI 도구 | 입력 자료 | 생성 결과 | 사람이 한 검수 | 최종 사용 여부 | 사용 토큰 수 | 관련 파일 또는 커밋 |
+|---|---|---|---|---|---|---|---|---|
+| 2026-08-22 | 초반 장면 이미지 2/3/4/5 정규화·runtime 채택 | 사용자가 생성한 이미지 직접 제공; Codex는 Pillow 기계 정규화만 수행 | Doyun suspicious, employee-ID surprise, Juno monitor emergence, baked direct-wish prompt 원본 4종. exact 생성 모델·작업 ID는 미확인 | 캐릭터 2종 1200×2000 transparent PNG, CUT 2종 1920×1080 WebP. 원본은 변경 없이 보존. 분리 punctuation만 제거 | 사용자가 IMAGE 2/3/4/5 사용을 최종 승인하고 IMAGE 5 baked 문구를 asset-specific 예외로 승인. IMAGE 1 seated는 보류. 자동 규격·매핑·접근성·CUT exclusivity 검증 후 actual 장면 재검수 대기 | 4종 `ready`; IMAGE 1 `P2 OPTIONAL` 미수입. 사람 in-game QA 전 `approved` 아님 | 미측정 | `assets/source/early-scene-2026-08-22/`, `assets/runtime/{char,cut}/`, DEC-077 |
+
 ## 기록 규칙
 
 - 프롬프트 전문이 길면 별도 파일/도구 대화 ID를 참조하고 입력 자료 핵심만 적는다.

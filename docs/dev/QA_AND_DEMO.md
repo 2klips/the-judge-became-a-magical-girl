@@ -410,7 +410,8 @@ npm run build
 `?debug=1`로 장면 선택기를 열거나 `?debug=1&scene=<장면ID>`로 직접 확인한다. 기준은 [장면별 에셋 매핑 명세](../assets/SCENE_ASSET_MAPPING.md)다.
 
 - [ ] 22개 프리셋의 배경·인물·표정·컷·BGM 표기가 명세와 같다.
-- [ ] 이미 전달된 배경 16장, 도윤 runtime 11장, 주노 runtime 5장은 깨지지 않고 장면 매핑대로 표시된다.
+- [ ] 전달된 배경 16장, 도윤 runtime 13장, 주노 runtime 5장, 초반 모니터 CUT 2장은 깨지지 않고 장면 매핑대로 표시된다.
+- [ ] N0 prompt→N1 suspicious Doyun→Juno emergence CUT→N2 live에서 baked visible prompt 중복 0, CUT live actor 0, PTT/click 접근성이 유지된다.
 - [ ] 도윤은 오른쪽 확대·상반신 구도이며 주노와 대화 UI를 가리지 않는다.
 - [ ] 전달된 `gray_wraith.normal`은 실파일, 미전달 `gray_wraith.weakened`는 normal+CSS 파생으로 보인다. normal 로드 실패와 미전달 변신 컷은 검은 placeholder여도 대사·버튼·게이지가 보인다.
 - [ ] 전달된 BGM 5곡이 계약 장면에 연결되고, 로드 실패 시 폴백곡 또는 무음으로 진행을 막지 않는다.

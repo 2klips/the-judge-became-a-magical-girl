@@ -36,7 +36,11 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
     if (lineIndex < 2) return null;
     return "doyun.normal_tired";
   }
-  if (cue.nodeId === "n1_first_voice") return "doyun.normal";
+  if (cue.nodeId === "n1_first_voice") {
+    if (cue.intentId === "want_rest") return "doyun.normal_tired";
+    if (cue.intentId === "seek_new_fun") return "doyun.normal_smile";
+    return "doyun.normal_suspicious";
+  }
   if (cue.nodeId === "n2_juno_intro") {
     if (cue.intentId === "curious_magic") return "doyun.normal_smile";
     if (cue.intentId === "realistic_objection") return "doyun.normal";
@@ -45,7 +49,7 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
   }
   if (cue.nodeId === "n2_juno_followup") {
     if (cue.intentId === "stay_cold") return "doyun.normal_tired";
-    return "doyun.normal";
+    return "doyun.normal_suspicious";
   }
   if (cue.nodeId === "n3_wraith_choice") {
     if (cue.intentId === "protect_others" || cue.intentId === "seek_method") {
@@ -70,7 +74,7 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
   if (cue.nodeId === "n5_transform") {
     if (cue.stage === "transformation") return "doyun.magical_pose";
     if (cue.stage === "incantation") return "doyun.normal";
-    return cue.lineIndex === 0 ? "doyun.normal_startled" : "doyun.normal";
+    return cue.lineIndex === 0 ? "doyun.employee_id_surprised" : "doyun.normal";
   }
   if (cue.nodeId === "n6_first_choice") return "doyun.magical_pose";
   if (cue.nodeId === "n7_gray_answer" || cue.nodeId === "n8_final_spell") {

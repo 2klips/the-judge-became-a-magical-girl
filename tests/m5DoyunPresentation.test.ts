@@ -17,8 +17,29 @@ describe("M5 도윤 화면 노출 계약", () => {
 
   it("첫 목소리는 mild disbelief, 실제 Juno 출현부터 startled로 단계 상승한다", () => {
     expect(resolveDoyunVisual({ kind: "node", nodeId: "n1_first_voice" })).toBe(
-      "doyun.normal",
+      "doyun.normal_suspicious",
     );
+    expect(
+      resolveDoyunVisual({
+        kind: "node",
+        nodeId: "n1_first_voice",
+        intentId: "question_signal",
+      }),
+    ).toBe("doyun.normal_suspicious");
+    expect(
+      resolveDoyunVisual({
+        kind: "node",
+        nodeId: "n1_first_voice",
+        intentId: "want_rest",
+      }),
+    ).toBe("doyun.normal_tired");
+    expect(
+      resolveDoyunVisual({
+        kind: "node",
+        nodeId: "n1_first_voice",
+        intentId: "seek_new_fun",
+      }),
+    ).toBe("doyun.normal_smile");
     expect(resolveDoyunVisual({ kind: "node", nodeId: "n2_juno_intro" })).toBe(
       "doyun.normal_startled",
     );
@@ -61,20 +82,23 @@ describe("M5 도윤 화면 노출 계약", () => {
   });
 
   it("N2 후속 질문의 태도에 맞춰 도윤의 표정을 바꾼다", () => {
+    expect(resolveDoyunVisual({ kind: "node", nodeId: "n2_juno_followup" })).toBe(
+      "doyun.normal_suspicious",
+    );
     expect(
       resolveDoyunVisual({
         kind: "node",
         nodeId: "n2_juno_followup",
         intentId: "ask_identity",
       }),
-    ).toBe("doyun.normal");
+    ).toBe("doyun.normal_suspicious");
     expect(
       resolveDoyunVisual({
         kind: "node",
         nodeId: "n2_juno_followup",
         intentId: "ask_why_chosen",
       }),
-    ).toBe("doyun.normal");
+    ).toBe("doyun.normal_suspicious");
     expect(
       resolveDoyunVisual({
         kind: "node",
@@ -142,10 +166,10 @@ describe("M5 도윤 화면 노출 계약", () => {
     );
   });
 
-  it("N5는 floating ID의 임시 startled proxy 뒤 facepalm 없이 행동으로 수렴한다", () => {
+  it("N5는 floating ID 전용 반응 뒤 facepalm 없이 행동으로 수렴한다", () => {
     expect(
       resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", lineIndex: 0 }),
-    ).toBe("doyun.normal_startled");
+    ).toBe("doyun.employee_id_surprised");
     for (const lineIndex of [1, 2]) {
       expect(
         resolveDoyunVisual({ kind: "node", nodeId: "n5_transform", lineIndex }),

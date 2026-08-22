@@ -82,6 +82,14 @@ const backgrounds = {
     logicalId: "bg_transform_space",
     primaryPath: "assets/bg/bg_transform_space.webp",
   },
+  "cut.juno_monitor_emerge": {
+    logicalId: "cut.juno_monitor_emerge",
+    primaryPath: "assets/cut/cut_juno_monitor_emerge.webp",
+  },
+  "cut.monitor_direct_wish_prompt": {
+    logicalId: "cut.monitor_direct_wish_prompt",
+    primaryPath: "assets/cut/cut_monitor_direct_wish_prompt.webp",
+  },
 } as const satisfies Record<string, BackgroundAssetContract>;
 
 const imagePaths = {
@@ -95,6 +103,8 @@ const imagePaths = {
   "doyun.normal": "assets/char/char_doyun_normal.png",
   "doyun.normal_tired": "assets/char/char_doyun_normal_tired.png",
   "doyun.normal_startled": "assets/char/char_doyun_normal_startled.png",
+  "doyun.normal_suspicious": "assets/char/char_doyun_normal_suspicious.png",
+  "doyun.employee_id_surprised": "assets/char/char_doyun_employee_id_surprised.png",
   "doyun.normal_smile": "assets/char/char_doyun_normal_smile.png",
   "doyun.normal_shy": "assets/char/char_doyun_normal_shy.png",
   "doyun.normal_empty": "assets/char/char_doyun_normal_empty.png",

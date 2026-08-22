@@ -9,9 +9,9 @@
 - `ready`: 파일 존재·기본 규격 통과.
 - `approved`: 사람 QA·라이선스 확인까지 완료.
 
-`[확정, DEC-030·034·035·036·037·040·048 및 2026-08-04·08-13·08-16 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 11장, 주노 5장, 회색 망령 2장, 변신 컷 2장, BGM 5곡, 로컬 폰트 3개가 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`다. 2026-08-16 사용자는 배경·도윤을 팀이 Codex/ChatGPT OpenAI 서비스와 당시 유료 Pro 이상 계정으로 직접 생성했고, backgrounds·Doyoon·Juno·gray wraith·transform cuts·continuity edits에는 text prompt 또는 team/project-owned internally generated asset만 input으로 사용해 외부 제3자 이미지가 없었음을 확인했다. BGM·source SFX는 생성 당시 Suno Pro였다. exact 모델·작업 ID 부재는 provenance gap으로 유지한다. reference-rights는 `USER ATTESTED / INTERNAL PROJECT LINEAGE`로 PASS 후보지만 법률 자문·제3자 허가 확인은 아니며, 사람 시각·청각 QA가 남은 자산은 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
+`[확정, DEC-030·034·035·036·037·040·048·077 및 2026-08-04·08-13·08-16·08-22 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 13장, 주노 5장, 회색 망령 2장, 컷 4장(변신 2·초반 모니터 2), BGM 5곡, 로컬 폰트 3개가 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`다. 2026-08-16 사용자는 배경·도윤을 팀이 Codex/ChatGPT OpenAI 서비스와 당시 유료 Pro 이상 계정으로 직접 생성했고, backgrounds·Doyoon·Juno·gray wraith·transform cuts·continuity edits에는 text prompt 또는 team/project-owned internally generated asset만 input으로 사용해 외부 제3자 이미지가 없었음을 확인했다. BGM·source SFX는 생성 당시 Suno Pro였다. 2026-08-22 초반 장면 4종은 사용자가 생성·직접 제공하고 최종 사용을 승인했으며, exact 모델·작업 ID와 신규 납품본에 특화된 reference 기록은 미확인으로 유지한다. 기존 attestation을 새 납품본의 법률 승인으로 확대하지 않는다. reference-rights는 확인된 범위에서만 `USER ATTESTED / INTERNAL PROJECT LINEAGE`로 기록하며 법률 자문·제3자 허가 확인은 아니다. 사람 시각·청각 QA가 남은 자산은 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 44개 파일, 총 `14,176,389 bytes`(`13.52 MiB`)다. 물리 에셋 30MiB 상한을 통과한다.
+현재 `assets/runtime/`은 48개 파일, 총 `14,991,963 bytes`(`14.30 MiB`)다. 물리 에셋 30MiB 상한을 통과한다.
 
 ## 이미지
 
@@ -25,8 +25,10 @@
 | `gray_wraith.normal` | `char_gray_wraith_normal.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle `enemy.id` + state | source/runtime 동일 바이트·413,056B·자동 규격 PASS. 사람 합성 QA 대기 |
 | `gray_wraith.weakened` | `char_gray_wraith_weakened.png` | 적 캐릭터 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | Codex 내장 OpenAI 이미지 생성·편집 도구·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle `enemy.id` + state | source/runtime 동일 바이트·205,779B·자동 규격 PASS. DEC-060 폴백 유지. 사람 합성 QA 대기 |
 | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 line 2~5, N2 거절·냉담, N3 철수·동조, N4 거리 유지 | 자동 규격 PASS. v3.1 human acting remap은 `HUMAN_RECHECK` |
-| `doyun.normal_startled` | `char_doyun_normal_startled.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 실제 주노 등장, N3 망령 opening, N5 floating ID 임시 proxy | 자동 규격 PASS. 강한 surprise를 실제 초현상 이후로 제한. N5 전용 시선 pose `NEW 1` 대기 |
-| `doyun.normal` | `char_doyun_normal.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N1 mild disbelief, N2 후속, N3 보호·방법 확인, N4 행동·협력, N5 압박·영창 | 자동 규격 PASS. v3.1 human acting remap은 `HUMAN_RECHECK` |
+| `doyun.normal_startled` | `char_doyun_normal_startled.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 실제 주노 등장, N3 망령 opening | 자동 규격 PASS. 강한 surprise를 실제 초현상 이후로 제한. N5 proxy는 전용 pose 채택으로 superseded |
+| `doyun.normal_suspicious` | `char_doyun_normal_suspicious.png` | 평상복·의심/집중 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N1 opening/question, N2 follow-up·identity·chosen | 원본 보존. 분리된 `?` component만 제거하고 비율 유지·투명 canvas 정규화. 263,523B·SHA-256 `ED7D6632B6E20CC202EE57AA0213FC0406EBD86E90DCDE0444A600FF120B3078`. 자동 규격·매핑 QA PASS, 사람 장면 QA 대기 |
+| `doyun.employee_id_surprised` | `char_doyun_employee_id_surprised.png` | 평상복·사원증 surprise | 1200×2000 PNG 투명 | 800KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N5 사원증 부상 첫 beat 전용 | 원본 보존. 분리된 `!` component만 제거하고 비율 유지·투명 canvas 정규화. 291,025B·SHA-256 `2442E7970DE74AFF8578E5B77FD3C98EF8569B4E28004E84030B77190B3A7CC3`. HQ-03 `HUMAN_RECHECK` |
+| `doyun.normal` | `char_doyun_normal.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N3 보호·방법 확인, N4 행동·협력, N5 압박·영창 | 자동 규격 PASS. N1/N2 의심·집중 beat는 `doyun.normal_suspicious`로 superseded |
 | `doyun.normal_smile` | `char_doyun_normal_smile.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N2 호기심, N4-A·관계 회복, GOOD·NORMAL | 자동 규격·응답 매핑·배치 QA PASS |
 | `doyun.normal_shy` | `char_doyun_normal_shy.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | 현재 v3.1 runtime mapping 없음; binary 보존 | full facepalm이 절망/고통으로 읽힌다는 human QA로 기존 사용처 superseded. mild facepalm 재사용 시 EDIT·사람 QA 필요 |
 | `doyun.normal_empty` | `char_doyun_normal_empty.png` | 평상복 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | BAD | 자동 규격 PASS, 장면 QA 대기 |
@@ -37,6 +39,8 @@
 | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 마법소녀 포즈 | 1200×2000 PNG 투명 | 800KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N5 변신 결과·전투 후 수렴 | 자동 규격 PASS, 장면 QA 대기 |
 | `transform.cast` | `cut_transform_01.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | 엔진 고정 변신 연출 1번, DEC-016 | source/runtime 동일 바이트·229,306B·SHA-256 `43E98D673C2DF9989B929A5B4575763CE254248410DEEC02D616E7F2EF80FD74`. A2 사원증의 은백색 내부 별빛·파란 테두리와 야간 영창 장면. 2026-08-13 사용자 시각 채택; 전체 continuity QA 대기 |
 | `transform.complete` | `cut_transform_02.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | 엔진 고정 변신 연출 2번, DEC-016 | source/runtime 동일 바이트·209,748B·SHA-256 `113F777CAA7785171B9CC112175E5D7CCDB1B2CBAE96BC592FF166918C2CFD3A`. 일몰을 야간 완료 장면으로 교체. 2026-08-13 사용자 시각 채택; 전체 continuity QA 대기 |
+| `cut.juno_monitor_emerge` | `cut_juno_monitor_emerge.webp` | 초반 full-stage 컷 | 1920×1080 WebP | 700KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow/WebP 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N1 응답 뒤 N2 진입 전, DEC-077 | 원본 보존·비율 crop. 141,288B·SHA-256 `922E52FA06D72DB3CF2ECF70B3FF511AE76927D494F949C85EE312B2B0C24CB3`. CUT 동안 live actor 0 자동 QA PASS, 사람 장면 QA 대기 |
+| `cut.monitor_direct_wish_prompt` | `cut_monitor_direct_wish_prompt.webp` | 초반 full-stage prompt 컷 | 1920×1080 WebP | 700KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow/WebP 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N0 final prompt·N1 voice opening, DEC-077 | 원본 보존·비율 crop. 119,738B·SHA-256 `E99CC6F3719E8063CEB873ADD0559EDC9E27063D7E36321365B17E2CDD616AF2`. baked visible 문구는 이 asset에만 사용자 승인; 중복 visible DOM 0·동등 hidden semantic 유지 |
 | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | GOOD 후속 컷 | 1920×1080 WebP | 700KB | 컷 가능 | planned | 미정 | 미확인 | GOOD 후속 훅·HIDDEN 재사용, DEC-032 | 얼굴·이름 비노출 검수 대기 |
 | `juno.climax` | `char_juno_climax.png` | 추가 포즈 | 1200×2000 PNG 투명 | 800KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
 | `bg_title` | `bg_title.webp` | 타이틀 배경 | 1920×1080 WebP | 500KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보; branding은 제출 맥락 risk accepted | title presentation | 210,992B. baked NHN/HACKATHON 표시는 사용자 제출-context 위험 수용. 상표 허가·license approved 아님; 일반 공개·개인 상업판은 clean 교체 또는 별도 허가 필요 |
@@ -67,11 +71,13 @@
 
 ### Phase B acting visual-production handoff (2026-08-22)
 
-- floating employee ID reaction: `NEW pose candidate = 1`. logical ID·파일명은 아직 만들지 않는다. 사원증을 직접 바라보는 surprise/disbelief, 약한 recoil, 사원증/가슴 쪽 손, 작게 열린 입을 요구한다. panic/horror/despair는 금지한다.
+- `doyun.normal_suspicious`: 사용자 승인본을 import해 N1/N2의 의심·집중 beat에 선택 매핑했다. frightened/panic 용도가 아니며 `want_rest`·`seek_new_fun`에는 사용하지 않는다.
+- floating employee ID reaction: `doyun.employee_id_surprised`로 import·N5 첫 beat 전용 매핑 완료. surprise/disbelief를 유지하고 panic/horror/despair 용도로 재사용하지 않는다. HQ-03은 사용자 실제 장면 재검수 전 `HUMAN_RECHECK`다.
+- IMAGE 1 seated thinking 후보는 import하지 않은 `P2 OPTIONAL` N0 후보이며 runtime dependency가 없다.
 - `doyun.normal_shy`: 현재 v3.1 mapping에서 제거했다. mild 관자놀이/이마 짚기 연기가 후속 승인될 때만 `EDIT 1` 후보이며 현재 필수 제작량에는 포함하지 않는다.
 - HQ-05 얼굴 continuity는 [acting/direction audit](V31_ACTING_DIRECTION_AUDIT.md#4-hq-05-transformation-face-continuity--human-decision-required)의 Option A/B 사람 결정 전까지 asset 변경 금지다.
 - 금지: 고통·패배가 아닌 코믹한 당혹감이라는 N5 결과 정서를 절망·심한 괴로움·패배 표정으로 바꾸는 것.
-- binary 생성·편집은 별도 visual-production 단계 소유다. 현재 runtime 파일과 논리 ID는 변경하지 않는다.
+- 위 승인 2종 외 binary 생성·편집은 별도 visual-production 단계 소유다. `doyun.magical_pose`, HQ-05, Juno action pose에는 손대지 않는다.
 
 ### 2026-08-03 배경 납품·이름 정규화 추적
 
@@ -192,4 +198,4 @@
 | `fonts/pretendard/Pretendard-Regular.woff2` | TITLE 일반 UI | 공식 v1.3.9 static WOFF2 400·765,892B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
 | `fonts/pretendard/Pretendard-SemiBold.woff2` | TITLE 강조 UI | 공식 v1.3.9 static WOFF2 600·785,856B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
 
-CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 폰트 채택 후 runtime은 14,176,389B로 30MiB 상한 이하다.
+CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 현재 runtime은 초반 장면 4종 채택 후 `14,991,963B`(14.30MiB)로 30MiB 상한 이하다.

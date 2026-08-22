@@ -20,6 +20,17 @@
   --vn-radius-md: 8px;
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .game-shell:not(.title-screen) {
   --vn-speaker-accent: var(--vn-accent-system);
   color: var(--vn-text-primary);
@@ -134,7 +145,47 @@
 
 .vn-dialogue-shell--narration:not(.battle-dialogue) {
   min-height: clamp(132px, 16vh, 172px);
+  padding-bottom: clamp(42px, 5.2vh, 56px);
   background: rgba(9, 12, 22, 0.9);
+}
+
+.vn-dialogue-shell--narration:not(.battle-dialogue) .vn-advance {
+  position: absolute;
+  right: clamp(22px, 2.4vw, 32px);
+  bottom: clamp(12px, 1.7vh, 18px);
+  margin: 0;
+}
+
+.early-scene-cut-controls {
+  position: absolute;
+  z-index: 12;
+  right: clamp(28px, 4vw, 72px);
+  bottom: clamp(24px, 4vh, 48px);
+}
+
+.early-scene-cut-advance {
+  min-height: 36px;
+  padding: 7px 3px 7px 9px;
+  border: 0;
+  color: var(--vn-text-secondary);
+  background: rgba(9, 12, 22, 0.5);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.early-scene-cut-advance::after {
+  margin-left: 8px;
+  color: var(--vn-accent-system);
+  content: "›";
+}
+
+.juno-monitor-emergence-cut .scene-background {
+  animation: early-scene-cut-reveal 220ms ease-out both;
+}
+
+@keyframes early-scene-cut-reveal {
+  from { opacity: 0.55; filter: brightness(1.35); }
+  to { opacity: 1; filter: brightness(1); }
 }
 
 .vn-dialogue-shell--narration:not(.battle-dialogue) .vn-dialogue-copy {
@@ -538,6 +589,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .juno-monitor-emergence-cut .scene-background {
+    animation: none !important;
+  }
+
   .vn-dialogue-shell:not(.battle-dialogue) *,
   .vn-dialogue-shell:not(.battle-dialogue)::after {
     animation: none !important;

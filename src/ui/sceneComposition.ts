@@ -178,6 +178,9 @@ export function compositionByPreset(
 }
 
 export function compositionForContext(context: string): SceneComposition {
+  if (context === "n0_direct_wish_prompt" || context === "n1_juno_monitor_emerge") {
+    return compositions["solo-cut"];
+  }
   if (context.includes("cut-01") || context.includes("cut-02")) {
     return compositions["solo-cut"];
   }

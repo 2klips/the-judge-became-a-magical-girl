@@ -18,6 +18,12 @@ import {
 } from "../assets/catalog";
 import { resolvePresentationBackground } from "../assets/presentationBackground";
 import { resolveDoyunVisual } from "../assets/presentationDoyun";
+import {
+  DIRECT_WISH_PROMPT_TEXT,
+  EARLY_SCENE_ASSET_IDS,
+  resolveEarlySceneBackground,
+  shouldHideDialogueOpeningForBakedPrompt,
+} from "../assets/earlyScenePresentation";
 import type { BattleGrade, BattleState } from "../battle/state";
 import { resolveDialogueOpening } from "../engine/storyPresentation";
 import {
@@ -550,6 +556,7 @@ export class GameView {
   private debugSttModel: OpenAiSttModel;
   private latestTranscription: TranscriptionObservation | null = null;
   private activeTitleView: TitleView | null = null;
+  private activeSceneTimer: number | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -667,6 +674,10 @@ export class GameView {
   }
 
   renderLine(options: LineViewOptions): void {
+    if (resolveEarlySceneBackground(options.nodeId, options.lineIndex)) {
+      this.renderDirectWishPrompt(options);
+      return;
+    }
     const shell = this.createShell(
       resolvePresentationBackground({
         kind: "node",
@@ -732,6 +743,54 @@ export class GameView {
     panel.append(button);
     shell.append(panel);
     this.commit(shell);
+  }
+
+  private renderDirectWishPrompt(options: LineViewOptions): void {
+    const shell = this.createShell(
+      EARLY_SCENE_ASSET_IDS.directWishPrompt,
+      "n0_direct_wish_prompt",
+    );
+    shell.classList.add("early-scene-cut", "direct-wish-prompt-cut");
+    shell.dataset.cutLogicalId = EARLY_SCENE_ASSET_IDS.directWishPrompt;
+    shell.dataset.activeSpeaker = "narration";
+    const controls = element("section", "early-scene-cut-controls");
+    const semanticPrompt = element(
+      "p",
+      "early-scene-prompt-semantic visually-hidden",
+      DIRECT_WISH_PROMPT_TEXT,
+    );
+    const button = this.delayedAdvanceButton(
+      "vn-advance early-scene-cut-advance",
+      options.continueLabel,
+      options.onContinue,
+    );
+    controls.append(semanticPrompt, button);
+    shell.append(controls);
+    this.commit(shell);
+  }
+
+  renderJunoMonitorEmergence(onContinue: () => void): void {
+    const shell = this.createShell(
+      EARLY_SCENE_ASSET_IDS.junoMonitorEmerge,
+      "n1_juno_monitor_emerge",
+    );
+    shell.classList.add("early-scene-cut", "juno-monitor-emergence-cut");
+    shell.dataset.cutLogicalId = "cut.juno_monitor_emerge";
+    shell.dataset.activeSpeaker = "narration";
+    shell.append(
+      element(
+        "p",
+        "visually-hidden",
+        "왼쪽 모니터의 빛이 갈라지며 주노가 화면 밖으로 나타난다.",
+      ),
+    );
+    this.commit(shell);
+    const reducedMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    this.activeSceneTimer = window.setTimeout(() => {
+      this.activeSceneTimer = null;
+      onContinue();
+    }, reducedMotion ? 800 : 1000);
   }
 
   renderIncantation(
@@ -1182,11 +1241,12 @@ export class GameView {
       inputOptions.forceClickForTurn ?? false,
     );
     const shell = this.createShell(
-      resolvePresentationBackground({
-        kind: "node",
-        nodeId: node.nodeId,
-        baseBackground: node.scene.bg,
-      }),
+      resolveEarlySceneBackground(node.nodeId) ??
+        resolvePresentationBackground({
+          kind: "node",
+          nodeId: node.nodeId,
+          baseBackground: node.scene.bg,
+        }),
       node.nodeId,
     );
     shell.dataset.activeSpeaker = node.nodeId === "n1_first_voice" ? "voice" : character.id;
@@ -1198,11 +1258,16 @@ export class GameView {
       node.npc.startEmotion,
     );
 
+    const bakedPrompt = shouldHideDialogueOpeningForBakedPrompt(node.nodeId);
     const panel = this.dialoguePanel(
       identity.speaker,
       resolveDialogueOpening(node, state),
       node.nodeId === "n1_first_voice" ? "voice" : character.id,
+      bakedPrompt
+        ? { visuallyHiddenCopy: true, semanticText: DIRECT_WISH_PROMPT_TEXT }
+        : undefined,
     );
+    if (bakedPrompt) panel.classList.add("vn-baked-prompt-shell");
     const inputArea = element("section", "dialogue-input vn-dialogue-input");
     inputArea.dataset.inputMode = state.inputMode;
     panel.append(inputArea);
@@ -1237,11 +1302,12 @@ export class GameView {
     onContinue: () => void;
   }): void {
     const shell = this.createShell(
-      resolvePresentationBackground({
-        kind: "node",
-        nodeId: options.nodeId,
-        baseBackground: options.sceneId,
-      }),
+      resolveEarlySceneBackground(options.nodeId) ??
+        resolvePresentationBackground({
+          kind: "node",
+          nodeId: options.nodeId,
+          baseBackground: options.sceneId,
+        }),
       options.nodeId,
     );
     shell.dataset.activeSpeaker =
@@ -1679,7 +1745,12 @@ export class GameView {
     return figure;
   }
 
-  private dialoguePanel(speaker: string, text: string, speakerId: string): HTMLElement {
+  private dialoguePanel(
+    speaker: string,
+    text: string,
+    speakerId: string,
+    options?: { visuallyHiddenCopy?: boolean; semanticText?: string },
+  ): HTMLElement {
     const presentation = resolveDialoguePresentation(speakerId);
     const panel = element(
       "section",
@@ -1690,10 +1761,20 @@ export class GameView {
     if (presentation.showName) {
       panel.append(element("div", "nameplate vn-speaker-name", speaker));
     }
-    const dialogueText = element("p", "dialogue-text vn-dialogue-copy");
-    dialogueText.dataset.typewriterText = formatDialogueText(text, speakerId);
-    dialogueText.textContent = dialogueText.dataset.typewriterText;
-    panel.append(dialogueText);
+    if (options?.visuallyHiddenCopy) {
+      panel.append(
+        element(
+          "p",
+          "early-scene-prompt-semantic visually-hidden",
+          options.semanticText ?? text,
+        ),
+      );
+    } else {
+      const dialogueText = element("p", "dialogue-text vn-dialogue-copy");
+      dialogueText.dataset.typewriterText = formatDialogueText(text, speakerId);
+      dialogueText.textContent = dialogueText.dataset.typewriterText;
+      panel.append(dialogueText);
+    }
     return panel;
   }
 
@@ -1825,6 +1906,10 @@ export class GameView {
   }
 
   private commit(shell: HTMLElement): void {
+    if (this.activeSceneTimer !== null) {
+      window.clearTimeout(this.activeSceneTimer);
+      this.activeSceneTimer = null;
+    }
     this.activeTitleView?.destroy();
     this.activeTitleView = null;
     this.activeVoiceCaptureCancel?.();
