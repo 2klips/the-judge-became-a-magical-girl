@@ -81,7 +81,7 @@
 | `[확정·M5 필수]` | `doyun.normal_shy` | `char_doyun_normal_shy.png` | full facepalm 기존본 | 현재 v3.1 runtime mapping 없음. binary는 보존하고 재사용 전 EDIT·사람 QA |
 | `[확정·M5 필수]` | `doyun.normal_empty` | `char_doyun_normal_empty.png` | 감정과 색이 빠진 도윤 | BAD 엔딩 |
 | `[확정·M5 필수]` | `doyun.magical` | `char_doyun_magical.png` | `[임시 승인, DEC-035]` 정면 변신 완료 기본 포즈 | 변신 완료·전투 공통 폴백 |
-| `[확정·M5 필수]` | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 변신 직후·전투 후 수렴 포즈 | N5 변신 결과, 수렴 |
+| `[확정·ready·사람 재검수]` | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 변신 직후·전투 후 수렴 포즈. 2026-08-23 head-only EDIT로 성공+민망함 표정 반영 | N5 변신 결과, 수렴; HQ-07 `HUMAN_RECHECK` |
 | `[확정·M5 필수]` | `doyun.magical_defend` | `char_doyun_magical_defend.png` | 방어 주문 포즈 | battle p1 |
 | `[확정·M5 필수]` | `doyun.magical_attack` | `char_doyun_magical_attack.png` | 공격 주문 포즈 | battle p2 |
 | `[확정·M5 필수]` | `doyun.magical_finish` | `char_doyun_magical_finish.png` | 마지막 판정 주문 포즈 | battle p3 |
@@ -162,7 +162,7 @@
 |---|---|---|---|---|---|
 | N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 첫 beat 도윤 `employee_id_surprised`, 이후 `normal` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | HQ-03 전용 pose를 첫 beat에만 사용. panic/horror 용도로 재사용하지 않으며 사람 actual 장면 재검수 대기 |
 | N5 주문 게이트 | 두 문장 한 번에 낭독 | `bg_desk_closeup` | 도윤 `normal`; 주문 UI 중심, 주노는 작게 유지 | 입력 중 기존 곡 duck | full facepalm 제거. 주문 전문은 DOM. 입력 중 BGM duck |
-| N5 변신 결과 | 야간 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` + `transform.cast` A2 사원증·야간 → `transform.complete` 심야 완료 | `bgm_transform` one-shot | 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등. 완전/표준/구제는 효과 강도만 다름 |
+| N5 변신 결과 | 야간 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` head-only EDIT + `transform.cast` A2 사원증·야간 → `transform.complete` 심야 완료 | `bgm_transform` one-shot | 몸·heart-hands·costume은 기존본 유지, 얼굴은 성공+민망함으로 수정. HQ-07 actual 합성 재검수 대기. 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등 |
 | `battle_wraith` / p1 `p1_defend` | 정지한 핵심 팀·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` + `gray_wraith.normal` + `juno.neutral`; 팀은 위협을 인식하지 못한 배경 실루엣 | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void` |
 | `battle_wraith` / p2 `p2_attack` | 망령 중심 공격 | `bg_hall_void` | 도윤 `magical_attack` + momentum별 망령 + `juno.happy` | 계속 `bgm_battle` | 공격 플래시 뒤에도 같은 캔버스 정렬 유지 |
 | `battle_wraith` / p3 `p3_answer` 질문 | 과거 기록·핵심 질문 | `bg_mind_archive` | 도윤 `magical_finish` + 현재 망령 상태 + `juno.neutral` | 계속 `bgm_battle`, 질문 중 일시 duck | `/project_archive/`, 소개 문구는 DOM/CSS |

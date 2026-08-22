@@ -364,11 +364,14 @@
 }
 
 .vn-dialogue-shell:not(.battle-dialogue) .vn-advance {
+  position: absolute;
+  right: clamp(22px, 2.4vw, 32px);
+  bottom: clamp(12px, 1.7vh, 18px);
   display: inline-flex;
   float: none;
   width: fit-content;
   min-height: 36px;
-  margin: 12px 0 0 auto;
+  margin: 0;
   padding: 7px 3px 7px 9px;
   align-items: center;
   border: 0;
@@ -586,6 +589,10 @@
   .vn-dialogue-shell:not(.battle-dialogue) .vn-debug-transcript button {
     justify-self: end;
   }
+}
+
+.vn-dialogue-shell:not(.battle-dialogue):has(.vn-advance) {
+  padding-bottom: clamp(50px, 6vh, 62px);
 }
 
 @media (prefers-reduced-motion: reduce) {

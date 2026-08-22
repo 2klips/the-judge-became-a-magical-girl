@@ -23,7 +23,7 @@
 | N4-C | 서먹함·회복 / 거리 유지 | opening `normal_shy`, 회복 `smile`, 거리 `tired` | opening facepalm 과도 | 중립 긴장 / 회복 / 거리 | opening `normal`, 나머지 유지 |
 | N5 line 0 | 사원증 발광·부상 | `normal_shy` | 사건 focal과 무관한 절망 | 사원증을 보는 surprise/disbelief | 사용자 승인 `doyun.employee_id_surprised` 전용 매핑, 사람 재검수 대기 |
 | N5 line 1~2·incantation | 망령 압박·주노 시범·낭독 | `normal_shy` | 계속 무너진 인상 | 압박을 견디고 행동 | `normal`로 `REMAP` |
-| N5 transformed-live | 변신 결과 | `magical_pose` | 몸은 적합, 얼굴은 고통/패배 | 성공+당황+벅참 | body `KEEP`, 얼굴 `EDIT 1` 유지 |
+| N5 transformed-live | 변신 결과 | `magical_pose` | 몸은 적합, 얼굴은 고통/패배 | 성공+당황+벅참 | body `KEEP`, head-only `EDIT 1` 적용·`HUMAN_RECHECK` |
 
 `normal_shy` binary는 삭제하지 않는다. 다만 현재 v3.1 runtime mapping에서는 제거했고, mild facepalm을 다시 쓸 경우 먼저 표정·손 위치 EDIT와 사람 QA가 필요하다.
 
@@ -48,8 +48,8 @@
 
 | 선택지 | 서사·시각 장점 | asset 영향 | 주의 |
 |---|---|---|---|
-| **A — Transformation Reveal** | 변신 CUT을 첫 full-face reveal로 삼고 이후에도 감정이 열린 도윤을 유지한다. 변화의 의미가 강하고 CUT→live 연속성이 좋다. | 현재 실제 post-transform 사용본 `magical_pose`, `magical_defend`, `magical_attack`, `magical_finish` 4장 눈/얼굴 EDIT. dormant fallback `magical`까지 family를 맞추면 1장 추가. `magical_pose`는 HQ-07 얼굴 EDIT와 한 번에 처리 가능 | N5~N8 전 장면의 얼굴·헤어 shadow 일관성을 같이 검수해야 함 |
-| **B — Keep Eyes Obscured** | 변신 전후의 도윤 identity를 유지하고 live sprite 작업량을 줄인다. | `cut_transform_01.webp`, `cut_transform_02.webp` 2장 EDIT. live 4장은 continuity 목적 edit 없음. HQ-07 `magical_pose` 표정 EDIT는 별도 유지 | 첫 얼굴 공개의 서사적 보상은 사라지며 CUT focal을 훼손하지 않는 가림 방식 필요 |
+| **A — Transformation Reveal** | 변신 CUT을 첫 full-face reveal로 삼고 이후에도 감정이 열린 도윤을 유지한다. 변화의 의미가 강하고 CUT→live 연속성이 좋다. | `magical_pose`는 2026-08-23 읽히는 눈·민망함 head-only EDIT 적용 완료. 남은 실제 post-transform 사용본 `magical_defend`, `magical_attack`, `magical_finish` 3장 눈/얼굴 EDIT. dormant fallback `magical`까지 family를 맞추면 1장 추가 | N5~N8 전 장면의 얼굴·헤어 shadow 일관성을 같이 검수해야 함 |
+| **B — Keep Eyes Obscured** | 변신 전후의 도윤 identity를 유지하고 live sprite 작업량을 줄인다. | `cut_transform_01.webp`, `cut_transform_02.webp` 2장 EDIT에 더해, 현재 읽히는 눈으로 편집된 `magical_pose`를 obscured motif로 되돌리는 1장 EDIT 필요 | 첫 얼굴 공개의 서사적 보상은 사라지며 CUT focal을 훼손하지 않는 가림 방식 필요 |
 
 관계 상태는 이 결정의 조건이 아니다. 이번 phase는 어느 안도 자동 선택하지 않는다.
 
@@ -77,8 +77,8 @@
 
 | Family | NEW | EDIT | 상태 |
 |---|---:|---:|---|
-| Doyun | 0 outstanding | 1 확정 + HQ-05 조건부 | floating ID reaction은 승인본 import 완료; `magical_pose` facial EDIT 1; mild facepalm EDIT는 선택적; HQ-05 A/B 결정 대기 |
+| Doyun | 0 outstanding | 0 확정 + HQ-05 조건부 | floating ID reaction import 완료; `magical_pose` head-only EDIT 1 적용·사람 재검수 대기; mild facepalm EDIT는 선택적; HQ-05 A/B 결정 대기 |
 | Juno | 3 | 0 | `barrier/protect`, `encourage/cast`, `point/explain` 기존 TODO 유지 |
 | Black Magical Girl | 1 | 0 | `ending.black_magical_girl` 기존 TODO 유지 |
 
-모든 수치는 visual-production inventory이며 이번 phase의 binary 변경 수는 0이다.
+모든 수치는 visual-production inventory다. Phase B 당시 binary 변경 수는 0이었고, 2026-08-23 후속 human QA에서 `magical_pose` head-only EDIT 1을 적용했다.

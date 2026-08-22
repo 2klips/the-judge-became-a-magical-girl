@@ -49,9 +49,9 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 화면을 과도하게 가리고 generic AI-generated UI처럼 보이며 대사·선택·입력 방식 위계가 약함 |
 | Desired Direction | 낮고 간결한 공통 VN dialogue shell, 작은 speaker accent, compact choice, secondary input-mode control |
 | Priority | P0 |
-| Implementation Status | `PASS` — Phase A/A.1 공통 VN token, compact dialogue/narration shell, integrated speaker accent, vertical narrative choice, editorial progress CTA, BGM HUD 정합화를 구현하고 사용자 visual 승인 |
-| Human Recheck | 2026-08-22 사용자 `APPROVED / FREEZE for core VN dialogue UI` 결정. optional narration CTA P2는 비차단 |
-| Final Status | `PASS` |
+| Implementation Status | `HUMAN_RECHECK` — Phase A/A.1 공통 VN foundation은 사용자 승인 유지. 2026-08-23 actual play에서 일반 대화의 `계속 ›`가 본문 flow에 따라 이동하는 회귀를 확인해 모든 core dialogue shell의 우하단 고정 슬롯으로 수정 |
+| Human Recheck | body copy·화자·회신 길이가 달라도 `계속 ›` 위치가 동일하고 본문과 겹치지 않는지 확인. 기존 2026-08-22 `APPROVED / FREEZE` 범위의 나머지 UI는 유지 |
+| Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | HQ-13 공통 foundation과 함께 구현. HQ-06·10·11·12 scene-specific redesign은 계속 `OPEN` |
 
 ### HQ-03 — Floating employee ID Doyun reaction
@@ -120,13 +120,13 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 |---|---|
 | Scene/Beat | N5 transformed-live result |
 | Category | Character asset edit |
-| User Evidence | 캡처 #11. 성공 결과인데 얼굴은 절망·고통·패배로 읽힘 |
+| User Evidence | 캡처 #11 및 2026-08-23 재확인. 성공 결과인데 얼굴은 절망·고통·패배로 읽히고 머리 쪽 회색 shadow/color가 부자연스러움 |
 | Problem | heart-hands와 성공 copy에 facial emotion이 맞지 않음 |
 | Desired Direction | body·costume·heart-hands 유지. 성공했지만 당황하고 overwhelmed된 작은 어색한 미소, 옅은 blush, 읽히는 눈 |
 | Priority | P0 ASSET EDIT |
-| Implementation Status | `OPEN` — `doyun.magical_pose`, NEW 0 / EDIT 1 handoff 존재 |
+| Implementation Status | `HUMAN_RECHECK` — `doyun.magical_pose` NEW 0 / EDIT 1 적용. 몸·costume·heart-hands·staff는 유지하고 head-only로 검은 머리, 읽히는 눈, 옅은 blush, 어색한 미소를 반영 |
 | Human Recheck | 성공·코미디·당황이 읽히며 despair/pain/defeat가 사라졌는지 확인 |
-| Final Status | `OPEN` |
+| Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | [ASSET_MANIFEST handoff](../assets/ASSET_MANIFEST.md#n5-변신-결과-visual-production-handoff). `RECONFIRMED BY FULL PLAY HUMAN QA` |
 
 ### HQ-08 — Confrontation composition
@@ -225,7 +225,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 
 | Existing TODO | Human QA link | 상태 |
 |---|---|---|
-| `doyun.magical_pose` EDIT 1 / NEW 0 | HQ-07 | `RECONFIRMED BY FULL PLAY HUMAN QA` |
+| `doyun.magical_pose` EDIT 1 / NEW 0 | HQ-07 | `EDIT APPLIED · HUMAN_RECHECK` |
 | Juno `barrier/protect` | HQ-08·HQ-10 | 기존 visual production TODO 유지 |
 | Juno `encourage/cast` | HQ-08·HQ-10 | 기존 visual production TODO 유지 |
 | Juno `point/explain` | HQ-02·HQ-08 | 기존 visual production TODO 유지 |

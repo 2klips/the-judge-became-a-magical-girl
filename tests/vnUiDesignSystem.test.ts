@@ -89,6 +89,15 @@ describe("Phase A VN UI design system", () => {
     expect(gameViewSource).toContain("delayedAdvanceButton(");
   });
 
+  it("pins progress actions to one bottom-right slot across core dialogue shells", () => {
+    expect(vnStylesSource).toMatch(
+      /\.vn-dialogue-shell:not\(\.battle-dialogue\):has\(\.vn-advance\)\s*\{[^}]*padding-bottom:/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.vn-dialogue-shell:not\(\.battle-dialogue\) \.vn-advance\s*\{[^}]*position:\s*absolute;[^}]*right:[^;]+;[^}]*bottom:/s,
+    );
+  });
+
   it("aligns only the gameplay BGM HUD with the VN layer while preserving audio control callbacks", () => {
     expect(vnStylesSource).toContain(
       ".game-shell:not(.title-screen) .bgm-controls",

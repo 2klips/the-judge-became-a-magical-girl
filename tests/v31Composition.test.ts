@@ -209,9 +209,9 @@ describe("Scenario v3.1 global scene composition", () => {
     );
   });
 
-  it("Doyun magical_pose는 신규 pose 없이 표정 EDIT handoff로 남긴다", () => {
-    expect(assetManifestSource).toContain("`doyun.magical_pose`: `EDIT REQUIRED`");
-    expect(assetManifestSource).toContain("신규 pose 0장, 기존 pose EDIT 1장");
+  it("Doyun magical_pose head-only EDIT는 사람 재검수 단계로 남긴다", () => {
+    expect(assetManifestSource).toContain("`doyun.magical_pose`: `EDIT APPLIED · HUMAN_RECHECK`");
+    expect(assetManifestSource).toContain("신규 pose 0장, 기존 pose EDIT 1장 적용");
     expect(assetManifestSource).toContain("heart-hand body pose");
     expect(assetManifestSource).toContain("고통·패배가 아닌 코믹한 당혹감");
   });

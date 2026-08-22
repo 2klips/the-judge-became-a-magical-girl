@@ -217,5 +217,15 @@
 
 - 폰트 전 runtime: 11,882,465B (11.33MiB).
 - 채택 폰트: 2,293,924B.
-- 2026-08-22 초반 장면 4종 채택 후 현재 runtime: 14,991,963B (14.30MiB), 48 files.
+- 2026-08-23 `doyun.magical_pose` head-only EDIT 채택 후 현재 runtime: 15,249,369B (14.54MiB), 48 files.
 - 30MiB 상한을 유지한다.
+
+## 2026-08-23 `doyun.magical_pose` head-only 표정 편집
+
+- 입력은 기존 internal project asset `assets/source/doyun/delivery/char_doyun_magical_pose.png` 하나다. 외부 제3자 reference는 추가하지 않았다.
+- 사용자 actual play QA에서 몸·costume·heart-hands는 유지하고, 머리의 부자연스러운 회색 shadow/color와 절망·고통으로 읽히는 표정만 “변신 성공 후 민망하고 벅찬 상태”로 수정하도록 지시했다.
+- Codex 내장 OpenAI `image_gen`으로 검은 머리·읽히는 눈·옅은 blush·작고 어색한 미소의 head reference를 생성했다. exact 모델·버전·work ID는 도구가 노출하지 않아 `UNKNOWN`이다.
+- 생성 reference를 현재 1200×2000 좌표에 맞춘 뒤 head envelope만 합성했다. 자동 raw-pixel 비교에서 head envelope 밖 변경 픽셀은 0이며 몸·의상·하트손·지팡이·리본·다리 실루엣은 이전 채택본을 유지한다.
+- 교체 전 source/runtime: 308,884B, SHA-256 `C6CB1D201A10C597CAB63849EF87AAF6B8A2D5BF234683F4111181F39C0CDF09`.
+- 현재 source/runtime: 1200×2000 transparent PNG, 566,290B, SHA-256 `9E5EEB0699A3A8F66E0FA12F4607CE299ABB3FAE89B0D397ED12AEB5F7CB8426`, 동일 바이트.
+- HQ-07은 `HUMAN_RECHECK`다. 이 편집은 HQ-05의 post-transform 전체 얼굴 continuity A/B 결정을 닫지 않으며, 사람 in-game QA 전 상태는 계속 `ready`이고 `approved`가 아니다.
