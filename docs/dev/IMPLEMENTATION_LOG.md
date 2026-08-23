@@ -1927,3 +1927,11 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 | `git diff --check` | PASS | 공백 오류 없음 |
 
 HQ-01·04·08·09는 `HUMAN_RECHECK`, HQ-03·07은 asset 미제작으로 `OPEN`, HQ-05는 `OPEN / HUMAN DECISION REQUIRED`다. Codex 단독으로 `PASS` 처리하지 않았다.
+
+## N2→N3 Wraith Omen Presentation + WebAudio Cue
+
+- 작업일: 2026-08-23 KST
+- 브랜치: `codex/scenario-v31-runtime-composition-p1`
+- `n2_juno_followup → n3_wraith_choice`의 실제 advanced callback에서만 actor 0·1,100ms lower-third omen을 1회 표시한다. N3 Resume·debug direct entry·ordinary re-render는 edge hook을 통과하지 않아 표시 0회다.
+- `wraith_omen`은 distributed binary가 아닌 synthesized WebAudio 2-layer 저역 cue다. 기존 master gain, 40ms duplicate window, PTT suppression, AudioContext fail-soft를 재사용하며 BGM 전환·duck 상태는 추가하지 않는다.
+- 자동 계약은 exact edge, one-shot guard, actor/VN shell 0, cue 2-layer와 duplicate/suppression/fail-soft를 검증한다. 실제 click 3-viewport 합성은 통과했으며 actual voice·청각 clipping·reduced-motion은 사람 체크리스트에서 재확인한다.

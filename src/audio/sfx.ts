@@ -7,6 +7,7 @@ export type SfxCue =
   | "advance"
   | "guard"
   | "wraith_shift"
+  | "wraith_omen"
   | "ending";
 
 interface ToneLayer {
@@ -54,6 +55,10 @@ const cueLayers: Record<SfxCue, readonly ToneLayer[]> = {
   wraith_shift: [
     { type: "triangle", startHz: 180, endHz: 620, offset: 0, duration: 0.36, gain: 0.052 },
     { type: "sine", startHz: 480, endHz: 1_080, offset: 0.08, duration: 0.3, gain: 0.038 },
+  ],
+  wraith_omen: [
+    { type: "sine", startHz: 92, endHz: 64, offset: 0, duration: 0.62, gain: 0.046 },
+    { type: "triangle", startHz: 148, endHz: 82, offset: 0.08, duration: 0.52, gain: 0.028 },
   ],
   ending: [
     { type: "sine", startHz: 392, endHz: 392, offset: 0, duration: 0.34, gain: 0.045 },

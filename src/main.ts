@@ -726,6 +726,7 @@ async function bootstrap(): Promise<void> {
               shouldPresentWraithOmen(node.nodeId, nextNodeId, result.advanced)
             ) {
               transitionPresentationStarted = true;
+              sfx.play("wraith_omen");
               view.renderWraithOmen(() => renderCurrent());
               return;
             }

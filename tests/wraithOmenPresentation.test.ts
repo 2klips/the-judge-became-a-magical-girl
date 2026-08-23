@@ -41,6 +41,11 @@ describe("natural-edge Wraith omen presentation", () => {
     expect(mainSource).toMatch(
       /const nextNodeId = engine\.getState\(\)\.currentNodeId;[\s\S]*?shouldPresentWraithOmen\(node\.nodeId, nextNodeId, result\.advanced\)[\s\S]*?transitionPresentationStarted = true;[\s\S]*?view\.renderWraithOmen\(\(\) => renderCurrent\(\)\);[\s\S]*?return;/,
     );
+    const edgeBlock = mainSource.match(
+      /if \(\s*!transitionPresentationStarted[\s\S]*?view\.renderWraithOmen\(\(\) => renderCurrent\(\)\);[\s\S]*?return;\s*\}/,
+    )?.[0];
+    expect(edgeBlock).toBeDefined();
+    expect(edgeBlock?.match(/sfx\.play\("wraith_omen"\)/g)).toHaveLength(1);
   });
 
   it("renders an actor-free status caption instead of a VN dialogue shell", () => {

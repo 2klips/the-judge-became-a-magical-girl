@@ -60,4 +60,19 @@ describe("M5 Web Audio SFX", () => {
     });
     expect(player.play("ending")).toBe(false);
   });
+
+  it("plays one two-layer wraith omen and keeps suppression and fail-soft", () => {
+    const { context, starts } = fakeAudioContext();
+    let now = 500;
+    const player = new SfxPlayer(() => context, () => now);
+
+    expect(player.play("wraith_omen")).toBe(true);
+    expect(starts).toHaveLength(2);
+    expect(player.play("wraith_omen")).toBe(false);
+    now += 40;
+    expect(player.play("wraith_omen")).toBe(true);
+    expect(starts).toHaveLength(4);
+    player.setSuppressed(true);
+    expect(player.play("wraith_omen")).toBe(false);
+  });
 });
