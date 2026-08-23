@@ -16,6 +16,10 @@ import { compositionForContext } from "../src/ui/sceneComposition";
 const gameViewSource = readFileSync(resolve("src", "ui", "gameView.ts"), "utf8");
 const mainSource = readFileSync(resolve("src", "main.ts"), "utf8");
 const vnCssSource = readFileSync(resolve("src", "ui", "vn.css"), "utf8");
+const qaPagesWorkflow = readFileSync(
+  resolve(".github", "workflows", "qa-pages.yml"),
+  "utf8",
+);
 const deliveryDirectory = resolve("assets", "source", "early-scene-2026-08-22", "delivery");
 
 function readPngDimensions(file: Buffer): { width: number; height: number } {
@@ -119,6 +123,12 @@ describe("2026-08-22 early-scene human-approved assets", () => {
     });
     expect(cleanupReport.bytes).toEqual(expect.any(Number));
     expect(cleanupReport.bytes as number).toBeLessThanOrEqual(800 * 1024);
+  });
+
+  it("fetches the historical commit required by the employee-ID verifier", () => {
+    expect(qaPagesWorkflow).toMatch(
+      /- name: Checkout[\s\S]*?uses: actions\/checkout@v6[\s\S]*?with:\s*\n\s*fetch-depth:\s*0/,
+    );
   });
 
   it("uses the baked prompt once while retaining an accessible semantic equivalent", () => {
