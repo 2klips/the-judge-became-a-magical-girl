@@ -69,6 +69,7 @@ import { resolveWorkerUrl } from "./runtimeConfig";
 import { SaveRepository } from "./storage/saveRepository";
 import { GameView } from "./ui/gameView";
 import { withTitleResumeMode } from "./ui/titleStart";
+import { shouldPresentWraithOmen } from "./ui/wraithOmenPresentation";
 
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("#app 루트 요소가 없습니다.");
@@ -713,9 +714,19 @@ async function bootstrap(): Promise<void> {
         ): void => {
           activeVoice = null;
           activeLlm = null;
+          let transitionPresentationStarted = false;
           const continueFromReply = (): void => {
             if (node.nodeId === "n1_first_voice" && result.advanced) {
               view.renderJunoMonitorEmergence(() => renderCurrent());
+              return;
+            }
+            const nextNodeId = engine.getState().currentNodeId;
+            if (
+              !transitionPresentationStarted &&
+              shouldPresentWraithOmen(node.nodeId, nextNodeId, result.advanced)
+            ) {
+              transitionPresentationStarted = true;
+              view.renderWraithOmen(() => renderCurrent());
               return;
             }
             renderCurrent();

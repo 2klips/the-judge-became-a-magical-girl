@@ -137,7 +137,7 @@
 | N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` → final `cut.monitor_direct_wish_prompt` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. line 2~4 `doyun.normal_tired`; final prompt는 full-stage CUT | `bgm_daily` | 실제 초현상 전에는 startled를 쓰지 않는다. final baked prompt와 같은 visible DOM 문구는 렌더하지 않고 hidden semantic만 유지 |
 | N1 `n1_first_voice` | 모니터 속 첫 목소리 | `cut.monitor_direct_wish_prompt` 연속 사용 | 의심·집중의 `doyun.normal_suspicious`. `want_rest`는 tired, `seek_new_fun`은 smile. **주노 live 미노출** | 계속 `bgm_daily` | PTT/click은 live DOM. 응답 뒤 `cut.juno_monitor_emerge` full-stage 1,000ms; baked Juno와 live actor 동시 표시 금지 |
 | N2 `n2_juno_intro` | 모니터 emergence 뒤 주노 live 등장 | `cut.juno_monitor_emerge` → `bg_hall_day` | CUT 동안 actor 0, 이후 도윤 `normal_startled` + 주노 `surprised → happy`; 후속 identity/chosen에는 도윤 `normal_suspicious` | 계속 `bgm_daily` | soft fade 뒤 기존 live scene 진입. 자유 대화 결과 표정 사용 |
-| N2 `n2_juno_followup` | 정체·선택 이유 확인 | `bg_hall_day` | 도윤 `normal` + 주노 `neutral`; 냉담만 `normal_tired` | 계속 `bgm_daily` | full facepalm `normal_shy`는 현재 mapping에서 제외. 각 캐릭터는 한 번에 한 표정만 표시 |
+| N2 `n2_juno_followup` | 정체·선택 이유 확인 | `bg_hall_day` → 자연 전이에서만 `bg_hall_dark` omen | 도윤 `normal` + 주노 `neutral`; 냉담만 `normal_tired`. omen은 actor 0 | 계속 `bgm_daily`; N3 진입 뒤 기존 `bgm_crisis` | full facepalm `normal_shy`는 현재 mapping에서 제외. `n2_juno_followup → n3_wraith_choice` 실제 advanced edge에서만 1,100ms caption `(모니터 속 평가 문장이 한 글자씩 회색으로 번진다.)`를 1회 표시한다. Resume/debug/re-render는 0회이며 GameState/save/flags를 쓰지 않는다 |
 | N3 `n3_wraith_choice` | 회색 망령 등장 | `bg_hall_dark` | opening 도윤 `normal_startled` + LEFT/CENTER-LEFT 대형 `gray_wraith.normal` + Doyun-side center-low `juno.upset`; 시간·인식이 멈춘 핵심 팀은 배경 실루엣 | 선호 `bgm_crisis`; MVP 폴백 `bgm_battle` | `[ WRAITH ] ↔ [ JUNO + DOYUN ]` 대립축. Wraith만 audited mirror로 inward-facing. 평가표·안개·방어막 균열은 CSS/Canvas |
 | N4-A `n4_team` | 죽이 맞는 콤비 | `bg_hall_dark` | 도윤 `normal_smile` + `juno.happy`; 망령 유지 | 계속 crisis/폴백 | 주노 한 바퀴 회전은 CSS |
 | N4-B `n4_cooperate` | 마지못한 협력 | `bg_hall_dark` | 도윤 `normal` + `juno.neutral`; 망령 유지 | 계속 crisis/폴백 | 주노를 N4-A보다 작고 차분하게 배치 |
@@ -213,6 +213,7 @@
 - `[구현]` BGM controller는 신규/손상 설정 기본 음량 `0.20`, 유효 저장 volume/mute 우선, PTT duck `0.18배`, 실패 경로 세션 재요청 차단, autoplay 거부 뒤 다음 포인터 입력 1회 재시도, 변신 one-shot 동일 ID 중복 방지를 적용한다.
 - `[구현]` 도윤 13종을 `assets/runtime/char/`에 계약명으로 배치했다. 기존 11종 원본은 `assets/source/doyun/delivery/`, 2026-08-22 승인 2종 원본은 `assets/source/early-scene-2026-08-22/originals/`에 보존한다.
 - `[구현·DEC-077]` N0 final prompt→N1 suspicious Doyun→N1 reply→Juno emergence CUT→N2 live를 같은 workstation mini-sequence로 연결했다. prompt의 baked visible 문구는 이 한 asset만 허용하며 같은 visible DOM 중복은 0, screen-reader semantic은 유지한다.
+- `[구현·사람 재검수]` N2 follow-up의 실제 advanced edge에서만 actor 없는 1,100ms 회색 번짐 omen을 표시한다. node 진입 자체가 아니라 edge callback에 한정하므로 N3 Resume·debug 직접 진입·ordinary re-render에서는 반복하지 않으며, 직후 N3 대립 구도와 BGM 계약은 변경하지 않는다.
 - `[DEFERRED]` seated Doyun IMAGE 1은 `P2 OPTIONAL` N0 후보로 import하지 않았고 runtime dependency가 없다.
 - `[구현·QA PASS, DEC-047]` 도윤 전용 presentation class를 적용해 데스크톱·모바일에서 오른쪽 확대·상반신 crop으로 표시한다. 주노는 중앙/왼쪽 보조 위치를 유지한다.
 - `[구현·QA PASS, DEC-048]` 과거 `docs/Asset/juno-reference-v2/`에서 현재 source로 `R100` 이동된 주노 5표정을 동일 바이트로 `assets/runtime/char/`에 채택했다. N2·battle dev 장면의 투명 합성과 표정 로드를 확인했다.

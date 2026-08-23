@@ -412,6 +412,11 @@ npm run build
 - [ ] 22개 프리셋의 배경·인물·표정·컷·BGM 표기가 명세와 같다.
 - [ ] 전달된 배경 16장, 도윤 runtime 13장, 주노 runtime 5장, 초반 모니터 CUT 2장은 깨지지 않고 장면 매핑대로 표시된다.
 - [ ] N0 prompt→N1 suspicious Doyun→Juno emergence CUT→N2 live에서 baked visible prompt 중복 0, CUT live actor 0, PTT/click 접근성이 유지된다.
+- [ ] Production click: `n2_juno_followup → n3_wraith_choice` natural edge에서 actor 0의 작은 omen caption이 정확히 1회·약 1.1초 표시되고 N3로 이어진다.
+- [ ] Production actual voice: 같은 natural edge에서 omen이 정확히 1회이며 `/voice/realtime`·BGM 동작을 바꾸지 않는다.
+- [ ] N3 저장 Resume, `?debug=1&scene=n3-wraith`, resize/focus ordinary re-render에서는 omen 표시 0회다.
+- [ ] omen은 VN dialogue shell/modal을 만들지 않고 center stage를 크게 가리지 않으며 1920×1080·1600×900·1366×768에서 scroll/clipping 0이다.
+- [ ] `prefers-reduced-motion: reduce`에서는 haze flicker/scale이 없고 짧은 opacity entrance와 동일 1.1초 hold만 유지한다.
 - [ ] 도윤은 오른쪽 확대·상반신 구도이며 주노와 대화 UI를 가리지 않는다.
 - [ ] 전달된 `gray_wraith.normal`은 실파일, 미전달 `gray_wraith.weakened`는 normal+CSS 파생으로 보인다. normal 로드 실패와 미전달 변신 컷은 검은 placeholder여도 대사·버튼·게이지가 보인다.
 - [ ] 전달된 BGM 5곡이 계약 장면에 연결되고, 로드 실패 시 폴백곡 또는 무음으로 진행을 막지 않는다.

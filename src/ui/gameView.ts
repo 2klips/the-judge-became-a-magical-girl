@@ -61,6 +61,7 @@ import { applySceneEffect } from "./effects";
 import { createGauge } from "./gauge";
 import { mountParticleBurst } from "./particles";
 import { TitleView, type TitleViewOptions } from "./titleView";
+import { WRAITH_OMEN_PRESENTATION } from "./wraithOmenPresentation";
 
 export const VOICE_TITLE_SUBTITLE =
   "마이크를 누른 채 말하고 놓아, 정체불명의 목소리와 호흡을 맞춰 보자.";
@@ -791,6 +792,22 @@ export class GameView {
       this.activeSceneTimer = null;
       onContinue();
     }, reducedMotion ? 800 : 1000);
+  }
+
+  renderWraithOmen(onContinue: () => void): void {
+    const omen = WRAITH_OMEN_PRESENTATION;
+    const shell = this.createShell(omen.backgroundId, omen.sceneId);
+    shell.classList.add("wraith-omen-interstitial");
+    shell.dataset.actorCount = "0";
+    shell.append(element("div", "wraith-omen-monitor-haze"));
+    const caption = element("p", "wraith-omen-caption", omen.text);
+    caption.setAttribute("role", "status");
+    shell.append(caption);
+    this.commit(shell);
+    this.activeSceneTimer = window.setTimeout(() => {
+      this.activeSceneTimer = null;
+      onContinue();
+    }, omen.durationMs);
   }
 
   renderIncantation(

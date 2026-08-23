@@ -195,6 +195,57 @@
   to { opacity: 1; filter: brightness(1); }
 }
 
+.wraith-omen-interstitial {
+  overflow: hidden;
+}
+
+.wraith-omen-monitor-haze {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(186, 187, 201, 0.025) 0,
+      rgba(186, 187, 201, 0.025) 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    radial-gradient(circle at 50% 40%, rgba(159, 160, 175, 0.16), transparent 54%);
+  mix-blend-mode: screen;
+  animation: wraith-omen-haze 220ms steps(2, end) 2 alternate;
+}
+
+.wraith-omen-caption {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: clamp(92px, 12vh, 138px);
+  width: fit-content;
+  max-width: min(760px, calc(100vw - 64px));
+  margin: 0;
+  padding: 5px 0 5px 18px;
+  border-left: 1px solid rgba(200, 201, 211, 0.52);
+  color: rgba(226, 226, 231, 0.88);
+  background: transparent;
+  font: 600 clamp(0.9rem, 1.15vw, 1.05rem)/1.65 "MaruBuri", "Noto Serif KR", Georgia, serif;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 9px rgba(0, 0, 0, 0.92);
+  transform: translateX(-50%);
+  animation: wraith-omen-caption-in 180ms ease-out both;
+}
+
+@keyframes wraith-omen-haze {
+  from { opacity: 0.42; transform: translateX(-0.25%); }
+  to { opacity: 0.82; transform: translateX(0.25%); }
+}
+
+@keyframes wraith-omen-caption-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .vn-dialogue-shell--narration:not(.battle-dialogue) .vn-dialogue-copy {
   font-family: "MaruBuri", "Noto Serif KR", Georgia, serif;
   font-size: clamp(1.03rem, 1.32vw, 1.2rem);
@@ -611,5 +662,13 @@
   .vn-dialogue-shell:not(.battle-dialogue)::after {
     animation: none !important;
     transition-duration: 1ms !important;
+  }
+
+  .wraith-omen-monitor-haze {
+    animation: none !important;
+  }
+
+  .wraith-omen-caption {
+    animation: wraith-omen-caption-in 1ms linear both !important;
   }
 }
