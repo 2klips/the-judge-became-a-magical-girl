@@ -165,12 +165,12 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 |---|---|
 | Scene/Beat | battle HUD·BGM HUD·command surface |
 | Category | Battle UI / safe zone |
-| User Evidence | 캡처 #13. 우측 상단 battle HUD와 BGM HUD가 실제로 겹치고 하단 command가 과밀 |
+| User Evidence | 캡처 #13. 우측 상단 battle HUD와 BGM HUD가 실제로 겹치고 하단 command가 과밀. 2026-08-23 후속 1366×768 actual QA에서 dialogue bottom 568.3px / command dock top 556.6px로 11.7px 겹침을 추가 확인 |
 | Problem | 상태·대사·주문·선택·입력 방식이 동시에 경쟁함 |
 | Desired Direction | top HUD/BGM reserved safe zone, 하나의 compact command deck, narrative choice와 input-mode control 위계 분리 |
 | Priority | P0 |
-| Implementation Status | `OPEN` — 2026-08-23 focused safe-zone 수정으로 Battle HUD를 BGM 우측 lane에서 시작시키고 Juno를 lower hero-support lane으로 이동했으며, 망령 대화 패널을 48vw/820px로 제한했다. 3개 PC viewport의 BGM/HUD·Juno/dialogue·Juno/command dock 충돌 0은 자동/브라우저 확인. compact command deck 전체 redesign은 미완료 |
-| Human Recheck | 세 desktop viewport, actor/staff/CTA 가림, scan order 확인 |
+| Implementation Status | `OPEN` — 2026-08-23 focused safe-zone 수정으로 Battle HUD를 BGM 우측 lane에서 시작시키고 Juno를 lower hero-support lane으로 이동했으며, 망령 대화 패널을 48vw/820px로 제한했다. 후속 human recheck에서 발견된 1366 dialogue/dock 11.7px 겹침은 dialogue bottom clamp 하한만 228px로 높여 실제 gap을 1920/1600/1366에서 각각 27.4/20.0/16.6px로 확보했다. actor·HUD·dock anchor는 불변이며 compact command deck 전체 redesign은 미완료 |
+| Human Recheck | focused safe-gap 화면은 `HUMAN_RECHECK`. 세 desktop viewport에서 actor/staff/CTA 가림과 전체 scan order는 Phase C에서 계속 확인 |
 | Final Status | `OPEN` |
 | Related SSOT/TODO | Phase C Battle presentation 대상 |
 

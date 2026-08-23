@@ -143,6 +143,15 @@ describe("Scenario v3.1 global scene composition", () => {
     );
   });
 
+  it("Battle dialogue는 desktop command dock 위에 최소 16px safe gap을 예약한다", () => {
+    expect(stylesSource).toMatch(
+      /\.battle-dialogue\.dialogue-panel\s*\{[^}]*bottom:\s*clamp\(228px, 26vh, 245px\);/s,
+    );
+    expect(stylesSource).toMatch(
+      /\.battle-control-dock\s*\{[^}]*bottom:\s*clamp\(12px, 2vh, 24px\);/s,
+    );
+  });
+
   it("Ending Juno는 중앙 card 밖 left-low actor lane을 사용한다", () => {
     expect(stylesSource).toMatch(
       /\.game-shell\[data-composition="ending"\]\.ending-screen \.ending-character:not\(\.ending-black-magical-girl\)\s*\{[^}]*bottom:\s*clamp\(110px, 14vh, 160px\);[^}]*left:\s*clamp\(0%, 2vw, 3%\);/s,

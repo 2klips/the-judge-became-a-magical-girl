@@ -2834,7 +2834,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   position: absolute;
   z-index: 6;
   right: auto;
-  bottom: clamp(190px, 26vh, 245px);
+  bottom: clamp(228px, 26vh, 245px);
   left: clamp(18px, 5vw, 72px);
   width: min(68vw, 920px);
   min-height: 116px;

@@ -2009,3 +2009,15 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 | `npm run build` | PASS, 158 modules; 기존 Transformers 516.22kB chunk warning만 유지 |
 | `npm run build:qa` | PASS, 128 modules |
 | `git diff --check` | PASS |
+
+## Battle 1366 Dialogue / Command Safe Gap
+
+- 작업일: 2026-08-23 KST
+- 브랜치: `codex/scenario-v31-runtime-composition-p1`
+- starting HEAD: `27d0156981f51265c3e4c8322c3a101a0485cc49`
+- human actual QA가 1366×768에서 Battle dialogue와 command dock의 11.7px visible overlap을 확인했다.
+- command dock bottom anchor, actor 3종, Battle HUD, BGM HUD를 동결하고 Battle dialogue의 responsive bottom clamp 하한만 `190px → 228px`로 변경했다.
+- RED test는 228px desktop safe-gap contract 부재로 실패했고, 최소 CSS 변경 뒤 focused composition test 20/20이 통과했다.
+- production/debug OFF actual Battle 측정 gap은 1920×1080 `27.4px`, 1600×900 `20.0px`, 1366×768 `16.6px`다. 세 viewport 모두 Juno/dialogue·Juno/dock·BGM/HUD overlap 0, scroll 0, face·staff·Wraith core/head 가림 0이다.
+- 기존 approved Battle 1920 actor composition과 N6, Ending은 변경하지 않았다. HQ-10·HQ-11은 `OPEN`, focused 화면은 `HUMAN_RECHECK`다.
+- fresh gate는 focused 20 tests, TypeScript check, Vitest 61 files·438 tests, production build 158 modules, QA build 128 modules, `git diff --check`를 통과했다. production build의 기존 Transformers 516.22kB warning만 유지한다.

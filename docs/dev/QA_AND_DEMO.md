@@ -486,3 +486,35 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - [x] actual GOOD Ending은 같은 3개 viewport에서 Juno/중앙 card, Juno/Doyun, BGM/card 충돌 0, scroll 0이다.
 - [x] actual production play의 browser console error/warning은 0이며 Vite 연결/HMR debug log만 존재한다.
 - [ ] Wraith 크기, Battle support 위치, Ending left-low Juno의 최종 미술 판정은 사용자 `HUMAN_RECHECK`다. HQ-10 command deck과 HQ-11 editorial ending 전체 redesign은 `OPEN`을 유지한다.
+
+## 19. 2026-08-23 Battle 1366 Dialogue / Command Safe Gap 재검수
+
+- starting HEAD는 `27d0156981f51265c3e4c8322c3a101a0485cc49`다.
+- 섹션 18의 최초 측정 뒤 human QA가 1366×768에서 dialogue bottom 568.3px / command dock top 556.6px, 실제 겹침 11.7px를 발견했다. 이 후속 증거가 해당 viewport의 이전 충돌 0 기록을 대체한다.
+- actor·Battle HUD·BGM HUD·command dock bottom anchor는 동결하고 `.battle-dialogue.dialogue-panel`의 desktop bottom clamp 하한만 190px에서 228px로 높였다.
+
+| viewport | Battle dialogue `x/y/w/h` | command dock `x/y/w/h` | 실제 gap | 판정 |
+|---|---|---|---:|---|
+| 1920×1080 | `72/716/820/119` | `46/862.4/1828/196` | 27.4px | PASS |
+| 1600×900 | `72/547/768/119` | `46/686/1508/196` | 20.0px | PASS |
+| 1366×768 | `68.3/421/655.7/119` | `41/556.6/1284.1/196` | 16.6px | PASS |
+
+| viewport | BGM HUD `x/y/w/h` | Battle HUD `x/y/w/h` | Wraith `x/y/w/h` | Juno `x/y/w/h` | Doyun `x/y/w/h` |
+|---|---|---|---|---|---|
+| 1920×1080 | `53.8/16/290/60` | `420/27/1436/64` | `76.8/181.6/670/755` | `1017.6/432/190/334.8` | `1171.2/238/729.6/950` |
+| 1600×900 | `44.8/16/290/60` | `352/22.5/1184/64` | `64/150/560/630` | `848/360/176/279` | `976/198/608/792` |
+| 1366×768 | `38.2/16/290/60` | `350/19.2/961.4/64` | `54.6/117.4/478.1/537.6` | `724/299.9/150.3/238.1` | `833.3/169/519.1/675.8` |
+
+- 세 viewport 모두 Juno/dialogue·Juno/command dock·BGM/Battle HUD overlap 0, document scroll은 viewport와 동일하다.
+- 투명 여백을 포함한 Wraith/Doyun actor canvas bbox는 일부 UI 또는 actor bbox와 교차하지만, production screenshot에서 face·staff·Wraith core/head 가림은 0이다. 승인된 actor composition은 이동하지 않았다.
+- focused Battle 진입 이후 console error/warning 0이다. 동일 탭의 이전 Post-credit 순회에서 발생한 기존 `ending.black_magical_girl` missing-asset warning 1건은 이 변경과 무관하다.
+- focused 결과는 사용자 `HUMAN_RECHECK`; HQ-10 전체 Battle redesign과 HQ-11 Ending redesign은 `OPEN`이다.
+
+| 검증 | 결과 |
+|---|---|
+| focused composition | 1 file·20 tests PASS; safe-gap RED→GREEN 포함 |
+| `npm run check` | PASS |
+| `npm test` | 61 files·438 tests PASS |
+| `npm run build` | PASS, 158 modules; 기존 Transformers 516.22kB warning만 유지 |
+| `npm run build:qa` | PASS, 128 modules |
+| `git diff --check` | PASS |
