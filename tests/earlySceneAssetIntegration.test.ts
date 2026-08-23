@@ -126,4 +126,13 @@ describe("2026-08-22 early-scene human-approved assets", () => {
     );
     expect(vnCssSource).toMatch(/vn-dialogue-shell--narration[^}]*padding-bottom:/s);
   });
+
+  it("anchors only the direct-wish cut progress control above the bottom center", () => {
+    expect(vnCssSource).toMatch(
+      /\.direct-wish-prompt-cut\s+\.early-scene-cut-controls\s*\{[^}]*left:\s*50%;[^}]*right:\s*auto;[^}]*bottom:\s*clamp\(56px,\s*7vh,\s*80px\);[^}]*transform:\s*translateX\(-50%\);/s,
+    );
+    expect(vnCssSource).not.toMatch(
+      /\.juno-monitor-emergence-cut\s+\.early-scene-cut-controls[^}]*left:\s*50%/s,
+    );
+  });
 });

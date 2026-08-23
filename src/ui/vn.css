@@ -163,6 +163,13 @@
   bottom: clamp(24px, 4vh, 48px);
 }
 
+.direct-wish-prompt-cut .early-scene-cut-controls {
+  left: 50%;
+  right: auto;
+  bottom: clamp(56px, 7vh, 80px);
+  transform: translateX(-50%);
+}
+
 .early-scene-cut-advance {
   min-height: 36px;
   padding: 7px 3px 7px 9px;
