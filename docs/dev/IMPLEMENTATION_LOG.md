@@ -1926,7 +1926,7 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 | `npm run build:qa` | PASS | QA build 126 modules |
 | `git diff --check` | PASS | 공백 오류 없음 |
 
-HQ-01·04·08·09는 `HUMAN_RECHECK`, HQ-03·07은 asset 미제작으로 `OPEN`, HQ-05는 `OPEN / HUMAN DECISION REQUIRED`다. Codex 단독으로 `PASS` 처리하지 않았다.
+이 Phase B 감사 시점에는 HQ-01·04·08·09가 `HUMAN_RECHECK`, HQ-03·07이 asset 미제작, HQ-05가 사람 결정 대기였다. 이후 HQ-03·07 asset 반영과 HQ-05 Option A 구현은 아래 2026-08-23 closure가 supersede하며, Codex 단독으로 `PASS` 처리하지 않는 계약은 유지한다.
 
 ## N2→N3 Wraith Omen Presentation + WebAudio Cue
 
@@ -1935,3 +1935,42 @@ HQ-01·04·08·09는 `HUMAN_RECHECK`, HQ-03·07은 asset 미제작으로 `OPEN`,
 - `n2_juno_followup → n3_wraith_choice`의 실제 advanced callback에서만 actor 0·1,100ms lower-third omen을 1회 표시한다. N3 Resume·debug direct entry·ordinary re-render는 edge hook을 통과하지 않아 표시 0회다.
 - `wraith_omen`은 distributed binary가 아닌 synthesized WebAudio 2-layer 저역 cue다. 기존 master gain, 40ms duplicate window, PTT suppression, AudioContext fail-soft를 재사용하며 BGM 전환·duck 상태는 추가하지 않는다.
 - 자동 계약은 exact edge, one-shot guard, actor/VN shell 0, cue 2-layer와 duplicate/suppression/fail-soft를 검증한다. 실제 click 3-viewport 합성은 통과했으며 actual voice·청각 clipping·reduced-motion은 사람 체크리스트에서 재확인한다.
+
+## Wraith Omen + Transform Face Continuity Closure
+
+- 작업일: 2026-08-23 KST
+- 브랜치: `codex/scenario-v31-runtime-composition-p1`
+- implementation 시작 기준: `4405277550dcdea522b00d7d2922d901d250d09b`
+- asset pre-edit comparison baseline: `39f4370ab731377b77f3898f48496990961b81cc`
+
+### atomic commits
+
+| Task | commit | 결과 |
+|---|---|---|
+| plan bookkeeping | `5e735771c80981da95b5f439e3b91a4334619595` | implementation HEAD와 asset comparison baseline 역할을 분리하고 final gate 순서를 수정 |
+| direct-wish CTA | `df14c6395ee4c6fc452f4846aade39ff449c65fc` | `.direct-wish-prompt-cut`의 progress control만 중앙 하단 위쪽에 고정; 일반 dialogue·Transform·Battle·Ending CTA 불변 |
+| omen presentation | `d4dc04812df5366a03be87b969d3f6b0c89146df` | 자연 `n2_juno_followup → n3_wraith_choice` advanced callback에 actor-free 1,100ms caption 1회 |
+| omen audio | `af327791ac50c990bebe9588443f166b29b8ef34` | 기존 WebAudio master를 쓰는 2-layer 저역 cue. duplicate guard·PTT suppression·fail-soft 유지 |
+| employee-ID cleanup | `f2c115c287e20a4fbd0697b6fd87be9a09b2c7d7` | 생성형 재그리기 없이 magenta fringe alpha만 deterministic cleanup |
+| transformed faces | `864a3028fa6cb115790c1bf00e5fa0e79d33144a` | Option A에 따라 target별 mask 안 공개 얼굴 4종 적용; 모두 `HUMAN_RECHECK` |
+
+### edge·state safety
+
+- omen caption은 `(모니터 속 평가 문장이 한 글자씩 회색으로 번진다.)`다. 새로운 modal/VN shell 없이 lower caption으로만 표시하고 actor count는 0이다.
+- natural edge마다 presentation과 WebAudio cue는 각각 1회다. N3 Resume, debug direct entry, resize/focus를 포함한 ordinary re-render는 0회다.
+- GameState, save/schema, relationship, flags, scenario JSON은 변경하지 않았다. ephemeral one-shot ownership은 transition callback의 지역 실행 문맥에만 둔다.
+- reduced motion에서는 haze flicker/scale을 제거하고 짧은 opacity 진입과 동일 hold만 유지한다.
+
+### asset evidence
+
+- `doyun.employee_id_surprised`: baseline artifact 1,923px → 0, artifact 밖 변경 0, artifact RGB 변경 0. source/runtime 동일 291,030B, SHA-256 `E92AD2F508207C20D8F17B1747E09537F5A1B0248AA05363A5EB645C76174E70`. HQ-03 `HUMAN_RECHECK`다.
+- HQ-05 target body/costume/pose/입 모양 authority는 baseline `39f4370`의 각 파일이고, `doyun.magical_pose`는 공개 눈·얼굴 identity reference다. `magical_pose`는 566,290B·SHA-256 `9E5EEB0699A3A8F66E0FA12F4607CE299ABB3FAE89B0D397ED12AEB5F7CB8426`로 불변이다.
+- 공개 얼굴 4종은 기본 cautious/overwhelmed, 방어 determined/strained, 공격 focused, 마무리 forceful로 구분했다. target별 mask 밖 raw pixel·alpha 변경은 모두 0이고 source/runtime가 동일하다.
+- 최종 runtime은 48 files·15,263,089B(14.56MiB)다. asset의 자동 gate는 `ready`까지만 증명하며 HQ-03·05·07은 사용자 합성 재검수 전 `HUMAN_RECHECK`, `approved`가 아니다.
+
+### Chrome evidence
+
+- omen·CTA·employee-ID는 1920×1080·1600×900·1366×768에서 scope, actor-free, no-scroll·no-clipping을 확인했다.
+- `magical_defend`, `magical_attack`, `magical_finish` 실제 합성은 세 viewport 모두 scroll·offscreen·actor overlap 0, console error 0이다. `doyun.magical`은 현재 scene mapping이 없는 fallback이라 최종 투명 PNG 자체를 검수했다.
+- production/debug OFF 1920×1080 click playthrough는 TITLE → direct-wish → N2 → natural-edge omen → N3 → N5 employee ID/Transform CUT01·02 → Battle p1/p2 → N7 → N8 → GOOD까지 진행했다. 자연 edge에서 caption 1·actor 0·VN shell 0, N3 도착 뒤 caption 0, 전체 경로 scroll 0·console error 0이었다.
+- 문서 reconciliation 뒤 complete gate는 early-scene pipeline 2 tests, face verifier 4 targets, TypeScript check, Vitest 61 files·432 tests, production build 158 modules, QA build 128 modules, `git diff --check`를 모두 통과했다. production build의 기존 Transformers 516.22kB large-chunk warning만 유지한다.

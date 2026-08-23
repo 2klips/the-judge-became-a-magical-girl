@@ -437,3 +437,42 @@ npm run build
 
 - `npm run check`, `npm test`, `npm run build:qa`, QA Worker dry-run/deploy, QG-03·QG-04·QG-06·QG-07, Pages workflow, 배포 후 데스크톱·모바일 실제 발화와 OpenAI 대화·전투 smoke가 모두 PASS해야 링크를 공개 QA 가능으로 표시한다.
 - 임시 QA PASS는 M5 최종 PASS 또는 M6 production PASS가 아니다.
+
+## 17. 2026-08-23 Wraith Omen + Transform Face Continuity 재검수
+
+### 17.1 범위·상태
+
+- implementation 시작 기준은 `4405277550dcdea522b00d7d2922d901d250d09b`, asset pre-edit comparison baseline은 `39f4370ab731377b77f3898f48496990961b81cc`다.
+- direct-wish progress 위치, natural-edge omen caption/WebAudio cue, employee-ID alpha cleanup, HQ-05 Option A 공개 얼굴 4종만 범위다.
+- Story/FSM/save/schema/relationship/flags, Voice/PTT/BGM, Battle composition, Ending/Post-credit는 비범위이며 변경하지 않는다.
+
+### 17.2 실제 브라우저 체크
+
+- [x] `.direct-wish-prompt-cut` 전용 CTA가 3개 PC viewport에서 중앙 정렬·bottom clamp를 유지하고 다른 CTA selector를 바꾸지 않는다.
+- [x] click natural `n2_juno_followup → n3_wraith_choice` edge에서 actor 0의 작은 caption과 synthesized cue가 각각 1회다.
+- [x] N3 Resume·debug direct entry·ordinary re-render에서 omen replay 0이다.
+- [x] employee-ID sprite는 3개 PC viewport에서 magenta fringe 없이 no-scroll로 합성된다.
+- [x] Battle p1 `magical_defend`, p2 `magical_attack`, N8 `magical_finish`는 1920×1080·1600×900·1366×768에서 scroll·offscreen·actor overlap 0, console error 0이다.
+- [x] production/debug OFF 1920×1080 click playthrough가 TITLE → direct-wish → N2 → omen → N3 → N5 employee ID/Transform → Battle p1/p2 → N7 → N8 → GOOD을 통과했다. omen caption 1·actor 0·VN shell 0, N3 도착 뒤 caption 0, 최종 console error 0이다.
+- [ ] omen actual 청감·reduced-motion 육안과 HQ-03·HQ-05·HQ-07 최종 미술 판정은 사용자 `HUMAN_RECHECK`다.
+- [ ] `doyun.magical`은 현재 runtime scene mapping이 없는 fallback이므로 final PNG는 확인했지만 production 합성 사람 검수는 mapping이 생길 때 수행한다.
+
+### 17.3 변신 얼굴 판정 규칙
+
+- 네 target 원본은 body/costume/pose/입 모양·행동 긴장도의 authority다. `doyun.magical_pose`는 눈·얼굴 identity reference로만 사용하며 바이트를 변경하지 않는다.
+- fallback/defend/attack/finish는 각각 cautious/overwhelmed, determined/strained, focused, forceful로 읽혀야 하며 같은 표정으로 수렴하면 FAIL이다.
+- 자동 verifier의 mask 밖 raw pixel·alpha 변경 0과 source/runtime 동일 바이트는 기술 PASS다. 사람 actual game 합성 승인 전 상태는 `ready · HUMAN_RECHECK`, `approved`가 아니다.
+
+### 17.4 final gate
+
+Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다시 실행한다.
+
+| 검증 | 결과 | 근거 |
+|---|---|---|
+| early-scene asset pipeline | PASS | 2 tests |
+| face verifier | PASS | baseline `39f4370`, 4 targets, mask 밖 raw pixel·alpha 변경 0, `magical_pose` 불변 |
+| `npm run check` | PASS | `tsc --noEmit`, exit 0 |
+| `npm test` | PASS | 61 files·432 tests |
+| `npm run build` | PASS | Vite 8.2.0, 158 modules; 기존 Transformers 516.22kB warning만 유지 |
+| `npm run build:qa` | PASS | Vite 8.2.0, 128 modules |
+| `git diff --check` | PASS | 문서 reconciliation 공백 오류 0 |
