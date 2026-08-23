@@ -84,27 +84,13 @@ def normalize_character(source: Path) -> Image.Image:
 
 
 def save_indexed(image: Image.Image, destination: Path) -> None:
-    flat = Image.new("RGB", image.size, (255, 0, 255))
-    flat.paste(image.convert("RGB"), mask=image.getchannel("A"))
-    palette = flat.resize((240, 400), Image.Resampling.LANCZOS).quantize(
-        colors=256, method=Image.Quantize.MEDIANCUT
+    indexed = image.convert("RGBA").quantize(
+        colors=255,
+        method=Image.Quantize.FASTOCTREE,
+        dither=Image.Dither.NONE,
     )
-    transparent_index = Image.new("RGB", (1, 1), (255, 0, 255)).quantize(
-        palette=palette, dither=Image.Dither.NONE
-    ).getpixel((0, 0))
-    indexed = flat.quantize(palette=palette, dither=Image.Dither.NONE)
-    indexed_pixels = np.array(indexed)
-    indexed_pixels[np.array(image.getchannel("A")) < 128] = transparent_index
-    output = Image.fromarray(indexed_pixels.astype("uint8"), mode="P")
-    output.putpalette(indexed.getpalette())
     destination.parent.mkdir(parents=True, exist_ok=True)
-    output.save(
-        destination,
-        format="PNG",
-        optimize=True,
-        compress_level=9,
-        transparency=transparent_index,
-    )
+    indexed.save(destination, format="PNG", optimize=True, compress_level=9)
 
 
 def normalize_cut(source: Path, destination: Path) -> None:

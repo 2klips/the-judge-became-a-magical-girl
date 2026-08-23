@@ -25,7 +25,7 @@
 | 대상 | 원본 SHA-256·크기 | runtime SHA-256·크기 | 변환·사용 |
 |---|---|---|---|
 | IMAGE 2 `doyun.normal_suspicious` | `08662799D6B155D977AFEAEB04D4623BAD7AE1AA39480EB42303E9510B24B23E`, 1,243,086B, 1024×1536 RGBA | `ED7D6632B6E20CC202EE57AA0213FC0406EBD86E90DCDE0444A600FF120B3078`, 263,523B, 1200×2000 transparent PNG | 분리 `?` 제거·비율 유지. N1/N2 의심·집중 |
-| IMAGE 3 `doyun.employee_id_surprised` | `4905B29148236DA0BDF0F7D6E8624CF99C557E294624D9F6CBF7AB5215A2E353`, 1,306,799B, 1024×1536 RGBA | `2442E7970DE74AFF8578E5B77FD3C98EF8569B4E28004E84030B77190B3A7CC3`, 291,025B, 1200×2000 transparent PNG | 분리 `!` 제거·비율 유지. N5 사원증 첫 beat 전용 |
+| IMAGE 3 `doyun.employee_id_surprised` | `4905B29148236DA0BDF0F7D6E8624CF99C557E294624D9F6CBF7AB5215A2E353`, 1,306,799B, 1024×1536 RGBA | `E92AD2F508207C20D8F17B1747E09537F5A1B0248AA05363A5EB645C76174E70`, 291,030B, 1200×2000 transparent PNG | 분리 `!` 제거·비율 유지. 2026-08-23 deterministic alpha cleanup으로 baseline `39f4370`의 반투명 magenta fringe 1,923px만 alpha 0 처리하고 RGB·그 밖 pixel은 불변. N5 사원증 첫 beat 전용·사람 합성 재검수 대기 |
 | IMAGE 4 `cut.juno_monitor_emerge` | `F35267D8DA8CCB44CF9F8838D39C15B4A487F479665245B34A0BCE0436BE498B`, 1,828,710B, 1672×941 RGB | `922E52FA06D72DB3CF2ECF70B3FF511AE76927D494F949C85EE312B2B0C24CB3`, 141,288B, 1920×1080 WebP | 비율 crop. N1→N2 1,000ms solo CUT, live actor 0 |
 | IMAGE 5 `cut.monitor_direct_wish_prompt` | `043B5AF715E8C30658D79BE687130D10CEEF00B0C789A5C691BE815DED81CED6`, 2,707,422B, 1672×941 RGBA(opaque) | `E99CC6F3719E8063CEB873ADD0559EDC9E27063D7E36321365B17E2CDD616AF2`, 119,738B, 1920×1080 WebP | 비율 crop·baked 문구 보존. N0 final/N1 opening |
 
@@ -217,7 +217,7 @@
 
 - 폰트 전 runtime: 11,882,465B (11.33MiB).
 - 채택 폰트: 2,293,924B.
-- 2026-08-23 `doyun.magical_pose` head-only EDIT 채택 후 현재 runtime: 15,249,369B (14.54MiB), 48 files.
+- 2026-08-23 `doyun.magical_pose` head-only EDIT와 `doyun.employee_id_surprised` alpha cleanup 채택 후 현재 runtime: 15,249,374B (14.54MiB), 48 files.
 - 30MiB 상한을 유지한다.
 
 ## 2026-08-23 `doyun.magical_pose` head-only 표정 편집
@@ -229,3 +229,12 @@
 - 교체 전 source/runtime: 308,884B, SHA-256 `C6CB1D201A10C597CAB63849EF87AAF6B8A2D5BF234683F4111181F39C0CDF09`.
 - 현재 source/runtime: 1200×2000 transparent PNG, 566,290B, SHA-256 `9E5EEB0699A3A8F66E0FA12F4607CE299ABB3FAE89B0D397ED12AEB5F7CB8426`, 동일 바이트.
 - HQ-07은 `HUMAN_RECHECK`다. 이 편집은 HQ-05의 post-transform 전체 얼굴 continuity A/B 결정을 닫지 않으며, 사람 in-game QA 전 상태는 계속 `ready`이고 `approved`가 아니다.
+
+## 2026-08-23 `doyun.employee_id_surprised` deterministic alpha cleanup
+
+- asset pre-edit comparison baseline은 commit `39f4370ab731377b77f3898f48496990961b81cc`의 source/runtime PNG다. 사용자 제공 original은 변경하지 않았다.
+- 초기 기계 정규화가 반투명 가장자리 1,923px에 magenta matte RGB를 남긴 원인이었다. cleanup은 감사된 palette 범위의 해당 픽셀 alpha만 0으로 바꾸며 얼굴·머리 형태·표정·사원증·손·의상·포즈·body proportions의 RGB를 재생성하거나 다시 그리지 않는다.
+- baseline source/runtime: 291,025B, SHA-256 `2442E7970DE74AFF8578E5B77FD3C98EF8569B4E28004E84030B77190B3A7CC3`.
+- 현재 source/runtime: 1200×2000 indexed transparent PNG, 291,030B, SHA-256 `E92AD2F508207C20D8F17B1747E09537F5A1B0248AA05363A5EB645C76174E70`, 동일 바이트.
+- verifier 결과: cleanup 전 artifact 1,923px, cleanup 후 opaque/saturated magenta 0, artifact RGB 변경 0, artifact 밖 변경 0. exporter는 multi-alpha를 보존하는 255색 RGBA quantization으로 고쳐 재발 방지 테스트를 둔다.
+- 실제 N5 장면은 1920×1080·1600×900·1366×768에서 로드·no-scroll을 확인했지만 최종 사람 합성 승인 전 HQ-03은 `HUMAN_RECHECK`이고 asset은 `ready`다.

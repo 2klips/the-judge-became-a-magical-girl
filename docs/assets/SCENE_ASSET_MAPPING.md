@@ -75,7 +75,7 @@
 | `[확정·M5 필수]` | `doyun.normal_tired` | `char_doyun_normal_tired.png` | 야근으로 지쳤지만 직접 확인하는 평상복 도윤 | N0 line 2~5, N2 거절·냉담, N3 철수·동조, N4 거리 유지 |
 | `[확정·M5 필수]` | `doyun.normal_startled` | `char_doyun_normal_startled.png` | 실제 초현상에 놀란 도윤 | N2 주노 등장, N3 망령 opening. N5 proxy는 전용 pose로 superseded |
 | `[확정·ready·사람 재검수]` | `doyun.normal_suspicious` | `char_doyun_normal_suspicious.png` | 의심하지만 겁먹지 않은 집중·관찰 | N1 opening/question, N2 follow-up·identity·chosen. 휴식/새 즐거움 branch에는 사용하지 않음 |
-| `[확정·ready·사람 재검수]` | `doyun.employee_id_surprised` | `char_doyun_employee_id_surprised.png` | 떠오르는 사원증을 바라보는 surprise/disbelief | N5 사원증 부상 첫 beat 전용, HQ-03 |
+| `[확정·ready·사람 재검수]` | `doyun.employee_id_surprised` | `char_doyun_employee_id_surprised.png` | 떠오르는 사원증을 바라보는 surprise/disbelief. 2026-08-23 deterministic alpha cleanup으로 magenta fringe만 제거 | N5 사원증 부상 첫 beat 전용, HQ-03 `HUMAN_RECHECK` |
 | `[확정·M5 필수]` | `doyun.normal` | `char_doyun_normal.png` | 행동하는 평상복 도윤 | N3 보호·방법 확인, N4-B/C, N5 압박·영창 |
 | `[확정·M5 필수]` | `doyun.normal_smile` | `char_doyun_normal_smile.png` | 관계가 회복되거나 결말을 받아들이는 도윤 | N4-A, GOOD·NORMAL 본 장면 |
 | `[확정·M5 필수]` | `doyun.normal_shy` | `char_doyun_normal_shy.png` | full facepalm 기존본 | 현재 v3.1 runtime mapping 없음. binary는 보존하고 재사용 전 EDIT·사람 QA |
@@ -160,7 +160,7 @@
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물·컷 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
-| N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 첫 beat 도윤 `employee_id_surprised`, 이후 `normal` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | HQ-03 전용 pose를 첫 beat에만 사용. panic/horror 용도로 재사용하지 않으며 사람 actual 장면 재검수 대기 |
+| N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 첫 beat 도윤 `employee_id_surprised`, 이후 `normal` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | HQ-03 전용 pose를 첫 beat에만 사용. panic/horror 용도로 재사용하지 않는다. magenta fringe alpha cleanup의 3개 PC viewport 합성은 자동 검증했고 사람 actual 장면 재검수 대기 |
 | N5 주문 게이트 | 두 문장 한 번에 낭독 | `bg_desk_closeup` | 도윤 `normal`; 주문 UI 중심, 주노는 작게 유지 | 입력 중 기존 곡 duck | full facepalm 제거. 주문 전문은 DOM. 입력 중 BGM duck |
 | N5 변신 결과 | 야간 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` head-only EDIT + `transform.cast` A2 사원증·야간 → `transform.complete` 심야 완료 | `bgm_transform` one-shot | 몸·heart-hands·costume은 기존본 유지, 얼굴은 성공+민망함으로 수정. HQ-07 actual 합성 재검수 대기. 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등 |
 | `battle_wraith` / p1 `p1_defend` | 정지한 핵심 팀·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` + `gray_wraith.normal` + `juno.neutral`; 팀은 위협을 인식하지 못한 배경 실루엣 | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void` |

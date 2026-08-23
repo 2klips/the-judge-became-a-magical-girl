@@ -64,8 +64,8 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 핵심 초현상과 도윤 시선·몸동작이 연결되지 않음 |
 | Desired Direction | 사원증을 바라보는 `surprise / disbelief`; 공포·비명·horror 금지 |
 | Priority | P1 ASSET |
-| Implementation Status | `HUMAN_RECHECK` — 사용자 승인 `doyun.employee_id_surprised`를 1200×2000 투명 runtime asset으로 import하고 N5 첫 beat 전용으로 매핑했다. 기존 `normal_startled` proxy와 `NEW 1` handoff는 superseded |
-| Human Recheck | 실제 N5 합성에서 시선·손·사원증 focal relation과 surprise/disbelief가 읽히는지 확인 |
+| Implementation Status | `HUMAN_RECHECK` — 사용자 승인 `doyun.employee_id_surprised`를 1200×2000 투명 runtime asset으로 import하고 N5 첫 beat 전용으로 매핑했다. 기존 `normal_startled` proxy와 `NEW 1` handoff는 superseded. 2026-08-23에는 baseline `39f4370`의 반투명 magenta fringe 1,923px만 deterministic alpha cleanup하고 artifact 밖 pixel 변경 0을 검증했다 |
+| Human Recheck | 실제 N5 합성에서 시선·손·사원증 focal relation과 surprise/disbelief, 머리 둘레 magenta artifact 0을 확인 |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | [v3.1 acting/direction audit](../assets/V31_ACTING_DIRECTION_AUDIT.md#2-hq-03-floating-employee-id-handoff), [asset manifest](../assets/ASSET_MANIFEST.md) |
 

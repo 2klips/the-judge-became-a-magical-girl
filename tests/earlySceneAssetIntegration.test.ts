@@ -1,4 +1,5 @@
 import { readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -89,6 +90,35 @@ describe("2026-08-22 early-scene human-approved assets", () => {
         700 * 1024,
       );
     }
+  });
+
+  it("removes only the audited employee-ID magenta artifact against the frozen baseline", () => {
+    const cleanupReport = JSON.parse(
+      execFileSync(
+        "python",
+        [
+          "assets/source/early-scene-2026-08-22/tools/clean_magenta_artifact.py",
+          "--verify",
+          "--baseline",
+          "39f4370ab731377b77f3898f48496990961b81cc",
+          "--source",
+          "assets/source/early-scene-2026-08-22/delivery/char/char_doyun_employee_id_surprised.png",
+          "--runtime",
+          "assets/runtime/char/char_doyun_employee_id_surprised.png",
+        ],
+        { encoding: "utf8" },
+      ),
+    ) as Record<string, unknown>;
+
+    expect(cleanupReport).toMatchObject({
+      opaqueSaturatedMagenta: 0,
+      nonArtifactChangedPixels: 0,
+      width: 1200,
+      height: 2000,
+      sourceRuntimeEqual: true,
+    });
+    expect(cleanupReport.bytes).toEqual(expect.any(Number));
+    expect(cleanupReport.bytes as number).toBeLessThanOrEqual(800 * 1024);
   });
 
   it("uses the baked prompt once while retaining an accessible semantic equivalent", () => {
