@@ -518,3 +518,38 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 | `npm run build` | PASS, 158 modules; 기존 Transformers 516.22kB warning만 유지 |
 | `npm run build:qa` | PASS, 128 modules |
 | `git diff --check` | PASS |
+
+## 20. 2026-08-23 HQ-10 Battle Final Presentation 재검수
+
+- branch는 `codex/hq10-battle-final-presentation`, starting HEAD는 `afaf54b74798d5194e17c2307523d926a350bf7d`다.
+- actor 3종, BGM HUD lane, Battle HUD anchor, dialogue/dock anchor, Story/FSM/save/voice/BGM/battle logic은 변경하지 않았다.
+- Battle HUD와 망령 dialogue는 Phase A의 얇은 border·작은 radius·navy-black surface를 공유한다. command deck은 numbered response row, voice primary/secondary PTT, tertiary input-mode utility로 위계를 분리했다.
+- 첫 행동 result dock도 같은 surface와 borderless `다음 행동 ›`을 사용한다. 두 번째 주문 기회는 동일 numbered response hierarchy를 재사용한다.
+- 1366 입력 모드 전환 때 focused utility가 `.battle-stage`를 77px 내부 스크롤시키던 actual Chrome 회귀를 발견했다. Battle stage를 `overflow: clip`으로 고정해 최종 `scrollTop=0`을 확인했다.
+
+| viewport | Battle dialogue `x/y/w/h` | command deck `x/y/w/h` | 실제 gap | BGM HUD `x/y/w/h` | Battle HUD `x/y/w/h` |
+|---|---|---|---:|---|---|
+| 1920×1080 | `72/727/820/108` | `46/904.4/1828/154` | 69.4px | `53.8/16/290/60` | `420/27/1436/46` |
+| 1600×900 | `72/558/768/108` | `46/728/1508/154` | 62.0px | `44.8/16/290/60` | `352/22.5/1184/46` |
+| 1366×768 | `68.3/436/655.7/104` | `41/598.6/1284.1/154` | 58.6px | `38.2/16/290/60` | `350/19.2/961.4/46` |
+
+| viewport | Wraith `x/y/w/h` | Juno `x/y/w/h` | Doyun `x/y/w/h` |
+|---|---|---|---|
+| 1920×1080 | `76.8/181.6/670/755` | `1017.6/432/190/334.8` | `1171.2/238/729.6/950` |
+| 1600×900 | `64/150/560/630` | `848/360/176/279` | `976/198/608/792` |
+| 1366×768 | `54.6/117.4/478.1/537.6` | `724/299.9/150.3/238.1` | `833.3/169/519.1/675.8` |
+
+- 세 viewport 모두 BGM/Battle HUD, Juno/dialogue, Juno/command deck bbox overlap은 0이고 document scroll은 viewport와 동일하다. actor 투명 canvas bbox는 일부 UI와 교차하지만 실제 face·staff·Wraith core/head 가림은 0이다.
+- 1366 click→voice 전환 뒤 rect와 gap은 유지됐고 `.battle-stage.scrollTop=0`이다. PTT 두 종류, live meter markup, click 전환, keyboard `Tab` focus 2px outline이 유지된다.
+- production/debug OFF actual flow는 TITLE → click route → Transform → N6 first choice → Battle first action → result → second opportunity까지 진행했다. Console error/warning은 0이다.
+- screenshot은 local QA evidence `qa-evidence/hq10-battle-final-presentation`에 1920 first/result/second, 1600 first, 1366 first/voice 6장으로 보존했다.
+- HQ-10은 Codex 단독 `PASS`가 아닌 `HUMAN_RECHECK`다. 사용자 시각 승인 후에만 FREEZE한다.
+
+| 검증 | 결과 |
+|---|---|
+| focused | 4 files·45 tests PASS; semantic hierarchy·stage focus-scroll·result CTA RED→GREEN 포함 |
+| `npm run check` | PASS |
+| `npm test` | 62 files·446 tests PASS |
+| `npm run build` | PASS, 158 modules; 기존 Transformers 516.22kB warning만 유지 |
+| `npm run build:qa` | PASS, 128 modules |
+| `git diff --check` | PASS |

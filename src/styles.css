@@ -2881,13 +2881,17 @@ html[data-qa-preview="true"] .dev-scene-nav {
   line-height: 1.45;
 }
 
-.battle-control-dock > :not(.battle-spell-label):not(.battle-spell) {
+.battle-command-brief {
+  grid-column: 1;
+}
+
+.battle-command-interaction {
   grid-column: 2;
+  align-self: center;
 }
 
 .battle-control-dock .battle-actions,
 .battle-control-dock .battle-choice-list {
-  grid-row: 1 / span 2;
   align-self: center;
   margin: 0;
 }
@@ -2987,7 +2991,8 @@ html[data-qa-preview="true"] .dev-scene-nav {
     overflow: hidden;
   }
 
-  .battle-control-dock > :not(.battle-spell-label):not(.battle-spell) {
+  .battle-command-brief,
+  .battle-command-interaction {
     grid-column: 1;
   }
 

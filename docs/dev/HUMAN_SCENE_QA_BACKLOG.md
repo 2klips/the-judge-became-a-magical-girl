@@ -169,10 +169,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 상태·대사·주문·선택·입력 방식이 동시에 경쟁함 |
 | Desired Direction | top HUD/BGM reserved safe zone, 하나의 compact command deck, narrative choice와 input-mode control 위계 분리 |
 | Priority | P0 |
-| Implementation Status | `OPEN` — 2026-08-23 focused safe-zone 수정으로 Battle HUD를 BGM 우측 lane에서 시작시키고 Juno를 lower hero-support lane으로 이동했으며, 망령 대화 패널을 48vw/820px로 제한했다. 후속 human recheck에서 발견된 1366 dialogue/dock 11.7px 겹침은 dialogue bottom clamp 하한만 228px로 높여 실제 gap을 1920/1600/1366에서 각각 27.4/20.0/16.6px로 확보했다. actor·HUD·dock anchor는 불변이며 compact command deck 전체 redesign은 미완료 |
-| Human Recheck | focused safe-gap 화면은 `HUMAN_RECHECK`. 세 desktop viewport에서 actor/staff/CTA 가림과 전체 scan order는 Phase C에서 계속 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | Phase C Battle presentation 대상 |
+| Implementation Status | `HUMAN_RECHECK` — 기능·responsive collision closure를 보존한 채 Battle HUD·망령 dialogue·command/result deck을 Phase A VN 언어로 정리했다. click action은 numbered response row, voice는 primary/secondary PTT, mode switch는 tertiary utility로 분리했다. actor·HUD·dock anchor와 voice/BGM/battle logic은 불변이다. |
+| Human Recheck | production/debug OFF 실제 flow에서 1920/1600/1366 dialogue-command gap은 69.4/62.0/58.6px, Juno/dialogue·Juno/dock·BGM/HUD overlap과 document/stage scroll은 모두 0이다. 최종 시각 질문 5개는 사용자 판정 대기. |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | HQ-10 final presentation 구현 완료. 사용자 승인 후에만 `PASS`/FREEZE로 승격 |
 
 ### HQ-11 — Ending presentation
 
@@ -217,7 +217,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Implementation Status | `HUMAN_RECHECK` — core VN foundation은 사용자 승인·freeze. Battle/Ending/Post-credit scene-specific presentation이 남아 global 항목은 유지 |
 | Human Recheck | core dialogue preview에서 장면 간 일관성·keyboard focus·actor occlusion을 사용자 검수. Battle/Ending/Post-credit는 Phase C 뒤 별도 재검수 |
 | Final Status | `HUMAN_RECHECK` |
-| Related SSOT/TODO | HQ-02 core migration 완료. HQ-06·HQ-10·HQ-11·HQ-12는 foundation만 공유하고 scene-specific 상태는 `OPEN` 유지 |
+| Related SSOT/TODO | HQ-02 core migration 완료. HQ-10은 final presentation `HUMAN_RECHECK`; HQ-06·HQ-11·HQ-12는 scene-specific `OPEN` 유지 |
 
 ## 3. Existing TODO 연결
 

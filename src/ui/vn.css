@@ -603,6 +603,436 @@
   font: 600 0.76rem/1 "Pretendard", "Noto Sans KR", sans-serif;
 }
 
+/* HQ-10: Battle uses the authored VN language without changing actor geometry. */
+.game-shell.battle-screen .battle-stage {
+  overflow: clip;
+}
+
+.game-shell.battle-screen .battle-hud {
+  gap: 12px;
+  padding: 8px 14px;
+  border-color: var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-secondary);
+  background: rgba(9, 12, 22, 0.7);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.game-shell.battle-screen .battle-phase-label {
+  color: var(--vn-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.game-shell.battle-screen .battle-phase-dots {
+  gap: 6px;
+}
+
+.game-shell.battle-screen .battle-phase-dot {
+  width: 7px;
+  height: 7px;
+  border-color: rgba(224, 226, 236, 0.42);
+}
+
+.game-shell.battle-screen .battle-phase-dot.is-complete {
+  background: color-mix(in srgb, var(--vn-accent-wraith) 72%, transparent);
+}
+
+.game-shell.battle-screen .battle-phase-dot.is-active {
+  background: var(--vn-accent-juno);
+  box-shadow: none;
+}
+
+.game-shell.battle-screen .battle-hud .gauge-heading {
+  color: var(--vn-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.game-shell.battle-screen .battle-hud .gauge-track {
+  height: 6px;
+  border-color: rgba(224, 226, 236, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+.game-shell.battle-screen .battle-hud .gauge-fill {
+  background: linear-gradient(
+    90deg,
+    var(--vn-accent-wraith),
+    var(--vn-accent-transform) 68%,
+    var(--vn-accent-juno)
+  );
+  box-shadow: none;
+}
+
+.battle-dialogue.vn-dialogue-shell {
+  --vn-speaker-accent: var(--vn-accent-wraith);
+  min-height: 108px;
+  padding: 18px 22px 17px;
+  overflow: hidden;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-primary);
+  background: rgba(9, 12, 22, 0.86);
+  box-shadow: none;
+  clip-path: none;
+  backdrop-filter: blur(8px);
+}
+
+.battle-dialogue.vn-dialogue-shell::before {
+  top: -1px;
+  right: auto;
+  left: 22px;
+  width: 42px;
+  height: 2px;
+  background: var(--vn-speaker-accent);
+  box-shadow: none;
+}
+
+.battle-dialogue.vn-dialogue-shell::after {
+  display: none;
+}
+
+.battle-dialogue.vn-dialogue-shell .vn-speaker-name {
+  position: static;
+  display: inline-flex;
+  width: fit-content;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 0 8px;
+  padding: 0;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  color: var(--vn-speaker-accent);
+  background: transparent;
+  box-shadow: none;
+  clip-path: none;
+  transform: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.battle-dialogue.vn-dialogue-shell .vn-speaker-name::before {
+  width: 22px;
+  height: 1px;
+  content: "";
+  background: currentColor;
+}
+
+.battle-dialogue.vn-dialogue-shell .vn-dialogue-copy {
+  min-height: 0;
+  margin: 0;
+  color: var(--vn-text-primary);
+  font-size: clamp(0.98rem, 1.2vw, 1.12rem);
+  font-weight: 500;
+  line-height: 1.58;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.72);
+}
+
+.battle-dialogue.vn-dialogue-shell .player-line {
+  width: fit-content;
+  margin: 0 0 7px auto;
+  padding-left: 9px;
+  border-left: 2px solid var(--vn-accent-doyun);
+  color: var(--vn-text-muted);
+  background: transparent;
+  font-size: 0.72rem;
+}
+
+.battle-command-deck {
+  gap: 8px 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-primary);
+  background: rgba(9, 12, 22, 0.9);
+  box-shadow: none;
+  backdrop-filter: blur(9px);
+}
+
+.battle-command-brief {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  align-content: center;
+}
+
+.battle-command-brief .battle-spell-label {
+  color: var(--vn-accent-juno);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.battle-command-brief .battle-spell {
+  color: var(--vn-text-secondary);
+  font-size: clamp(0.9rem, 1.08vw, 1.02rem);
+  font-weight: 500;
+  line-height: 1.48;
+}
+
+.battle-command-brief .input-notice {
+  margin: 4px 0 0;
+  padding: 5px 8px;
+  border: 0;
+  border-left: 2px solid var(--vn-accent-system);
+  border-radius: 0;
+  color: var(--vn-text-muted);
+  background: var(--vn-surface-subtle);
+  font-size: 0.72rem;
+}
+
+.battle-command-interaction {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 10px;
+  align-items: end;
+}
+
+.battle-response-list {
+  counter-reset: battle-choice;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.battle-command-deck .battle-response-list {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 0;
+  border-bottom: 1px solid rgba(224, 226, 236, 0.12);
+}
+
+.battle-response-list:has(> .battle-action-choice:nth-child(4)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.battle-action-choice {
+  position: relative;
+  display: grid;
+  min-height: 38px;
+  padding: 7px 9px;
+  align-items: center;
+  border: 0;
+  border-top: 1px solid rgba(224, 226, 236, 0.12);
+  border-radius: 0;
+  color: var(--vn-text-secondary);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.battle-response-list .battle-action-choice {
+  counter-increment: battle-choice;
+  grid-template-columns: 28px minmax(0, 1fr) 12px;
+  gap: 7px;
+  text-align: left;
+}
+
+.battle-response-list .battle-action-choice::before {
+  color: var(--vn-text-muted);
+  content: counter(battle-choice, decimal-leading-zero);
+  font-size: 0.64rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.battle-response-list .battle-action-choice::after {
+  color: var(--vn-accent-transform);
+  content: "›";
+  opacity: 0;
+  transform: translateX(-2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.battle-action-choice:hover:not(:disabled),
+.battle-action-choice:focus-visible {
+  transform: none;
+  color: var(--vn-text-primary);
+  background: rgba(123, 207, 225, 0.06);
+  box-shadow: inset 2px 0 0 var(--vn-accent-transform);
+}
+
+.battle-response-list .battle-action-choice:hover:not(:disabled)::after,
+.battle-response-list .battle-action-choice:focus-visible::after {
+  opacity: 0.8;
+  transform: translateX(0);
+}
+
+.battle-action-choice:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.battle-action-choice--spell {
+  color: var(--vn-text-primary);
+}
+
+.battle-action-choice--guard {
+  color: var(--vn-text-muted);
+}
+
+.battle-command-deck .battle-voice-actions {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.battle-command-deck .battle-voice-actions .battle-action-choice {
+  min-height: 42px;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  justify-items: center;
+  text-align: center;
+}
+
+.battle-voice-primary {
+  border-color: color-mix(in srgb, var(--vn-accent-transform) 58%, transparent);
+  color: var(--vn-text-primary);
+}
+
+.battle-voice-secondary {
+  color: var(--vn-text-secondary);
+}
+
+.battle-command-deck .ptt-button[aria-pressed="true"] {
+  color: var(--vn-text-primary);
+  background: rgba(32, 69, 82, 0.86);
+  box-shadow: inset 0 0 0 1px var(--vn-accent-transform);
+}
+
+.battle-input-mode-utility {
+  grid-column: 2;
+  justify-self: end;
+  min-height: 30px;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.battle-input-mode-utility:hover:not(:disabled),
+.battle-input-mode-utility:focus-visible {
+  transform: none;
+  border-color: var(--vn-border-subtle);
+  color: var(--vn-text-secondary);
+  background: var(--vn-surface-subtle);
+  box-shadow: none;
+}
+
+.battle-input-utilities {
+  grid-column: 1;
+  min-height: 0;
+  margin: 0;
+}
+
+.battle-input-utilities:empty {
+  display: none;
+}
+
+.battle-result-deck {
+  display: grid;
+  min-height: 64px;
+  padding: 10px 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  align-items: center;
+  border: 1px solid var(--vn-border-subtle);
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-secondary);
+  background: rgba(9, 12, 22, 0.9);
+  box-shadow: none;
+  backdrop-filter: blur(9px);
+}
+
+.battle-result-deck .battle-result-narration,
+.battle-result-deck .battle-phase-callout {
+  margin: 0;
+  color: var(--vn-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.battle-result-deck .battle-phase-callout {
+  color: var(--vn-text-muted);
+}
+
+.battle-result-deck .battle-phase-callout strong {
+  color: var(--vn-accent-juno);
+}
+
+.battle-result-advance {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-height: 34px;
+  padding: 7px 4px 7px 10px;
+  border: 0;
+  border-radius: var(--vn-radius-sm);
+  color: var(--vn-text-secondary);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.battle-result-advance::after {
+  margin-left: 8px;
+  color: var(--vn-accent-transform);
+  content: "›";
+}
+
+.battle-result-advance:hover:not(:disabled),
+.battle-result-advance:focus-visible {
+  color: var(--vn-text-primary);
+  background: var(--vn-surface-subtle);
+  box-shadow: none;
+}
+
+@media (max-height: 800px) {
+  .battle-dialogue.vn-dialogue-shell {
+    min-height: 104px;
+    padding: 14px 18px;
+  }
+
+  .battle-command-deck {
+    gap: 6px 14px;
+    padding: 10px 14px;
+  }
+
+  .battle-command-brief .battle-spell {
+    font-size: 0.86rem;
+    line-height: 1.38;
+  }
+
+  .battle-action-choice {
+    min-height: 34px;
+    padding: 5px 8px;
+    font-size: 0.74rem;
+  }
+
+  .battle-command-deck .battle-voice-actions .battle-action-choice {
+    min-height: 38px;
+  }
+
+  .battle-input-mode-utility {
+    min-height: 28px;
+    padding-block: 4px;
+  }
+}
+
 /* Later scene-specific phases consume these tokens without changing geometry here. */
 .game-shell:not(.title-screen) :is(
     .incantation-card,

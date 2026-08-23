@@ -2021,3 +2021,25 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - production/debug OFF actual Battle 측정 gap은 1920×1080 `27.4px`, 1600×900 `20.0px`, 1366×768 `16.6px`다. 세 viewport 모두 Juno/dialogue·Juno/dock·BGM/HUD overlap 0, scroll 0, face·staff·Wraith core/head 가림 0이다.
 - 기존 approved Battle 1920 actor composition과 N6, Ending은 변경하지 않았다. HQ-10·HQ-11은 `OPEN`, focused 화면은 `HUMAN_RECHECK`다.
 - fresh gate는 focused 20 tests, TypeScript check, Vitest 61 files·438 tests, production build 158 modules, QA build 128 modules, `git diff --check`를 통과했다. production build의 기존 Transformers 516.22kB warning만 유지한다.
+
+## HQ-10 Battle Final Presentation Closure
+
+- 작업일: 2026-08-23 KST
+- 브랜치·시작 HEAD: `codex/hq10-battle-final-presentation` · `afaf54b74798d5194e17c2307523d926a350bf7d`
+- 범위: Battle HUD·망령 dialogue·command/result deck presentation과 관련 responsive/accessibility 회귀. actor composition, Story/FSM/save/voice/BGM/battle logic, binary asset은 변경하지 않았다.
+
+### TDD·구현
+
+- RED에서 semantic command deck, VN-compatible response hierarchy, PTT/utility 위계, result progression CTA, focus mode-switch stage scroll 계약의 부재를 확인했다.
+- command deck은 하나의 낮은 navy-black surface로 통합하고 click action을 numbered response row로 정리했다. voice mode는 주문 PTT, 자유 대응 PTT, guard, input-mode utility의 시각 강도를 분리했다.
+- Battle HUD와 망령 dialogue는 얇은 1px border, 4px radius, 제한된 gold/violet/cyan accent를 사용한다. 첫 행동 result dock은 borderless `다음 행동 ›`, second opportunity는 같은 response list를 사용한다.
+- 실제 Chrome 1366 input-mode switch가 overflow-hidden stage를 77px 내부 스크롤시키는 문제를 발견했다. Battle stage만 `overflow: clip`으로 고정해 actor/HUD 위치 변경 없이 `scrollTop=0`으로 닫았다.
+- 기존 PTT helper 호출 문자열 계약이 full test에서 1회 RED가 되어, helper 시그니처는 복원하고 presentation class만 `classList.add`로 부착했다. MediaRecorder/analyser/typed failure/Worker/BGM duck 코드는 변경하지 않았다.
+
+### actual Chrome·validation
+
+- production/debug OFF actual click flow로 TITLE → Transform → N6 → Battle first action → result → second opportunity까지 진행했다.
+- dialogue-command 실제 gap은 1920×1080 `69.4px`, 1600×900 `62.0px`, 1366×768 `58.6px`다. 세 viewport 모두 BGM/HUD·Juno/dialogue·Juno/dock overlap 0, scroll 0, face/staff/Wraith core 가림 0이다.
+- 1366 voice mode에서 PTT가 표시되고 mode-switch 뒤 stage scroll 0, rect 불변이다. keyboard Tab focus는 2px outline으로 확인했다. Console error/warning은 0이다.
+- focused는 4 files·45 tests, full suite는 62 files·446 tests PASS다. TypeScript check, production build 158 modules, QA build 128 modules이 PASS했고 기존 Transformers 516.22kB warning만 유지한다.
+- HQ-10 상태는 구현 완료 후 `HUMAN_RECHECK`다. 사용자 screenshot 승인 전 `PASS`/FREEZE로 올리지 않는다.

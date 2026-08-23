@@ -1058,45 +1058,69 @@ export class GameView {
       phase.enemyPrompt,
       battleState,
     );
-    const command = element("section", "battle-control-dock battle-command");
+    const command = element(
+      "section",
+      "battle-control-dock battle-command battle-command-deck",
+    );
+    command.setAttribute("aria-label", "전투 행동");
+    const brief = element("div", "battle-command-brief");
+    const interaction = element("div", "battle-command-interaction");
     if (battleState.awaitingSecondSpellChoice) {
       command.classList.add("battle-second-spell-choice");
-      command.append(
+      brief.append(
         element("p", "battle-spell-label", "획득한 추가 기회"),
         element("p", "battle-spell", "도윤, 아직 힘이 남아 있어. 한 번 더 할 수 있어!"),
       );
-      const choices = element("div", "choice-list battle-choice-list");
-      const accept = element("button", "primary-button", "반대 주문도 사용한다");
-      const decline = element("button", "secondary-button", "첫 선택으로 마무리한다");
+      const choices = element(
+        "div",
+        "choice-list battle-choice-list battle-response-list",
+      );
+      const accept = element(
+        "button",
+        "battle-action-choice battle-action-choice--spell",
+        "반대 주문도 사용한다",
+      );
+      const decline = element(
+        "button",
+        "battle-action-choice",
+        "첫 선택으로 마무리한다",
+      );
       accept.type = "button";
       decline.type = "button";
       accept.addEventListener("click", options.onAcceptSecondSpell, { once: true });
       decline.addEventListener("click", options.onDeclineSecondSpell, { once: true });
       choices.append(accept, decline);
-      command.append(choices);
+      interaction.append(choices);
+      command.append(brief, interaction);
       stage.append(command);
       shell.append(stage);
       this.commit(shell);
       return;
     }
-    command.append(
+    brief.append(
       element("p", "battle-spell-label", "이번 언령"),
       element("p", "battle-spell", phase.spell.displayText),
     );
-    if (options.notice) command.append(element("p", "input-notice", options.notice));
+    if (options.notice) brief.append(element("p", "input-notice", options.notice));
 
     if (controlContract.showVoiceCapture) {
-      const controls = element("div", "battle-actions");
+      const controls = element("div", "battle-actions battle-voice-actions");
       const spell = createPttButton("주문 · 누르고 말하기 (T)");
+      spell.classList.add("battle-action-choice", "battle-voice-primary");
       const freeform = createPttButton(
         "자유 대응 · 누르고 말하기 (T)",
         "ptt-button freeform-button",
       );
-      const guard = element("button", "secondary-button", "버티기");
+      freeform.classList.add("battle-action-choice", "battle-voice-secondary");
+      const guard = element(
+        "button",
+        "battle-action-choice battle-action-choice--guard",
+        "버티기",
+      );
       for (const button of [spell, freeform, guard]) button.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       controls.append(spell, freeform, guard);
-      command.append(controls);
+      interaction.append(controls);
       this.bindHoldToTalk(spell, options, (transcript) =>
         options.onTranscript(
           "spell",
@@ -1115,20 +1139,27 @@ export class GameView {
       );
       const clickMode = element(
         "button",
-        "secondary-button compact-input vn-input-mode-utility",
+        "compact-input vn-input-mode-utility battle-input-mode-utility",
         "클릭으로 전환",
       );
       clickMode.type = "button";
       clickMode.addEventListener("click", () => options.onModeChange("click"), { once: true });
-      command.append(clickMode);
+      interaction.append(clickMode);
     } else if (controlContract.showClickActions) {
-      const choices = element("div", "choice-list battle-choice-list");
-      const spell = element("button", "primary-button", "주문을 외친다");
+      const choices = element(
+        "div",
+        "choice-list battle-choice-list battle-response-list",
+      );
+      const spell = element(
+        "button",
+        "battle-action-choice battle-action-choice--spell",
+        "주문을 외친다",
+      );
       spell.type = "button";
       spell.addEventListener("click", options.onClickSpell, { once: true });
       choices.append(spell);
       phase.clickResponses.forEach((response) => {
-        const button = element("button", "secondary-button", response.text);
+        const button = element("button", "battle-action-choice", response.text);
         button.type = "button";
         button.addEventListener(
           "click",
@@ -1137,27 +1168,35 @@ export class GameView {
         );
         choices.append(button);
       });
-      const guard = element("button", "secondary-button", "버티기");
+      const guard = element(
+        "button",
+        "battle-action-choice battle-action-choice--guard",
+        "버티기",
+      );
       guard.type = "button";
       guard.addEventListener("click", options.onGuard, { once: true });
       choices.append(guard);
-      command.append(choices);
+      interaction.append(choices);
       if (controlContract.showVoiceModeSwitch) {
         const voice = element(
           "button",
-          "secondary-button compact-input vn-input-mode-utility",
+          "compact-input vn-input-mode-utility battle-input-mode-utility",
           "음성 입력으로 전환",
         );
         voice.type = "button";
         voice.addEventListener("click", () => options.onModeChange("voice"), { once: true });
-        command.append(voice);
+        interaction.append(voice);
       }
     }
-    const utilities = element("div", "input-utilities vn-input-utilities");
+    const utilities = element(
+      "div",
+      "input-utilities vn-input-utilities battle-input-utilities",
+    );
     this.appendDebugTranscript(utilities, async (transcript) => {
       await options.onTranscript("spell", transcript);
     });
-    command.append(utilities, this.battleDebugControls(options, battleState));
+    interaction.append(utilities, this.battleDebugControls(options, battleState));
+    command.append(brief, interaction);
     stage.append(command);
     shell.append(stage);
     this.commit(shell);
@@ -1214,7 +1253,10 @@ export class GameView {
       element("p", "player-line", `도윤 · ${options.actionLabel}`),
       dialogue.firstChild,
     );
-    const result = element("section", "battle-control-dock battle-result-controls");
+    const result = element(
+      "section",
+      "battle-control-dock battle-result-controls battle-result-deck",
+    );
     if (options.narration) {
       result.append(
         element("p", "battle-result-narration", formatDialogueText(options.narration, "narration")),
@@ -1247,7 +1289,7 @@ export class GameView {
       });
     }
     const button = this.delayedAdvanceButton(
-      "primary-button",
+      "battle-result-advance",
       options.completed ? "계속" : "다음 행동",
       options.onContinue,
     );
