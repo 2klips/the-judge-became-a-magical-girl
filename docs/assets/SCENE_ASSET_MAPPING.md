@@ -80,11 +80,11 @@
 | `[확정·M5 필수]` | `doyun.normal_smile` | `char_doyun_normal_smile.png` | 관계가 회복되거나 결말을 받아들이는 도윤 | N4-A, GOOD·NORMAL 본 장면 |
 | `[확정·M5 필수]` | `doyun.normal_shy` | `char_doyun_normal_shy.png` | full facepalm 기존본 | 현재 v3.1 runtime mapping 없음. binary는 보존하고 재사용 전 EDIT·사람 QA |
 | `[확정·M5 필수]` | `doyun.normal_empty` | `char_doyun_normal_empty.png` | 감정과 색이 빠진 도윤 | BAD 엔딩 |
-| `[확정·M5 필수]` | `doyun.magical` | `char_doyun_magical.png` | `[임시 승인, DEC-035]` 정면 변신 완료 기본 포즈 | 변신 완료·전투 공통 폴백 |
+| `[확정·ready·사람 재검수]` | `doyun.magical` | `char_doyun_magical.png` | `[임시 승인, DEC-035]` 정면 변신 완료 기본 포즈. cautious/overwhelmed 공개 얼굴 EDIT | 현재 scene 미매핑 전투 공통 폴백; HQ-05 `HUMAN_RECHECK` |
 | `[확정·ready·사람 재검수]` | `doyun.magical_pose` | `char_doyun_magical_pose.png` | 변신 직후·전투 후 수렴 포즈. 2026-08-23 head-only EDIT로 성공+민망함 표정 반영 | N5 변신 결과, 수렴; HQ-07 `HUMAN_RECHECK` |
-| `[확정·M5 필수]` | `doyun.magical_defend` | `char_doyun_magical_defend.png` | 방어 주문 포즈 | battle p1 |
-| `[확정·M5 필수]` | `doyun.magical_attack` | `char_doyun_magical_attack.png` | 공격 주문 포즈 | battle p2 |
-| `[확정·M5 필수]` | `doyun.magical_finish` | `char_doyun_magical_finish.png` | 마지막 판정 주문 포즈 | battle p3 |
+| `[확정·ready·사람 재검수]` | `doyun.magical_defend` | `char_doyun_magical_defend.png` | 기존 방어 긴장·입 모양을 유지한 determined/strained 공개 얼굴 EDIT | battle p1; HQ-05 `HUMAN_RECHECK` |
+| `[확정·ready·사람 재검수]` | `doyun.magical_attack` | `char_doyun_magical_attack.png` | 기존 공격 긴장·입 모양을 유지한 focused 공개 얼굴 EDIT | battle p2; HQ-05 `HUMAN_RECHECK` |
+| `[확정·ready·사람 재검수]` | `doyun.magical_finish` | `char_doyun_magical_finish.png` | 기존 마무리 외침·긴장도를 유지한 forceful 공개 얼굴 EDIT | battle p3; HQ-05 `HUMAN_RECHECK` |
 | `[확장]` | `juno.climax` | `char_juno_climax.png` | 클라이맥스 추가 포즈 | 확장판 전용 |
 
 주노 5종은 같은 1200×2000 캔버스·좌표·몸·의상·구도를 유지한다. 회색 망령 2종도 같은 캔버스·실루엣 중심·스케일을 유지한다.
@@ -163,10 +163,10 @@
 | N5 `n5_transform` 도입 | 사원증 부상·망령 압박 | `bg_hall_dark` → `bg_desk_closeup` | 첫 beat 도윤 `employee_id_surprised`, 이후 `normal` + `gray_wraith.normal` + 직전 관계의 주노 표정 | crisis/폴백 유지 | HQ-03 전용 pose를 첫 beat에만 사용. panic/horror 용도로 재사용하지 않는다. magenta fringe alpha cleanup의 3개 PC viewport 합성은 자동 검증했고 사람 actual 장면 재검수 대기 |
 | N5 주문 게이트 | 두 문장 한 번에 낭독 | `bg_desk_closeup` | 도윤 `normal`; 주문 UI 중심, 주노는 작게 유지 | 입력 중 기존 곡 duck | full facepalm 제거. 주문 전문은 DOM. 입력 중 BGM duck |
 | N5 변신 결과 | 야간 영창→완료 | `bg_transform_space` 위 컷 전면 | 도윤 `magical_pose` head-only EDIT + `transform.cast` A2 사원증·야간 → `transform.complete` 심야 완료 | `bgm_transform` one-shot | 몸·heart-hands·costume은 기존본 유지, 얼굴은 성공+민망함으로 수정. HQ-07 actual 합성 재검수 대기. 컷 누락 시 배경+도윤+CSS 플래시/파티클로 강등 |
-| `battle_wraith` / p1 `p1_defend` | 정지한 핵심 팀·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` + `gray_wraith.normal` + `juno.neutral`; 팀은 위협을 인식하지 못한 배경 실루엣 | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void` |
-| `battle_wraith` / p2 `p2_attack` | 망령 중심 공격 | `bg_hall_void` | 도윤 `magical_attack` + momentum별 망령 + `juno.happy` | 계속 `bgm_battle` | 공격 플래시 뒤에도 같은 캔버스 정렬 유지 |
-| `battle_wraith` / p3 `p3_answer` 질문 | 과거 기록·핵심 질문 | `bg_mind_archive` | 도윤 `magical_finish` + 현재 망령 상태 + `juno.neutral` | 계속 `bgm_battle`, 질문 중 일시 duck | `/project_archive/`, 소개 문구는 DOM/CSS |
-| `battle_wraith` / p3 `p3_answer` 주문 | 마지막 주문·회색 핵 노출 | `bg_battle_core` | 도윤 `magical_finish` + 현재 망령 상태 + `juno.neutral`; 정지한 팀은 배경에 보호 | 계속 `bgm_battle` | 주문 음성은 제목에서 보정한 dBFS 범위도 판정. 너무 작거나 크면 문서 지정 재시도/턴 소모 분기를 적용 |
+| `battle_wraith` / p1 `p1_defend` | 정지한 핵심 팀·게임 보호 | `bg_battle_wide` | 도윤 `magical_defend` 공개 얼굴 + `gray_wraith.normal` + `juno.neutral`; 팀은 위협을 인식하지 못한 배경 실루엣 | `bgm_battle` | 방어막은 CSS/Canvas. 실패 시 `bg_hall_void`. 3개 PC viewport 합성 자동 QA PASS, HQ-05 사람 재검수 대기 |
+| `battle_wraith` / p2 `p2_attack` | 망령 중심 공격 | `bg_hall_void` | 도윤 `magical_attack` 공개 얼굴 + momentum별 망령 + `juno.happy` | 계속 `bgm_battle` | 공격 플래시 뒤에도 같은 캔버스 정렬 유지. 3개 PC viewport 합성 자동 QA PASS, HQ-05 사람 재검수 대기 |
+| `battle_wraith` / p3 `p3_answer` 질문 | 과거 기록·핵심 질문 | `bg_mind_archive` | 도윤 `magical_finish` 공개 얼굴 + 현재 망령 상태 + `juno.neutral` | 계속 `bgm_battle`, 질문 중 일시 duck | `/project_archive/`, 소개 문구는 DOM/CSS. HQ-05 사람 재검수 대기 |
+| `battle_wraith` / p3 `p3_answer` 주문 | 마지막 주문·회색 핵 노출 | `bg_battle_core` | 도윤 `magical_finish` 공개 얼굴 + 현재 망령 상태 + `juno.neutral`; 정지한 팀은 배경에 보호 | 계속 `bgm_battle` | 주문 음성은 제목에서 보정한 dBFS 범위도 판정. 너무 작거나 크면 문서 지정 재시도/턴 소모 분기를 적용. 3개 PC viewport 합성 자동 QA PASS, HQ-05 사람 재검수 대기 |
 
 ### 4.3 수렴·엔딩
 

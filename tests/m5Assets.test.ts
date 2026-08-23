@@ -62,6 +62,18 @@ const runtimeDoyun = [
   "char_doyun_magical_pose.png",
 ] as const;
 
+const transformedFaces = [
+  "char_doyun_magical.png",
+  "char_doyun_magical_defend.png",
+  "char_doyun_magical_attack.png",
+  "char_doyun_magical_finish.png",
+] as const;
+
+const assetManifest = readFileSync(
+  resolve("docs", "assets", "ASSET_MANIFEST.md"),
+  "utf8",
+);
+
 const runtimeJuno = [
   "char_juno_neutral.png",
   "char_juno_happy.png",
@@ -312,6 +324,20 @@ describe("M5 에셋 계약", () => {
       );
     }
   });
+
+  it.each(transformedFaces)(
+    "변신 얼굴 %s는 source/runtime 동일 바이트이며 사람 재검수 상태다",
+    (filename) => {
+      expectTransparentCharacterAsset(
+        filename,
+        resolve("assets", "source", "doyun", "delivery"),
+      );
+      const manifestRow = assetManifest
+        .split("\n")
+        .find((line) => line.includes(`\`${filename}\``));
+      expect(manifestRow, filename).toContain("HUMAN_RECHECK");
+    },
+  );
 
   it("주노 runtime 5장은 이동된 source와 같은 1200×2000 투명 PNG다", () => {
     for (const filename of runtimeJuno) {

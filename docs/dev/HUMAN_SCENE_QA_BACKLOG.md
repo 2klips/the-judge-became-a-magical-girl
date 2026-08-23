@@ -92,12 +92,12 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Category | Art direction / character continuity |
 | User Evidence | 캡처 #09~#11. CUT에서만 얼굴 전체가 보이고 live에서 다시 눈이 가려짐 |
 | Problem | 의도된 reveal보다 제작 시점이 다른 asset 불일치처럼 보임 |
-| Desired Direction | 변신 전·CUT·변신 후 얼굴 공개 규칙 하나를 human/art-direction 결정으로 확정 |
+| Desired Direction | 사용자 확정 Option A: 변신 전에는 눈을 가리고, CUT01/02에서 처음 공개한 얼굴을 변신 후 N5~N8 live에서도 유지 |
 | Priority | P0 ART DIRECTION |
-| Implementation Status | `OPEN / HUMAN DECISION REQUIRED` — A: 변신 후 live 얼굴 공개 유지, B: CUT의 눈 가림 유지안을 asset 영향과 함께 작성; 선택 전 binary 변경 금지 |
-| Human Recheck | CUT와 N5~N8 live sprite 연속성 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | [두 option 비교](../assets/V31_ACTING_DIRECTION_AUDIT.md#4-hq-05-transformation-face-continuity--human-decision-required) |
+| Implementation Status | `HUMAN_RECHECK` — 사용자 Option A 확정 후 `doyun.magical`, `magical_defend`, `magical_attack`, `magical_finish`에 target별 masked 공개 얼굴 EDIT 적용. `magical_pose`는 identity reference로만 사용하고 이번 변경에서 수정하지 않음. 네 target의 body·costume·pose·입 모양·긴장도는 baseline 유지, mask 밖 raw pixel·alpha 변경 0 |
+| Human Recheck | 최종 이미지 4종의 서로 다른 행동 감정과 CUT→N5~N8 live 얼굴 연속성, 실제 battle p1·p2·N8 합성 확인 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | [두 option 비교](../assets/V31_ACTING_DIRECTION_AUDIT.md#4-hq-05-transformation-face-continuity--human-decision-required)는 결정 이력으로 보존. [manifest handoff](../assets/ASSET_MANIFEST.md#hq-05-변신-후-공개-얼굴-continuity-handoff-2026-08-23-적용) |
 
 ### HQ-06 — Transform CUT control UI
 

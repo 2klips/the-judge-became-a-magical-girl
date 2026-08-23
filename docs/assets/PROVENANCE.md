@@ -217,7 +217,7 @@
 
 - 폰트 전 runtime: 11,882,465B (11.33MiB).
 - 채택 폰트: 2,293,924B.
-- 2026-08-23 `doyun.magical_pose` head-only EDIT와 `doyun.employee_id_surprised` alpha cleanup 채택 후 현재 runtime: 15,249,374B (14.54MiB), 48 files.
+- 2026-08-23 `doyun.magical_pose` head-only EDIT, `doyun.employee_id_surprised` alpha cleanup, HQ-05 공개 얼굴 4종 채택 후 현재 runtime: 15,263,089B (14.56MiB), 48 files.
 - 30MiB 상한을 유지한다.
 
 ## 2026-08-23 `doyun.magical_pose` head-only 표정 편집
@@ -228,7 +228,22 @@
 - 생성 reference를 현재 1200×2000 좌표에 맞춘 뒤 head envelope만 합성했다. 자동 raw-pixel 비교에서 head envelope 밖 변경 픽셀은 0이며 몸·의상·하트손·지팡이·리본·다리 실루엣은 이전 채택본을 유지한다.
 - 교체 전 source/runtime: 308,884B, SHA-256 `C6CB1D201A10C597CAB63849EF87AAF6B8A2D5BF234683F4111181F39C0CDF09`.
 - 현재 source/runtime: 1200×2000 transparent PNG, 566,290B, SHA-256 `9E5EEB0699A3A8F66E0FA12F4607CE299ABB3FAE89B0D397ED12AEB5F7CB8426`, 동일 바이트.
-- HQ-07은 `HUMAN_RECHECK`다. 이 편집은 HQ-05의 post-transform 전체 얼굴 continuity A/B 결정을 닫지 않으며, 사람 in-game QA 전 상태는 계속 `ready`이고 `approved`가 아니다.
+- HQ-07은 `HUMAN_RECHECK`다. 이 파일은 이후 HQ-05 Option A 공개 얼굴 4종의 identity reference로만 사용했으며 이번 HQ-05 edit에서 다시 변경하지 않았다. 사람 in-game QA 전 상태는 계속 `ready`이고 `approved`가 아니다.
+
+## 2026-08-23 HQ-05 변신 후 공개 얼굴 4종 masked edit
+
+- 사용자가 Option A(변신 CUT에서 처음 공개된 얼굴을 N5~N8 live에서도 유지)를 선택했다. 대상은 `doyun.magical`, `doyun.magical_defend`, `doyun.magical_attack`, `doyun.magical_finish` 네 파일이다.
+- 각 target의 commit `39f4370ab731377b77f3898f48496990961b81cc` 버전을 body·costume·pose·입 모양·긴장도 authority로 사용했다. 현재 `doyun.magical_pose`는 공개 눈·얼굴 identity reference일 뿐 target body authority나 교체 대상이 아니다.
+- 각 target와 identity reference만 입력한 Codex 내장 OpenAI `image_gen` 후보를 별도로 만들었다. exact 모델·버전·work ID는 도구가 노출하지 않아 `UNKNOWN`이며, 외부 제3자 reference는 추가하지 않았다.
+- 후보 전체를 runtime으로 쓰지 않았다. target별 audited polygon face mask 안에서만 후보의 얼굴을 baseline palette에 합성했으며, mask 밖 raw pixel·alpha 변경은 네 파일 모두 0이다. source/runtime는 각각 동일 바이트이고 투명 canvas·1200×2000·800KB 상한을 유지한다.
+- 네 표정은 동일하지 않다: 기본은 cautious/overwhelmed, 방어는 determined/strained, 공격은 focused, 마무리는 forceful shout다. target의 기존 입 모양·행동 긴장도를 유지했다.
+- 최종 파일:
+  - `doyun.magical`: 305,801B, SHA-256 `C9D2D15D1FCF0EFC600E63C1DC1B21A6537E7B3418A73BD0CA273963CA674207`
+  - `doyun.magical_defend`: 326,121B, SHA-256 `163AE1B01956CFC7C8E4D49F8F7DFA70301E110FCAAE3E9968AB0A047C0185C5`
+  - `doyun.magical_attack`: 294,540B, SHA-256 `39F9134827B04DCEFD9BB43DAB92DFB99339576B3917A59762414AA0C261F7CD`
+  - `doyun.magical_finish`: 335,301B, SHA-256 `666C7E65B41DC06CE22222BE337FDBB4B25A8C319E77F419BEE395505E5F9658`
+- `doyun.magical_defend`·`attack`·`finish` 실제 Chrome 합성은 1920×1080·1600×900·1366×768에서 scroll·offscreen·actor overlap 0, console error 0을 확인했다. `doyun.magical`은 현재 runtime scene mapping이 없는 fallback이라 최종 PNG 자체만 검수했다.
+- 자동 검증과 Codex 육안 확인은 사람 승인이 아니다. HQ-05는 네 최종 이미지와 실제 합성에 대해 `HUMAN_RECHECK`, asset은 `ready`, `approved`가 아니다.
 
 ## 2026-08-23 `doyun.employee_id_surprised` deterministic alpha cleanup
 
