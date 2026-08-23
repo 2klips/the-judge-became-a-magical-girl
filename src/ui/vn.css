@@ -608,6 +608,12 @@
   overflow: clip;
 }
 
+.game-shell[data-composition="battle"] .battle-stage-juno {
+  right: auto;
+  bottom: clamp(238px, 30vh, 330px);
+  left: clamp(55%, 57vw, 59%);
+}
+
 .game-shell.battle-screen .battle-hud {
   gap: 12px;
   padding: 8px 14px;
@@ -761,7 +767,8 @@
   display: grid;
   min-width: 0;
   gap: 4px;
-  align-content: center;
+  align-self: stretch;
+  align-content: start;
 }
 
 .battle-command-brief .battle-spell-label {
@@ -794,7 +801,9 @@
   min-width: 0;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 5px 10px;
-  align-items: end;
+  align-self: stretch;
+  align-content: center;
+  align-items: center;
 }
 
 .battle-response-list {
@@ -958,6 +967,14 @@
   backdrop-filter: blur(9px);
 }
 
+.battle-result-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  align-self: stretch;
+  align-content: start;
+}
+
 .battle-result-deck .battle-result-narration,
 .battle-result-deck .battle-phase-callout {
   margin: 0;
@@ -976,7 +993,9 @@
 
 .battle-result-advance {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
   min-height: 34px;
   padding: 7px 4px 7px 10px;
   border: 0;

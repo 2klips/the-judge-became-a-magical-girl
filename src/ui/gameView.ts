@@ -66,6 +66,8 @@ import { WRAITH_OMEN_PRESENTATION } from "./wraithOmenPresentation";
 export const VOICE_TITLE_SUBTITLE =
   "마이크를 누른 채 말하고 놓아, 정체불명의 목소리와 호흡을 맞춰 보자.";
 
+const BATTLE_PRESENTATION_BACKGROUND_ID = "bg_office_wide";
+
 export interface DialogueIdentity {
   speaker: string;
   brand: string;
@@ -1042,12 +1044,7 @@ export class GameView {
       options.forceClickForTurn ?? false,
     );
     const shell = this.createShell(
-      resolvePresentationBackground({
-        kind: "battle",
-        phaseId: phase.phaseId,
-        beat: "prompt",
-        baseBackground: node.scene.bg,
-      }),
+      BATTLE_PRESENTATION_BACKGROUND_ID,
       "battle_wraith",
     );
     shell.classList.add("battle-screen", `enemy-${battleState.enemyState}`);
@@ -1219,7 +1216,10 @@ export class GameView {
     grade: BattleGrade | null;
     onContinue(): void;
   }): void {
-    const shell = this.createShell(options.sceneId, "battle_wraith");
+    const shell = this.createShell(
+      BATTLE_PRESENTATION_BACKGROUND_ID,
+      "battle_wraith",
+    );
     shell.classList.add("battle-screen", `enemy-${options.battleState.enemyState}`);
     shell.dataset.activeSpeaker = "gray_wraith";
     const delta = options.battleState.momentum - options.previousMomentum;
@@ -1257,8 +1257,9 @@ export class GameView {
       "section",
       "battle-control-dock battle-result-controls battle-result-deck",
     );
+    const resultCopy = element("div", "battle-result-copy");
     if (options.narration) {
-      result.append(
+      resultCopy.append(
         element("p", "battle-result-narration", formatDialogueText(options.narration, "narration")),
       );
     }
@@ -1268,7 +1269,7 @@ export class GameView {
         element("strong", undefined, "주노"),
         document.createTextNode(` ${actionPresentation.phaseCallout}`),
       );
-      result.append(callout);
+      resultCopy.append(callout);
     }
     if (actionPresentation.guardBarrier) {
       stage.append(element("div", "battle-guard-barrier"));
@@ -1293,7 +1294,7 @@ export class GameView {
       options.completed ? "계속" : "다음 행동",
       options.onContinue,
     );
-    result.append(button);
+    result.append(resultCopy, button);
     stage.append(result);
     shell.append(stage);
     this.commit(shell);

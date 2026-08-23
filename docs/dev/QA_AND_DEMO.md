@@ -553,3 +553,20 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 | `npm run build` | PASS, 158 modules; 기존 Transformers 516.22kB warning만 유지 |
 | `npm run build:qa` | PASS, 128 modules |
 | `git diff --check` | PASS |
+
+## 21. 2026-08-24 HQ-10 Battle Manual QA 후속 재검수
+
+- starting HEAD는 `8ce93d57ebdf92a8cace6c4ac91211ca48414ef8`다.
+- actual Chrome computed style에서 `.battle-command-brief`의 `align-content: center`가 정보 위치 흔들림의 직접 원인임을 확인했다. 좌측 brief는 `align-self: stretch; align-content: start`, 우측 interaction은 `align-self: stretch; align-content: center`로 분리했다.
+- result deck은 `battle-result-copy` 그룹을 추가해 narration/callout을 좌상단에 묶고, advance action만 독립적으로 세로 중앙 정렬한다.
+- 사용자 화면의 청색 사각형은 DOM/debug overlay가 아니라 `bg_battle_wide.webp`에 baked-in 된 glass 영역이었다. binary edit 없이 Battle presentation만 기존 `bg_office_wide`로 remap해 노출을 제거했다.
+- Juno는 중앙 support에서 Doyun-side lane으로 이동했다. Wraith/Doyun 위치·크기, Battle/BGM HUD, dialogue/dock anchor, Story/FSM/save/voice/BGM/battle logic은 변경하지 않았다.
+
+| viewport/state | brief `x/y/w/h` | interaction `x/y/w/h` | Juno `x/y/w/h` | dialogue-command gap | scroll |
+|---|---|---|---|---:|---|
+| 1920×1080 click | `63/917.4/546.5/128` | `627.5/917.4/1229.5/128` | `1094.4/421.2/190/334.8` | 69.4px | 0 |
+| 1366×768 click | `56/609.6/381.5/132` | `451.5/609.6/858.5/132` | `778.6/291.9/150.3/238.1` | 58.6px | 0 |
+
+- production/debug OFF actual flow에서 1920·1366 click/voice/result/second-opportunity를 캡처했다. 좌측 정보 top-left, 우측 action vertical-center, result copy top-left, Juno/dialogue·Juno/dock overlap 0, face/staff/Wraith core 가림 0이다.
+- Chrome console error/warning은 0이다. HQ-10은 사용자 screenshot 승인 전 `HUMAN_RECHECK`를 유지한다.
+- focused HQ-10은 11/11, full suite는 62 files·450 tests PASS다. `npm run check`, production/QA build, `git diff --check`도 PASS이며 기존 Transformers chunk warning만 유지한다.

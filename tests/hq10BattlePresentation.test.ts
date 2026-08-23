@@ -17,6 +17,39 @@ const renderBattleReply = gameViewSource.slice(
 );
 
 describe("HQ-10 Battle final presentation", () => {
+  it("anchors Battle information at the top-left and centers the action column", () => {
+    expect(vnStylesSource).toMatch(
+      /\.battle-command-brief\s*\{[^}]*align-self:\s*stretch;[^}]*align-content:\s*start;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.battle-command-interaction\s*\{[^}]*align-self:\s*stretch;[^}]*align-content:\s*center;/s,
+    );
+  });
+
+  it("groups Battle result copy separately from its vertically centered advance action", () => {
+    expect(renderBattleReply).toContain("battle-result-copy");
+    expect(vnStylesSource).toMatch(
+      /\.battle-result-copy\s*\{[^}]*align-content:\s*start;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.battle-result-advance\s*\{[^}]*align-self:\s*center;/s,
+    );
+  });
+
+  it("uses the clean office presentation instead of the baked blue Battle glass panel", () => {
+    expect(gameViewSource).toContain(
+      'const BATTLE_PRESENTATION_BACKGROUND_ID = "bg_office_wide";',
+    );
+    expect(renderBattle).toContain("BATTLE_PRESENTATION_BACKGROUND_ID");
+    expect(renderBattleReply).toContain("BATTLE_PRESENTATION_BACKGROUND_ID");
+  });
+
+  it("keeps Juno in a Doyun-side support lane above the Battle controls", () => {
+    expect(vnStylesSource).toMatch(
+      /\.game-shell\[data-composition="battle"\] \.battle-stage-juno\s*\{[^}]*left:\s*clamp\(55%,\s*57vw,\s*59%\);/s,
+    );
+  });
+
   it("renders one semantic command deck instead of generic button cards", () => {
     for (const className of [
       "battle-command-deck",

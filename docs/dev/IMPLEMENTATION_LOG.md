@@ -2043,3 +2043,16 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - 1366 voice mode에서 PTT가 표시되고 mode-switch 뒤 stage scroll 0, rect 불변이다. keyboard Tab focus는 2px outline으로 확인했다. Console error/warning은 0이다.
 - focused는 4 files·45 tests, full suite는 62 files·446 tests PASS다. TypeScript check, production build 158 modules, QA build 128 modules이 PASS했고 기존 Transformers 516.22kB warning만 유지한다.
 - HQ-10 상태는 구현 완료 후 `HUMAN_RECHECK`다. 사용자 screenshot 승인 전 `PASS`/FREEZE로 올리지 않는다.
+
+## HQ-10 Battle Manual QA Follow-up
+
+- 작업일: 2026-08-24 KST
+- 브랜치·시작 HEAD: `codex/hq10-battle-final-presentation` · `8ce93d57ebdf92a8cace6c4ac91211ca48414ef8`
+- 수동 QA가 command/voice/result/second-opportunity deck의 내부 정렬, baked blue glass background, Juno의 중앙 부유감을 재확인했다.
+- focused RED 4건으로 좌측 brief top-left, 우측 interaction vertical-center, result copy group, clean Battle background, Doyun-side Juno lane 계약을 먼저 고정했다.
+- `battle-command-brief`와 `battle-command-interaction`을 각각 stretch/start와 stretch/center로 분리했다. result narration/callout은 `battle-result-copy`에 묶고 CTA만 세로 중앙에 둔다.
+- 파란 사각형은 runtime overlay가 아니라 `bg_battle_wide.webp` 원본의 baked glass 영역이었다. binary를 수정하지 않고 Battle prompt/reply의 presentation background를 기존 `bg_office_wide`로 제한 remap했다.
+- Juno는 `left: clamp(55%, 57vw, 59%)` Doyun-side support lane으로 이동했다. Wraith/Doyun, HUD, dialogue/dock anchor와 Battle 기능은 불변이다.
+- production/debug OFF actual Chrome에서 1920×1080·1366×768 click/voice/result/second-opportunity를 확인했다. scroll 0, console error/warning 0, Juno/dialogue·Juno/dock 및 critical face/staff/core 가림 0이다.
+- focused HQ-10은 11/11, full suite는 62 files·450 tests PASS다. check, production/QA build, diff-check도 PASS다.
+- HQ-10은 자동 승인하지 않고 `HUMAN_RECHECK`를 유지한다.

@@ -165,12 +165,12 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 |---|---|
 | Scene/Beat | battle HUD·BGM HUD·command surface |
 | Category | Battle UI / safe zone |
-| User Evidence | 캡처 #13. 우측 상단 battle HUD와 BGM HUD가 실제로 겹치고 하단 command가 과밀. 2026-08-23 후속 1366×768 actual QA에서 dialogue bottom 568.3px / command dock top 556.6px로 11.7px 겹침을 추가 확인 |
-| Problem | 상태·대사·주문·선택·입력 방식이 동시에 경쟁함 |
-| Desired Direction | top HUD/BGM reserved safe zone, 하나의 compact command deck, narrative choice와 input-mode control 위계 분리 |
+| User Evidence | 캡처 #13. 우측 상단 battle HUD와 BGM HUD가 실제로 겹치고 하단 command가 과밀. 2026-08-23 후속 1366×768 actual QA에서 dialogue/command 겹침을 닫은 뒤, 2026-08-24 수동 QA에서 `이번 언령` 정보 블록의 세로 흔들림, 우측 action baseline 불균형, baked blue glass rectangle, 중앙에 떨어진 Juno를 추가 확인 |
+| Problem | 상태·대사·주문·선택·입력 방식이 동시에 경쟁하고, deck 내부 정보/행동 축과 Juno의 hero-side 관계가 약함 |
+| Desired Direction | top HUD/BGM reserved safe zone, 하나의 compact command deck, 좌측 정보 top-left/우측 action vertical-center, narrative choice와 input-mode control 위계, Juno의 Doyun-side support lane |
 | Priority | P0 |
-| Implementation Status | `HUMAN_RECHECK` — 기능·responsive collision closure를 보존한 채 Battle HUD·망령 dialogue·command/result deck을 Phase A VN 언어로 정리했다. click action은 numbered response row, voice는 primary/secondary PTT, mode switch는 tertiary utility로 분리했다. actor·HUD·dock anchor와 voice/BGM/battle logic은 불변이다. |
-| Human Recheck | production/debug OFF 실제 flow에서 1920/1600/1366 dialogue-command gap은 69.4/62.0/58.6px, Juno/dialogue·Juno/dock·BGM/HUD overlap과 document/stage scroll은 모두 0이다. 최종 시각 질문 5개는 사용자 판정 대기. |
+| Implementation Status | `HUMAN_RECHECK` — 기능·responsive collision closure를 보존한 채 Battle HUD·망령 dialogue·command/result deck을 Phase A VN 언어로 정리했다. 후속으로 command/voice/second-opportunity의 좌측 brief를 top-left, 우측 action을 vertical-center로 고정하고 result copy를 독립 group으로 정렬했다. baked blue glass 영역이 있는 Battle 배경은 기존 clean office asset으로 presentation remap했으며 binary는 변경하지 않았다. Juno만 Doyun-side support lane으로 이동했다. |
+| Human Recheck | production/debug OFF actual flow에서 1920/1366 click·voice·result·second-opportunity를 확인했다. dialogue-command gap은 69.4/58.6px, Juno/dialogue·Juno/dock·BGM/HUD overlap과 document/stage scroll은 모두 0, console error/warning 0이다. 최종 시각 판정은 사용자 대기. |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | HQ-10 final presentation 구현 완료. 사용자 승인 후에만 `PASS`/FREEZE로 승격 |
 
