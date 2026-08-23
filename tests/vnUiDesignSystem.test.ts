@@ -51,6 +51,15 @@ describe("Phase A VN UI design system", () => {
     expect(vnStylesSource).toContain(".vn-dialogue-shell:not(.battle-dialogue)");
   });
 
+  it("pins speaker identity to a stable upper-left inset and reserves its row", () => {
+    expect(vnStylesSource).toMatch(
+      /\.vn-dialogue-shell:not\(\.battle-dialogue\) \.vn-speaker-name\s*\{[^}]*position:\s*absolute;[^}]*top:\s*clamp\(20px, 2\.2vh, 24px\);[^}]*left:\s*clamp\(22px, 2\.4vw, 32px\);/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.vn-dialogue-shell:not\(\.battle-dialogue\):has\(\.vn-speaker-name\)\s*\{[^}]*padding-top:\s*clamp\(48px, 5\.8vh, 56px\);/s,
+    );
+  });
+
   it("keeps narration label-free and gives it an editorial shell modifier", () => {
     expect(resolveDialoguePresentation("narration").showName).toBe(false);
     expect(gameViewSource).toContain("vn-dialogue-shell--${presentation.tone}");

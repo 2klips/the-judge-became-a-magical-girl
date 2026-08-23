@@ -139,8 +139,8 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | enemy와 hero의 시선·대립축이 약하고 Juno support affiliation이 흐림 |
 | Desired Direction | Wraith LEFT/CENTER-LEFT·대형·RIGHT-facing, Doyun RIGHT·LEFT-facing, Juno는 Doyun 측 center-low/right-low support |
 | Priority | P0 |
-| Implementation Status | `HUMAN_RECHECK` — Wraith LEFT/CENTER-LEFT·screen-right, Doyun RIGHT·screen-left, Juno Doyun-side center-low support로 metadata/CSS 구도 구현 |
-| Human Recheck | enemy↔hero axis, support triangle, face/staff/core occlusion 0 확인 |
+| Implementation Status | `HUMAN_RECHECK` — Wraith LEFT/CENTER-LEFT·screen-right, Doyun RIGHT·screen-left, Juno Doyun-side center-low support로 metadata/CSS 구도 구현. 2026-08-23 actual `n6_first_choice`에서 Wraith만 42vw/780px·80vh/860px 한도로 확대해 위협 축을 보강 |
+| Human Recheck | enemy↔hero axis, support triangle, 확대된 Wraith의 face/staff/core·dialogue occlusion 0 확인 |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | 손그림은 비율·디자인이 아니라 `enemy ↔ hero axis + support triangle`만 참조 |
 
@@ -169,7 +169,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 상태·대사·주문·선택·입력 방식이 동시에 경쟁함 |
 | Desired Direction | top HUD/BGM reserved safe zone, 하나의 compact command deck, narrative choice와 input-mode control 위계 분리 |
 | Priority | P0 |
-| Implementation Status | `OPEN` — 이번 phase redesign 제외 |
+| Implementation Status | `OPEN` — 2026-08-23 focused safe-zone 수정으로 Battle HUD를 BGM 우측 lane에서 시작시키고 Juno를 lower hero-support lane으로 이동했으며, 망령 대화 패널을 48vw/820px로 제한했다. 3개 PC viewport의 BGM/HUD·Juno/dialogue·Juno/command dock 충돌 0은 자동/브라우저 확인. compact command deck 전체 redesign은 미완료 |
 | Human Recheck | 세 desktop viewport, actor/staff/CTA 가림, scan order 확인 |
 | Final Status | `OPEN` |
 | Related SSOT/TODO | Phase C Battle presentation 대상 |
@@ -184,7 +184,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 감정적 결말이 반복되는 generic card pattern에 묻힘 |
 | Desired Direction | editorial ending layout, actor와 UI 분리, background 위 hierarchy 중심 title·small CTA |
 | Priority | P1 |
-| Implementation Status | `OPEN` |
+| Implementation Status | `OPEN` — 2026-08-23 focused fix로 Juno를 중앙 card 밖 left-low lane에 배치했고 3개 PC viewport에서 Juno/card·Juno/Doyun 충돌 0을 확인. editorial ending layout 자체는 미구현 |
 | Human Recheck | ending별 정서 차이, Juno 가독성, title crop 0 확인 |
 | Final Status | `OPEN` |
 | Related SSOT/TODO | Phase C Ending presentation 대상 |

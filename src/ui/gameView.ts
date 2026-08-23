@@ -802,12 +802,25 @@ export class GameView {
     shell.append(element("div", "wraith-omen-monitor-haze"));
     const caption = element("p", "wraith-omen-caption", omen.text);
     caption.setAttribute("role", "status");
-    shell.append(caption);
+    const advance = element(
+      "button",
+      "wraith-omen-advance vn-advance",
+      "계속",
+    );
+    advance.type = "button";
+    advance.dataset.advanceState = "ready";
+    advance.addEventListener(
+      "click",
+      () => {
+        advance.disabled = true;
+        advance.dataset.advanceState = "used";
+        this.onAdvance?.();
+        onContinue();
+      },
+      { once: true },
+    );
+    shell.append(caption, advance);
     this.commit(shell);
-    this.activeSceneTimer = window.setTimeout(() => {
-      this.activeSceneTimer = null;
-      onContinue();
-    }, omen.durationMs);
   }
 
   renderIncantation(

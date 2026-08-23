@@ -40,7 +40,7 @@
 
 > (모니터 속 평가 문장이 한 글자씩 회색으로 번진다.)
 
-- 약 1.1초 후 기존 N3 confrontation 화면으로 전환한다.
+- 후속 human QA amendment에 따라 caption 전용 `계속 ›` 입력 후 기존 N3 confrontation 화면으로 전환한다. 자동 timer 진행은 사용하지 않는다.
 - reduced-motion에서는 flicker·scale을 제거하고 짧은 opacity 전환과 동일 hold를 사용한다.
 
 ### 효과음

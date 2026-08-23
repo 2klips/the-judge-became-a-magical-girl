@@ -157,7 +157,6 @@ it("owns no actors, node state, or large dialogue shell", () => {
     sceneId: "n2_n3_wraith_omen",
     backgroundId: "bg_hall_dark",
     text: "(모니터 속 평가 문장이 한 글자씩 회색으로 번진다.)",
-    durationMs: 1100,
     actors: [],
   });
 });
@@ -182,7 +181,6 @@ export const WRAITH_OMEN_PRESENTATION = Object.freeze({
   sceneId: "n2_n3_wraith_omen",
   backgroundId: "bg_hall_dark",
   text: "(모니터 속 평가 문장이 한 글자씩 회색으로 번진다.)",
-  durationMs: 1_100,
   actors: [] as const,
 });
 
@@ -215,7 +213,7 @@ if (
 
 Keep the existing N1→N2 Juno emergence condition and normal fallback. Resume, debug preview, and ordinary N3 re-render call `renderCurrent()` directly and therefore cannot enter this edge hook.
 
-- [ ] Add `GameView.renderWraithOmen(onContinue)` following the proven `renderJunoMonitorEmergence` timer lifecycle:
+- [ ] Add `GameView.renderWraithOmen(onContinue)` following the proven interstitial shell/commit lifecycle, but with explicit user advancement instead of a timer:
 
 ```ts
 renderWraithOmen(onContinue: () => void): void {
@@ -226,17 +224,22 @@ renderWraithOmen(onContinue: () => void): void {
   shell.append(element("div", "wraith-omen-monitor-haze"));
   const caption = element("p", "wraith-omen-caption", omen.text);
   caption.setAttribute("role", "status");
-  shell.append(caption);
-  this.commit(shell);
-  this.activeSceneTimer = window.setTimeout(() => {
-    this.activeSceneTimer = null;
+  const advance = element("button", "wraith-omen-advance vn-advance", "계속");
+  advance.type = "button";
+  advance.dataset.advanceState = "ready";
+  advance.addEventListener("click", () => {
+    advance.disabled = true;
+    advance.dataset.advanceState = "used";
+    this.onAdvance?.();
     onContinue();
-  }, omen.durationMs);
+  }, { once: true });
+  shell.append(caption, advance);
+  this.commit(shell);
 }
 ```
 
 - [ ] Style only `.wraith-omen-interstitial`, `.wraith-omen-monitor-haze`, and `.wraith-omen-caption`. The caption is a one-line lower-third subtitle: `width: fit-content`, `max-width: min(760px, calc(100vw - 64px))`, no `dialogue-panel`/`vn-dialogue-shell`, no detached card, no large padding, no center-screen modal. Use subtle gray text/line, not a rounded panel.
-- [ ] Normal motion: one short monitor haze/noise/flicker. Reduced motion: remove flicker/scale and retain opacity-only entrance plus the same 1.1-second hold.
+- [ ] Normal motion: one short monitor haze/noise/flicker. Reduced motion: remove flicker/scale and retain opacity-only entrance. 후속 human QA amendment로 두 모드 모두 caption 전용 `계속 ›` 입력을 기다리며 자동 hold timer는 사용하지 않는다.
 - [ ] Render no live Doyun/Juno/Wraith and add no actor via `appendDialogueVisuals`.
 
 ### 4. Targeted validation
@@ -252,7 +255,7 @@ Before commit, explicitly inspect `git diff --name-only`; it must not include `s
 
 ### 5. Browser QA
 
-- [ ] Production/debug OFF natural click path: complete `n2_juno_followup`; observe exactly one omen, 1.1-second hold, then approved N3 composition.
+- [ ] Production/debug OFF natural click path: complete `n2_juno_followup`; observe exactly one omen that remains until the caption-specific `계속 ›` is activated, then approved N3 composition. Automatic timer advancement must be 0.
 - [ ] Natural actual voice path: same edge, exactly one omen.
 - [ ] Reload/Resume while current node is N3: omen count 0.
 - [ ] Open `?debug=1&scene=n3-wraith`: omen count 0.

@@ -122,6 +122,33 @@ describe("Scenario v3.1 global scene composition", () => {
     );
   });
 
+  it("N6 첫 선택에서만 Wraith를 확대하고 다른 battle actor 계약은 유지한다", () => {
+    expect(stylesSource).toMatch(
+      /data-presentation-context="n6_first_choice"[^}]*\.scene-enemy-visual\s*\{[^}]*left:\s*clamp\(-2%, 0vw, 2%\);[^}]*width:\s*min\(42vw, 780px\);[^}]*height:\s*min\(80vh, 860px\);/s,
+    );
+    expect(stylesSource).not.toMatch(
+      /data-composition="battle"[^}]*\.scene-enemy-visual\s*\{[^}]*width:\s*min\(42vw, 780px\)/s,
+    );
+  });
+
+  it("Battle은 BGM용 좌상단 lane을 비우고 Juno를 lower support에 둔다", () => {
+    expect(stylesSource).toMatch(
+      /\.game-shell\.battle-screen \.battle-hud\s*\{[^}]*left:\s*clamp\(350px, 22vw, 420px\);/s,
+    );
+    expect(stylesSource).toMatch(
+      /data-composition="battle"[^}]*\.battle-stage-juno\s*\{[^}]*bottom:\s*clamp\(230px, 29vh, 320px\);[^}]*left:\s*clamp\(51%, 53vw, 55%\);/s,
+    );
+    expect(stylesSource).toMatch(
+      /\.game-shell\[data-composition="battle"\] \.battle-dialogue\.dialogue-panel\s*\{[^}]*width:\s*min\(48vw, 820px\);/s,
+    );
+  });
+
+  it("Ending Juno는 중앙 card 밖 left-low actor lane을 사용한다", () => {
+    expect(stylesSource).toMatch(
+      /\.game-shell\[data-composition="ending"\]\.ending-screen \.ending-character:not\(\.ending-black-magical-girl\)\s*\{[^}]*bottom:\s*clamp\(110px, 14vh, 160px\);[^}]*left:\s*clamp\(0%, 2vw, 3%\);/s,
+    );
+  });
+
   it("N5 protect preview는 enemy/hero/support safe zones를 runtime처럼 분리한다", () => {
     expect(stylesSource).toMatch(
       /data-composition="protect"[^}]*\.dev-role-enemy,[\s\S]*?\{[^}]*left:\s*2%[^}]*width:\s*34%/s,

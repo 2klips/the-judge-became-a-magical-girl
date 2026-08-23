@@ -3292,13 +3292,38 @@ html[data-qa-preview="true"] .dev-scene-nav {
     opacity: 0.96;
   }
 
+  .game-shell[data-presentation-context="n6_first_choice"] .scene-enemy-visual {
+    right: auto;
+    bottom: clamp(120px, 15vh, 170px);
+    left: clamp(-2%, 0vw, 2%);
+    width: min(42vw, 780px);
+    height: min(80vh, 860px);
+    opacity: 0.96;
+  }
+
   .game-shell[data-composition="battle"] .battle-stage-juno {
     z-index: 2;
     right: auto;
-    bottom: clamp(300px, 38vh, 420px);
-    left: clamp(44%, 47vw, 50%);
+    bottom: clamp(230px, 29vh, 320px);
+    left: clamp(51%, 53vw, 55%);
     width: min(11vw, 190px);
     height: min(31vh, 335px);
+  }
+
+  .game-shell[data-composition="battle"] .battle-dialogue.dialogue-panel {
+    width: min(48vw, 820px);
+  }
+
+  .game-shell.battle-screen .battle-hud {
+    left: clamp(350px, 22vw, 420px);
+  }
+
+  .game-shell[data-composition="ending"].ending-screen .ending-character:not(.ending-black-magical-girl) {
+    right: auto;
+    bottom: clamp(110px, 14vh, 160px);
+    left: clamp(0%, 2vw, 3%);
+    width: min(15vw, 260px);
+    height: min(42vh, 455px);
   }
 
   .game-shell[data-composition="battle"] .battle-stage-doyun {

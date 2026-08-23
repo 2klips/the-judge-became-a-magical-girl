@@ -412,12 +412,12 @@ npm run build
 - [ ] 22개 프리셋의 배경·인물·표정·컷·BGM 표기가 명세와 같다.
 - [ ] 전달된 배경 16장, 도윤 runtime 13장, 주노 runtime 5장, 초반 모니터 CUT 2장은 깨지지 않고 장면 매핑대로 표시된다.
 - [ ] N0 prompt→N1 suspicious Doyun→Juno emergence CUT→N2 live에서 baked visible prompt 중복 0, CUT live actor 0, PTT/click 접근성이 유지된다.
-- [ ] Production click: `n2_juno_followup → n3_wraith_choice` natural edge에서 actor 0의 작은 omen caption이 정확히 1회·약 1.1초 표시되고 N3로 이어진다.
+- [ ] Production click: `n2_juno_followup → n3_wraith_choice` natural edge에서 actor 0의 작은 omen caption이 정확히 1회 표시되고, 사용자가 caption 전용 `계속 ›`를 누른 뒤 N3로 이어진다. 자동 timer 진행은 0이다.
 - [ ] Production actual voice: 같은 natural edge에서 omen이 정확히 1회이며 `/voice/realtime`·BGM 동작을 바꾸지 않는다.
 - [ ] natural edge마다 synthesized WebAudio `wraith_omen` 저역 cue가 1회만 들리고, 40ms 중복 차단·PTT suppression·AudioContext fail-soft가 유지된다. N3 Resume/debug/re-render에서는 cue 0회다.
 - [ ] N3 저장 Resume, `?debug=1&scene=n3-wraith`, resize/focus ordinary re-render에서는 omen 표시 0회다.
 - [ ] omen은 VN dialogue shell/modal을 만들지 않고 center stage를 크게 가리지 않으며 1920×1080·1600×900·1366×768에서 scroll/clipping 0이다.
-- [ ] `prefers-reduced-motion: reduce`에서는 haze flicker/scale이 없고 짧은 opacity entrance와 동일 1.1초 hold만 유지한다.
+- [ ] `prefers-reduced-motion: reduce`에서는 haze flicker/scale 없이 짧은 opacity entrance만 유지하고, 동일한 명시적 `계속 ›` 입력을 기다린다.
 - [ ] 도윤은 오른쪽 확대·상반신 구도이며 주노와 대화 UI를 가리지 않는다.
 - [ ] 전달된 `gray_wraith.normal`은 실파일, 미전달 `gray_wraith.weakened`는 normal+CSS 파생으로 보인다. normal 로드 실패와 미전달 변신 컷은 검은 placeholder여도 대사·버튼·게이지가 보인다.
 - [ ] 전달된 BGM 5곡이 계약 장면에 연결되고, 로드 실패 시 폴백곡 또는 무음으로 진행을 막지 않는다.
@@ -472,7 +472,17 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 | early-scene asset pipeline | PASS | 2 tests |
 | face verifier | PASS | baseline `39f4370`, 4 targets, mask 밖 raw pixel·alpha 변경 0, `magical_pose` 불변 |
 | `npm run check` | PASS | `tsc --noEmit`, exit 0 |
-| `npm test` | PASS | 61 files·432 tests |
+| `npm test` | PASS | 61 files·437 tests |
 | `npm run build` | PASS | Vite 8.2.0, 158 modules; 기존 Transformers 516.22kB warning만 유지 |
 | `npm run build:qa` | PASS | Vite 8.2.0, 128 modules |
 | `git diff --check` | PASS | 문서 reconciliation 공백 오류 0 |
+
+## 18. 2026-08-23 Human Scene Composition Polish 재검수
+
+- [x] natural `n2_juno_followup → n3_wraith_choice` edge의 omen은 1.7초 대기 뒤에도 유지되며 caption 전용 `계속 ›` 1회 입력 후 N3로 진행한다. N3 도착 뒤 omen 0, actor 0 계약과 edge-only 소유권은 유지한다.
+- [x] 일반 VN 화자명은 1920×1080 기준 panel 좌상단 33px/25px inset의 고정 slot을 사용하고 copy 시작 영역과 겹치지 않는다.
+- [x] actual `n6_first_choice` Wraith는 LEFT enemy lane에서 780×860px 한도로 확대되며 dialogue·Juno·Doyun의 판독 가능한 실루엣을 침범하지 않는다.
+- [x] actual Battle은 1920×1080·1600×900·1366×768에서 BGM/HUD, Juno/망령 대화 패널, Juno/command dock bbox 충돌 0, scroll 0이다.
+- [x] actual GOOD Ending은 같은 3개 viewport에서 Juno/중앙 card, Juno/Doyun, BGM/card 충돌 0, scroll 0이다.
+- [x] actual production play의 browser console error/warning은 0이며 Vite 연결/HMR debug log만 존재한다.
+- [ ] Wraith 크기, Battle support 위치, Ending left-low Juno의 최종 미술 판정은 사용자 `HUMAN_RECHECK`다. HQ-10 command deck과 HQ-11 editorial ending 전체 redesign은 `OPEN`을 유지한다.

@@ -31,7 +31,6 @@ describe("natural-edge Wraith omen presentation", () => {
       sceneId: "n2_n3_wraith_omen",
       backgroundId: "bg_hall_dark",
       text: "(모니터 속 평가 문장이 한 글자씩 회색으로 번진다.)",
-      durationMs: 1_100,
       actors: [],
     });
   });
@@ -54,5 +53,21 @@ describe("natural-edge Wraith omen presentation", () => {
     expect(gameViewSource).toContain('caption.setAttribute("role", "status")');
     expect(vnCssSource).toContain(".wraith-omen-caption");
     expect(vnCssSource).not.toMatch(/\.wraith-omen-caption[^}]*border-radius/s);
+  });
+
+  it("waits for one explicit editorial advance instead of auto-advancing", () => {
+    const start = gameViewSource.indexOf("renderWraithOmen(onContinue: () => void)");
+    const end = gameViewSource.indexOf("renderIncantation(", start);
+    const renderer = gameViewSource.slice(start, end);
+
+    expect(renderer).toContain('"wraith-omen-advance vn-advance"');
+    expect(renderer).toContain('"계속"');
+    expect(renderer).toMatch(
+      /advance\.addEventListener\([\s\S]*?"click"[\s\S]*?advance\.disabled = true;[\s\S]*?onContinue\(\);[\s\S]*?\{ once: true \}/,
+    );
+    expect(renderer).not.toContain("window.setTimeout");
+    expect(vnCssSource).toMatch(
+      /\.wraith-omen-advance\s*\{[^}]*position:\s*absolute;[^}]*right:[^;]+;[^}]*bottom:/s,
+    );
   });
 });

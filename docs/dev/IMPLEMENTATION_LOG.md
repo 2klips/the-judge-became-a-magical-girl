@@ -1932,7 +1932,7 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 
 - 작업일: 2026-08-23 KST
 - 브랜치: `codex/scenario-v31-runtime-composition-p1`
-- `n2_juno_followup → n3_wraith_choice`의 실제 advanced callback에서만 actor 0·1,100ms lower-third omen을 1회 표시한다. N3 Resume·debug direct entry·ordinary re-render는 edge hook을 통과하지 않아 표시 0회다.
+- `[당시 구현 계약·후속 변경됨]` `n2_juno_followup → n3_wraith_choice`의 실제 advanced callback에서만 actor 0·1,100ms lower-third omen을 1회 표시했다. N3 Resume·debug direct entry·ordinary re-render는 edge hook을 통과하지 않아 표시 0회였다. 이후 `Human Scene Composition Polish`에서 자동 진행을 explicit `계속 ›`로 교체했다.
 - `wraith_omen`은 distributed binary가 아닌 synthesized WebAudio 2-layer 저역 cue다. 기존 master gain, 40ms duplicate window, PTT suppression, AudioContext fail-soft를 재사용하며 BGM 전환·duck 상태는 추가하지 않는다.
 - 자동 계약은 exact edge, one-shot guard, actor/VN shell 0, cue 2-layer와 duplicate/suppression/fail-soft를 검증한다. 실제 click 3-viewport 합성은 통과했으며 actual voice·청각 clipping·reduced-motion은 사람 체크리스트에서 재확인한다.
 
@@ -1949,7 +1949,7 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 |---|---|---|
 | plan bookkeeping | `5e735771c80981da95b5f439e3b91a4334619595` | implementation HEAD와 asset comparison baseline 역할을 분리하고 final gate 순서를 수정 |
 | direct-wish CTA | `df14c6395ee4c6fc452f4846aade39ff449c65fc` | `.direct-wish-prompt-cut`의 progress control만 중앙 하단 위쪽에 고정; 일반 dialogue·Transform·Battle·Ending CTA 불변 |
-| omen presentation | `d4dc04812df5366a03be87b969d3f6b0c89146df` | 자연 `n2_juno_followup → n3_wraith_choice` advanced callback에 actor-free 1,100ms caption 1회 |
+| omen presentation | `d4dc04812df5366a03be87b969d3f6b0c89146df` | 당시 자연 `n2_juno_followup → n3_wraith_choice` advanced callback에 actor-free 1,100ms caption 1회. 후속 explicit advance 변경은 아래 최신 섹션 참조 |
 | omen audio | `af327791ac50c990bebe9588443f166b29b8ef34` | 기존 WebAudio master를 쓰는 2-layer 저역 cue. duplicate guard·PTT suppression·fail-soft 유지 |
 | employee-ID cleanup | `f2c115c287e20a4fbd0697b6fd87be9a09b2c7d7` | 생성형 재그리기 없이 magenta fringe alpha만 deterministic cleanup |
 | transformed faces | `864a3028fa6cb115790c1bf00e5fa0e79d33144a` | Option A에 따라 target별 mask 안 공개 얼굴 4종 적용; 모두 `HUMAN_RECHECK` |
@@ -1974,3 +1974,38 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - `magical_defend`, `magical_attack`, `magical_finish` 실제 합성은 세 viewport 모두 scroll·offscreen·actor overlap 0, console error 0이다. `doyun.magical`은 현재 scene mapping이 없는 fallback이라 최종 투명 PNG 자체를 검수했다.
 - production/debug OFF 1920×1080 click playthrough는 TITLE → direct-wish → N2 → natural-edge omen → N3 → N5 employee ID/Transform CUT01·02 → Battle p1/p2 → N7 → N8 → GOOD까지 진행했다. 자연 edge에서 caption 1·actor 0·VN shell 0, N3 도착 뒤 caption 0, 전체 경로 scroll 0·console error 0이었다.
 - 문서 reconciliation 뒤 complete gate는 early-scene pipeline 2 tests, face verifier 4 targets, TypeScript check, Vitest 61 files·432 tests, production build 158 modules, QA build 128 modules, `git diff --check`를 모두 통과했다. production build의 기존 Transformers 516.22kB large-chunk warning만 유지한다.
+
+## Human Scene Composition Polish
+
+- 작업일: 2026-08-23 KST
+- 브랜치: `codex/scenario-v31-runtime-composition-p1`
+- starting HEAD: `1e79156c1ca9f63ec1cb34276f0dc2701f2c9404`
+
+### 구현
+
+- natural `n2_juno_followup → n3_wraith_choice` omen에서 1,100ms 자동 진행을 제거하고 caption 전용 borderless `계속 ›` one-shot control을 추가했다. edge-only callback, actor 0, Resume/debug/re-render replay 0, GameState/save/flags 불변 계약은 유지한다.
+- 일반 VN 화자명은 dialogue shell 좌상단 고정 inset과 예약 padding row를 사용한다. copy 길이에 따라 `주노` 위치가 움직이지 않는다.
+- actual `n6_first_choice`에만 Wraith 42vw/780px·80vh/860px 상한을 적용했다. 이후 Battle의 Wraith scale과 approved actor direction은 변경하지 않는다.
+- Battle HUD는 top-left BGM lane 오른쪽에서 시작한다. Juno는 lower hero-support lane으로 이동하고 망령 대화 패널 폭을 48vw/820px로 제한해 UI/actor 겹침을 제거했다.
+- Ending Juno는 중앙 card 밖 left-low lane을 사용한다. 도윤, 중앙 card, ending copy·CTA는 변경하지 않는다.
+
+### 실제 Chrome evidence
+
+- production/debug OFF natural flow에서 omen은 1.7초 대기 뒤에도 유지됐고 `계속 ›` 클릭 뒤 N3에 정확히 1회 진입했다. N3 도착 뒤 omen 0이다.
+- 1920×1080 화자명은 panel 기준 left 33px/top 25px 고정이며 copy와 겹침 0이다.
+- actual N6 Wraith는 x=40~820, y=42~902의 780×860px로 표시되고 actor/UI 판독을 유지했다.
+- actual Battle의 1920×1080·1600×900·1366×768에서 BGM/HUD, Juno/망령 대화 패널, Juno/command dock 충돌 0과 scroll 0을 확인했다.
+- actual GOOD Ending의 같은 3개 viewport에서 Juno/중앙 card, Juno/Doyun, BGM/card 충돌 0과 scroll 0을 확인했다.
+- browser console error/warning 0. Vite 연결/HMR debug log만 존재했다.
+- 시각 판정은 `HUMAN_RECHECK`; HQ-10 command deck과 HQ-11 editorial layout 전체는 여전히 `OPEN`이다.
+
+### fresh verification
+
+| 검증 | 결과 |
+|---|---|
+| focused | 3 files·36 tests PASS; explicit-advance duration field RED→GREEN 포함 |
+| `npm run check` | PASS |
+| `npm test` | 61 files·437 tests PASS |
+| `npm run build` | PASS, 158 modules; 기존 Transformers 516.22kB chunk warning만 유지 |
+| `npm run build:qa` | PASS, 128 modules |
+| `git diff --check` | PASS |
