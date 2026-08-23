@@ -17,7 +17,8 @@
 Implementation must start from exactly:
 
 - branch: `codex/scenario-v31-runtime-composition-p1`
-- approved baseline: `39f4370ab731377b77f3898f48496990961b81cc`
+- implementation starting HEAD: `4405277550dcdea522b00d7d2922d901d250d09b`
+- asset pre-edit comparison baseline: `39f4370ab731377b77f3898f48496990961b81cc` (Task 4/5 verifier 전용)
 - worktree: clean, including untracked files
 
 - [ ] **Preflight before Task 1**
@@ -25,7 +26,7 @@ Implementation must start from exactly:
 ```powershell
 Set-Location 'F:\codex\NHN_HACKTON\worktrees\the-judge-became-a-magical-girl\scenario-v31-runtime-composition-p1'
 $expectedBranch = 'codex/scenario-v31-runtime-composition-p1'
-$expectedHead = '39f4370ab731377b77f3898f48496990961b81cc'
+$expectedHead = '4405277550dcdea522b00d7d2922d901d250d09b'
 if ((git branch --show-current) -ne $expectedBranch) { throw 'Unexpected branch; stop and report.' }
 if ((git rev-parse HEAD) -ne $expectedHead) { throw 'Unexpected HEAD; stop and report.' }
 if (@(git status --porcelain=v1 --untracked-files=all).Count -ne 0) { throw 'Dirty worktree; stop and report.' }
@@ -647,7 +648,7 @@ Expected before final doc alignment: at least the historical/current-state lines
 
 ### 4. Targeted validation
 
-Run the complete gate from a clean dependency tree without modifying dependencies:
+Run the complete gate after the stale-state search and SSOT/document reconciliation. Documentation changes may still be uncommitted here, so do not expect `git status --short` to be clean yet:
 
 ```powershell
 python assets/source/early-scene-2026-08-22/tools/test_early_scene_asset_pipeline.py
@@ -657,10 +658,9 @@ npm test
 npm run build
 npm run build:qa
 git diff --check
-git status --short
 ```
 
-Expected: all PASS, only the existing Transformers large-chunk warning if unchanged, and clean status after the final docs commit. Report actual test file/test counts; do not copy historical numbers.
+Expected: all PASS and only the existing Transformers large-chunk warning if unchanged. Report actual test file/test counts; do not copy historical numbers. Commit the reconciled docs in Step 7 before checking final cleanliness.
 
 ### 5. Browser QA
 
@@ -685,6 +685,21 @@ git commit -m "docs(qa): record omen and face continuity evidence"
 ```
 
 If the preceding commits already contain exact final evidence and no stale line remains, create no empty documentation commit.
+
+After the Task 6 docs commit, or after confirming no docs commit is needed, rerun the complete gate at the final HEAD and check cleanliness last:
+
+```powershell
+python assets/source/early-scene-2026-08-22/tools/test_early_scene_asset_pipeline.py
+python assets/source/doyun/face-continuity-2026-08-23/tools/verify_face_edits.py --baseline 39f4370ab731377b77f3898f48496990961b81cc
+npm run check
+npm test
+npm run build
+npm run build:qa
+git diff --check
+git status --short
+```
+
+Expected: all complete-gate commands PASS, only the unchanged Transformers large-chunk warning is allowed, and the final `git status --short` output is empty.
 
 ## Final implementation handoff report
 
