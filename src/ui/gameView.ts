@@ -343,6 +343,28 @@ export function resolveEndingPages(
   }));
 }
 
+const EDITORIAL_ENDING_IDS = ["good", "normal", "bad", "hidden"] as const;
+type EditorialEndingId = (typeof EDITORIAL_ENDING_IDS)[number];
+
+export function isEditorialEndingId(endingId: string): endingId is EditorialEndingId {
+  return EDITORIAL_ENDING_IDS.includes(endingId as EditorialEndingId);
+}
+
+export interface EditorialEndingHeading {
+  readonly label: string;
+  readonly copy: string;
+}
+
+export function resolveEditorialEndingHeading(text: string): EditorialEndingHeading {
+  const separator = " — ";
+  const separatorIndex = text.indexOf(separator);
+  if (separatorIndex <= 0) return { label: "", copy: text };
+  return {
+    label: text.slice(0, separatorIndex),
+    copy: text.slice(separatorIndex + separator.length),
+  };
+}
+
 export interface EndingVisual {
   readonly characterId: "juno";
   readonly emotion: Emotion;
@@ -1426,8 +1448,12 @@ export class GameView {
       const page = pages[pageIndex];
       if (!page) return;
       const shell = this.createShell(page.sceneId, node.nodeId);
+      const editorialEnding = isEditorialEndingId(node.endingId);
       shell.dataset.activeSpeaker = page.line.speaker;
+      shell.dataset.endingId = node.endingId;
+      shell.dataset.endingPage = String(page.lineIndex + 1);
       shell.classList.add("ending-screen", `ending-tone-${node.endingId}`);
+      if (editorialEnding) shell.classList.add("ending-editorial-screen");
       const doyunVisual = resolveDoyunVisual({
         kind: "ending",
         endingId: node.endingId,
@@ -1465,11 +1491,26 @@ export class GameView {
         );
       }
 
-      const card = element("section", "ending-card");
-      card.append(
-        element("p", "eyebrow", "이야기의 결말"),
-        element("h2", "ending-title", pages[0]?.line.text ?? "엔딩"),
+      const card = element(
+        "section",
+        editorialEnding ? "ending-card ending-editorial" : "ending-card",
       );
+      const endingTitle = pages[0]?.line.text ?? "엔딩";
+      if (editorialEnding) {
+        const heading = resolveEditorialEndingHeading(endingTitle);
+        const title = element("h2", "ending-title");
+        title.setAttribute("aria-label", endingTitle);
+        if (heading.label) {
+          title.append(element("span", "ending-heading-label", heading.label));
+        }
+        title.append(element("span", "ending-heading-copy", heading.copy));
+        card.append(element("p", "eyebrow ending-kicker", "이야기의 결말"), title);
+      } else {
+        card.append(
+          element("p", "eyebrow", "이야기의 결말"),
+          element("h2", "ending-title", endingTitle),
+        );
+      }
       if (page.lineIndex > 0) {
         const speaker =
           page.line.speaker === "narration"
@@ -1479,9 +1520,12 @@ export class GameView {
         card.append(element("p", "ending-line", `${speaker}${lineText}`));
       }
 
+      const advanceClass = editorialEnding
+        ? "primary-button ending-advance"
+        : "primary-button";
       const button = page.isLast
-        ? element("button", "primary-button", onNext ? "Post-credit" : "처음부터")
-        : this.delayedAdvanceButton("primary-button", "계속", () => {
+        ? element("button", advanceClass, onNext ? "Post-credit" : "처음부터")
+        : this.delayedAdvanceButton(advanceClass, "계속", () => {
             pageIndex += 1;
             renderPage();
           });

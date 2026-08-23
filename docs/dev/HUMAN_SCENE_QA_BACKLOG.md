@@ -169,10 +169,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 상태·대사·주문·선택·입력 방식이 동시에 경쟁하고, deck 내부 정보/행동 축과 Juno의 hero-side 관계가 약함 |
 | Desired Direction | top HUD/BGM reserved safe zone, 하나의 compact command deck, 좌측 정보 top-left/우측 action vertical-center, narrative choice와 input-mode control 위계, Juno의 Doyun-side support lane |
 | Priority | P0 |
-| Implementation Status | `HUMAN_RECHECK` — 기능·responsive collision closure를 보존한 채 Battle HUD·망령 dialogue·command/result deck을 Phase A VN 언어로 정리했다. 후속으로 command/voice/second-opportunity의 좌측 brief를 top-left, 우측 action을 vertical-center로 고정하고 result copy를 독립 group으로 정렬했다. baked blue glass 영역이 있는 Battle 배경은 기존 clean office asset으로 presentation remap했으며 binary는 변경하지 않았다. Juno만 Doyun-side support lane으로 이동했다. |
-| Human Recheck | production/debug OFF actual flow에서 1920/1366 click·voice·result·second-opportunity를 확인했다. dialogue-command gap은 69.4/58.6px, Juno/dialogue·Juno/dock·BGM/HUD overlap과 document/stage scroll은 모두 0, console error/warning 0이다. 최종 시각 판정은 사용자 대기. |
-| Final Status | `HUMAN_RECHECK` |
-| Related SSOT/TODO | HQ-10 final presentation 구현 완료. 사용자 승인 후에만 `PASS`/FREEZE로 승격 |
+| Implementation Status | `PASS / FREEZE` — 기능·responsive collision closure를 보존한 채 Battle HUD·망령 dialogue·command/result deck을 Phase A VN 언어로 정리했다. 후속으로 command/voice/second-opportunity의 좌측 brief를 top-left, 우측 action을 vertical-center로 고정하고 result copy를 독립 group으로 정렬했다. baked blue glass 영역이 있는 Battle 배경은 기존 clean office asset으로 presentation remap했으며 binary는 변경하지 않았다. Juno만 Doyun-side support lane으로 이동했다. |
+| Human Recheck | 2026-08-24 사용자 최종 육안 검수에서 command deck 정렬, click/voice/result/second-opportunity, blue rectangle 제거, Doyun-side Juno lane, 1920×1080·1366×768, scroll 0, console error 0을 승인했다. |
+| Final Status | `PASS / FREEZE` |
+| Related SSOT/TODO | HQ-10 종료. release-blocking regression 증거 없이는 Battle presentation·composition·관련 tests를 변경하지 않는다. |
 
 ### HQ-11 — Ending presentation
 
@@ -184,10 +184,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 감정적 결말이 반복되는 generic card pattern에 묻힘 |
 | Desired Direction | editorial ending layout, actor와 UI 분리, background 위 hierarchy 중심 title·small CTA |
 | Priority | P1 |
-| Implementation Status | `OPEN` — 2026-08-23 focused fix로 Juno를 중앙 card 밖 left-low lane에 배치했고 3개 PC viewport에서 Juno/card·Juno/Doyun 충돌 0을 확인. editorial ending layout 자체는 미구현 |
-| Human Recheck | ending별 정서 차이, Juno 가독성, title crop 0 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | Phase C Ending presentation 대상 |
+| Implementation Status | `HUMAN_RECHECK` — GOOD/NORMAL/BAD/HIDDEN 공통 editorial system을 구현했다. giant centered modal을 제거하고 background 위 center-left title·small CTA, left-low Juno, right Doyun을 분리했다. ending copy·logic·routing은 변경하지 않았다. |
+| Human Recheck | production/debug OFF actual flow에서 네 ending을 확인했다. 1920×1080·1600×900·1366×768에서 title/Juno·title/Doyun·Juno/Doyun·BGM/title overlap 0, scroll 0, console error/warning 0이다. 최종 정서·위계 판정은 사용자 대기. |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | HQ-11 implementation 완료. 사용자 승인 후에만 `PASS / FREEZE`; HQ-12 Post-credit는 `OPEN` 유지. |
 
 ### HQ-12 — Post-credit black magical girl
 
@@ -214,10 +214,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 장면별 독립 component처럼 보여 하나의 VN 제품 언어가 형성되지 않음 |
 | Desired Direction | 공통 navy-black base, 얇은 border, 작은 radius·padding, 제한된 speaker accent, 명확한 대사 > 서사 선택 > 입력 방식 위계 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `HUMAN_RECHECK` — core VN foundation은 사용자 승인·freeze. Battle/Ending/Post-credit scene-specific presentation이 남아 global 항목은 유지 |
-| Human Recheck | core dialogue preview에서 장면 간 일관성·keyboard focus·actor occlusion을 사용자 검수. Battle/Ending/Post-credit는 Phase C 뒤 별도 재검수 |
+| Implementation Status | `HUMAN_RECHECK` — core VN foundation은 사용자 승인·freeze, HQ-10 Battle은 `PASS / FREEZE`, HQ-11 Ending은 editorial system 구현 후 `HUMAN_RECHECK`. Post-credit scene-specific presentation이 남아 global 항목은 유지 |
+| Human Recheck | core dialogue와 Battle은 사용자 승인. Ending은 현재 사용자 재검수 대기이며 Post-credit는 HQ-12에서 별도 검수 |
 | Final Status | `HUMAN_RECHECK` |
-| Related SSOT/TODO | HQ-02 core migration 완료. HQ-10은 final presentation `HUMAN_RECHECK`; HQ-06·HQ-11·HQ-12는 scene-specific `OPEN` 유지 |
+| Related SSOT/TODO | HQ-02 core migration·HQ-10 Battle 완료. HQ-11은 `HUMAN_RECHECK`; HQ-06·HQ-12는 scene-specific `OPEN` 유지 |
 
 ## 3. Existing TODO 연결
 

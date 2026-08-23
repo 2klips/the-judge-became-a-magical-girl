@@ -570,3 +570,24 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - production/debug OFF actual flow에서 1920·1366 click/voice/result/second-opportunity를 캡처했다. 좌측 정보 top-left, 우측 action vertical-center, result copy top-left, Juno/dialogue·Juno/dock overlap 0, face/staff/Wraith core 가림 0이다.
 - Chrome console error/warning은 0이다. HQ-10은 사용자 screenshot 승인 전 `HUMAN_RECHECK`를 유지한다.
 - focused HQ-10은 11/11, full suite는 62 files·450 tests PASS다. `npm run check`, production/QA build, `git diff --check`도 PASS이며 기존 Transformers chunk warning만 유지한다.
+
+## 22. 2026-08-24 HQ-11 Ending Final Presentation 재검수
+
+- branch는 `codex/hq11-ending-final-presentation`, starting HEAD는 `4cd0fa666c924b7d1197f64ec3995a8a77fb3eec`다.
+- 사용자 최종 승인에 따라 HQ-10은 `PASS / FREEZE`로 기록했으며 Battle source·presentation·composition·tests는 변경하지 않았다.
+- GOOD/NORMAL/BAD/HIDDEN의 giant centered result modal을 제거하고 동일한 editorial system으로 통합했다. title은 center-left, Juno는 left-low, Doyun은 right actor lane에 분리했다. Post-credit는 기존 card 경로를 유지한다.
+- production/debug OFF actual flow로 네 ending을 각각 열었다. HIDDEN은 perfect transform, 방어·공격 양쪽 주문, 두 번째 주문 기회 사용, N7 BELIEVE, N8 final success를 실제 순서대로 만족시켜 도달했다.
+
+| viewport | title `x/y/w/h` | Juno `x/y/w/h` | Doyun `x/y/w/h` | BGM HUD `x/y/w/h` | overlap | scroll |
+|---|---|---|---|---|---|---|
+| 1920×1080 GOOD | `556.8/216/660/214.2` | `136/546/230/410` | `1270.8/288.8/590/840` | `53.8/16/290/60` | 0 | 0 |
+| 1600×900 GOOD | `464/180/560/194.5` | `120/452/208/342` | `1048/236/496/702` | `44.8/16/290/60` | 0 | 0 |
+| 1366×768 GOOD | `396.1/145.9/478.1/162.9` | `108.3/406.4/177.6/276.5` | `888.9/206.7/423.5/583.7` | `38.2/16/290/60` | 0 | 0 |
+| 1920×1080 HIDDEN | `556.8/216/660/286.8` | `136/546/230/410` | `1270.8/288.8/590/840` | `53.8/16/290/60` | 0 | 0 |
+| 1600×900 HIDDEN | `464/180/560/255` | `120/452/208/342` | `1048/236/496/702` | `44.8/16/290/60` | 0 | 0 |
+| 1366×768 HIDDEN | `396.1/145.9/478.1/162.9` | `108.3/406.4/177.6/276.5` | `888.9/206.7/423.5/583.7` | `38.2/16/290/60` | 0 | 0 |
+
+- NORMAL·BAD도 1920×1080에서 같은 actor/title geometry로 actual capture했고 overlap·scroll은 0이다. CTA는 production에서 visible·enabled이고 debug HUD는 0이다.
+- Chrome console error/warning은 0이다. screenshot은 repo 밖 local QA evidence `qa-evidence/hq11-ending`에 저장했다.
+- focused HQ-11은 5/5, full suite는 63 files·455 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS이며 기존 Transformers 516.22kB warning만 유지한다.
+- HQ-11은 구현 완료 후 `HUMAN_RECHECK`다. 사용자 screenshot 승인 전 `PASS / FREEZE`로 올리지 않는다. HQ-12 Post-credit는 `OPEN`이다.

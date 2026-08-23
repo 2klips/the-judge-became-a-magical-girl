@@ -1020,6 +1020,195 @@
   box-shadow: none;
 }
 
+/* HQ-11: Ending is background + actors + editorial type, not a result modal. */
+.ending-screen.ending-editorial-screen {
+  --ending-accent: var(--vn-accent-transform);
+  --ending-accent-soft: rgba(123, 207, 225, 0.52);
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: clip;
+}
+
+.ending-editorial-screen.ending-tone-good {
+  --ending-accent: #f2d486;
+  --ending-accent-soft: rgba(242, 212, 134, 0.5);
+}
+
+.ending-editorial-screen.ending-tone-normal {
+  --ending-accent: #a9c9d5;
+  --ending-accent-soft: rgba(169, 201, 213, 0.45);
+}
+
+.ending-editorial-screen.ending-tone-bad {
+  --ending-accent: #aaa5ba;
+  --ending-accent-soft: rgba(170, 165, 186, 0.42);
+}
+
+.ending-editorial-screen.ending-tone-hidden {
+  --ending-accent: #9ee7f2;
+  --ending-accent-soft: rgba(244, 191, 212, 0.48);
+}
+
+.ending-editorial-screen .ending-editorial {
+  position: absolute;
+  z-index: 6;
+  top: clamp(150px, 20vh, 220px);
+  left: clamp(27%, 29vw, 31%);
+  display: grid;
+  width: min(35vw, 660px);
+  max-height: min(54vh, 520px);
+  margin: 0;
+  padding: 0 0 18px;
+  gap: clamp(10px, 1.4vh, 16px);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  color: var(--vn-text-primary);
+  background: transparent;
+  box-shadow: none;
+  clip-path: none;
+  text-align: left;
+  backdrop-filter: none;
+}
+
+.ending-editorial-screen .ending-editorial::before {
+  display: block;
+  width: clamp(52px, 5vw, 88px);
+  height: 1px;
+  margin: 0 0 2px;
+  content: "";
+  background: linear-gradient(90deg, var(--ending-accent), transparent);
+  box-shadow: none;
+}
+
+.ending-editorial-screen .ending-kicker {
+  margin: 0;
+  color: var(--ending-accent);
+  font-size: clamp(0.68rem, 0.78vw, 0.8rem);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.ending-editorial-screen .ending-title {
+  display: grid;
+  max-width: none;
+  margin: 0;
+  gap: 5px;
+  color: var(--vn-text-primary);
+  font-family: Georgia, "Noto Serif KR", serif;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  text-shadow: 0 3px 22px rgba(0, 0, 0, 0.7);
+}
+
+.ending-editorial-screen .ending-heading-label {
+  color: var(--ending-accent);
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  font-size: clamp(0.82rem, 1vw, 1rem);
+  font-weight: 650;
+  letter-spacing: 0.16em;
+}
+
+.ending-editorial-screen .ending-heading-copy {
+  max-width: 100%;
+  font-size: clamp(2.3rem, 3.5vw, 4.4rem);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.ending-editorial-screen .ending-line {
+  max-width: 92%;
+  margin: 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--ending-accent-soft);
+  color: var(--vn-text-secondary);
+  font-size: clamp(0.94rem, 1.12vw, 1.08rem);
+  line-height: 1.68;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.ending-editorial-screen .ending-advance {
+  justify-self: start;
+  width: fit-content;
+  min-height: 36px;
+  margin: 2px 0 0;
+  padding: 7px 4px 7px 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--vn-text-secondary);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.ending-editorial-screen .ending-advance::after {
+  margin-left: 9px;
+  color: var(--ending-accent);
+  content: "›";
+  transition: transform 120ms ease;
+}
+
+.ending-editorial-screen .ending-advance:hover:not(:disabled),
+.ending-editorial-screen .ending-advance:focus-visible {
+  transform: none;
+  color: var(--vn-text-primary);
+  background: transparent;
+  box-shadow: none;
+}
+
+.ending-editorial-screen .ending-advance:hover:not(:disabled)::after,
+.ending-editorial-screen .ending-advance:focus-visible::after {
+  transform: translateX(3px);
+}
+
+.game-shell[data-composition="ending"].ending-editorial-screen
+  .ending-character:not(.ending-black-magical-girl) {
+  z-index: 3;
+  right: auto;
+  bottom: clamp(82px, 10vh, 116px);
+  left: clamp(3%, 5vw, 7%);
+  width: min(13vw, 230px);
+  height: min(38vh, 410px);
+}
+
+.game-shell[data-composition="ending"].ending-editorial-screen .ending-player-visual {
+  z-index: 3;
+  right: clamp(-1%, 1vw, 2%);
+  bottom: -6vh;
+  left: auto;
+  width: min(31vw, 590px);
+  height: min(78vh, 840px);
+}
+
+@media (max-height: 800px) and (min-width: 761px) {
+  .ending-editorial-screen .ending-editorial {
+    top: clamp(126px, 19vh, 154px);
+    gap: 8px;
+  }
+
+  .ending-editorial-screen .ending-heading-copy {
+    font-size: clamp(2.05rem, 3.2vw, 3.2rem);
+  }
+
+  .ending-editorial-screen .ending-line {
+    font-size: clamp(0.88rem, 1vw, 0.98rem);
+    line-height: 1.55;
+  }
+
+  .game-shell[data-composition="ending"].ending-editorial-screen
+    .ending-character:not(.ending-black-magical-girl) {
+    bottom: clamp(66px, 9vh, 86px);
+    height: min(36vh, 300px);
+  }
+
+  .game-shell[data-composition="ending"].ending-editorial-screen .ending-player-visual {
+    bottom: -5vh;
+    height: min(76vh, 620px);
+  }
+}
+
 @media (max-height: 800px) {
   .battle-dialogue.vn-dialogue-shell {
     min-height: 104px;

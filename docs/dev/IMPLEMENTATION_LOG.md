@@ -2056,3 +2056,25 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - production/debug OFF actual Chrome에서 1920×1080·1366×768 click/voice/result/second-opportunity를 확인했다. scroll 0, console error/warning 0, Juno/dialogue·Juno/dock 및 critical face/staff/core 가림 0이다.
 - focused HQ-10은 11/11, full suite는 62 files·450 tests PASS다. check, production/QA build, diff-check도 PASS다.
 - HQ-10은 자동 승인하지 않고 `HUMAN_RECHECK`를 유지한다.
+
+## HQ-11 Ending Final Presentation Closure
+
+- 작업일: 2026-08-24 KST
+- 브랜치·시작 HEAD: `codex/hq11-ending-final-presentation` · `4cd0fa666c924b7d1197f64ec3995a8a77fb3eec`
+- 사용자 최종 승인에 따라 HQ-10은 `PASS / FREEZE`로 기록했다. 이 작업은 Battle source·CSS·composition·tests를 변경하지 않는다.
+
+### TDD·구현
+
+- RED에서 canonical ending 분리, exact heading split, modal chrome 제거, high-specificity actor lane, ending copy/routing freeze 계약 부재를 확인했다.
+- GOOD/NORMAL/BAD/HIDDEN에만 `.ending-editorial-screen`과 `.ending-editorial`을 적용했다. `POST-CREDIT`은 기존 card path를 유지해 HQ-12 범위를 열지 않았다.
+- ending title은 기존 `TYPE — TITLE` copy를 바꾸지 않고 label/title span으로만 분리했다. center-left 35vw/660px editorial lane, borderless CTA, ending별 제한 accent를 사용한다.
+- Juno는 left-low, Doyun은 right lane에 두고 기존 generic ending preset보다 높은 selector specificity로 actor geometry를 고정했다. Story/FSM/save/ending logic·routing·binary asset은 변경하지 않았다.
+
+### actual Chrome·validation
+
+- production/debug OFF actual flow로 GOOD/NORMAL/BAD/HIDDEN을 모두 열었다. HIDDEN은 실제 five-condition route로 도달했다.
+- GOOD/HIDDEN은 1920×1080·1600×900·1366×768에서 title/Juno·title/Doyun·Juno/Doyun·BGM/title overlap 0, document scroll 0이다. NORMAL/BAD도 1920×1080에서 같은 geometry로 overlap·scroll 0이다.
+- HIDDEN title이 가장 긴 copy다. 1366×768에서 `396.1/145.9/478.1/162.9`, Juno `108.3/406.4/177.6/276.5`, Doyun `888.9/206.7/423.5/583.7`로 분리됐다.
+- Console error/warning은 0이고 production debug HUD는 0이다. CTA는 visible·enabled 상태를 확인했다.
+- focused HQ-11은 5/5, full suite는 63 files·455 tests PASS다. TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했고 기존 Transformers 516.22kB warning만 유지한다.
+- HQ-11은 자동 승인하지 않고 `HUMAN_RECHECK`를 유지한다. HQ-12 Post-credit는 `OPEN`이다.
