@@ -42,7 +42,7 @@ M1은 QJ-01~QJ-02, M2는 QJ-01~QJ-03, M3는 QJ-01~QJ-08을 통과해야 한다. 
 
 | ID | 조건/절차 | 기대 결과 |
 |---|---|---|
-| QTITLE-01 | 1920×1080, 1600×900, 1366×768에서 TITLE·Settings open 측정 | 가로/세로 scroll 0, `document.documentElement.scrollHeight <= viewport height`, title/menu/mic/BGM/modal 겹침·잘림 없음, NHN banner 핵심 영역 가림 최소 |
+| QTITLE-01 | 1920×1080, 1600×900, 1366×768에서 TITLE·Settings open 측정 | 가로/세로 scroll 0, `document.documentElement.scrollHeight <= viewport height`, title/menu/mic/BGM/modal 겹침·잘림 없음, OpenAI GAME BUILDERS SEOUL 핵심 배너 crop/occlusion 0 |
 | QTITLE-02 | 게임 시작·이어하기·설정에 mouse hover/exit, Tab focus, Enter/Space active | default는 투명·흰 글자·glow 없음. hover/focus만 soft pink·설명 표시, active scale 약 0.98, focus visible |
 | QTITLE-03 | save 없음 상태에서 이어하기 hover/focus/click/Enter/Space | button이 보이고 Tab 접근 가능, `aria-disabled="true"`, `아직 저장된 이야기가 없습니다.` 표시, 모든 activation에서 state 변화 없음 |
 | QTITLE-04 | save 있음/없음, voice/click save 조합 | save 있으면 정상 복구. voice save + mic not READY는 음성 설정/클릭 이어하기 선택, click은 복사 state로 node·history·affinity·flags·실패 총계를 보존하고 runtime inputMode만 변경. resume 직후 저장소 bytes는 불변 |
@@ -421,7 +421,7 @@ npm run build
 - [ ] 도윤은 오른쪽 확대·상반신 구도이며 주노와 대화 UI를 가리지 않는다.
 - [ ] 전달된 `gray_wraith.normal`은 실파일, 미전달 `gray_wraith.weakened`는 normal+CSS 파생으로 보인다. normal 로드 실패와 미전달 변신 컷은 검은 placeholder여도 대사·버튼·게이지가 보인다.
 - [ ] 전달된 BGM 5곡이 계약 장면에 연결되고, 로드 실패 시 폴백곡 또는 무음으로 진행을 막지 않는다.
-- [ ] TITLE baked NHN/HACKATHON 문구·로고는 임시 승인본으로 표시된다. 최종 승인·라이선스 완료로 기록하지 않는다.
+- [ ] TITLE은 사용자 제공 OpenAI 제출본을 표시하고 runtime/public-visible NHN/NH-IN/HACKATHON branding은 0이다. exact 생성 모델·작업 ID는 `UNKNOWN`, 사람 시각 승인 전 `HUMAN_RECHECK`다.
 
 ### 16.3 의도된 제한과 실패 보고
 
@@ -677,6 +677,21 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 ## 28. 2026-08-24 HQ-11 사용자 승인·freeze
 
 - 사용자가 final HEAD `099fe59be85f72a0619103ffe9545efd8d17ef44`의 GOOD/NORMAL/BAD/HIDDEN ending presentation을 최종 승인했다. HQ-11 상태는 `PASS / FREEZE`다.
+
+## 29. 2026-08-24 OpenAI 제출 TITLE rebrand 재검수
+
+- 사용자 제공 1672×941 PNG 원본을 source에 바이트 그대로 보존하고, runtime `bg_title.webp`만 1920×1080 WebP quality 88로 정규화했다. runtime은 265,998B·SHA-256 `A08A4407B721E9AB2E56CC9677A97C0D0DEDDAA5AEC79444FEDCC6FC0F0482A1`이며 과거 NHN runtime hash `A9837907...5FC9C`와 다르다.
+- 기존 TITLE DOM·CSS·optional mic·BGM·focus 계약은 변경하지 않았다. production/debug OFF actual Chrome에서 OpenAI GAME BUILDERS SEOUL 건물·메인 배너는 세 viewport 모두 완전 노출되고 title/menu/mic lane과 겹치지 않았다.
+
+| viewport | TITLE content rect | BGM rect | content/BGM overlap | scroll | background |
+|---|---|---|---:|---|---|
+| 1920×1080 | `103.7,79.9,650.0,920.2` | `1574.0,36.7,274.0,48.0` | 0 | `1920×1080` | complete·1920×1080·cover |
+| 1600×900 | `86.4,66.6,624.0,766.8` | `1262.0,30.6,274.0,48.0` | 0 | `1600×900` | complete·1920×1080·cover |
+| 1366×768 | `73.8,56.8,532.7,654.3` | `1037.4,26.1,274.0,48.0` | 0 | `1366×768` | complete·1920×1080·cover |
+
+- Tab focus는 세 viewport에서 `게임 시작`의 기존 visible focus 상태로 확인했다. console error/warning, broken background, crop, horizontal/vertical scroll은 0이다. HTTP asset probe는 200 `image/webp`·265,998B다.
+- focused TITLE/asset suite 32/32, full suite 64 files·463 tests, `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했다. 기존 Transformers 516.22kB warning만 유지한다.
+- screenshot은 repo 밖 `qa-evidence/openai-title-rebrand/`에 저장했다. OpenAI TITLE은 사용자 최종 화면 승인 전 `HUMAN_RECHECK`다. HQ-10·HQ-11은 `PASS / FREEZE`, HQ-12는 `OPEN`이며 시작하지 않았다.
 - freeze 범위는 fixed Result Frame 외부 geometry, header/title independent anchors, 공통 result title scale, detached CTA geometry, Juno/Doyun actor composition이다.
 - HQ-10 Battle도 기존 `PASS / FREEZE`를 유지한다. release-blocking regression 증거 없이는 두 영역의 visual presentation을 다시 수정하지 않는다.
 - HQ-12 Post-credit는 별도 `OPEN`이며 이 승인으로 자동 완료되지 않는다.

@@ -46,7 +46,7 @@ const doyun = (state: string): DevSceneVisual => ({
 const M5_SCENE_PREVIEW_DRAFTS = [
   {
     id: "title",
-    label: "TITLE · 임시 승인본",
+    label: "TITLE · OpenAI 제출본",
     backgroundId: "bg_title",
     nodeId: "title",
     beat: "타이틀",

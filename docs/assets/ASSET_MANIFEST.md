@@ -43,7 +43,7 @@
 | `cut.monitor_direct_wish_prompt` | `cut_monitor_direct_wish_prompt.webp` | 초반 full-stage prompt 컷 | 1920×1080 WebP | 700KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow/WebP 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N0 final prompt·N1 voice opening, DEC-077 | 원본 보존·비율 crop. 119,738B·SHA-256 `E99CC6F3719E8063CEB873ADD0559EDC9E27063D7E36321365B17E2CDD616AF2`. baked visible 문구는 이 asset에만 사용자 승인; 중복 visible DOM 0·동등 hidden semantic 유지 |
 | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | GOOD 후속 컷 | 1920×1080 WebP | 700KB | 컷 가능 | planned | 미정 | 미확인 | GOOD 후속 훅·HIDDEN 재사용, DEC-032 | 얼굴·이름 비노출 검수 대기 |
 | `juno.climax` | `char_juno_climax.png` | 추가 포즈 | 1200×2000 PNG 투명 | 800KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
-| `bg_title` | `bg_title.webp` | 타이틀 배경 | 1920×1080 WebP | 500KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보; branding은 제출 맥락 risk accepted | title presentation | 210,992B. baked NHN/HACKATHON 표시는 사용자 제출-context 위험 수용. 상표 허가·license approved 아님; 일반 공개·개인 상업판은 clean 교체 또는 별도 허가 필요 |
+| `bg_title` | `bg_title.webp` | 타이틀 배경 | 1920×1080 WebP | 500KB | 필수 | ready | 사용자 직접 제공·정확한 생성 서비스/모델/작업 ID `UNKNOWN`; Codex는 Sharp 기계 정규화만 수행 | 사용자 제공 제출 자산·OpenAI 대회 제출 사용 승인; 별도 상표 허가·법률 승인 기록 아님 | title presentation | 265,998B·SHA-256 `A08A4407B721E9AB2E56CC9677A97C0D0DEDDAA5AEC79444FEDCC6FC0F0482A1`. source PNG 1672×941 원본 바이트 보존 후 Lanczos3 cover·WebP quality 88로 1920×1080 정규화. 과거 NHN runtime hash `A9837907...5FC9C`는 superseded·runtime 미참조. OpenAI TITLE `HUMAN_RECHECK` |
 | `bg_office_wide` | `bg_office_wide.webp` | 메인 사무실 전경 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | OpenAI base USER ATTESTED + Codex 이미지 편집·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 도입 beat | 131,376B·SHA-256 `F404F46A15FBA0F6B884E6777D0B1858DD2B0C100E452E3DFB7152104E39AE5D`. 심사 핵심 팀이 남아 있는 심야 야근. 2026-08-13 사용자 시각 채택; 전체 continuity QA 대기 |
 | `bg_hall_day` | `bg_hall_day.webp` | 도윤 책상 1인칭 기본 | 1920×1080 WebP | 500KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 심사, N2 | 176,244B. `BG-02` 4:3 원본 중앙 16:9 crop, 모니터·키보드·사원증 보존 및 runtime 전환 QA PASS |
 | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | 시간정지 책상 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | N1 | 130,218B. 자동 규격·runtime 전환 QA PASS |
@@ -95,12 +95,13 @@
 - ZIP 무결성: CRC 오류 0. 실제 배경 PNG 16장 + `manifest.txt` 1개. 인계 문서의 과거 17종 대비 미상 1장 누락은 현재 매핑에서 제외한다.
 - 원본 자동 규격: `BG-02`는 1448×1086, 나머지 15장은 1672×941 PNG·개별 약 1.7~2.5MB다. DEC-037에 따라 채택 복사본 16개를 `1920×1080 WebP`, quality 84, 개별 76,672~316,250B로 변환했다. 총 2,666,866B.
 - 사람 시각 QA: 16장 모두 사람·캐릭터 없음. `BG-02A~E`는 같은 정면 책상 계열, `BG-04~04B`는 같은 사무실 와이드 계열. `BG-02`는 4:3 상단 시점이라 변형군과 hard cut 전환만 허용한다.
-- 내용 QA: `TITLE`의 대형 NHN/HACKATHON 표시는 2026-08-16 사용자가 NHN 해커톤 제출 맥락에 한정해 위험을 수용했다. 이는 상표 허가·license approved가 아니며 일반 공개·개인 상업판은 clean 교체 또는 별도 허가가 필요하다.
+- 내용 QA: 2026-08-24 현재 runtime `TITLE`은 사용자 제공 OpenAI 대회 제출본으로 교체되어 public-visible NHN/NH-IN/HACKATHON 표시는 0이다. 과거 NHN 표시는 역사적 source bundle에만 보존하며 당시 제출-context 위험 수용은 상표 허가·license approved가 아니었다.
 - 증빙: 팀이 Codex/ChatGPT OpenAI 서비스와 생성 당시 유료 Pro 이상 계정으로 직접 생성했다는 사용자 확인은 기록했다. 정확한 모델·프롬프트/작업 ID·생성일과 최초 input/reference 계보는 미확인이다. 사람 QA와 남은 권리 확인 전 모든 배경은 `approved` 승격 금지.
 
 | 납품 원본 | 논리 ID | runtime 계약 파일 | 확정 장면 | 상태·폴백 |
 |---|---|---|---|---|
-| `title__bg00_nhn_hq_hackathon_2026_afternoon.png` | `bg_title` | `bg_title.webp` | 타이틀 | DEC-037 임시 승인·ready·2026-08-16 제출-context 위험 수용. 상표 허가 아님; 범용 공개판 clean 교체/별도 허가 검토 |
+| `openai-submission-2026-08-24/original/bg_title_openai_submission.png` | `bg_title` | `bg_title.webp` | 현재 OpenAI 제출 타이틀 | 사용자 직접 제공 원본·SHA-256 `0048CBD12479BB458970DCB8D94EBD97422F95887C441D7D5E421522966772A8`; exact 생성 모델·작업 ID `UNKNOWN`; Sharp 기계 정규화만 수행 |
+| `title__bg00_nhn_hq_hackathon_2026_afternoon.png` | historical `bg_title` | 현재 runtime 미사용 | 과거 NHN 제출 타이틀 | DEC-037·2026-08-16 제출-context 위험 수용 이력 보존. 2026-08-24 OpenAI 제출본으로 superseded; source archive에서 삭제하지 않음 |
 | `BG-01_메인_사무실_전경.png` | `bg_office_wide` | `bg_office_wide.webp` | N0 도입 | 2026-08-03 납품 원본은 2026-08-13 야간 재편집본으로 superseded; 실패 시 `bg_hall_day` |
 | `BG-02_도윤_책상_1인칭.png` | `bg_hall_day` | `bg_hall_day.webp` | N0 심사, N2 | 16:9 crop QA 필수 |
 | `BG-02A_시간정지.png` | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | N1 | 실패 시 `bg_hall_day` + CSS |
@@ -208,4 +209,4 @@
 | `fonts/pretendard/Pretendard-Regular.woff2` | TITLE 일반 UI | 공식 v1.3.9 static WOFF2 400·765,892B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
 | `fonts/pretendard/Pretendard-SemiBold.woff2` | TITLE 강조 UI | 공식 v1.3.9 static WOFF2 600·785,856B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
 
-CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 현재 runtime은 초반 장면 4종, `doyun.magical_pose` head-only EDIT, `doyun.employee_id_surprised` alpha cleanup, HQ-05 공개 얼굴 4종 채택 후 `15,263,089B`(14.56MiB)로 30MiB 상한 이하다.
+CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 현재 runtime은 초반 장면 4종, `doyun.magical_pose` head-only EDIT, `doyun.employee_id_surprised` alpha cleanup, HQ-05 공개 얼굴 4종과 OpenAI 제출 `bg_title` 채택 후 `15,318,095B`(14.61MiB)로 30MiB 상한 이하다.

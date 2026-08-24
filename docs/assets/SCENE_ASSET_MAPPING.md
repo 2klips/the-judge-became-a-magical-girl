@@ -36,7 +36,7 @@
 
 | 우선순위 | 논리 ID | 정확한 파일명 | 제작 내용 | 장면 |
 |---|---|---|---|---|
-| `[확정·M5 필수]` | `bg_title` | `bg_title.webp` | NHN 사옥 외경 타이틀 베이스. 작품명·시작 버튼은 DOM/CSS. baked NHN/HACKATHON 표시는 `[DEC-037 임시 승인·2026-08-16 ACCEPTED SUBMISSION RISK]`; 상표 허가·license approved 아님. 일반 공개·개인 상업판은 clean 교체 또는 별도 허가 필요 | 타이틀 |
+| `[확정·OpenAI 제출·HUMAN_RECHECK]` | `bg_title` | `bg_title.webp` | 사용자 제공 OpenAI GAME BUILDERS SEOUL 외경 타이틀 베이스. 작품명·시작 버튼은 DOM/CSS. 과거 baked NHN/NH-IN/HACKATHON runtime은 2026-08-24 superseded되어 public-visible 참조 0 | 타이틀 |
 | `[확정·M5 폴백 가능]` | `bg_office_wide` | `bg_office_wide.webp` | 늦은 밤, 심사 핵심 팀이 야근하는 메인 사무실 전경. 창밖·조명은 심야 자체 표현 | N0 도입 establishing |
 | `[확정·M5 필수]` | `bg_hall_day` | `bg_hall_day.webp` | **이름은 호환용 레거시 ID다. 실제 내용은 도윤 책상 1인칭 기본 배경.** 모니터·키보드·사원증이 보이는 구도 | N0 심사, N2 주노 등장·대화 |
 | `[확정·M5 폴백 가능]` | `bg_hall_time_stop` | `bg_hall_time_stop.webp` | 정면 책상 구도에 푸른 정지광과 빛나는 사원증. 없으면 `bg_hall_day` + CSS 정지 효과 | N1 첫 목소리 |
@@ -133,7 +133,7 @@
 
 | 순서·런타임 | 장면 | 배경 | 화면 인물 | 음악 | 추가 연출·개발 주의 |
 |---|---|---|---|---|---|
-| 타이틀 | 작품 소개·새 게임·이어하기·설정 | `bg_title` | 없음 | 최초 사용자 gesture 뒤 `bgm_daily` | 왼쪽 CSS gradient 위 local MaruBuri 제목·Pretendard 메뉴, 오른쪽 NHN/HACKATHON 핵심 영역 보존. 마이크는 선택형 9-state FSM이고 click 시작은 항상 가능하다. baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용 상태이며 공식 상표 허가가 아니다 |
+| 타이틀 | 작품 소개·새 게임·이어하기·설정 | `bg_title` | 없음 | 최초 사용자 gesture 뒤 `bgm_daily` | 왼쪽 CSS gradient 위 local MaruBuri 제목·Pretendard 메뉴, 오른쪽 OpenAI GAME BUILDERS SEOUL 핵심 영역 보존. 마이크는 선택형 9-state FSM이고 click 시작은 항상 가능하다. logical ID·TITLE UX는 유지하고 배경만 OpenAI 제출본으로 교체했다 |
 | N0 `n0_review` | 늦은 밤 반복되는 심사 | 도입 `bg_office_wide` → 책상 `bg_hall_day` → final `cut.monitor_direct_wish_prompt` | 심사 핵심 팀 동료는 멀리 작고 익명적인 실루엣. 첫 두 대사는 도윤 미표시. line 2~4 `doyun.normal_tired`; final prompt는 full-stage CUT | `bgm_daily` | 실제 초현상 전에는 startled를 쓰지 않는다. final baked prompt와 같은 visible DOM 문구는 렌더하지 않고 hidden semantic만 유지 |
 | N1 `n1_first_voice` | 모니터 속 첫 목소리 | `cut.monitor_direct_wish_prompt` 연속 사용 | 의심·집중의 `doyun.normal_suspicious`. `want_rest`는 tired, `seek_new_fun`은 smile. **주노 live 미노출** | 계속 `bgm_daily` | PTT/click은 live DOM. 응답 뒤 `cut.juno_monitor_emerge` full-stage 1,000ms; baked Juno와 live actor 동시 표시 금지 |
 | N2 `n2_juno_intro` | 모니터 emergence 뒤 주노 live 등장 | `cut.juno_monitor_emerge` → `bg_hall_day` | CUT 동안 actor 0, 이후 도윤 `normal_startled` + 주노 `surprised → happy`; 후속 identity/chosen에는 도윤 `normal_suspicious` | 계속 `bgm_daily` | soft fade 뒤 기존 live scene 진입. 자유 대화 결과 표정 사용 |
@@ -292,7 +292,7 @@
 | AR-09 | `PASS 후보·비차단` | 사용자는 backgrounds·Doyoon·Juno·gray wraith·transform cuts·continuity edits가 text prompt 또는 team/project-owned internally generated asset만 사용했고 외부 제3자 이미지가 없었음을 확인했다. BGM·source SFX 생성 당시 Suno Pro도 확인했다 | upstream reference blocker는 해소. exact 모델·작업 ID 부재는 provenance quality gap이며, 이 사용자 확인은 법률 자문·제3자 허가 확인이 아님 | `USER ATTESTED / INTERNAL PROJECT LINEAGE` 유지. 사람 품질 QA는 AR-01/02에서 별도 수행 |
 | AR-10 | `OPEN·실측 대기` | 현재 `assets/runtime/` 총합은 30MB 이하이나 public Pages controlled cold-load 첫 화면 3초를 아직 측정하지 않음 | 실제 공개망·목표 Chrome에서 초기 로딩 목표 초과 가능 | [QA_AND_DEMO.md §15.8](../dev/QA_AND_DEMO.md)의 5회 cold-run 절차로 실측 |
 | AR-11 | `임시 통합·교체 검토` | 도윤 세트의 OpenAI 직접 생성·당시 유료 Pro 이상과 internal project lineage는 `USER ATTESTED`; `char_doyun_magical.png`은 정면 포즈다 | 권리 blocker는 해소됐으나 전투 구도와 장면 continuity가 약할 수 있음 | 현 runtime 사용. AR-01/02 사람 QA에서 keep/edit/replace 판정 후 같은 계약 경로로 재검수 |
-| AR-12 | `ready·제출 위험 수용` | 배경 16개 runtime 규격·장면 로드 PASS. OpenAI 직접 생성·당시 유료 Pro 이상·internal project lineage는 `USER ATTESTED`. TITLE baked branding은 DEC-037 임시 승인과 2026-08-16 제출-context 위험 수용, `BG-02`는 4:3 원본에서 16:9 crop | image reference blocker는 해소됐지만 상표 허가·license approved가 아니다. 일반 공개·개인 상업판은 clean TITLE 또는 별도 허가 필요. N2→N3 camera hard cut은 유지 | 제출판 현 배경 유지. AR-01/02 continuity QA 수행; 범용 공개판은 clean TITLE/별도 허가 검토 |
+| AR-12 | `ready·OpenAI TITLE HUMAN_RECHECK` | 배경 16개 runtime 규격·장면 로드 PASS. 2026-08-24 사용자 제공 OpenAI 제출본을 `bg_title`로 채택했고 과거 NHN runtime은 superseded. 새 원본의 exact 생성 모델·작업 ID는 `UNKNOWN`; `BG-02`는 4:3 원본에서 16:9 crop | public-visible NHN branding은 0이나 새 TITLE의 3개 PC viewport 사람 시각 승인이 남음. 제출 자산 사용 승인은 별도 상표 허가·법률 승인 기록이 아님. N2→N3 camera hard cut은 유지 | OpenAI 제출 TITLE 3개 viewport HUMAN_RECHECK 후 freeze. 역사적 NHN 원본·결정은 source/provenance에만 보존 |
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
 | AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
 | AR-15 | `PASS·일부 수동 QA PENDING` | DEC-071 optional TITLE microphone FSM과 DEC-073 PTT 내부 live meter를 구현했다. 9-state fake microphone·one-stream·3 viewport no-scroll 자동 QA, CORSAIR·QHD Webcam TITLE QA, CORSAIR gameplay live fill QA는 PASS다. battle 적응형 dBFS 판정은 유지 | 자동 검증 밖의 권한·장치·API 상태, keyboard hold, 극단 음량, 강제 화면 교체에서 회귀 가능 | DENIED/NO_DEVICE/UNSUPPORTED/ERROR, OS reduced-motion, focused Space/Enter PTT, physical loud, 강제 scene replacement, 실제 getUserMedia 횟수 계측은 manual PENDING으로 유지 |
@@ -300,7 +300,7 @@
 
 ### 다음 단계 순서
 
-1. 제작자/사용자: 아래 AR-01/AR-02 closure plan으로 main menu 외 본편 장면을 전수 검수하고 각 대상을 `keep/edit/replace/add`로 판정한다. clean TITLE은 일반 공개·개인 상업판 또는 제출-context 위험 수용 변경 시 교체 후보로 유지한다.
+1. 제작자/사용자: 아래 AR-01/AR-02 closure plan으로 main menu 외 본편 장면을 전수 검수하고 각 대상을 `keep/edit/replace/add`로 판정한다. OpenAI 제출 TITLE은 3개 PC viewport 사람 시각 QA 전 `HUMAN_RECHECK`로 유지한다.
 2. 제작자/사용자: 2026-08-11 채택한 망령 `weakened`와 변신 컷 2장의 장면 합성·화풍을 확인한다. BGM은 생성 당시 Suno Pro `USER ATTESTED`를 유지하되 사람 청각 QA를 보완하고, source SFX runtime 통합은 선택 후속으로 둔다.
 3. 개발자: AR-04~AR-07 자동 회귀와 검은 presentation·무음 수동 검증을 유지한다. `SFX_HANDOFF.md`의 선택 5종은 optional runtime 후속으로 승인된 경우에만 통합하고 중복·PTT 격리·로드 실패 QA를 수행한다.
 4. 통합 담당: 자동 규격 통과 파일만 `assets/runtime/`에 배치하고 catalog·scene/phase 매핑을 이 문서와 대조한다.

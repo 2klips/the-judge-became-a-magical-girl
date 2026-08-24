@@ -6,7 +6,8 @@
 
 | 묶음 | 보관 위치 | Git 업로드 근거 | 제작 도구·모델 | 라이선스·공개 사용 | 상태 |
 |---|---|---|---|---|---|
-| 배경 원본 16장 | `assets/source/background/심사역은_마법소녀가_되었다_최종확정_배경세트.zip` | commit `c2e3e1a`, 2026-08-03, 업로드자 `lj33126` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | text prompt 또는 team/project-owned internal asset만 사용, 외부 제3자 이미지 없음 — `USER ATTESTED`. TITLE branding은 NHN 제출 맥락 위험 수용 | 규격·장면 QA `ready`, 권리 계보 PASS 후보·사람 장면 QA 대기 |
+| 배경 원본 16장 | `assets/source/background/심사역은_마법소녀가_되었다_최종확정_배경세트.zip` | commit `c2e3e1a`, 2026-08-03, 업로드자 `lj33126` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | text prompt 또는 team/project-owned internal asset만 사용, 외부 제3자 이미지 없음 — `USER ATTESTED`. 과거 TITLE의 NHN 제출 맥락 위험 수용 이력은 역사 기록으로 보존 | 현재 runtime 배경 15장과 역사적 NHN TITLE source. 과거 TITLE runtime은 2026-08-24 superseded |
+| 2026-08-24 OpenAI 제출 TITLE | `assets/source/background/openai-submission-2026-08-24/original/bg_title_openai_submission.png` → `assets/runtime/bg/bg_title.webp` | 사용자 직접 제공; Git commit은 본 작업 완료 후 기록 | exact 생성 서비스·모델·작업 ID `UNKNOWN`. Codex는 Sharp Lanczos3 resize/crop·WebP 압축만 수행 | 사용자 제공 OpenAI 대회 제출 자산. 별도 상표 허가·법률 승인 기록은 아님 | 원본 바이트 보존·runtime 규격 `ready`; 3개 PC viewport `HUMAN_RECHECK` |
 | 도윤 외부 원본 6장 | `assets/source/doyun/doyoon-hero-sprites.zip` | commit `af26039`, 2026-08-03, 업로드자 `2klips` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | text prompt 또는 team/project-owned internal asset만 사용, 외부 제3자 이미지 없음 — `USER ATTESTED` | 원본 추적용 |
 | 도윤 정규화 납품 23장 | `assets/source/doyun/delivery/` | commit `4adb4db`, 2026-08-02, 업로드자 `Rpuplesun` | 팀이 Codex/ChatGPT OpenAI 서비스로 직접 생성, 당시 유료 Pro 이상 — 2026-08-16 사용자 확인. 정확한 모델·버전·작업 ID는 미확인 | internal project lineage·외부 제3자 이미지 없음 — `USER ATTESTED` | 자동 규격 `ready`, 권리 계보 PASS 후보·사람 장면 QA 대기 |
 | 주노 납품 5장 | `assets/source/juno/delivery/` → `assets/runtime/char/` 채택본 | commit `6076466`, 2026-08-04, 업로드자 `Rpuplesun` | Codex 내장 OpenAI 이미지 생성 도구. 모델명·버전 미노출 | 최초 첨부 reference도 team/project-owned internally generated asset, 외부 제3자 이미지 없음 — `USER ATTESTED` | 자동 규격·runtime 합성 `ready`, 권리 계보 PASS 후보·variation/사람 장면 QA 대기 |
@@ -15,6 +16,15 @@
 | 2026-08-13 야근 연속성 재편집 7종 | 배경 source `assets/source/background/delivery/`, 컷 source `assets/source/p0-required-images/delivery/` → runtime 동일 바이트 | commit `92ef1e267aeb547dfba6033c35433f5c08b14ef5`, 2026-08-13, Codex | Codex 내장 OpenAI `image_gen` 편집(정확한 모델·버전·작업 ID 미노출), FFmpeg Lanczos | direct/base 모두 internal project lineage, 외부 제3자 이미지 없음 — `USER ATTESTED` | 7종 사용자 시각 채택·자동 규격·동일 바이트 `ready`; 권리 계보 PASS 후보·전체 continuity QA 대기 |
 | 2026-08-22 초반 장면 승인 4종 | `assets/source/early-scene-2026-08-22/originals/` → `delivery/` → `assets/runtime/{char,cut}/` | 사용자 직접 제공·2/3/4/5 사용 승인. commit은 본 작업 완료 후 기록 | 사용자가 생성한 PNG를 직접 제공; exact 생성 서비스·모델·작업 ID 미확인. Codex는 Pillow로 분리 punctuation 제거·비율 유지 canvas/WebP 정규화만 수행 | 신규 납품본의 exact reference/input 증빙 미확인. 기존 2026-08-16 attestation을 자동 확대하지 않으며 법률 자문·제3자 허가 확인이 아님 | 4종 원본 보존·자동 규격 `ready`; runtime 사람 장면 QA 대기. IMAGE 1은 미수입 `P2 OPTIONAL` |
 | BGM 최종 편집본 5곡 | `assets/source/bgm/delivery/` → `assets/runtime/bgm/` 동일 바이트 채택 | commit `bf44289` 인계 병합, 2026-08-06, Git 작성자 `lj33126` | Suno + FFmpeg 8.1.1. 생성 당시와 현재 모두 Suno Pro — 2026-08-16 사용자 확인; 정확한 모델·곡 ID는 미확인 | Suno Pro 생성물 권리 근거 `USER ATTESTED`; 사람 청각 QA 별도 | 자동 규격·동일 바이트 `ready`, 권리 PASS 후보·사람 청각 승인 대기 |
+
+## 2026-08-24 OpenAI 제출용 TITLE 교체
+
+- 사용자가 제공한 PNG를 다른 이미지로 생성·재구성하지 않고 `assets/source/background/openai-submission-2026-08-24/original/`에 바이트 그대로 보존했다.
+- source: 1672×941 RGB PNG, 2,691,073B, SHA-256 `0048CBD12479BB458970DCB8D94EBD97422F95887C441D7D5E421522966772A8`.
+- runtime: 1920×1080 RGB WebP, 265,998B, SHA-256 `A08A4407B721E9AB2E56CC9677A97C0D0DEDDAA5AEC79444FEDCC6FC0F0482A1`.
+- normalization: Sharp Lanczos3, `fit: cover`, center anchor, WebP quality 88·effort 6·smart subsample. 원본 비율 차이는 약 0.05%이며 핵심 OpenAI/event 건물·배너를 자르지 않는 중앙 정규화만 수행했다.
+- 과거 NHN runtime `bg_title.webp` SHA-256 `A9837907F87AFB7323DD3A3B6C85E3BC6B76F93FDEBDF50D2A163E59EB35FC9C`는 현재 runtime에서 superseded했다. 역사적 원본·제출-context 결정은 source bundle과 문서에 유지한다.
+- exact 생성 모델·버전·작업 ID와 upstream input/reference는 `UNKNOWN`이다. 이 기록은 사용자 제공 및 기계 정규화 사실이며 상표 허가·법률 승인 기록이 아니다.
 
 ## 2026-08-22 초반 장면 사용자 승인 납품 4종
 
@@ -46,7 +56,7 @@
 | 2026-08-13 연속성 편집 7종 | 각 existing internal project source/채택본 한 개를 edit target으로 사용 | `USER ATTESTED / INTERNAL PROJECT LINEAGE` | direct/base 외부 제3자 이미지 없음 — 사용자 확인 | reference-rights PASS 후보; exact 모델·작업 ID는 provenance gap |
 
 - BGM 5곡과 source SFX 5종은 생성 당시와 현재 모두 Suno Pro였음을 사용자가 확인했다. 기록에서 타인 lyrics/audio/reference 사용 흔적은 발견되지 않았다. 정확한 곡 ID·모델이 없는 경우 `UNKNOWN`을 유지하지만 그 부재만으로 권리 blocker를 유지하지 않는다.
-- `bg_title.webp`의 baked NHN/HACKATHON 표시에 대해 사용자는 NHN 해커톤 제출 맥락에 한정해 위험을 명시적으로 수용했다. 이는 상표 허가 확인이나 라이선스 승인 기록이 아니다. 일반 공개·개인 상업판 재사용 시 clean TITLE 또는 별도 허가가 필요하다.
+- 과거 `bg_title.webp`의 baked NHN/HACKATHON 표시에 대한 2026-08-16 제출-context 위험 수용은 역사 기록으로 유지한다. 2026-08-24 현재 runtime은 사용자 제공 OpenAI 제출본으로 교체되어 과거 NHN binary를 참조하지 않는다.
 
 ## 배경 원본
 
@@ -54,8 +64,8 @@
 - 크기: `33,378,690 bytes`
 - 확인 구성: PNG 16장 + `manifest.txt` 1개, CRC 오류 0.
 - `BG-02`는 1448×1086, 나머지 15장은 1672×941.
-- runtime 변환: 16개 채택본을 1920×1080 WebP quality 84로 crop·resize·압축. 원본 식별자→계약명은 [ASSET_MANIFEST.md](ASSET_MANIFEST.md)에 기록한다.
-- `TITLE`에 baked된 NHN/HACKATHON 문구·로고는 2026-08-16 사용자가 NHN 해커톤 제출 맥락에 한정해 위험을 수용했다. 상표 허가 확인·라이선스 승인이 아니며 일반 공개·개인 상업판은 clean 교체 또는 별도 허가가 필요하다.
+- runtime 변환: 이 bundle의 현재 채택 배경 15개는 1920×1080 WebP quality 84로 crop·resize·압축했다. 원본 식별자→계약명은 [ASSET_MANIFEST.md](ASSET_MANIFEST.md)에 기록한다. TITLE은 위 2026-08-24 OpenAI 제출본의 별도 quality 88 계약을 따른다.
+- bundle의 `TITLE`에 baked된 NHN/HACKATHON 문구·로고는 당시 제출-context 위험 수용 이력과 함께 source archive에만 보존한다. 현재 runtime/public TITLE에서는 참조하지 않는다.
 - 과거 문서의 `미드저니 추정` 표기는 증빙이 아니므로 제거했다. 팀이 Codex/ChatGPT OpenAI 서비스와 당시 유료 Pro 이상 계정으로 직접 생성했고, text prompt 또는 team/project-owned internally generated asset만 input으로 사용했으며 외부 제3자 이미지는 없었다는 2026-08-16 사용자 확인을 적용한다. 정확한 모델·버전·프롬프트/작업 ID·생성일은 미확인이다.
 - 작업자 원문: [BACKGROUND_HANDOFF.md](provenance/BACKGROUND_HANDOFF.md).
 

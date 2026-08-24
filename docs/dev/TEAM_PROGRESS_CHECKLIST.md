@@ -19,13 +19,14 @@
 - [x] Scenario v3.1의 18-node runtime과 GOOD/NORMAL/BAD/HIDDEN 분기
 - [x] Realtime voice core, 7종 typed failure, 누적 5회 정책, PTT live meter
 - [x] 선택형 마이크·9-state FSM·Settings를 갖춘 PC TITLE
+- [ ] OpenAI 제출용 TITLE 배경 교체 — runtime 구현·자동 검증 완료 / `HUMAN_RECHECK`
 - [x] 공통 VN dialogue/choice UI foundation — HQ-02 사용자 `PASS`
 - [x] N0~N2 early-scene mini-sequence와 전용 도윤 반응 자산 통합
 - [x] 최신 `main`의 GitHub Pages 배포 — Actions run #33 `SUCCESS`
 - [ ] Wraith omen·변신 후 공개 얼굴 — 구현 완료 / `HUMAN_RECHECK`
 - [x] Battle/Ending 1차 safe-zone 보정 — responsive collision closure 완료
-- [ ] Battle command deck 전체 개선 — HQ-10 `OPEN`
-- [ ] Ending editorial layout — HQ-11 `OPEN`
+- [x] Battle command deck/presentation — HQ-10 사용자 `PASS / FREEZE`
+- [x] Ending result frame/editorial presentation — HQ-11 사용자 `PASS / FREEZE`
 - [ ] 검은 마법소녀 post-credit 실자산·character-first 구성 — HQ-12 `OPEN`
 - [ ] Juno 행동 포즈·final purification 등 잔여 visual production 판정
 - [ ] AR-01 사람 장면·청각 QA, AR-02 스타일 연속성 QA, AR-10 public cold-load 5회
@@ -176,17 +177,17 @@
   - 이유: 사건 강도와 캐릭터 감정 개방을 같은 시각 언어로 연결하기 위해서다.
   - 상태: **부분 완료** — mapping·5종 facial edit 구현, HQ-01·03·05·07 사용자 `HUMAN_RECHECK`.
 
-- [ ] **Battle presentation 개선**
+- [x] **Battle presentation 개선**
   - 기존 문제: HUD·BGM·대화·command UI가 경쟁하고 작은 viewport에서 겹쳤다.
   - 변경안: top safe lane, actor battle zones, compact command deck, dialogue/dock 16px+ gap.
   - 이유: 전투 정보 위계와 캐릭터 행동을 동시에 읽게 하기 위해서다.
-  - 상태: **부분 완료** — actor/HUD/safe-gap 구현; HQ-10 전체 command deck redesign은 `OPEN`.
+  - 상태: **완료** — actor/HUD/safe-gap과 command deck 정렬·voice/click/result presentation 사용자 `PASS / FREEZE`.
 
 - [ ] **Ending·Post-credit presentation 개선**
   - 기존 문제: Ending은 generic modal처럼 보이고 post-credit는 검은 마법소녀보다 UI가 주인공이었다.
   - 변경안: editorial ending layout과 black magical girl character-first composition.
   - 이유: 결말의 감정과 후속 훅을 서로 다른 시각적 정점으로 만들기 위해서다.
-  - 상태: **부분 완료** — GOOD safe-zone만 보정. HQ-11·HQ-12 `OPEN`.
+  - 상태: **부분 완료** — GOOD/NORMAL/BAD/HIDDEN 공통 result frame·actor safe-zone은 HQ-11 사용자 `PASS / FREEZE`; HQ-12 Post-credit만 `OPEN`.
 
 - [ ] **잔여 visual production**
   - 기존 문제: Juno는 표정 5종만 있어 행동 silhouette가 반복되고 정화·후속 훅의 핵심 cut이 없다.
@@ -406,15 +407,15 @@
 |---|---|---|---|
 | Story | v2, N0~N5·3-phase battle·GOOD/NORMAL/BAD | 승인된 v3.1 주제, 18 nodes, N6/N7/N8, 4 endings, canonical post-credit | runtime 완료·visual QA 진행 |
 | Voice | Realtime/PTT/Worker 기반, 실패 의미·복구가 분산 | 7 typed failures, 누적 5회, actual dialogue/incantation/battle QA | core 완료 |
-| TITLE | 중앙 mic calibration 중심, mic 성공이 진입 gate | PC 3 viewport, optional mic, 9-state FSM, Settings, BGM 20% | 완료·freeze |
+| TITLE | 중앙 mic calibration 중심, mic 성공이 진입 gate | PC 3 viewport, optional mic, 9-state FSM, Settings, BGM 20%, OpenAI 제출 배경 교체 | UX freeze·새 배경 HUMAN_RECHECK |
 | VN UI | 큰 rounded panel과 card형 선택 | 공통 navy VN shell, speaker accent, vertical choice, editorial CTA | HQ-02 PASS; HQ-13 재검수 |
 | Character acting | early startled/facepalm 반복, 변신 얼굴 불연속 | suspicious·ID reaction 전용 pose, facepalm remap, post-transform 공개 얼굴 | 구현·HUMAN_RECHECK |
 | Composition | scene별 좌표, actor overlap·방향 규칙 부재 | named preset, safe zone, inward-facing audit, CUT/SPRITE exclusivity | foundation 완료 |
-| Battle | 3-phase 기능 중심, HUD/actor/UI 충돌 가능 | actor lanes, HUD/BGM 분리, responsive dialogue/dock 16px+ | 기능·collision closure 완료; HQ-10 command deck/presentation redesign OPEN |
-| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | 4 endings, Juno safe-zone, GOOD/HIDDEN canonical stinger | 로직 완료; HQ-11/12 OPEN |
-| Assets | 핵심 자산 다수와 SSOT 골격 | runtime 48 files/14.56MiB, early cuts·poses·face edits·hash 검증 | 기술 ready; 사람 approved 대기 |
-| Rights | tool/plan/reference 상태가 일부 혼재 | USER ATTESTED/internal lineage/Suno Pro/NHN risk를 분리 기록 | AR-09 PASS 후보·비차단 |
-| Tests | 41 files / 187 tests 기록 | 61 files / 439 tests PASS | 확대 완료 |
+| Battle | 3-phase 기능 중심, HUD/actor/UI 충돌 가능 | actor lanes, HUD/BGM 분리, responsive dialogue/dock 16px+, 정돈된 command/result deck | HQ-10 PASS / FREEZE |
+| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | 4 endings, 공통 result frame·독립 header/title·detached CTA·Juno safe-zone | HQ-11 PASS / FREEZE; HQ-12 OPEN |
+| Assets | 핵심 자산 다수와 SSOT 골격 | runtime 48 files/14.61MiB, early cuts·poses·face edits·OpenAI 제출 TITLE·hash 검증 | 기술 ready; 사람 approved 대기 |
+| Rights | tool/plan/reference 상태가 일부 혼재 | USER ATTESTED/internal lineage/Suno Pro를 분리 기록하고 과거 NHN TITLE은 archive, 현재 OpenAI 제출본 provenance는 별도 기록 | AR-09 PASS 후보·새 TITLE exact 모델/work ID UNKNOWN |
+| Tests | 41 files / 187 tests 기록 | 64 files / 463 tests PASS | 확대 완료 |
 | CI | 로컬과 Ubuntu Python/Git history 차이 미검증 | Python deps, historical verifier, full checkout, build/deploy 자동화 | run #33 SUCCESS |
 | Public Pages | 이전에는 TITLE baseline `2a6d9e4` 제공 | 최신 `main` `df3a94d` 배포, HTTP 200 | 최신본 공개 |
 

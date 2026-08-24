@@ -67,6 +67,12 @@
 | 2026-08-23 | `doyun.employee_id_surprised` magenta fringe alpha cleanup | 생성형 도구 없음; Pillow deterministic alpha cleanup | 기존 사용자 납품 original은 보존하고 baseline `39f4370`의 정규화 delivery/runtime PNG만 비교 입력으로 사용 | 반투명 magenta fringe 1,923px의 alpha만 0으로 변경. 얼굴·머리 형태·표정·사원증·손·의상·포즈·RGB 재생성 없음 | artifact 밖 변경 0, artifact RGB 변경 0, cleanup 후 opaque/saturated magenta 0, source/runtime 동일 바이트·291,030B·SHA-256 `E92AD2...174E70`; 3개 PC viewport 실제 합성 재검수 대기 | `ready`; HQ-03 `HUMAN_RECHECK`, `approved` 아님 | 해당 없음 | `assets/source/early-scene-2026-08-22/tools/clean_magenta_artifact.py`, delivery/runtime PNG, [PROVENANCE](PROVENANCE.md) |
 | 2026-08-23 | HQ-05 변신 후 공개 얼굴 4종 masked edit | Codex 내장 OpenAI `image_gen` + Pillow deterministic masked palette composite | 각 target의 baseline `39f4370` 원본을 body/costume/pose/입 모양 authority로, 현재 `doyun.magical_pose`를 눈·얼굴 identity reference로 사용. 외부 reference 없음 | `doyun.magical` cautious/overwhelmed, `magical_defend` determined/strained, `magical_attack` focused, `magical_finish` forceful 공개 얼굴. 생성 후보 전체가 아니라 target별 polygon face mask 내부만 합성 | 4종 모두 mask 밖 raw pixel·alpha 변경 0, source/runtime 동일 바이트, 1200×2000 transparent·800KB 이하. 방어/공격/마무리 actual Chrome 합성 3개 PC viewport scroll·offscreen·actor overlap 0; 최종 사람 미술 재검수 대기 | `ready`; HQ-05 `HUMAN_RECHECK`, `approved` 아님 | 미측정 | `assets/source/doyun/face-continuity-2026-08-23/`, delivery/runtime PNG 4종, [PROVENANCE](PROVENANCE.md) |
 
+## 2026-08-24 OpenAI 제출 TITLE 교체
+
+| 날짜 | 작업 | 사용 AI 도구 | 입력 자료 | 생성 결과 | 사람이 한 검수 | 최종 사용 여부 | 사용 토큰 수 | 관련 파일 또는 커밋 |
+|---|---|---|---|---|---|---|---|---|
+| 2026-08-24 | OpenAI 대회 제출용 `bg_title` 교체 | 사용자 제공 이미지; Codex는 Sharp 기계 정규화만 수행 | 1672×941 PNG 1장, SHA-256 `0048CBD1...6772A8`. exact 생성 서비스·모델·작업 ID `UNKNOWN` | 원본 바이트 보존 + 1920×1080 WebP quality 88, 265,998B, SHA-256 `A08A4407...F0482A1`. 생성형 재편집 없음 | 사용자가 해당 이미지를 canonical replacement input으로 확정. 자동 hash·규격·NHN runtime 미참조 확인; 3개 PC viewport 실제 TITLE 사람 재검수 대기 | runtime `ready`; OpenAI TITLE `HUMAN_RECHECK`. 과거 NHN 원본·이력은 archive/provenance 보존 | 미측정 | `assets/source/background/openai-submission-2026-08-24/`, `assets/runtime/bg/bg_title.webp`, `tests/openaiTitleRebrand.test.ts` |
+
 ## 기록 규칙
 
 - 프롬프트 전문이 길면 별도 파일/도구 대화 ID를 참조하고 입력 자료 핵심만 적는다.

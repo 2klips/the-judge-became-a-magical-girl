@@ -2128,3 +2128,11 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - 사용자가 GOOD/NORMAL/BAD/HIDDEN ending presentation을 최종 승인해 HQ-11을 `PASS / FREEZE`로 닫았다.
 - fixed Result Frame geometry, header/title independent anchors, 공통 result title scale, detached CTA geometry, Juno/Doyun actor composition은 release-blocking regression 증거 없이는 변경하지 않는다.
 - HQ-10 Battle도 `PASS / FREEZE`를 유지한다. HQ-12 Post-credit는 별도 `OPEN`이며 시작하지 않았다.
+
+## OpenAI Submission TITLE Rebrand Closure
+
+- 작업일: 2026-08-24 KST. 사용자가 제공한 OpenAI GAME BUILDERS SEOUL 이미지를 canonical input으로 사용했고 생성형 재생성·재구성은 하지 않았다. source PNG 2,691,073B·SHA-256 `0048CBD12479BB458970DCB8D94EBD97422F95887C441D7D5E421522966772A8`를 그대로 보존했다.
+- runtime logical ID `bg_title`과 TITLE UX를 유지한 채 1920×1080 WebP quality 88·265,998B·SHA-256 `A08A4407B721E9AB2E56CC9677A97C0D0DEDDAA5AEC79444FEDCC6FC0F0482A1`로 교체했다. 과거 NHN runtime hash는 더 이상 runtime/build에서 참조되지 않으며 source/provenance 역사만 보존한다.
+- focused RED 3건은 source provenance 부재, 과거 NHN runtime hash 유지, preview 임시 표기였다. 원본 보존·runtime 정규화·preview label 갱신 뒤 focused TITLE/asset 32/32가 PASS했다. runtime-facing source와 build HTML/CSS/JS의 NHN/NH-IN/HACKATHON 문자열은 0이다.
+- 기존 왼쪽 gradient에서 1920×1080·1600×900·1366×768 actual Chrome을 확인해 추가 CSS 변경은 하지 않았다. 각 viewport에서 title/menu/mic/BGM 가독성, OpenAI 핵심 배너 노출, focus visible을 확인했고 overlap·crop·scroll·console error/warning은 0이다.
+- full suite 64 files·463 tests, TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했다. HQ-10·HQ-11 `PASS / FREEZE`는 보존했고 OpenAI TITLE만 `HUMAN_RECHECK`다. HQ-12·AR-10·main 통합·push/deploy는 시작하지 않았다.

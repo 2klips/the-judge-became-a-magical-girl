@@ -214,10 +214,25 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 장면별 독립 component처럼 보여 하나의 VN 제품 언어가 형성되지 않음 |
 | Desired Direction | 공통 navy-black base, 얇은 border, 작은 radius·padding, 제한된 speaker accent, 명확한 대사 > 서사 선택 > 입력 방식 위계 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `HUMAN_RECHECK` — core VN foundation은 사용자 승인·freeze, HQ-10 Battle은 `PASS / FREEZE`, HQ-11 Ending은 editorial system 구현 후 `HUMAN_RECHECK`. Post-credit scene-specific presentation이 남아 global 항목은 유지 |
-| Human Recheck | core dialogue와 Battle은 사용자 승인. Ending은 현재 사용자 재검수 대기이며 Post-credit는 HQ-12에서 별도 검수 |
+| Implementation Status | `HUMAN_RECHECK` — core VN foundation과 HQ-10 Battle·HQ-11 Ending은 사용자 `PASS / FREEZE`. Post-credit scene-specific presentation이 남아 global 항목은 유지 |
+| Human Recheck | core dialogue·Battle·Ending은 사용자 승인. Post-credit는 HQ-12에서 별도 검수 |
 | Final Status | `HUMAN_RECHECK` |
-| Related SSOT/TODO | HQ-02 core migration·HQ-10 Battle 완료. HQ-11은 `HUMAN_RECHECK`; HQ-06·HQ-12는 scene-specific `OPEN` 유지 |
+| Related SSOT/TODO | HQ-02 core migration·HQ-10 Battle·HQ-11 Ending 완료. HQ-06·HQ-12는 scene-specific `OPEN` 유지 |
+
+### HQ-14 — OpenAI submission TITLE rebrand
+
+| 필드 | 내용 |
+|---|---|
+| Scene/Beat | TITLE 첫 화면 |
+| Category | Branding / background asset replacement |
+| User Evidence | OpenAI 제출용 타이틀 이미지를 canonical replacement input으로 직접 제공하고 기존 NHN 제출 흔적 제거를 요청 |
+| Problem | 기존 `bg_title.webp`에 NHN/NH-IN/HACKATHON branding이 baked되어 OpenAI 제출 첫 화면에 노출됨 |
+| Desired Direction | 제공 원본 composition·branding을 유지한 1920×1080 WebP `bg_title`; 기존 Game Start/Continue/Settings·optional mic·BGM·keyboard 계약 유지; public-visible NHN branding 0 |
+| Priority | P0 SUBMISSION |
+| Implementation Status | `HUMAN_RECHECK` — source 원본 보존, runtime replacement·hash/규격·과거 NHN hash 미참조 자동 검증 구현 |
+| Human Recheck | 1920×1080·1600×900·1366×768에서 OpenAI 핵심 배너 crop/occlusion, 메뉴·mic·BGM 가독성, focus, scroll·console 확인 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | 과거 NHN 원본·DEC-037 이력은 source/provenance에만 유지. TITLE CSS·UX는 실제 화면 필요 시 최소 범위만 조정 |
 
 ## 3. Existing TODO 연결
 
