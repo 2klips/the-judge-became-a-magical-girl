@@ -2097,3 +2097,10 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - production/debug OFF actual flow로 네 ending을 1920×1080·1600×900·1366×768 모두 측정했다. 동일 viewport에서는 frame x/y/w/h·title font-size·CTA centerX가 완전히 동일하고 frame/actor·frame/BGM·CTA/actor overlap, crop, scroll, console error/warning은 0이다.
 - full suite는 63 files·459 tests PASS이며 TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS다. 기존 Transformers 516.22kB warning만 유지한다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-uniformity`에 보관한다. Story/FSM/save/ending logic·routing/BGM/binary asset, HQ-10 Battle, HQ-12 Post-credit는 변경하지 않았으며 HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
+
+## HQ-11 Result Frame Internal Balance Micro Closure
+
+- 작업일·시작 HEAD: 2026-08-24 KST · `101a08a5d1c00963cb0b4f6e852331f50779a0e1`.
+- 고정 result frame·공통 title scale·detached CTA·actor lane을 변경하지 않고 kicker/code/title을 하나의 중앙 content group으로 재구성했다. 비어 있는 62px support slot과 긴 divider는 숨겨 NORMAL/BAD의 미완성 form 인상을 제거했다.
+- production/debug OFF 실제 flow에서 네 ending × 세 viewport의 frame geometry와 CTA center axis가 직전 승인값과 동일함을 재확인했다. actor/BGM overlap, crop, scroll, console error/warning은 모두 0이며 HIDDEN visual copy는 균형 잡힌 두 줄을 유지한다.
+- focused HQ-11/HQ-10 21/21, full suite 63 files·460 tests, TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했다. screenshot·rect JSON은 repo 밖 `qa-evidence/hq11-ending-internal-balance`에 보관하며 HQ-11은 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.

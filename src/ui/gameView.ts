@@ -1526,7 +1526,12 @@ export class GameView {
           headingCopy.append(element("span", "ending-heading-line", copyLine));
         }
         title.append(headingCopy);
-        card.append(element("p", "eyebrow ending-kicker", "이야기의 결말"), title);
+        const resultContent = element("div", "ending-result-content");
+        resultContent.append(
+          element("p", "eyebrow ending-kicker", "이야기의 결말"),
+          title,
+        );
+        card.append(resultContent);
       } else {
         card.append(
           element("p", "eyebrow", "이야기의 결말"),

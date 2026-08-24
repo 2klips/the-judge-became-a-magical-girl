@@ -626,3 +626,18 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - HIDDEN의 visual span은 세 viewport 모두 `완벽한 호흡,` / `완벽한 사고` 두 줄이다. frame/Juno·frame/Doyun·frame/BGM·CTA/Juno·CTA/Doyun overlap, crop, console error/warning은 0이다.
 - focused HQ-11/HQ-10은 20/20, full suite는 63 files·459 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS이며 기존 Transformers 516.22kB warning만 유지한다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-uniformity`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
+
+## 25. 2026-08-24 HQ-11 result frame 내부 균형 재검수
+
+- starting HEAD `101a08a5d1c00963cb0b4f6e852331f50779a0e1`에서 외부 frame·CTA·actor geometry를 동결한 채 kicker·code·title을 `.ending-result-content` 한 그룹으로 묶어 frame 안에서 중앙 정렬했다.
+- 비어 있는 62px support slot은 visual flow에서 제거하고 전체 폭 divider를 삭제했다. supporting copy가 실제로 생기는 페이지는 별도 auto row를 사용하며 ending copy는 추가·수정하지 않았다.
+
+| viewport | 모든 ending 공통 frame `x/y/w/h` | title font-size | CTA `x/y/w/h` | CTA center offset | actor/BGM overlap | scroll |
+|---|---|---|---|---|---|---|
+| 1920×1080 | `556.8/172.8/672/360` | `56px` | `857.4/546.8/70.7/36` | `0` | `0` | `0` |
+| 1600×900 | `464/144/560/300` | `48px` | `708.6/458/70.7/36` | `0` | `0` | `0` |
+| 1366×768 | `396.1/122.9/480/270` | `40.98px` | `600.8/406.9/70.7/36` | `0` | `0` | `0` |
+
+- production/debug OFF에서 GOOD/NORMAL/BAD/HIDDEN 1920×1080과 GOOD/BAD/HIDDEN 1366×768 screenshot을 저장했다. NORMAL/BAD의 긴 빈 하단 영역과 form-like divider는 보이지 않으며 HIDDEN 두 줄은 유지된다.
+- console error/warning 0, crop·scroll 0이다. focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS이며 기존 Transformers 516.22kB warning만 유지한다.
+- screenshot과 rect JSON은 repo 밖 `qa-evidence/hq11-ending-internal-balance`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.

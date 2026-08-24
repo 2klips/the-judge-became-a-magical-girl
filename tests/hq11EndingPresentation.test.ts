@@ -55,11 +55,26 @@ describe("HQ-11 Ending final presentation", () => {
       /\.ending-editorial-screen \.ending-result-layout\s*\{[^}]*position:\s*absolute;[^}]*top:\s*clamp\([^}]*left:\s*clamp\([^}]*width:\s*clamp\(480px, 35vw, 680px\);[^}]*justify-items:\s*center;/s,
     );
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*width:\s*100%;[^}]*block-size:\s*clamp\(270px, 33\.333vh, 360px\);[^}]*grid-template-rows:\s*1px 18px minmax\(0, 1fr\) 62px;[^}]*text-align:\s*center;/s,
+      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*width:\s*100%;[^}]*block-size:\s*clamp\(270px, 33\.333vh, 360px\);[^}]*grid-template-rows:\s*1px minmax\(0, 1fr\);[^}]*text-align:\s*center;/s,
     );
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-support-slot\s*\{[^}]*min-height:\s*62px;[^}]*text-align:\s*center;/s,
+      /\.ending-editorial-screen \.ending-support-slot\s*\{[^}]*text-align:\s*center;/s,
     );
+  });
+
+  it("centers the core result content and removes the empty form-like support footprint", () => {
+    expect(renderEnding).toContain("ending-result-content");
+    expect(renderEnding).toContain("resultContent.append");
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-result-content\s*\{[^}]*align-self:\s*center;[^}]*display:\s*grid;[^}]*width:\s*100%;[^}]*text-align:\s*center;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-support-slot:empty\s*\{[^}]*display:\s*none;/s,
+    );
+    const supportRule =
+      vnStylesSource.match(/\.ending-editorial-screen \.ending-support-slot\s*\{[^}]*/s)?.[0] ?? "";
+    expect(supportRule).not.toContain("border-top");
+    expect(supportRule).not.toContain("min-height: 62px");
   });
 
   it("uses one title scale and detaches a centered CTA below the result frame", () => {
