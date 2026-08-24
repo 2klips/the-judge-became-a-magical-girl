@@ -24,6 +24,7 @@ describe("HQ-11 Ending final presentation", () => {
     expect(gameViewSource).toContain("isEditorialEndingId");
     expect(renderEnding).toContain("ending-editorial-screen");
     expect(renderEnding).toContain("ending-editorial");
+    expect(renderEnding).toContain("ending-result-plate");
     expect(renderEnding).toMatch(/isEditorialEndingId\(node\.endingId\)/);
     expect(renderEnding).toMatch(/node\.endingId === "post_credit"/);
   });
@@ -35,13 +36,40 @@ describe("HQ-11 Ending final presentation", () => {
     expect(renderEnding).toContain("ending-kicker");
   });
 
-  it("removes the giant modal chrome and reserves a center-left editorial lane", () => {
+  it("frames the editorial result with a compact translucent plate, not a giant modal", () => {
+    const resultPlateRule =
+      vnStylesSource.match(/\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*/s)?.[0] ?? "";
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-editorial\s*\{[^}]*position:\s*absolute;[^}]*left:\s*clamp\([^}]*width:\s*min\([^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*box-shadow:\s*none;[^}]*backdrop-filter:\s*none;/s,
+      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*position:\s*absolute;[^}]*left:\s*clamp\([^}]*width:\s*clamp\(480px, 35vw, 680px\);[^}]*padding:\s*26px 30px 24px;[^}]*border:\s*1px solid var\(--ending-plate-border\);[^}]*border-radius:\s*var\(--vn-radius-md\);[^}]*background:\s*var\(--ending-plate-bg\);[^}]*box-shadow:\s*none;[^}]*backdrop-filter:\s*blur\(6px\);/s,
     );
-    expect(vnStylesSource).toContain("width: min(35vw, 660px);");
+    expect(resultPlateRule).not.toContain("background: var(--vn-surface);");
     expect(vnStylesSource).toMatch(
       /\.ending-editorial-screen \.ending-advance\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*box-shadow:\s*none;/s,
+    );
+  });
+
+  it("uses restrained plate tones for all four canonical endings", () => {
+    for (const endingId of ["good", "normal", "bad", "hidden"]) {
+      expect(vnStylesSource).toMatch(
+        new RegExp(
+          `\\.ending-editorial-screen\\.ending-tone-${endingId}\\s*\\{[^}]*--ending-plate-bg:\\s*rgba\\(`,
+          "s",
+        ),
+      );
+    }
+  });
+
+  it("balances the HIDDEN heading into two visual lines without changing its copy", () => {
+    expect(gameViewSource).toContain("resolveEditorialEndingCopyLines");
+    expect(gameViewSource).toContain('"완벽한 호흡,"');
+    expect(gameViewSource).toContain('"완벽한 사고"');
+    expect(renderEnding).toContain("ending-heading-copy-hidden");
+    expect(renderEnding).toContain("ending-heading-line");
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-heading-copy-hidden\s*\{[^}]*display:\s*grid;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-heading-line\s*\{[^}]*display:\s*block;/s,
     );
   });
 

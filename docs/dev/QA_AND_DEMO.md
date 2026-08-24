@@ -591,3 +591,22 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - Chrome console error/warning은 0이다. screenshot은 repo 밖 local QA evidence `qa-evidence/hq11-ending`에 저장했다.
 - focused HQ-11은 5/5, full suite는 63 files·455 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS이며 기존 Transformers 516.22kB warning만 유지한다.
 - HQ-11은 구현 완료 후 `HUMAN_RECHECK`다. 사용자 screenshot 승인 전 `PASS / FREEZE`로 올리지 않는다. HQ-12 Post-credit는 `OPEN`이다.
+
+## 23. 2026-08-24 HQ-11 subtle result plate 후속 재검수
+
+- starting HEAD `99aa2d7df919b82e11e0fd9fb2b2a631f9ddafa9`에서 giant modal을 복원하지 않고 GOOD/NORMAL/BAD/HIDDEN 공통 compact result plate를 추가했다. surface는 ending별 36–46% navy-black, 6px backdrop blur, 1px 제한 accent border, 8px radius, shadow 없음이다.
+- HIDDEN 원문 `HIDDEN — 완벽한 호흡, 완벽한 사고`와 aria-label은 그대로 유지하고 visual copy span만 `완벽한 호흡,` / `완벽한 사고`로 나눴다. 1366×768에서 각 span은 visual line 1개(`231.1×50`, `219.2×50`)이며 orphan 단어가 없다.
+
+| viewport | ending | plate `x/y/w/h` | title `x/y/w/h` | Juno `x/y/w/h` | Doyun `x/y/w/h` | overlap / crop / scroll |
+|---|---|---|---|---|---|---|
+| 1920×1080 | GOOD | `556.8/172.8/672/364.9` | `587.8/248/610/167.4` | `136/546/230/410` | `1270.8/288.8/590/840` | `0 / 0 / 0` |
+| 1600×900 | GOOD | `464/144/560/359.6` | `495/214.2/498/143.2` | `120/452/208/342` | `1048/236/496/702` | `0 / 0 / 0` |
+| 1366×768 | GOOD | `396.1/122.9/480/244.6` | `423.1/179.9/426/66.9` | `108.3/406.4/177.6/276.5` | `888.9/206.7/423.5/583.7` | `0 / 0 / 0` |
+| 1920×1080 | NORMAL | `556.8/172.8/672/248.2` | `587.8/248/610/94.8` | `136/546/230/410` | `1270.8/288.8/590/840` | `0 / 0 / 0` |
+| 1920×1080 | BAD | `556.8/172.8/672/248.2` | `587.8/248/610/94.8` | `136/546/230/410` | `1270.8/288.8/590/840` | `0 / 0 / 0` |
+| 1920×1080 | HIDDEN | `556.8/172.8/672/320.8` | `587.8/248/610/167.4` | `136/546/230/410` | `1270.8/288.8/590/840` | `0 / 0 / 0` |
+| 1600×900 | HIDDEN | `464/144/560/289` | `495/214.2/498/143.2` | `120/452/208/342` | `1048/236/496/702` | `0 / 0 / 0` |
+| 1366×768 | HIDDEN | `396.1/122.9/480/240.1` | `423.1/179.9/426/114.1` | `108.3/406.4/177.6/276.5` | `888.9/206.7/423.5/583.7` | `0 / 0 / 0` |
+
+- 실제 click flow로 GOOD/NORMAL/BAD에 도달했다. HIDDEN은 저장값을 직접 조작하지 않고 debug transcript UI로 perfect-transform 주문을 입력한 뒤 방어·공격 양쪽 주문, N7 BELIEVE, N8 success를 수행하고 production `이어하기`로 debug OFF 화면을 재개했다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-followup`에 저장했다. HQ-10 Battle source·presentation·tests와 HQ-12 Post-credit는 변경하지 않았고 HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.

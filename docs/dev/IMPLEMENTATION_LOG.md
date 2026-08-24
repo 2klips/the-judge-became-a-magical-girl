@@ -2078,3 +2078,12 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - Console error/warning은 0이고 production debug HUD는 0이다. CTA는 visible·enabled 상태를 확인했다.
 - focused HQ-11은 5/5, full suite는 63 files·455 tests PASS다. TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했고 기존 Transformers 516.22kB warning만 유지한다.
 - HQ-11은 자동 승인하지 않고 `HUMAN_RECHECK`를 유지한다. HQ-12 Post-credit는 `OPEN`이다.
+
+## HQ-11 Subtle Ending Result Plate Follow-up
+
+- 작업일·시작 HEAD: 2026-08-24 KST · `99aa2d7df919b82e11e0fd9fb2b2a631f9ddafa9`.
+- 기존 editorial hierarchy와 actor lane을 유지하면서 canonical four endings에만 `.ending-result-plate`를 추가했다. plate는 `clamp(480px, 35vw, 680px)`, ending별 36–46% navy-black, 6px blur, 1px subtle border, VN 8px radius, shadow 없음이다. Post-credit와 HQ-10 Battle은 변경하지 않았다.
+- HIDDEN title string/aria-label은 동결하고 `resolveEditorialEndingCopyLines`가 visual span만 `완벽한 호흡,` / `완벽한 사고`로 분리한다. 1366×768에서 두 span은 각각 단일 line이며 title/plate crop이 없다.
+- focused RED는 result plate class·compact geometry·four tone tokens·HIDDEN visual line 계약 부재 4건이었다. 최소 구현 뒤 HQ-11/HQ-10 focused suite 18/18이 PASS했다.
+- production/debug OFF actual 화면에서 GOOD/HIDDEN 1920×1080·1600×900·1366×768, NORMAL/BAD 1920×1080을 측정했다. plate/Juno·plate/Doyun·plate/BGM·Juno/Doyun overlap, plate/title/CTA crop, document scroll은 모두 0이다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-followup`에 보관한다. HQ-11은 사용자 screenshot 승인 전 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.

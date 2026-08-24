@@ -184,8 +184,8 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 감정적 결말이 반복되는 generic card pattern에 묻힘 |
 | Desired Direction | editorial ending layout, actor와 UI 분리, background 위 hierarchy 중심 title·small CTA |
 | Priority | P1 |
-| Implementation Status | `HUMAN_RECHECK` — GOOD/NORMAL/BAD/HIDDEN 공통 editorial system을 구현했다. giant centered modal을 제거하고 background 위 center-left title·small CTA, left-low Juno, right Doyun을 분리했다. ending copy·logic·routing은 변경하지 않았다. |
-| Human Recheck | production/debug OFF actual flow에서 네 ending을 확인했다. 1920×1080·1600×900·1366×768에서 title/Juno·title/Doyun·Juno/Doyun·BGM/title overlap 0, scroll 0, console error/warning 0이다. 최종 정서·위계 판정은 사용자 대기. |
+| Implementation Status | `HUMAN_RECHECK` — GOOD/NORMAL/BAD/HIDDEN 공통 editorial system을 구현했다. giant centered modal은 폐기한 채 background가 비치는 compact result plate로 kicker·code·title·borderless CTA를 묶었다. center-left plate, left-low Juno, right Doyun을 분리했으며 ending copy·logic·routing은 변경하지 않았다. |
+| Human Recheck | production/debug OFF actual flow에서 네 ending을 확인했다. 1920×1080·1600×900·1366×768에서 plate/Juno·plate/Doyun·Juno/Doyun·BGM/plate overlap 0, crop·scroll 0이다. HIDDEN 1366은 원문을 유지한 채 `완벽한 호흡,` / `완벽한 사고`의 균형 잡힌 2줄이다. 최종 plate 정서·위계 판정은 사용자 대기. |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | HQ-11 implementation 완료. 사용자 승인 후에만 `PASS / FREEZE`; HQ-12 Post-credit는 `OPEN` 유지. |
 

@@ -365,6 +365,16 @@ export function resolveEditorialEndingHeading(text: string): EditorialEndingHead
   };
 }
 
+export function resolveEditorialEndingCopyLines(
+  endingId: string,
+  copy: string,
+): readonly string[] {
+  if (endingId === "hidden" && copy === "완벽한 호흡, 완벽한 사고") {
+    return ["완벽한 호흡,", "완벽한 사고"];
+  }
+  return [copy];
+}
+
 export interface EndingVisual {
   readonly characterId: "juno";
   readonly emotion: Emotion;
@@ -1493,7 +1503,9 @@ export class GameView {
 
       const card = element(
         "section",
-        editorialEnding ? "ending-card ending-editorial" : "ending-card",
+        editorialEnding
+          ? "ending-card ending-editorial ending-result-plate"
+          : "ending-card",
       );
       const endingTitle = pages[0]?.line.text ?? "엔딩";
       if (editorialEnding) {
@@ -1503,7 +1515,17 @@ export class GameView {
         if (heading.label) {
           title.append(element("span", "ending-heading-label", heading.label));
         }
-        title.append(element("span", "ending-heading-copy", heading.copy));
+        const copyLines = resolveEditorialEndingCopyLines(node.endingId, heading.copy);
+        const headingCopy = element(
+          "span",
+          node.endingId === "hidden"
+            ? "ending-heading-copy ending-heading-copy-hidden"
+            : "ending-heading-copy",
+        );
+        for (const copyLine of copyLines) {
+          headingCopy.append(element("span", "ending-heading-line", copyLine));
+        }
+        title.append(headingCopy);
         card.append(element("p", "eyebrow ending-kicker", "이야기의 결말"), title);
       } else {
         card.append(
