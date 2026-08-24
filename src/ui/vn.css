@@ -1071,6 +1071,7 @@
 }
 
 .ending-editorial-screen .ending-result-plate {
+  position: relative;
   display: grid;
   box-sizing: border-box;
   width: 100%;
@@ -1078,8 +1079,6 @@
   max-height: none;
   margin: 0;
   padding: 26px 30px 24px;
-  gap: clamp(10px, 1.4vh, 16px);
-  grid-template-rows: 1px minmax(0, 1fr);
   overflow: visible;
   border: 1px solid var(--ending-plate-border);
   border-radius: var(--vn-radius-md);
@@ -1092,22 +1091,25 @@
   backdrop-filter: blur(6px);
 }
 
-.ending-editorial-screen .ending-result-plate::before {
+.ending-editorial-screen .ending-result-header {
+  position: absolute;
+  top: clamp(18px, 2.5vh, 27px);
+  left: 50%;
+  display: grid;
+  width: calc(100% - 60px);
+  gap: 4px;
+  justify-items: center;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.ending-editorial-screen .ending-result-accent {
   display: block;
   width: clamp(52px, 5vw, 88px);
   height: 1px;
-  margin: 0 auto;
-  content: "";
+  margin-bottom: 2px;
   background: linear-gradient(90deg, var(--ending-accent), transparent);
   box-shadow: none;
-}
-
-.ending-editorial-screen .ending-result-content {
-  align-self: center;
-  display: grid;
-  width: 100%;
-  gap: clamp(12px, 1.6vh, 18px);
-  text-align: center;
 }
 
 .ending-editorial-screen .ending-kicker {
@@ -1120,22 +1122,24 @@
 }
 
 .ending-editorial-screen .ending-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: grid;
-  width: 100%;
+  width: calc(100% - 60px);
   min-height: 0;
   max-width: none;
   margin: 0;
-  gap: 5px;
-  grid-template-rows: 22px minmax(0, 1fr);
   color: var(--vn-text-primary);
   font-family: "MaruBuri", "Noto Serif KR", Georgia, serif;
   line-height: 1.08;
   letter-spacing: -0.045em;
   text-shadow: 0 3px 22px rgba(0, 0, 0, 0.7);
+  transform: translate(-50%, -50%);
   text-align: center;
 }
 
-.ending-editorial-screen .ending-heading-label {
+.ending-editorial-screen .ending-result-code {
   color: var(--ending-accent);
   font-family: "Pretendard", "Noto Sans KR", sans-serif;
   font-size: clamp(0.82rem, 1vw, 1rem);
@@ -1171,18 +1175,17 @@
 }
 
 .ending-editorial-screen .ending-support-slot {
+  position: absolute;
+  right: 30px;
+  bottom: 24px;
+  left: 30px;
   display: grid;
-  width: 100%;
   place-items: center;
   text-align: center;
 }
 
 .ending-editorial-screen .ending-support-slot:empty {
   display: none;
-}
-
-.ending-editorial-screen .ending-result-plate:has(.ending-support-slot:not(:empty)) {
-  grid-template-rows: 1px minmax(0, 1fr) auto;
 }
 
 .ending-editorial-screen .ending-advance {

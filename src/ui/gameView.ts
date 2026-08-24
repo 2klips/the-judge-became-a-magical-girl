@@ -1510,11 +1510,18 @@ export class GameView {
       const endingTitle = pages[0]?.line.text ?? "엔딩";
       if (editorialEnding) {
         const heading = resolveEditorialEndingHeading(endingTitle);
+        const resultHeader = element("div", "ending-result-header");
+        const resultAccent = element("span", "ending-result-accent");
+        resultAccent.setAttribute("aria-hidden", "true");
+        resultHeader.append(
+          resultAccent,
+          element("p", "eyebrow ending-kicker", "이야기의 결말"),
+        );
+        if (heading.label) {
+          resultHeader.append(element("span", "ending-result-code", heading.label));
+        }
         const title = element("h2", "ending-title");
         title.setAttribute("aria-label", endingTitle);
-        if (heading.label) {
-          title.append(element("span", "ending-heading-label", heading.label));
-        }
         const copyLines = resolveEditorialEndingCopyLines(node.endingId, heading.copy);
         const headingCopy = element(
           "span",
@@ -1526,12 +1533,7 @@ export class GameView {
           headingCopy.append(element("span", "ending-heading-line", copyLine));
         }
         title.append(headingCopy);
-        const resultContent = element("div", "ending-result-content");
-        resultContent.append(
-          element("p", "eyebrow ending-kicker", "이야기의 결말"),
-          title,
-        );
-        card.append(resultContent);
+        card.append(resultHeader, title);
       } else {
         card.append(
           element("p", "eyebrow", "이야기의 결말"),

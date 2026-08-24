@@ -641,3 +641,20 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - production/debug OFF에서 GOOD/NORMAL/BAD/HIDDEN 1920×1080과 GOOD/BAD/HIDDEN 1366×768 screenshot을 저장했다. NORMAL/BAD의 긴 빈 하단 영역과 form-like divider는 보이지 않으며 HIDDEN 두 줄은 유지된다.
 - console error/warning 0, crop·scroll 0이다. focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS이며 기존 Transformers 516.22kB warning만 유지한다.
 - screenshot과 rect JSON은 repo 밖 `qa-evidence/hq11-ending-internal-balance`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
+
+## 26. 2026-08-24 HQ-11 header/title 독립 anchor 재검수
+
+- starting HEAD `c3b33566c0222cbd1c4b54e9a7a9dbc5d1918064`에서 승인된 frame·CTA·actor·background·BGM geometry를 동결했다. accent·kicker·ending code는 frame 상단의 `.ending-result-header`, 결과 title은 frame 중앙의 `.ending-title`로 분리해 title 줄 수가 header 위치에 영향을 주지 않게 했다.
+- production/debug OFF actual flow로 GOOD/NORMAL/BAD/HIDDEN 1920×1080과 GOOD/HIDDEN 1366×768을 캡처했다. HIDDEN은 원문을 유지한 `완벽한 호흡,` / `완벽한 사고` 두 줄이다.
+
+| viewport | ending | frame `x/y/w/h` | accent/kicker/code Y | title `x/y/w/h` | title center offset | CTA `x/y/w/h` | CTA center offset |
+|---|---|---|---|---|---|---|---|
+| 1920×1080 | GOOD/NORMAL/BAD | `556.8/172.8/672/360` | `200.8/207.8/226.8` | `587.8/322.5/610/60.5` | `0` | `857.4/546.8/70.7/36` | `0` |
+| 1920×1080 | HIDDEN | `556.8/172.8/672/360` | `200.8/207.8/226.8` | `587.8/292.3/610/120.9` | `0` | `857.4/546.8/70.7/36` | `0` |
+| 1600×900 | HIDDEN | `464/144/560/300` | `167.5/174.5/193.5` | `495/242.2/498/103.7` | `0` | `708.6/458/70.7/36` | `0` |
+| 1366×768 | GOOD | `396.1/122.9/480/270` | `143.1/150.1/167.1` | `427.1/235.8/418/44.3` | `0` | `600.8/406.9/70.7/36` | `0` |
+| 1366×768 | HIDDEN | `396.1/122.9/480/270` | `143.1/150.1/167.1` | `427.1/213.6/418/88.5` | `0` | `600.8/406.9/70.7/36` | `0` |
+
+- 모든 측정에서 frame/actor·frame/BGM·CTA/actor overlap, frame/header/title/CTA crop, scroll, production debug element, Chrome console error/warning은 0이다. frame 크기는 1920 `672×360`, 1600 `560×300`, 1366 `480×270`, CTA gap은 14px로 직전 승인값과 같다.
+- RED는 독립 header wrapper·상단 anchor·독립 title center anchor 부재 3건이었다. 최소 구현 뒤 focused HQ-11/HQ-10 21/21, full suite 63 files·460 tests, `npm run check`, production/QA build가 PASS했다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-independent-anchors`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.

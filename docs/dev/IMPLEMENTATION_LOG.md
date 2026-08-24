@@ -2104,3 +2104,12 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - 고정 result frame·공통 title scale·detached CTA·actor lane을 변경하지 않고 kicker/code/title을 하나의 중앙 content group으로 재구성했다. 비어 있는 62px support slot과 긴 divider는 숨겨 NORMAL/BAD의 미완성 form 인상을 제거했다.
 - production/debug OFF 실제 flow에서 네 ending × 세 viewport의 frame geometry와 CTA center axis가 직전 승인값과 동일함을 재확인했다. actor/BGM overlap, crop, scroll, console error/warning은 모두 0이며 HIDDEN visual copy는 균형 잡힌 두 줄을 유지한다.
 - focused HQ-11/HQ-10 21/21, full suite 63 files·460 tests, TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했다. screenshot·rect JSON은 repo 밖 `qa-evidence/hq11-ending-internal-balance`에 보관하며 HQ-11은 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.
+
+## HQ-11 Result Header / Title Independent Anchor Closure
+
+- 작업일·시작 HEAD: 2026-08-24 KST · `c3b33566c0222cbd1c4b54e9a7a9dbc5d1918064`.
+- RED에서 accent·kicker·code 전용 header wrapper, frame 기준 고정 top anchor, title-only center anchor가 없음을 3건으로 확인했다. 최소 구현은 `.ending-result-header`와 `.ending-result-accent`를 추가하고 `.ending-title`을 frame 중앙의 독립 absolute anchor로 분리했다.
+- 승인된 frame 크기·위치·surface, detached CTA, actor/background/BGM, ending copy·logic·routing은 변경하지 않았다. HIDDEN visual copy는 기존 `완벽한 호흡,` / `완벽한 사고` 두 줄을 유지한다.
+- production/debug OFF actual Chrome에서 1920 네 ending의 accent/kicker/code Y가 `200.8/207.8/226.8px`, title centerY가 `352.8px`로 동일했다. 1366 GOOD/HIDDEN도 `143.1/150.1/167.1px`, title centerY `257.9px`로 동일하고 CTA center offset·title center offset은 0이다.
+- frame/actor·frame/BGM·CTA/actor overlap, crop, scroll, console error/warning은 0이다. focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS이며 TypeScript check와 production/QA build도 PASS했다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-independent-anchors`에 보관한다. HQ-11은 사용자 승인 전 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.

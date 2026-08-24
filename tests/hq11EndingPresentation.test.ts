@@ -29,9 +29,11 @@ describe("HQ-11 Ending final presentation", () => {
     expect(renderEnding).toMatch(/node\.endingId === "post_credit"/);
   });
 
-  it("splits the frozen ending heading into editorial label and copy spans", () => {
+  it("splits the frozen ending heading into an independent header and title", () => {
     expect(gameViewSource).toContain("resolveEditorialEndingHeading");
-    expect(renderEnding).toContain("ending-heading-label");
+    expect(renderEnding).toContain("ending-result-header");
+    expect(renderEnding).toContain("ending-result-accent");
+    expect(renderEnding).toContain("ending-result-code");
     expect(renderEnding).toContain("ending-heading-copy");
     expect(renderEnding).toContain("ending-kicker");
   });
@@ -48,25 +50,32 @@ describe("HQ-11 Ending final presentation", () => {
     );
   });
 
-  it("uses one fixed result-frame geometry and centered internal slots for every ending", () => {
+  it("uses one fixed result-frame geometry for every ending", () => {
     expect(renderEnding).toContain("ending-result-layout");
     expect(renderEnding).toContain("ending-support-slot");
     expect(vnStylesSource).toMatch(
       /\.ending-editorial-screen \.ending-result-layout\s*\{[^}]*position:\s*absolute;[^}]*top:\s*clamp\([^}]*left:\s*clamp\([^}]*width:\s*clamp\(480px, 35vw, 680px\);[^}]*justify-items:\s*center;/s,
     );
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*width:\s*100%;[^}]*block-size:\s*clamp\(270px, 33\.333vh, 360px\);[^}]*grid-template-rows:\s*1px minmax\(0, 1fr\);[^}]*text-align:\s*center;/s,
+      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*position:\s*relative;[^}]*width:\s*100%;[^}]*block-size:\s*clamp\(270px, 33\.333vh, 360px\);[^}]*text-align:\s*center;/s,
     );
     expect(vnStylesSource).toMatch(
       /\.ending-editorial-screen \.ending-support-slot\s*\{[^}]*text-align:\s*center;/s,
     );
   });
 
-  it("centers the core result content and removes the empty form-like support footprint", () => {
-    expect(renderEnding).toContain("ending-result-content");
-    expect(renderEnding).toContain("resultContent.append");
+  it("anchors the compact header at the top and the title at the frame center independently", () => {
+    expect(renderEnding).toContain("resultHeader.append");
+    expect(renderEnding).toContain("resultHeader, title");
+    expect(renderEnding).not.toContain("ending-result-content");
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-result-content\s*\{[^}]*align-self:\s*center;[^}]*display:\s*grid;[^}]*width:\s*100%;[^}]*text-align:\s*center;/s,
+      /\.ending-editorial-screen \.ending-result-header\s*\{[^}]*position:\s*absolute;[^}]*top:\s*clamp\([^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\);[^}]*text-align:\s*center;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-title\s*\{[^}]*position:\s*absolute;[^}]*top:\s*50%;[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);[^}]*text-align:\s*center;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-result-accent\s*\{[^}]*height:\s*1px;[^}]*background:\s*linear-gradient\(90deg, var\(--ending-accent\), transparent\);/s,
     );
     expect(vnStylesSource).toMatch(
       /\.ending-editorial-screen \.ending-support-slot:empty\s*\{[^}]*display:\s*none;/s,

@@ -184,8 +184,8 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 감정적 결말이 반복되는 generic card pattern에 묻힘 |
 | Desired Direction | editorial ending layout, actor와 UI 분리, background 위 hierarchy 중심 title·small CTA |
 | Priority | P1 |
-| Implementation Status | `HUMAN_RECHECK` — GOOD/NORMAL/BAD/HIDDEN 공통 editorial system과 subtle result plate 방향을 유지하면서 네 ending이 같은 viewport에서 동일한 fixed result frame·title scale을 사용하게 통일했다. kicker·code·title을 하나의 중앙 content group으로 묶고 빈 support slot과 긴 divider의 시각 footprint를 제거했다. `계속 ›`는 frame 아래 공통 중심축의 별도 CTA다. center-left frame, left-low Juno, right Doyun과 ending copy·logic·routing은 변경하지 않았다. |
-| Human Recheck | production/debug OFF actual flow에서 네 ending을 1920×1080·1600×900·1366×768 전부 확인했다. 같은 viewport의 frame `x/y/w/h`, title font-size, CTA centerX는 직전 승인값과 동일하고 frame/Juno·frame/Doyun·frame/BGM·CTA/actor overlap과 crop·scroll은 0이다. 빈 support slot은 `display:none`, HIDDEN은 세 viewport 모두 원문을 유지한 `완벽한 호흡,` / `완벽한 사고` 2줄이다. 최종 내부 균형 판정은 사용자 대기. |
+| Implementation Status | `HUMAN_RECHECK` — GOOD/NORMAL/BAD/HIDDEN 공통 editorial system과 subtle fixed result frame·title scale을 유지했다. accent·kicker·ending code는 frame 상단의 독립 header anchor, 결과 title만 frame 중앙의 독립 title anchor를 사용해 title 줄 수가 header를 움직이지 않는다. 빈 support slot과 긴 divider는 시각 flow에서 제거했고 `계속 ›`는 frame 아래 공통 중심축의 별도 CTA다. center-left frame, left-low Juno, right Doyun과 ending copy·logic·routing은 변경하지 않았다. |
+| Human Recheck | production/debug OFF actual flow에서 네 ending의 1920×1080과 GOOD/HIDDEN 1366×768을 재확인했다. 1920에서 네 ending의 accent/kicker/code Y는 `200.8/207.8/226.8px`, title centerY는 `352.8px`로 동일하다. 1366 GOOD/HIDDEN도 `143.1/150.1/167.1px`, title centerY `257.9px`로 동일하다. frame·CTA geometry는 승인값을 유지하며 frame/actor·frame/BGM·CTA/actor overlap, crop·scroll·console error는 0이다. HIDDEN은 원문을 유지한 `완벽한 호흡,` / `완벽한 사고` 2줄이다. 최종 육안 판정은 사용자 대기. |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | HQ-11 implementation 완료. 사용자 승인 후에만 `PASS / FREEZE`; HQ-12 Post-credit는 `OPEN` 유지. |
 
