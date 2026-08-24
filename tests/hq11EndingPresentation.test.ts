@@ -89,7 +89,7 @@ describe("HQ-11 Ending final presentation", () => {
   it("uses one title scale and detaches a centered CTA below the result frame", () => {
     expect(renderEnding).toContain("resultLayout.append(card, button)");
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-heading-copy\s*\{[^}]*font-size:\s*clamp\(2\.5rem, 3vw, 3\.5rem\);/s,
+      /\.ending-editorial-screen \.ending-heading-copy\s*\{[^}]*font-size:\s*clamp\(2\.875rem, 3\.4vw, 4rem\);/s,
     );
     expect(vnStylesSource).toMatch(
       /\.ending-editorial-screen \.ending-advance\s*\{[^}]*justify-self:\s*center;[^}]*margin:\s*14px 0 0;[^}]*border:\s*1px solid var\(--ending-plate-border\);/s,

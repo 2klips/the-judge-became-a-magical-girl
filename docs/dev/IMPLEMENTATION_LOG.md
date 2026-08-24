@@ -2113,3 +2113,11 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - production/debug OFF actual Chrome에서 1920 네 ending의 accent/kicker/code Y가 `200.8/207.8/226.8px`, title centerY가 `352.8px`로 동일했다. 1366 GOOD/HIDDEN도 `143.1/150.1/167.1px`, title centerY `257.9px`로 동일하고 CTA center offset·title center offset은 0이다.
 - frame/actor·frame/BGM·CTA/actor overlap, crop, scroll, console error/warning은 0이다. focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS이며 TypeScript check와 production/QA build도 PASS했다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-independent-anchors`에 보관한다. HQ-11은 사용자 승인 전 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.
+
+## HQ-11 Result Title Scale Micro Adjustment
+
+- 작업일·시작 HEAD: 2026-08-24 KST · `5fdea31efc3a986f907b40261500faa4a13c0789`.
+- 결과 title 공통 contract만 `clamp(2.875rem, 3.4vw, 4rem)`으로 강화했다. 실제 computed size는 1920 `64px`, 1600 `54.4px`, 1366 `46.44px`이며 GOOD/NORMAL/BAD/HIDDEN에 ending별 override가 없다.
+- 승인된 frame·header·title center anchor·CTA·actor·background·BGM과 ending copy·logic·routing은 변경하지 않았다. HIDDEN은 `완벽한 호흡,` / `완벽한 사고` 두 줄을 유지한다.
+- production/debug OFF actual Chrome에서 1920 네 ending과 1366 GOOD/HIDDEN을 캡처했다. 모든 지원 viewport에서 title crop·frame overflow·actor/BGM/CTA overlap·scroll·console error/warning은 0이다.
+- focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS이며 TypeScript check와 production/QA build도 PASS했다. screenshot은 repo 밖 `qa-evidence/hq11-ending-title-scale`에 보관한다. HQ-11은 사용자 승인 전 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.

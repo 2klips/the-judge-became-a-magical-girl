@@ -658,3 +658,18 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - 모든 측정에서 frame/actor·frame/BGM·CTA/actor overlap, frame/header/title/CTA crop, scroll, production debug element, Chrome console error/warning은 0이다. frame 크기는 1920 `672×360`, 1600 `560×300`, 1366 `480×270`, CTA gap은 14px로 직전 승인값과 같다.
 - RED는 독립 header wrapper·상단 anchor·독립 title center anchor 부재 3건이었다. 최소 구현 뒤 focused HQ-11/HQ-10 21/21, full suite 63 files·460 tests, `npm run check`, production/QA build가 PASS했다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-independent-anchors`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
+
+## 27. 2026-08-24 HQ-11 result title scale 재검수
+
+- starting HEAD `5fdea31efc3a986f907b40261500faa4a13c0789`에서 승인된 frame·header·title center anchor·CTA·actor·background·BGM geometry를 동결하고 결과 title 공통 scale만 `clamp(2.5rem, 3vw, 3.5rem)`에서 `clamp(2.875rem, 3.4vw, 4rem)`으로 강화했다.
+- production/debug OFF actual flow에서 GOOD/NORMAL/BAD/HIDDEN 1920×1080, GOOD/HIDDEN 1366×768을 캡처하고 1600×900까지 자동 측정했다.
+
+| viewport | 모든 ending 공통 frame `x/y/w/h` | title font-size | title centerY | CTA `x/y/w/h` | actor/BGM overlap | scroll |
+|---|---|---:|---:|---|---|---|
+| 1920×1080 | `556.8/172.8/672/360` | `64px` | `352.8px` | `857.4/546.8/70.7/36` | `0` | `0` |
+| 1600×900 | `464/144/560/300` | `54.4px` | `294px` | `708.6/458/70.7/36` | `0` | `0` |
+| 1366×768 | `396.1/122.9/480/270` | `46.44px` | `257.9px` | `600.8/406.9/70.7/36` | `0` | `0` |
+
+- 1920 네 ending과 1366 GOOD/HIDDEN에서 title crop·frame overflow·CTA/actor overlap은 0이며 HIDDEN은 정확히 `완벽한 호흡,` / `완벽한 사고` 2줄이다. Chrome console error/warning과 production debug element도 0이다.
+- focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules이 PASS했고 기존 Transformers 516.22kB warning만 유지한다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-title-scale`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
