@@ -2087,3 +2087,13 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - focused RED는 result plate class·compact geometry·four tone tokens·HIDDEN visual line 계약 부재 4건이었다. 최소 구현 뒤 HQ-11/HQ-10 focused suite 18/18이 PASS했다.
 - production/debug OFF actual 화면에서 GOOD/HIDDEN 1920×1080·1600×900·1366×768, NORMAL/BAD 1920×1080을 측정했다. plate/Juno·plate/Doyun·plate/BGM·Juno/Doyun overlap, plate/title/CTA crop, document scroll은 모두 0이다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-followup`에 보관한다. HQ-11은 사용자 screenshot 승인 전 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.
+
+## HQ-11 Fixed Result Frame Uniformity Follow-up
+
+- 작업일·시작 HEAD: 2026-08-24 KST · `354bfd455608f7305a09d6cd3f0428e19ab50894`.
+- GOOD/NORMAL/BAD/HIDDEN의 result frame을 같은 responsive width·fixed block-size와 공통 anchor로 통일했다. frame 내부는 accent line, kicker, ending title, 62px support slot의 고정 row contract이며 모든 핵심 text가 중앙 정렬된다.
+- `계속 ›`는 frame에서 분리한 sibling CTA다. frame 아래 14px, 공통 center axis를 사용하고 ending별 차이는 accent tone에만 남겼다. MaruBuri title은 네 ending이 같은 responsive clamp를 사용하며 HIDDEN visual copy는 모든 지원 viewport에서 균형 잡힌 두 줄이다.
+- focused RED에서 공통 layout wrapper·fixed slot·동일 title contract·detached CTA가 없음을 확인했다. 최소 구현 후 HQ-11/HQ-10 focused suite 20/20이 PASS했다.
+- production/debug OFF actual flow로 네 ending을 1920×1080·1600×900·1366×768 모두 측정했다. 동일 viewport에서는 frame x/y/w/h·title font-size·CTA centerX가 완전히 동일하고 frame/actor·frame/BGM·CTA/actor overlap, crop, scroll, console error/warning은 0이다.
+- full suite는 63 files·459 tests PASS이며 TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS다. 기존 Transformers 516.22kB warning만 유지한다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-uniformity`에 보관한다. Story/FSM/save/ending logic·routing/BGM/binary asset, HQ-10 Battle, HQ-12 Post-credit는 변경하지 않았으며 HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.

@@ -1533,13 +1533,22 @@ export class GameView {
           element("h2", "ending-title", endingTitle),
         );
       }
+      let supportingCopy = "";
       if (page.lineIndex > 0) {
         const speaker =
           page.line.speaker === "narration"
             ? ""
             : `${characterNames.get(page.line.speaker) ?? page.line.speaker} · `;
         const lineText = formatDialogueText(page.line.text, page.line.speaker);
-        card.append(element("p", "ending-line", `${speaker}${lineText}`));
+        supportingCopy = `${speaker}${lineText}`;
+        if (!editorialEnding) {
+          card.append(element("p", "ending-line", supportingCopy));
+        }
+      }
+      if (editorialEnding) {
+        card.append(
+          element("p", "ending-line ending-support-slot", supportingCopy),
+        );
       }
 
       const advanceClass = editorialEnding
@@ -1555,8 +1564,14 @@ export class GameView {
       if (page.isLast) {
         button.addEventListener("click", onNext ?? onNewGame, { once: true });
       }
-      card.append(button);
-      shell.append(card);
+      if (editorialEnding) {
+        const resultLayout = element("div", "ending-result-layout");
+        resultLayout.append(card, button);
+        shell.append(resultLayout);
+      } else {
+        card.append(button);
+        shell.append(card);
+      }
       this.commit(shell);
     };
 

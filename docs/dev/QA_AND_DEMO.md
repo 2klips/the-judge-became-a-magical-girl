@@ -610,3 +610,19 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 
 - 실제 click flow로 GOOD/NORMAL/BAD에 도달했다. HIDDEN은 저장값을 직접 조작하지 않고 debug transcript UI로 perfect-transform 주문을 입력한 뒤 방어·공격 양쪽 주문, N7 BELIEVE, N8 success를 수행하고 production `이어하기`로 debug OFF 화면을 재개했다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-followup`에 저장했다. HQ-10 Battle source·presentation·tests와 HQ-12 Post-credit는 변경하지 않았고 HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
+
+## 24. 2026-08-24 HQ-11 fixed result frame 최종 균일성 재검수
+
+- starting HEAD `354bfd455608f7305a09d6cd3f0428e19ab50894`에서 GOOD/NORMAL/BAD/HIDDEN의 plate를 공통 fixed result frame으로 통일했다. kicker·code·title·62px support slot은 같은 vertical rhythm과 center alignment를 사용하며 빈 support copy도 slot geometry를 유지한다.
+- `계속 ›`는 frame content flow에서 분리해 frame 아래 14px, 같은 horizontal center axis에 둔 작은 CTA로 만들었다. ending별 geometry·position·title size override는 없고 accent tone만 유지한다.
+
+| viewport | 모든 ending 공통 frame `x/y/w/h` | title font-size | CTA `x/y/w/h` | CTA center offset | actor/BGM overlap | scroll |
+|---|---|---|---|---|---|---|
+| 1920×1080 | `556.8/172.8/672/360` | `56px` | `857.4/546.8/70.7/36` | `0` | `0` | `0` |
+| 1600×900 | `464/144/560/300` | `48px` | `708.6/458/70.7/36` | `0` | `0` | `0` |
+| 1366×768 | `396.1/122.9/480/270` | `40.98px` | `600.8/406.9/70.7/36` | `0` | `0` | `0` |
+
+- GOOD/NORMAL/BAD/HIDDEN을 모두 실제 flow로 열고 production/debug OFF에서 12개 viewport-ending 조합을 측정했다. HIDDEN은 debug transcript UI로 perfect-transform 주문을 입력한 뒤 실제 five-condition route를 수행하고 production `이어하기`로 재개했다.
+- HIDDEN의 visual span은 세 viewport 모두 `완벽한 호흡,` / `완벽한 사고` 두 줄이다. frame/Juno·frame/Doyun·frame/BGM·CTA/Juno·CTA/Doyun overlap, crop, console error/warning은 0이다.
+- focused HQ-11/HQ-10은 20/20, full suite는 63 files·459 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules, `git diff --check`도 PASS이며 기존 Transformers 516.22kB warning만 유지한다.
+- screenshot은 repo 밖 `qa-evidence/hq11-ending-uniformity`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.

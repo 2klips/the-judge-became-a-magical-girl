@@ -40,11 +40,35 @@ describe("HQ-11 Ending final presentation", () => {
     const resultPlateRule =
       vnStylesSource.match(/\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*/s)?.[0] ?? "";
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*position:\s*absolute;[^}]*left:\s*clamp\([^}]*width:\s*clamp\(480px, 35vw, 680px\);[^}]*padding:\s*26px 30px 24px;[^}]*border:\s*1px solid var\(--ending-plate-border\);[^}]*border-radius:\s*var\(--vn-radius-md\);[^}]*background:\s*var\(--ending-plate-bg\);[^}]*box-shadow:\s*none;[^}]*backdrop-filter:\s*blur\(6px\);/s,
+      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*width:\s*100%;[^}]*padding:\s*26px 30px 24px;[^}]*border:\s*1px solid var\(--ending-plate-border\);[^}]*border-radius:\s*var\(--vn-radius-md\);[^}]*background:\s*var\(--ending-plate-bg\);[^}]*box-shadow:\s*none;[^}]*backdrop-filter:\s*blur\(6px\);/s,
     );
     expect(resultPlateRule).not.toContain("background: var(--vn-surface);");
     expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-advance\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*box-shadow:\s*none;/s,
+      /\.ending-editorial-screen \.ending-advance\s*\{[^}]*border:\s*1px solid var\(--ending-plate-border\);[^}]*background:\s*rgba\(8, 11, 20, 0\.48\);[^}]*box-shadow:\s*none;/s,
+    );
+  });
+
+  it("uses one fixed result-frame geometry and centered internal slots for every ending", () => {
+    expect(renderEnding).toContain("ending-result-layout");
+    expect(renderEnding).toContain("ending-support-slot");
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-result-layout\s*\{[^}]*position:\s*absolute;[^}]*top:\s*clamp\([^}]*left:\s*clamp\([^}]*width:\s*clamp\(480px, 35vw, 680px\);[^}]*justify-items:\s*center;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-result-plate\s*\{[^}]*width:\s*100%;[^}]*block-size:\s*clamp\(270px, 33\.333vh, 360px\);[^}]*grid-template-rows:\s*1px 18px minmax\(0, 1fr\) 62px;[^}]*text-align:\s*center;/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-support-slot\s*\{[^}]*min-height:\s*62px;[^}]*text-align:\s*center;/s,
+    );
+  });
+
+  it("uses one title scale and detaches a centered CTA below the result frame", () => {
+    expect(renderEnding).toContain("resultLayout.append(card, button)");
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-heading-copy\s*\{[^}]*font-size:\s*clamp\(2\.5rem, 3vw, 3\.5rem\);/s,
+    );
+    expect(vnStylesSource).toMatch(
+      /\.ending-editorial-screen \.ending-advance\s*\{[^}]*justify-self:\s*center;[^}]*margin:\s*14px 0 0;[^}]*border:\s*1px solid var\(--ending-plate-border\);/s,
     );
   });
 

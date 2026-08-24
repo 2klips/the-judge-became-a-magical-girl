@@ -1059,17 +1059,27 @@
   --ending-plate-border: rgba(158, 231, 242, 0.24);
 }
 
-.ending-editorial-screen .ending-result-plate {
+.ending-editorial-screen .ending-result-layout {
   position: absolute;
   z-index: 6;
   top: clamp(128px, 16vh, 174px);
   left: clamp(27%, 29vw, 31%);
   display: grid;
   width: clamp(480px, 35vw, 680px);
-  max-height: min(54vh, 520px);
+  margin: 0;
+  justify-items: center;
+}
+
+.ending-editorial-screen .ending-result-plate {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  block-size: clamp(270px, 33.333vh, 360px);
+  max-height: none;
   margin: 0;
   padding: 26px 30px 24px;
   gap: clamp(10px, 1.4vh, 16px);
+  grid-template-rows: 1px 18px minmax(0, 1fr) 62px;
   overflow: visible;
   border: 1px solid var(--ending-plate-border);
   border-radius: var(--vn-radius-md);
@@ -1077,7 +1087,7 @@
   background: var(--ending-plate-bg);
   box-shadow: none;
   clip-path: none;
-  text-align: left;
+  text-align: center;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
@@ -1086,13 +1096,14 @@
   display: block;
   width: clamp(52px, 5vw, 88px);
   height: 1px;
-  margin: 0 0 2px;
+  margin: 0 auto;
   content: "";
   background: linear-gradient(90deg, var(--ending-accent), transparent);
   box-shadow: none;
 }
 
 .ending-editorial-screen .ending-kicker {
+  width: 100%;
   margin: 0;
   color: var(--ending-accent);
   font-size: clamp(0.68rem, 0.78vw, 0.8rem);
@@ -1102,14 +1113,18 @@
 
 .ending-editorial-screen .ending-title {
   display: grid;
+  width: 100%;
+  min-height: 0;
   max-width: none;
   margin: 0;
   gap: 5px;
+  grid-template-rows: 22px minmax(0, 1fr);
   color: var(--vn-text-primary);
-  font-family: Georgia, "Noto Serif KR", serif;
+  font-family: "MaruBuri", "Noto Serif KR", Georgia, serif;
   line-height: 1.08;
   letter-spacing: -0.045em;
   text-shadow: 0 3px 22px rgba(0, 0, 0, 0.7);
+  text-align: center;
 }
 
 .ending-editorial-screen .ending-heading-label {
@@ -1121,8 +1136,10 @@
 }
 
 .ending-editorial-screen .ending-heading-copy {
+  display: grid;
+  align-content: center;
   max-width: 100%;
-  font-size: clamp(2.3rem, 3.5vw, 4.4rem);
+  font-size: clamp(2.5rem, 3vw, 3.5rem);
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
@@ -1136,26 +1153,34 @@
 }
 
 .ending-editorial-screen .ending-line {
-  max-width: 92%;
+  max-width: 100%;
   margin: 0;
-  padding-left: 14px;
-  border-left: 1px solid var(--ending-accent-soft);
+  padding: 0 14px;
   color: var(--vn-text-secondary);
   font-size: clamp(0.94rem, 1.12vw, 1.08rem);
   line-height: 1.68;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
 }
 
+.ending-editorial-screen .ending-support-slot {
+  display: grid;
+  width: 100%;
+  min-height: 62px;
+  place-items: center;
+  border-top: 1px solid var(--ending-accent-soft);
+  text-align: center;
+}
+
 .ending-editorial-screen .ending-advance {
-  justify-self: start;
+  justify-self: center;
   width: fit-content;
   min-height: 36px;
-  margin: 2px 0 0;
-  padding: 7px 4px 7px 0;
-  border: 0;
-  border-radius: 0;
+  margin: 14px 0 0;
+  padding: 7px 16px;
+  border: 1px solid var(--ending-plate-border);
+  border-radius: var(--vn-radius-sm);
   color: var(--vn-text-secondary);
-  background: transparent;
+  background: rgba(8, 11, 20, 0.48);
   box-shadow: none;
   font-size: 0.8rem;
   font-weight: 600;
@@ -1173,7 +1198,7 @@
 .ending-editorial-screen .ending-advance:focus-visible {
   transform: none;
   color: var(--vn-text-primary);
-  background: transparent;
+  background: var(--vn-surface-subtle);
   box-shadow: none;
 }
 
@@ -1202,14 +1227,13 @@
 }
 
 @media (max-height: 800px) and (min-width: 761px) {
-  .ending-editorial-screen .ending-result-plate {
+  .ending-editorial-screen .ending-result-layout {
     top: clamp(116px, 16vh, 132px);
-    padding: 24px 26px 22px;
-    gap: 8px;
   }
 
-  .ending-editorial-screen .ending-heading-copy {
-    font-size: clamp(2.05rem, 3.2vw, 3.2rem);
+  .ending-editorial-screen .ending-result-plate {
+    padding: 24px 26px 22px;
+    gap: 8px;
   }
 
   .ending-editorial-screen .ending-line {
