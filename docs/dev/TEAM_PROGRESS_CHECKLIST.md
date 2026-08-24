@@ -16,10 +16,10 @@
 
 ## 현재 한눈에 보기
 
-- [x] Scenario v3.1의 18-node runtime과 GOOD/NORMAL/BAD/HIDDEN 분기
+- [x] Scenario v3.1의 제출판 17-node runtime과 GOOD/NORMAL/BAD/HIDDEN 분기
 - [x] Realtime voice core, 7종 typed failure, 누적 5회 정책, PTT live meter
 - [x] 선택형 마이크·9-state FSM·Settings를 갖춘 PC TITLE
-- [ ] OpenAI 제출용 TITLE 배경 교체 — runtime 구현·자동 검증 완료 / `HUMAN_RECHECK`
+- [x] OpenAI 제출용 TITLE 배경 교체 — 사용자 `PASS / FREEZE`
 - [x] 공통 VN dialogue/choice UI foundation — HQ-02 사용자 `PASS`
 - [x] N0~N2 early-scene mini-sequence와 전용 도윤 반응 자산 통합
 - [x] 최신 `main`의 GitHub Pages 배포 — Actions run #33 `SUCCESS`
@@ -27,7 +27,7 @@
 - [x] Battle/Ending 1차 safe-zone 보정 — responsive collision closure 완료
 - [x] Battle command deck/presentation — HQ-10 사용자 `PASS / FREEZE`
 - [x] Ending result frame/editorial presentation — HQ-11 사용자 `PASS / FREEZE`
-- [ ] 검은 마법소녀 post-credit 실자산·character-first 구성 — HQ-12 `OPEN`
+- [ ] Post-credit teaser 제거·네 Ending 종료 flow — HQ-12 구현 완료 / `HUMAN_RECHECK`
 - [ ] Juno 행동 포즈·final purification 등 잔여 visual production 판정
 - [ ] AR-01 사람 장면·청각 QA, AR-02 스타일 연속성 QA, AR-10 public cold-load 5회
 
@@ -44,7 +44,7 @@
 
 - [x] **데이터 기반 GameEngine / FSM**
   - 기존: `TITLE → PROLOGUE → DIALOGUE → CUTSCENE → ENDING`을 node 데이터로 실행했다.
-  - 현재: 기존 엔진을 보존하면서 v3.1 관계·전투·엔딩 계약을 18개 node로 확장했다.
+  - 현재: 기존 엔진을 보존하면서 v3.1 관계·전투·엔딩 계약을 제출판 17개 node로 유지한다.
   - 비고: story 문서가 runtime에 자동 반영되는 구조는 아니므로 JSON·engine 구현을 별도로 검증한다.
 
 - [x] **GameState와 save/localStorage**
@@ -69,7 +69,7 @@
 
 - [x] **v2 시나리오의 핵심 골격**
   - 기존: 심사역, 야근, 이상한 게임, 음성 사건, 주노, 회색 망령, 변신, 3-phase battle, GOOD/NORMAL/BAD가 있었다.
-  - 현재: 이 골격은 유지하고 의미·분기·HIDDEN·post-credit를 v3/v3.1로 확장했다.
+  - 현재: 이 골격은 유지하고 의미·분기·HIDDEN을 v3/v3.1로 확장했다. 과거 post-credit 확장은 제출판에서 제거했다.
   - 비고: “무에서 새로 만든 게임”이 아니라 완주 가능한 v2 프로토타입을 개선한 프로젝트다.
 
 - [x] **장면 preview와 debug 경로**
@@ -79,7 +79,7 @@
 
 - [x] **주요 캐릭터·배경·BGM 자산**
   - 기존: 배경, 도윤, 주노, 회색 망령, 변신 컷, BGM의 핵심 자산이 이미 존재했다.
-  - 현재: source/runtime 경계를 정리하고, 현재 runtime 48개·15,263,089B로 관리한다.
+  - 현재: source/runtime 경계를 정리하고, 현재 제출 runtime 46개·15,114,735B로 관리한다.
   - 비고: 누락 이미지는 presentation fallback, 누락 BGM은 무음으로 진행을 보존한다.
 
 - [x] **Asset SSOT와 자동 QA의 골격**
@@ -135,11 +135,11 @@
   - 이유: 플레이 선택·판단 책임·late recovery를 엔딩과 정확히 연결하기 위해서다.
   - 상태: **완료** — CYNIC+success=NORMAL, technical failure≠BAD, HIDDEN 5조건을 runtime test로 보호.
 
-- [x] **GOOD/NORMAL/BAD/HIDDEN + canonical post-credit**
+- [x] **GOOD/NORMAL/BAD/HIDDEN + 제출판 terminal flow**
   - 기존 문제: HIDDEN runtime과 독립 post-credit가 없고 GOOD 뒤 후속 정보가 감정적 완결을 침범했다.
-  - 변경안: 4 ending을 분리하고 GOOD/HIDDEN만 같은 canonical post-credit로 연결.
-  - 이유: 본편 결말과 sequel hook을 분리하면서 심사 결과 왜곡 개그를 제거하기 위해서다.
-  - 상태: **완료** — 분기 로직 완료. Post-credit visual asset은 별도 `OPEN`.
+  - 변경안: 먼저 4 ending과 canonical post-credit를 분리했으나, 제출 일정 최종 결정으로 미지의 소녀 teaser를 제거하고 네 ending 모두 기존 종료 동작을 사용한다.
+  - 이유: 미납품 teaser asset 없이도 승인된 Result Frame에서 완결감 있게 종료하기 위해서다.
+  - 상태: **구현 완료·HUMAN_RECHECK** — 4 ending·HIDDEN 5조건은 유지, post-credit runtime node/asset reference는 0.
 
 - [x] **Global composition preset·safe zone**
   - 기존 문제: 장면마다 actor 위치가 달라 face·staff·core가 겹쳤다.
@@ -183,16 +183,16 @@
   - 이유: 전투 정보 위계와 캐릭터 행동을 동시에 읽게 하기 위해서다.
   - 상태: **완료** — actor/HUD/safe-gap과 command deck 정렬·voice/click/result presentation 사용자 `PASS / FREEZE`.
 
-- [ ] **Ending·Post-credit presentation 개선**
+- [ ] **Ending·제출판 종료 presentation 개선**
   - 기존 문제: Ending은 generic modal처럼 보이고 post-credit는 검은 마법소녀보다 UI가 주인공이었다.
-  - 변경안: editorial ending layout과 black magical girl character-first composition.
-  - 이유: 결말의 감정과 후속 훅을 서로 다른 시각적 정점으로 만들기 위해서다.
-  - 상태: **부분 완료** — GOOD/NORMAL/BAD/HIDDEN 공통 result frame·actor safe-zone은 HQ-11 사용자 `PASS / FREEZE`; HQ-12 Post-credit만 `OPEN`.
+  - 변경안: editorial ending layout을 완성하고, 미완성 black magical girl teaser는 제출판에서 제거한다.
+  - 이유: 결말의 감정을 보존하면서 미납품 후속 훅 없이 제출판을 완결하기 위해서다.
+  - 상태: **부분 완료** — HQ-11은 사용자 `PASS / FREEZE`; HQ-12 terminal exit는 구현 완료 후 `HUMAN_RECHECK`.
 
 - [ ] **잔여 visual production**
   - 기존 문제: Juno는 표정 5종만 있어 행동 silhouette가 반복되고 정화·후속 훅의 핵심 cut이 없다.
-  - 변경안: Juno barrier/protect·encourage/cast·point/explain, final purification, black magical girl 후보 제작.
-  - 이유: 감정 표정과 행동 연기를 분리하고 climax·post-credit 밀도를 높이기 위해서다.
+  - 변경안: Juno barrier/protect·encourage/cast·point/explain, final purification 후보 제작. Black Magical Girl은 제출 범위에서 제외했다.
+  - 이유: 감정 표정과 행동 연기를 분리하고 climax 밀도를 높이기 위해서다.
   - 상태: **미착수** — 신규 binary 제작 전 scene/layout 계약 재확인 필요.
 
 - [ ] **Rights/provenance와 asset approval 분리**
@@ -405,15 +405,15 @@
 
 | 구분 | 인계 당시 | 현재 | 상태 |
 |---|---|---|---|
-| Story | v2, N0~N5·3-phase battle·GOOD/NORMAL/BAD | 승인된 v3.1 주제, 18 nodes, N6/N7/N8, 4 endings, canonical post-credit | runtime 완료·visual QA 진행 |
+| Story | v2, N0~N5·3-phase battle·GOOD/NORMAL/BAD | 승인된 v3.1 주제, 제출판 17 nodes, N6/N7/N8, 4 terminal endings | runtime 완료·HQ-12 재검수 |
 | Voice | Realtime/PTT/Worker 기반, 실패 의미·복구가 분산 | 7 typed failures, 누적 5회, actual dialogue/incantation/battle QA | core 완료 |
-| TITLE | 중앙 mic calibration 중심, mic 성공이 진입 gate | PC 3 viewport, optional mic, 9-state FSM, Settings, BGM 20%, OpenAI 제출 배경 교체 | UX freeze·새 배경 HUMAN_RECHECK |
+| TITLE | 중앙 mic calibration 중심, mic 성공이 진입 gate | PC 3 viewport, optional mic, 9-state FSM, Settings, BGM 20%, OpenAI 제출 배경 교체 | PASS / FREEZE |
 | VN UI | 큰 rounded panel과 card형 선택 | 공통 navy VN shell, speaker accent, vertical choice, editorial CTA | HQ-02 PASS; HQ-13 재검수 |
 | Character acting | early startled/facepalm 반복, 변신 얼굴 불연속 | suspicious·ID reaction 전용 pose, facepalm remap, post-transform 공개 얼굴 | 구현·HUMAN_RECHECK |
 | Composition | scene별 좌표, actor overlap·방향 규칙 부재 | named preset, safe zone, inward-facing audit, CUT/SPRITE exclusivity | foundation 완료 |
 | Battle | 3-phase 기능 중심, HUD/actor/UI 충돌 가능 | actor lanes, HUD/BGM 분리, responsive dialogue/dock 16px+, 정돈된 command/result deck | HQ-10 PASS / FREEZE |
-| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | 4 endings, 공통 result frame·독립 header/title·detached CTA·Juno safe-zone | HQ-11 PASS / FREEZE; HQ-12 OPEN |
-| Assets | 핵심 자산 다수와 SSOT 골격 | runtime 48 files/14.61MiB, early cuts·poses·face edits·OpenAI 제출 TITLE·hash 검증 | 기술 ready; 사람 approved 대기 |
+| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | 4 endings, 공통 result frame·독립 header/title·detached CTA·Juno safe-zone, teaser 없는 terminal exit | HQ-11 PASS / FREEZE; HQ-12 HUMAN_RECHECK |
+| Assets | 핵심 자산 다수와 SSOT 골격 | runtime 46 files/14.41MiB, early cuts·poses·face edits·OpenAI 제출 TITLE·hash 검증 | 기술 ready; 사람 approved 대기 |
 | Rights | tool/plan/reference 상태가 일부 혼재 | USER ATTESTED/internal lineage/Suno Pro를 분리 기록하고 과거 NHN TITLE은 archive, 현재 OpenAI 제출본 provenance는 별도 기록 | AR-09 PASS 후보·새 TITLE exact 모델/work ID UNKNOWN |
 | Tests | 41 files / 187 tests 기록 | 64 files / 463 tests PASS | 확대 완료 |
 | CI | 로컬과 Ubuntu Python/Git history 차이 미검증 | Python deps, historical verifier, full checkout, build/deploy 자동화 | run #33 SUCCESS |
@@ -425,10 +425,10 @@
 
 - [ ] **AR-01 Human visual/audio scene QA:** Wraith omen 청감, BGM loop/masking/duck, 전체 click/voice scene composite를 사람 기준으로 승인한다.
 - [ ] **AR-02 Style/scene consistency:** HQ-01·03·05·07·08·09의 `HUMAN_RECHECK`와 캐릭터·배경·CUT 전수 style-anchor 판정을 닫는다.
-- [ ] **HQ-10 Battle:** safe-gap은 유지하되 command deck·정보 위계의 전체 redesign과 human approval을 완료한다.
-- [ ] **HQ-11 Ending:** 임시 safe-zone 위에서 GOOD/NORMAL/BAD/HIDDEN의 editorial layout과 감정 차이를 승인한다.
-- [ ] **HQ-12 Post-credit:** `ending.black_magical_girl` 실자산과 character-first corridor composition을 구현·검수한다.
-- [ ] **잔여 visual production 우선순위:** release closure 직접 관련은 ① Black Magical Girl post-credit asset, ② final purification CUT이다. 이후 ③ Juno barrier/protect, ④ Juno encourage/cast, ⑤ Juno point/explain 순으로 진행하며, 그 밖의 배경/컷 후보는 keep/edit/new/presentation으로 최종 판정한다.
+- [x] **HQ-10 Battle:** command deck·정보 위계·safe gap 사용자 `PASS / FREEZE`.
+- [x] **HQ-11 Ending:** GOOD/NORMAL/BAD/HIDDEN editorial Result Frame 사용자 `PASS / FREEZE`.
+- [ ] **HQ-12 제출 종료:** Black Magical Girl teaser 제거와 GOOD/HIDDEN terminal exit의 actual human QA를 닫는다. 대체 teaser asset은 제작하지 않는다.
+- [ ] **잔여 visual production 우선순위:** release closure 직접 관련은 ① final purification CUT이다. 이후 ② Juno barrier/protect, ③ Juno encourage/cast, ④ Juno point/explain 순으로 검토한다. Black Magical Girl post-credit asset은 제출 범위에서 제거됐다.
 - [ ] **AR-10:** 최종 asset freeze 뒤 public Pages cold cache 5/5에서 first-screen ready ≤3초를 증명한다.
 - [ ] **Final release QA:** 최신 Pages SHA에서 required asset 200, console error 0, click/voice ending matrix와 제출 smoke를 다시 확인한다.
 

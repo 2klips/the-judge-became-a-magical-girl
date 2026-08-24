@@ -11,7 +11,7 @@
 
 `[확정, DEC-030·034·035·036·037·040·048·077 및 2026-08-04·08-13·08-16·08-22·08-23 사용자 결정]` 물리 에셋은 `assets/source/`에 원본을 보존하고 채택본만 `assets/runtime/`에 둔다. 현재 runtime에는 확정 배경 16장, 장면에 채택한 도윤 13장, 주노 5장, 회색 망령 2장, 컷 4장(변신 2·초반 모니터 2), BGM 5곡, 로컬 폰트 3개가 있다. Vite는 runtime만 `dist/assets/`로 복사하며 source는 Pages 산출물에서 제외한다. 자동 규격·동일 바이트 검사를 통과한 파일만 `ready`다. 2026-08-16 사용자는 배경·도윤을 팀이 Codex/ChatGPT OpenAI 서비스와 당시 유료 Pro 이상 계정으로 직접 생성했고, backgrounds·Doyoon·Juno·gray wraith·transform cuts·continuity edits에는 text prompt 또는 team/project-owned internally generated asset만 input으로 사용해 외부 제3자 이미지가 없었음을 확인했다. BGM·source SFX는 생성 당시 Suno Pro였다. 2026-08-22 초반 장면 4종은 사용자가 생성·직접 제공하고 최종 사용을 승인했으며, exact 모델·작업 ID와 신규 납품본에 특화된 reference 기록은 미확인으로 유지한다. 기존 attestation을 새 납품본의 법률 승인으로 확대하지 않는다. reference-rights는 확인된 범위에서만 `USER ATTESTED / INTERNAL PROJECT LINEAGE`로 기록하며 법률 자문·제3자 허가 확인은 아니다. 사람 시각·청각 QA가 남은 자산은 `approved`가 아니다. 도구·제작자·권리는 [PROVENANCE.md](PROVENANCE.md)의 확인된 근거만 사용한다. 누락 이미지·컷은 검은 presentation, 누락 BGM은 무음으로 진행한다.
 
-현재 `assets/runtime/`은 48개 파일, 총 `15,263,089 bytes`(`14.56 MiB`)다. 물리 에셋 30MiB 상한을 통과한다.
+현재 제출판 `assets/runtime/`은 46개 파일, 총 `15,114,735 bytes`(`14.41 MiB`)다. 물리 에셋 30MiB 상한을 통과한다. 과거 corridor teaser WebP 2장은 source/history에만 남고 runtime에서는 제거됐다.
 
 ## 이미지
 
@@ -41,7 +41,7 @@
 | `transform.complete` | `cut_transform_02.webp` | 컷씬 | 1920×1080 WebP | 700KB | 필수 | ready | Codex 내장 OpenAI 이미지 편집·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | 엔진 고정 변신 연출 2번, DEC-016 | source/runtime 동일 바이트·209,748B·SHA-256 `113F777CAA7785171B9CC112175E5D7CCDB1B2CBAE96BC592FF166918C2CFD3A`. 일몰을 야간 완료 장면으로 교체. 2026-08-13 사용자 시각 채택; 전체 continuity QA 대기 |
 | `cut.juno_monitor_emerge` | `cut_juno_monitor_emerge.webp` | 초반 full-stage 컷 | 1920×1080 WebP | 700KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow/WebP 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N1 응답 뒤 N2 진입 전, DEC-077 | 원본 보존·비율 crop. 141,288B·SHA-256 `922E52FA06D72DB3CF2ECF70B3FF511AE76927D494F949C85EE312B2B0C24CB3`. CUT 동안 live actor 0 자동 QA PASS, 사람 장면 QA 대기 |
 | `cut.monitor_direct_wish_prompt` | `cut_monitor_direct_wish_prompt.webp` | 초반 full-stage prompt 컷 | 1920×1080 WebP | 700KB | 필수 | ready | 사용자 생성·직접 제공, exact 모델/작업 ID 미확인; Pillow/WebP 기계 정규화 | 신규 납품 reference 증빙 미확인·법률 자문 아님 | N0 final prompt·N1 voice opening, DEC-077 | 원본 보존·비율 crop. 119,738B·SHA-256 `E99CC6F3719E8063CEB873ADD0559EDC9E27063D7E36321365B17E2CDD616AF2`. baked visible 문구는 이 asset에만 사용자 승인; 중복 visible DOM 0·동등 hidden semantic 유지 |
-| `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | GOOD 후속 컷 | 1920×1080 WebP | 700KB | 컷 가능 | planned | 미정 | 미확인 | GOOD 후속 훅·HIDDEN 재사용, DEC-032 | 얼굴·이름 비노출 검수 대기 |
+| `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | 과거 GOOD/HIDDEN 후속 컷 기획 | 1920×1080 WebP | 700KB | 제출판 제외 | superseded | 미정 | 미확인 | historical DEC-032 only | 2026-08-24 제출 범위 축소로 logical ID·runtime teaser 제거. binary는 제작되지 않았으며 대체 asset도 만들지 않음 |
 | `juno.climax` | `char_juno_climax.png` | 추가 포즈 | 1200×2000 PNG 투명 | 800KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
 | `bg_title` | `bg_title.webp` | 타이틀 배경 | 1920×1080 WebP | 500KB | 필수 | ready | 사용자 직접 제공·정확한 생성 서비스/모델/작업 ID `UNKNOWN`; Codex는 Sharp 기계 정규화만 수행 | 사용자 제공 제출 자산·OpenAI 대회 제출 사용 승인; 별도 상표 허가·법률 승인 기록 아님 | title presentation | 265,998B·SHA-256 `A08A4407B721E9AB2E56CC9677A97C0D0DEDDAA5AEC79444FEDCC6FC0F0482A1`. source PNG 1672×941 원본 바이트 보존 후 Lanczos3 cover·WebP quality 88로 1920×1080 정규화. 과거 NHN runtime hash `A9837907...5FC9C`는 superseded·runtime 미참조. OpenAI TITLE `HUMAN_RECHECK` |
 | `bg_office_wide` | `bg_office_wide.webp` | 메인 사무실 전경 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | OpenAI base USER ATTESTED + Codex 이미지 편집·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | N0 도입 beat | 131,376B·SHA-256 `F404F46A15FBA0F6B884E6777D0B1858DD2B0C100E452E3DFB7152104E39AE5D`. 심사 핵심 팀이 남아 있는 심야 야근. 2026-08-13 사용자 시각 채택; 전체 continuity QA 대기 |
@@ -57,8 +57,8 @@
 | `bg_hall_void` | `bg_hall_void.webp` | 망령 전투 공간 | 1920×1080 WebP | 500KB | 필수 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle p2 | 131,940B. 자동 규격·도윤 실파일 합성 runtime QA PASS |
 | `bg_mind_archive` | `bg_mind_archive.webp` | N7 심리·아카이브 공간 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle p3 질문 beat | 126,264B. 자동 규격·질문 UI 가독성 runtime QA PASS |
 | `bg_battle_core` | `bg_battle_core.webp` | 회색 핵 최종전 | 1920×1080 WebP | 500KB | 폴백 가능 | ready | OpenAI base USER ATTESTED + Codex 이미지 편집·모델 미노출 | internal project lineage·USER ATTESTED·rights PASS 후보 | battle p3 주문 beat | 118,876B·SHA-256 `6AE173DD2C61306CD1DA740D6FD7DE92A0C638B90547B2589FC468EB7159AE8C`. 정지된 핵심 팀을 보호하는 야간 최종전. 2026-08-13 시각 채택; 전체 continuity QA 대기 |
-| `bg_corridor_day` | `bg_corridor_day.webp` | 밝은 복도 | 1920×1080 WebP | 500KB | 컷 가능 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | GOOD 후속 도입, HIDDEN 전환 | 126,688B. 자동 규격·GOOD 6페이지 runtime QA PASS |
-| `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | 검은빛 복도 | 1920×1080 WebP | 500KB | 컷 가능 | ready | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | GOOD 후속 검은빛, HIDDEN | 76,672B. 포스터 baked text 포함. GOOD 7페이지 runtime QA PASS |
+| `bg_corridor_day` | `bg_corridor_day.webp` | 과거 밝은 복도 teaser 배경 | 1920×1080 WebP | 500KB | 제출판 제외 | source/history only | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | historical GOOD/HIDDEN 후속 기획 | 과거 runtime 126,688B. 2026-08-24 제출판 teaser 제거로 catalog/runtime binary 삭제; source·provenance 이력 유지 |
+| `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | 과거 검은빛 복도 teaser 배경 | 1920×1080 WebP | 500KB | 제출판 제외 | source/history only | OpenAI Codex/ChatGPT·Pro 이상 USER ATTESTED·모델 미확인 | internal project lineage·USER ATTESTED·rights PASS 후보 | historical GOOD/HIDDEN 후속 기획 | 과거 runtime 76,672B·포스터 baked text 포함. 2026-08-24 catalog/runtime binary 삭제; source·provenance 이력 유지 |
 | `bg_lounge_day` | `bg_lounge_day.webp` | 배경 | 1920×1080 WebP | 500KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
 | `bg_street_evening` | `bg_street_evening.webp` | 배경 | 1920×1080 WebP | 500KB | 확장 | planned | 미정 | 미확인 | 현재 M5 미사용 | 제작 보류 |
 | `bg_ch2_branch` | `[제안] bg_{장소}_{상태}.webp` | 배경 | 1920×1080 WebP | 500KB | 컷 가능 | planned | 미정 | 미확인 | chapter 2 `scene.bg` | 이름·장면 대기 |
@@ -115,8 +115,8 @@
 | `BG-04A_망령_전투.png` | `bg_hall_void` | `bg_hall_void.webp` | battle p2 | 기존 필수 ID |
 | `BG-05_N7_심리_공간.png` | `bg_mind_archive` | `bg_mind_archive.webp` | battle p3 질문 | 실패 시 `bg_hall_void` + DOM |
 | `BG-04B_회색핵_최종전.png` | `bg_battle_core` | `bg_battle_core.webp` | battle p3 주문 | 실패 시 `bg_hall_void` |
-| `BG-06_복도.png` | `bg_corridor_day` | `bg_corridor_day.webp` | GOOD 후속 도입, HIDDEN 전환 | 컷 가능. 없으면 검은 화면 전환 |
-| `BG-06A_검은빛_복도.png` | `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | GOOD 후속 검은빛, HIDDEN | 컷 가능. 포스터 text·검은 잔향 QA 대기 |
+| `BG-06_복도.png` | historical `bg_corridor_day` | 현재 runtime 미사용 | 과거 GOOD 후속 도입·HIDDEN 전환 기획 | 제출판 teaser 제거로 source/history만 보존 |
+| `BG-06A_검은빛_복도.png` | historical `bg_corridor_blacklight` | 현재 runtime 미사용 | 과거 GOOD 후속 검은빛·HIDDEN 기획 | 제출판 teaser 제거로 source/history만 보존 |
 
 ### 2026-08-13 야근 연속성 재편집본 source/runtime
 
@@ -209,4 +209,4 @@
 | `fonts/pretendard/Pretendard-Regular.woff2` | TITLE 일반 UI | 공식 v1.3.9 static WOFF2 400·765,892B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
 | `fonts/pretendard/Pretendard-SemiBold.woff2` | TITLE 강조 UI | 공식 v1.3.9 static WOFF2 600·785,856B | ready | 공식 GitHub release·OFL 1.1·source/runtime SHA-256 일치·HTTP 200 `font/woff2` |
 
-CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 현재 runtime은 초반 장면 4종, `doyun.magical_pose` head-only EDIT, `doyun.employee_id_surprised` alpha cleanup, HQ-05 공개 얼굴 4종과 OpenAI 제출 `bg_title` 채택 후 `15,318,095B`(14.61MiB)로 30MiB 상한 이하다.
+CDN과 외부 font request는 사용하지 않는다. 상세 출처·hash·notice는 [PROVENANCE.md](PROVENANCE.md)의 `2026-08-15 PC TITLE 로컬 폰트`를 따른다. 현재 제출 runtime은 초반 장면 4종, `doyun.magical_pose` head-only EDIT, `doyun.employee_id_surprised` alpha cleanup, HQ-05 공개 얼굴 4종과 OpenAI 제출 `bg_title`을 포함하고, corridor teaser 2종 제거 후 `15,114,735B`(14.41MiB)로 30MiB 상한 이하다.

@@ -115,7 +115,7 @@ describe("M5 장면 표시 계약", () => {
     expect(isActBoundaryTransition("n5_transform_result", "battle_wraith")).toBe(true);
     expect(isActBoundaryTransition("battle_wraith", "n7_gray_answer")).toBe(true);
     expect(isActBoundaryTransition("n8_final_spell", "ending_good")).toBe(true);
-    expect(isActBoundaryTransition("ending_good", "post_credit")).toBe(true);
+    expect(isActBoundaryTransition("ending_good", "post_credit")).toBe(false);
     expect(isActBoundaryTransition("n2_juno_intro", "n2_juno_followup")).toBe(false);
     expect(isActBoundaryTransition("battle_wraith", "battle_wraith")).toBe(false);
   });
@@ -239,7 +239,7 @@ describe("M5 장면 표시 계약", () => {
     ]);
   });
 
-  it("ending 문장별 주노 표정과 canonical post-credit 분리를 고정한다", () => {
+  it("ending 문장별 주노 표정을 고정한다", () => {
     expect(resolveEndingVisual("good", 0)).toEqual({
       characterId: "juno",
       emotion: "happy",
@@ -248,7 +248,6 @@ describe("M5 장면 표시 계약", () => {
       characterId: "juno",
       emotion: "happy",
     });
-    expect(resolveEndingVisual("post_credit", 0)).toBeNull();
     expect(resolveEndingVisual("normal", 0)?.emotion).toBe("neutral");
     expect(resolveEndingVisual("bad", 0)?.emotion).toBe("upset");
   });

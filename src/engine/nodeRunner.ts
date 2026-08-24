@@ -451,15 +451,6 @@ export class GameEngine {
     return this.battleState;
   }
 
-  advanceEndingNode(): GameState {
-    const node = this.getCurrentNode();
-    if (node.type !== "ending" || !node.next) {
-      throw new Error("이어지는 post-credit가 있는 엔딩에서만 이동할 수 있습니다.");
-    }
-    this.moveTo(node.next);
-    return this.getState();
-  }
-
   private applyBattleStoryFlags(node: BattleNode, battleState: BattleState): GameState {
     if (!node.storyFlow) return this.getState();
     const flags: string[] = [];

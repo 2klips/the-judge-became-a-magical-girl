@@ -7,10 +7,7 @@ import {
   type SceneActor,
 } from "../src/ui/sceneComposition";
 import { M5_SCENE_PREVIEWS } from "../src/dev/scenePreview";
-import {
-  resolveMissingAssetPresentation,
-  resolveOptionalAssetFailureBehavior,
-} from "../src/ui/gameView";
+import { resolveMissingAssetPresentation } from "../src/ui/gameView";
 
 const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 const gameViewSource = readFileSync(new URL("../src/ui/gameView.ts", import.meta.url), "utf8");
@@ -154,7 +151,7 @@ describe("Scenario v3.1 global scene composition", () => {
 
   it("Ending Juno는 중앙 card 밖 left-low actor lane을 사용한다", () => {
     expect(stylesSource).toMatch(
-      /\.game-shell\[data-composition="ending"\]\.ending-screen \.ending-character:not\(\.ending-black-magical-girl\)\s*\{[^}]*bottom:\s*clamp\(110px, 14vh, 160px\);[^}]*left:\s*clamp\(0%, 2vw, 3%\);/s,
+      /\.game-shell\[data-composition="ending"\]\.ending-screen \.ending-character\s*\{[^}]*bottom:\s*clamp\(110px, 14vh, 160px\);[^}]*left:\s*clamp\(0%, 2vw, 3%\);/s,
     );
   });
 
@@ -261,12 +258,10 @@ describe("Scenario v3.1 global scene composition", () => {
     }
   });
 
-  it("post-credit 누락 asset은 debug에서 명시적 label, production에서 hidden이다", () => {
-    expect(resolveMissingAssetPresentation("검은 마법소녀", "debug")).toMatchObject({
-      text: "ASSET MISSING · 검은 마법소녀",
+  it("일반 누락 asset은 debug에서 명시적 label을 유지한다", () => {
+    expect(resolveMissingAssetPresentation("검증 대상", "debug")).toMatchObject({
+      text: "ASSET MISSING · 검증 대상",
       className: "asset-missing-debug",
     });
-    expect(resolveOptionalAssetFailureBehavior(true)).toBe("debug-label");
-    expect(resolveOptionalAssetFailureBehavior(false)).toBe("hide");
   });
 });

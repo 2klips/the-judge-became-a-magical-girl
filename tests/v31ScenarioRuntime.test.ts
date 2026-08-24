@@ -125,12 +125,12 @@ describe("Scenario v3.1 runtime data contract", () => {
     ]);
   });
 
-  it("GOOD/HIDDEN은 같은 독립 post-credit로 이어지고 나머지 엔딩은 terminal이다", () => {
-    expect(ending("ending_good").next).toBe("post_credit");
-    expect(ending("ending_hidden").next).toBe("post_credit");
+  it("제출판의 GOOD/HIDDEN/NORMAL/BAD는 모두 terminal ending이다", () => {
+    expect(ending("ending_good").next).toBeUndefined();
+    expect(ending("ending_hidden").next).toBeUndefined();
     expect(ending("ending_normal").next).toBeUndefined();
     expect(ending("ending_bad").next).toBeUndefined();
-    expect(ending("post_credit").endingId).toBe("post_credit");
+    expect(data.scenario.some(({ nodeId }) => nodeId === "post_credit")).toBe(false);
   });
 
   it("기술적 음성 실패는 N8 narrative_refusal intent를 자동 선택하는 데이터 경로가 없다", () => {

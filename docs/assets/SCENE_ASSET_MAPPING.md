@@ -50,8 +50,8 @@
 | `[확정·M5 필수]` | `bg_hall_void` | `bg_hall_void.webp` | 같은 사무실 와이드 구도에 회색 안개·떠다니는 평가표가 침식한 상태 | battle p2 |
 | `[확정·M5 폴백 가능]` | `bg_mind_archive` | `bg_mind_archive.webp` | 기록 UI·평가표가 떠다니는 심리/아카이브 공간 | battle p3의 N7 과거 기록·핵심 질문 |
 | `[확정·M5 폴백 가능]` | `bg_battle_core` | `bg_battle_core.webp` | 심야 사무실의 정지한 핵심 팀을 보호하며, 회색 핵과 별빛이 대치하는 최종전 공간 | battle p3 최종 주문·정화 직전 |
-| `[컷 가능]` | `bg_corridor_day` | `bg_corridor_day.webp` | 밝은 빈 사무실 복도 | GOOD 후속 훅 도입, HIDDEN 전환 |
-| `[컷 가능]` | `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | 같은 복도 계열의 검은빛·보랏빛 침식 상태. 검은 마법소녀 인물은 별도 컷/스프라이트 | GOOD 후속 검은빛, HIDDEN 크레딧 이후 |
+| `[역사 기록·제출판 제외]` | `bg_corridor_day` | `bg_corridor_day.webp` | 밝은 빈 사무실 복도 | 과거 GOOD/HIDDEN 후속 훅 기획. 2026-08-24 runtime/catalog 제거, source만 보존 |
+| `[역사 기록·제출판 제외]` | `bg_corridor_blacklight` | `bg_corridor_blacklight.webp` | 같은 복도 계열의 검은빛·보랏빛 침식 상태 | 과거 GOOD/HIDDEN 후속 훅 기획. 2026-08-24 runtime/catalog 제거, source만 보존 |
 | `[확장]` | `bg_lounge_day` | `bg_lounge_day.webp` | 10~30분 확장판 일상 제2장소 | 현재 M5 미사용 |
 | `[확장]` | `bg_street_evening` | `bg_street_evening.webp` | 10~30분 확장판 챕터2 거리 | 현재 M5 미사용 |
 
@@ -59,7 +59,7 @@
 
 `bg_hall_good/normal/bad`, `bg_hall_time_stop`, `bg_office_wide`, `bg_desk_closeup`, `bg_transform_space`, `bg_battle_wide`, `bg_mind_archive`, `bg_battle_core`가 없거나 불량이면 DEC-032의 기존 4개 배경과 CSS/DOM 연출로 폴백한다. 추가 배경 하나의 실패가 완주를 막지 않는다.
 
-`bg_corridor_day/blacklight`는 GOOD 후속 훅·HIDDEN 확장용 컷 가능 배경이다. 미통합이어도 GOOD/NORMAL/BAD 본편 완료를 막지 않는다.
+`bg_corridor_day/blacklight`는 과거 GOOD/HIDDEN 확장용 기획이었다. 제출판에서는 teaser 전체가 제거되어 runtime 논리 ID와 binary가 없으며, source/provenance만 역사 기록으로 보존한다.
 
 ### 3.2 캐릭터·적
 
@@ -99,7 +99,7 @@
 | `[확정·M5 필수]` | `transform.complete` | `cut_transform_02.webp` | 일몰이 아닌 심야 변신 완료. 마법소녀 도윤과 주노가 야근 장면의 시간대를 유지. 완전·표준·구제 공용 | N5 주문 성공 직후 2번 |
 | `[확정·ready·DEC-077]` | `cut.monitor_direct_wish_prompt` | `cut_monitor_direct_wish_prompt.webp` | 같은 야근 workstation의 모니터에 “지금 가장 원하는 것을 직접 말해주세요!”가 baked된 조용한 초현상 prompt. 이 asset만 visible baked story text 허용 | N0 final prompt→N1 voice opening. 같은 visible DOM 문구는 숨기고 동등한 screen-reader semantic만 유지 |
 | `[확정·ready·DEC-077]` | `cut.juno_monitor_emerge` | `cut_juno_monitor_emerge.webp` | 같은 카메라·조명의 LEFT monitor에서 주노가 물리적으로 나오는 순간. baked Juno 포함 | N1 reply→N2 live 사이 1,000ms full-stage CUT. CUT 동안 Doyun/Juno/Wraith live actor 0 |
-| `[컷 가능]` | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | 어두운 복도, 긴 검은 지팡이를 든 성인 여성 실루엣, 회색 픽셀이 지팡이로 흡수됨. 얼굴·이름·정체 노출 금지 | GOOD 후속 장면, HIDDEN 크레딧 이후 재사용 |
+| `[역사 기록·제출판 제외]` | `ending.black_magical_girl` | `cut_black_magical_girl_01.webp` | 과거 어두운 복도 teaser 기획. binary는 제작되지 않음 | 2026-08-24 logical ID·presentation 제거; 대체 teaser asset 없음 |
 
 `[ready, 2026-08-13]` `transform.cast`는 A2 사원증·야간 영창, `transform.complete`는 심야 변신 완료로 재편집했다. DEC-016의 `cast → complete` 순서와 완전·표준·구제 공용 사용 계약은 변경하지 않았다. 사용자가 미세한 구도·가시성 차이를 수용하고 시각 채택했으며, 데스크톱 16:9만 범위다. 대체 후 브라우저 QA와 권리·배포 확인은 대기다.
 
@@ -175,11 +175,10 @@
 |---|---|---|---|---|---|
 | 수렴 `ch3_gray_answer` | 작은 회색 빛의 질문 | `bg_hall_dark` + 색 회복 오버레이 | 도윤 `magical_pose` + 주노 `neutral`; 긍정 `happy`, 냉소 `upset`; 망령 제거 | 선호 `bgm_ending`; 폴백 `bgm_daily` | 작은 회색 핵은 Canvas/CSS 파티클 |
 | GOOD `ending_good` | 멈췄던 시간이 다시 흐르고 긴 밤 끝에 아침빛·평가 수정 | `bg_hall_good` | 도윤 `normal_smile` + `juno.happy` | ending/폴백 daily | `멈췄던 시간이 다시 흐른다. 긴 밤 끝에 아침빛...`의 시간 전환을 표현. 평가표 문장은 DOM |
-| GOOD 후속 훅 도입 | 1,024개 잔향·복도 전환 | `bg_corridor_day` | `juno.surprised` 반응 | ending 유지 | 복도 끝 검은빛 직전까지 사용. 컷 가능 배경이므로 없으면 기존 검은 화면 전환 |
-| GOOD 후속 훅 검은빛 | 검은 마법소녀 암시 | `bg_corridor_blacklight` + 컷 가능 `ending.black_magical_girl` | 인물은 컷에 포함. 주노 별도 표시 금지 | 마지막 순간 정지/감쇠 | 배경 자체는 인물 대체물이 아니다. 컷 없으면 복도+픽셀 흡수 CSS+대사. 본편 이름 `노아` 노출 금지 |
+| GOOD 제출판 종료 | 승인된 Result Frame | `bg_hall_good` | 도윤 `normal_smile` + `juno.happy` | ending 유지 | 마지막 `계속 ›` 뒤 기존 `처음부터` 동작. post-credit teaser 0 |
 | NORMAL `ending_normal` | 판단 보류·한 번 더 | `bg_hall_normal` | 도윤 `normal_smile` + `juno.neutral` | ending/폴백 daily | `UNKNOWN USER CONNECTED`는 DOM. 검은 마법소녀 실루엣 금지 |
 | BAD `ending_bad` | 회색 업무일지 | `bg_hall_bad` | 도윤 `normal_empty` + `juno.upset` | ending/폴백 daily | 회색 원형·반복 평가표는 DOM/CSS. 검은 마법소녀 직접 등장 금지 |
-| HIDDEN `[확장]` | 완벽한 호흡, 완벽한 사고 | `bg_hall_good` → `bg_corridor_blacklight` | `juno.surprised`; `ending.black_magical_girl` 재사용 | ending | M5 제외. 전용 신규 물리 에셋 만들지 않음 |
+| HIDDEN | 완벽한 호흡, 완벽한 사고 | `bg_hall_good` | 도윤 `normal_smile` + `juno.happy` | ending | five-condition·고유 사내 인기 변신 영상 문구 유지. 마지막 `계속 ›` 뒤 `처음부터`; post-credit teaser 0 |
 
 ## 5. 런타임 매핑 규칙
 
@@ -229,8 +228,8 @@
 - `[구현]` 같은 배경 ID는 정지 표시하고 다른 ID만 420ms crossfade한다. 감소 모션 환경에서는 전환을 제거한다.
 - `[구현·자동/Chrome QA PASS, DEC-071·073]` TITLE은 선택형 9-state microphone FSM, Settings, voice/click start·resume, 접근 가능한 save 없음 Continue, 첫 gesture `bgm_daily`, PC 3 viewport no-scroll 계약을 적용한다. gameplay PTT는 같은 capture stream을 공유하는 버튼 내부 live meter를 사용한다. CORSAIR·QHD Webcam TITLE QA와 CORSAIR gameplay live fill은 PASS이며, DENIED/NO_DEVICE/UNSUPPORTED/ERROR 등 일부 실제 상태와 Space/Enter·physical loud·강제 scene replacement·getUserMedia 횟수 계측은 manual PENDING이다.
 - `[구현]` battle 주문은 보정 범위보다 너무 작거나 큰 목소리를 실패 처리한다. 같은 턴 첫 음량 실패는 무료 재시도, 두 번째 실패는 `+0`으로 턴을 소비한다.
-- `[구현·QA PASS, DEC-036~039]` 배경 원본 16장을 `1920×1080 WebP ≤500KB` runtime 파일로 변환하고 catalog·node line·변신 stage·battle phase/p3 spell·ending line 고정 전환을 연결했다. `?debug=1` 장면 선택기와 22개 비파괴 프리뷰가 16개 배경을 모두 검수한다.
-- `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 생성 당시 Suno Pro는 `USER ATTESTED`지만 사람 청각 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 계속 planned다.
+- `[구현·QA PASS, DEC-036~039]` 과거 배경 원본 16장을 `1920×1080 WebP ≤500KB`로 통합했다. 제출판은 corridor teaser 2종을 제외한 배경 14장을 runtime에 유지하며 `?debug=1` 장면 선택기의 26개 비파괴 프리뷰가 현재 장면 계약을 검수한다.
+- `[부분 통합]` `bgm_crisis`, `bgm_ending`은 runtime `ready`다. 생성 당시 Suno Pro는 `USER ATTESTED`지만 사람 청각 QA 전 `approved`가 아니며, 로드 실패 시 기존 `bgm_battle`·`bgm_daily` 폴백을 유지한다. `ending.black_magical_girl`은 제출 runtime에서 제거됐고 제작하지 않는다.
 - `[대기]` 필수 물리 에셋의 사람 시각·청각·scene/style consistency QA를 진행한다. image reference-rights는 `USER ATTESTED / INTERNAL PROJECT LINEAGE`로 PASS 후보지만 법률 자문·제3자 허가 확인은 아니다.
 
 ## 7. 현재 M5에서 제작하지 않을 항목
@@ -294,7 +293,7 @@
 | AR-11 | `임시 통합·교체 검토` | 도윤 세트의 OpenAI 직접 생성·당시 유료 Pro 이상과 internal project lineage는 `USER ATTESTED`; `char_doyun_magical.png`은 정면 포즈다 | 권리 blocker는 해소됐으나 전투 구도와 장면 continuity가 약할 수 있음 | 현 runtime 사용. AR-01/02 사람 QA에서 keep/edit/replace 판정 후 같은 계약 경로로 재검수 |
 | AR-12 | `ready·OpenAI TITLE HUMAN_RECHECK` | 배경 16개 runtime 규격·장면 로드 PASS. 2026-08-24 사용자 제공 OpenAI 제출본을 `bg_title`로 채택했고 과거 NHN runtime은 superseded. 새 원본의 exact 생성 모델·작업 ID는 `UNKNOWN`; `BG-02`는 4:3 원본에서 16:9 crop | public-visible NHN branding은 0이나 새 TITLE의 3개 PC viewport 사람 시각 승인이 남음. 제출 자산 사용 승인은 별도 상표 허가·법률 승인 기록이 아님. N2→N3 camera hard cut은 유지 | OpenAI 제출 TITLE 3개 viewport HUMAN_RECHECK 후 freeze. 역사적 NHN 원본·결정은 source/provenance에만 보존 |
 | AR-13 | `OPEN·비차단` | 인계 문서가 과거 17종 대비 실제 16장이라고 기록했지만 누락된 1장의 식별자·장면이 없다 | 누락이 필수 장면이면 뒤늦은 재매핑 가능 | 현재 16장만 DEC-036으로 매핑. 제작자에게 과거 17번째 파일명·용도 확인 후 별도 추가 |
-| AR-14 | `구현·회귀 QA 대기` | 16개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
+| AR-14 | `구현·회귀 QA 대기` | 제출판 14개 배경 매핑과 동일 ID 무전환·변경 ID crossfade 구현 | 회귀 시 잘못된 배경 또는 불필요한 깜박임 | presentation unit + 브라우저 장면 QA |
 | AR-15 | `PASS·일부 수동 QA PENDING` | DEC-071 optional TITLE microphone FSM과 DEC-073 PTT 내부 live meter를 구현했다. 9-state fake microphone·one-stream·3 viewport no-scroll 자동 QA, CORSAIR·QHD Webcam TITLE QA, CORSAIR gameplay live fill QA는 PASS다. battle 적응형 dBFS 판정은 유지 | 자동 검증 밖의 권한·장치·API 상태, keyboard hold, 극단 음량, 강제 화면 교체에서 회귀 가능 | DENIED/NO_DEVICE/UNSUPPORTED/ERROR, OS reduced-motion, focused Space/Enter PTT, physical loud, 강제 scene replacement, 실제 getUserMedia 횟수 계측은 manual PENDING으로 유지 |
 | AR-16 | `source ready·runtime 대기` | 선택 SFX 5종은 규격·해시 확인됐지만 코드 cue·중복 방지·PTT 격리 미연결 | 잘못 연결하면 N5 치명타 오사용, 장면 중복음, STT 오염 가능 | [SFX_HANDOFF.md](provenance/SFX_HANDOFF.md)대로 runtime 채택 후 자동·청감 QA |
 

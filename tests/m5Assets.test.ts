@@ -28,8 +28,6 @@ const confirmedBackgrounds = [
   "bg_hall_void",
   "bg_battle_core",
   "bg_mind_archive",
-  "bg_corridor_day",
-  "bg_corridor_blacklight",
   "bg_transform_space",
 ] as const;
 
@@ -257,7 +255,7 @@ describe("M5 에셋 계약", () => {
     expect(viteConfig).toContain('".woff2": "font/woff2"');
   });
 
-  it("확정 배경 16개를 runtime 논리 ID와 파일명으로 해석한다", () => {
+  it("제출판 확정 배경 14개를 runtime 논리 ID와 파일명으로 해석한다", () => {
     for (const logicalId of confirmedBackgrounds) {
       expect(resolveBackgroundAsset(logicalId)?.primaryPath).toBe(
         `assets/bg/${logicalId}.webp`,
@@ -265,7 +263,7 @@ describe("M5 에셋 계약", () => {
     }
   });
 
-  it("확정 배경 16개 실파일은 1920×1080 WebP이며 각각 500KB 이하다", () => {
+  it("제출판 확정 배경 14개 실파일은 1920×1080 WebP이며 각각 500KB 이하다", () => {
     for (const logicalId of confirmedBackgrounds) {
       const assetPath = resolveBackgroundAsset(logicalId)?.primaryPath ?? "";
       const diskPath = runtimeDiskPath(assetPath);
@@ -308,9 +306,7 @@ describe("M5 에셋 계약", () => {
     expect(resolveImageAsset("transform.complete")).toBe(
       "assets/cut/cut_transform_02.webp",
     );
-    expect(resolveImageAsset("ending.black_magical_girl")).toBe(
-      "assets/cut/cut_black_magical_girl_01.webp",
-    );
+    expect(resolveImageAsset("ending.black_magical_girl")).toBeNull();
     expect(resolveBgmAsset("bgm_transform")).toBe(
       "assets/bgm/bgm_transform.mp3",
     );
@@ -428,7 +424,6 @@ describe("M5 에셋 계약", () => {
       "ending_normal",
       "ending_bad",
       "ending_hidden",
-      "post_credit",
     ]) {
       expect(bgmByNode.get(nodeId), nodeId).toBe("bgm_ending");
     }

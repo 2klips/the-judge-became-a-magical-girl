@@ -192,14 +192,13 @@ describe("M5 도윤 화면 노출 계약", () => {
     );
   });
 
-  it("엔딩 본문은 도윤을 유지하고 post-credit에서는 숨긴다", () => {
+  it("제출판 네 엔딩은 각 결과에 맞는 도윤을 유지한다", () => {
     expect(resolveDoyunVisual({ kind: "ending", endingId: "good", lineIndex: 4 })).toBe(
       "doyun.normal_smile",
     );
     expect(resolveDoyunVisual({ kind: "ending", endingId: "good", lineIndex: 5 })).toBe(
       "doyun.normal_smile",
     );
-    expect(resolveDoyunVisual({ kind: "ending", endingId: "post_credit", lineIndex: 0 })).toBeNull();
     expect(resolveDoyunVisual({ kind: "ending", endingId: "bad", lineIndex: 2 })).toBe(
       "doyun.normal_empty",
     );

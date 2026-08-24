@@ -72,8 +72,29 @@ const legacyNodeAliases: Readonly<Record<string, string>> = {
   ch3_gray_answer: "n7_gray_answer",
 };
 
+const canonicalEndingNodeIds = new Set(["ending_good", "ending_hidden"]);
+
 const migrateLegacyNodeId = (nodeId: string): string =>
   legacyNodeAliases[nodeId] ?? nodeId;
+
+function migrateLegacyPostCreditState(
+  currentNodeId: string,
+  history: readonly string[],
+): { currentNodeId: string; history: string[] } {
+  if (currentNodeId !== "post_credit") {
+    return { currentNodeId, history: [...history] };
+  }
+  const previousEnding = [...history]
+    .reverse()
+    .find((nodeId) => canonicalEndingNodeIds.has(nodeId));
+  if (!previousEnding) {
+    return { currentNodeId, history: [...history] };
+  }
+  return {
+    currentNodeId: previousEnding,
+    history: history.filter((nodeId) => nodeId !== "post_credit"),
+  };
+}
 
 export function createInitialGameState(config: GameConfig): GameState {
   return {
@@ -232,8 +253,12 @@ export function parseStateSnapshot(
     return null;
   }
   const snapshot = result.data;
-  const currentNodeId = migrateLegacyNodeId(snapshot.currentNodeId);
-  const history = snapshot.history.map(migrateLegacyNodeId);
+  const migratedCurrentNodeId = migrateLegacyNodeId(snapshot.currentNodeId);
+  const migratedHistory = snapshot.history.map(migrateLegacyNodeId);
+  const { currentNodeId, history } = migrateLegacyPostCreditState(
+    migratedCurrentNodeId,
+    migratedHistory,
+  );
   if (
     snapshot.flags.some((flag) => !allowedFlags.has(flag)) ||
     !knownNodeIds.has(currentNodeId) ||

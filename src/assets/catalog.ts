@@ -70,14 +70,6 @@ const backgrounds = {
     logicalId: "bg_mind_archive",
     primaryPath: "assets/bg/bg_mind_archive.webp",
   },
-  bg_corridor_day: {
-    logicalId: "bg_corridor_day",
-    primaryPath: "assets/bg/bg_corridor_day.webp",
-  },
-  bg_corridor_blacklight: {
-    logicalId: "bg_corridor_blacklight",
-    primaryPath: "assets/bg/bg_corridor_blacklight.webp",
-  },
   bg_transform_space: {
     logicalId: "bg_transform_space",
     primaryPath: "assets/bg/bg_transform_space.webp",
@@ -115,7 +107,6 @@ const imagePaths = {
   "doyun.magical_pose": "assets/char/char_doyun_magical_pose.png",
   "transform.cast": "assets/cut/cut_transform_01.webp",
   "transform.complete": "assets/cut/cut_transform_02.webp",
-  "ending.black_magical_girl": "assets/cut/cut_black_magical_girl_01.webp",
 } as const;
 
 const bgmPaths = {

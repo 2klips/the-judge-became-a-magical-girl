@@ -2136,3 +2136,14 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - focused RED 3건은 source provenance 부재, 과거 NHN runtime hash 유지, preview 임시 표기였다. 원본 보존·runtime 정규화·preview label 갱신 뒤 focused TITLE/asset 32/32가 PASS했다. runtime-facing source와 build HTML/CSS/JS의 NHN/NH-IN/HACKATHON 문자열은 0이다.
 - 기존 왼쪽 gradient에서 1920×1080·1600×900·1366×768 actual Chrome을 확인해 추가 CSS 변경은 하지 않았다. 각 viewport에서 title/menu/mic/BGM 가독성, OpenAI 핵심 배너 노출, focus visible을 확인했고 overlap·crop·scroll·console error/warning은 0이다.
 - full suite 64 files·463 tests, TypeScript check, production build 158 modules, QA build 128 modules, `git diff --check`가 PASS했다. HQ-10·HQ-11 `PASS / FREEZE`는 보존했고 OpenAI TITLE만 `HUMAN_RECHECK`다. HQ-12·AR-10·main 통합·push/deploy는 시작하지 않았다.
+
+## HQ-12 Post-credit Submission Closure
+
+- 작업일·시작 HEAD: 2026-08-24 KST · `58314bd030c8c2868c666e36ec21a39248a5d38c`.
+- 감사 결과 GOOD/HIDDEN만 `post_credit`로 이어졌고 NORMAL/BAD는 기존 `처음부터` terminal이었다. teaser는 corridor 배경 2장과 미납품 `ending.black_magical_girl`, 7개 전용 line에 의존했다. HIDDEN의 실제 고유 보상은 ending 본문의 five-condition route·고유 title·사내 인기 변신 영상 문구였다.
+- submission scope에 따라 GOOD/HIDDEN의 `next`, `post_credit` node, teaser renderer/transition/preview/composition, logical asset IDs를 제거했다. 네 ending의 마지막 action은 모두 기존 `처음부터`이며 Story ending copy·판정 조건·HQ-11 geometry는 변경하지 않았다.
+- schema v1 legacy save가 `post_credit`에 머물러 있으면 history의 직전 canonical GOOD/HIDDEN ending으로 복구한다. GameState field·schema version·relationship·flags는 추가하거나 변경하지 않았다.
+- 더 이상 참조되지 않는 corridor runtime WebP 2장만 제거했다. source/provenance와 과거 기획 문서는 역사 기록으로 보존하고, 존재하지 않던 Black Magical Girl binary나 대체 teaser asset은 만들지 않았다.
+- RED는 canonical ending terminal 계약, runtime teaser reference 0, GOOD/HIDDEN legacy save 복구에서 4건이었다. 최소 구현 뒤 HQ-12와 인접 ending/asset/composition 회귀를 focused suite로 검증했다.
+- actual Chrome production/debug OFF에서는 GOOD 전체 click flow, 마지막 `처음부터`, N0 새 게임 복귀를 확인했다. unknown girl/Black Magical Girl/broken image/stuck/console error/scroll은 0이다. HIDDEN은 완창 음성 입력이 필요한 실제 진입 경로라 이번 자율 click QA에서 재진입하지 않았고, five-condition route/terminal exit는 focused engine/runtime 회귀로 검증했다.
+- HQ-10 Battle·HQ-11 Ending·OpenAI TITLE은 `PASS / FREEZE`; HQ-12는 HIDDEN actual user recheck를 포함해 `HUMAN_RECHECK`다. push/deploy·AR-10·추가 visual production은 시작하지 않는다.

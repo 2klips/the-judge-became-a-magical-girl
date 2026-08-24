@@ -210,7 +210,7 @@ export function compositionForContext(context: string): SceneComposition {
   ) {
     return compositions.battle;
   }
-  if (context.startsWith("ending_") || context === "post_credit") {
+  if (context.startsWith("ending_")) {
     return compositions.ending;
   }
   return compositions.conversation;

@@ -20,13 +20,14 @@ const renderEnding = gameViewSource.slice(
 );
 
 describe("HQ-11 Ending final presentation", () => {
-  it("isolates the four canonical endings from the untouched post-credit surface", () => {
+  it("keeps the four canonical endings on the frozen editorial surface", () => {
     expect(gameViewSource).toContain("isEditorialEndingId");
     expect(renderEnding).toContain("ending-editorial-screen");
     expect(renderEnding).toContain("ending-editorial");
     expect(renderEnding).toContain("ending-result-plate");
     expect(renderEnding).toMatch(/isEditorialEndingId\(node\.endingId\)/);
-    expect(renderEnding).toMatch(/node\.endingId === "post_credit"/);
+    expect(renderEnding).not.toContain("post_credit");
+    expect(renderEnding).toContain('element("button", advanceClass, "처음부터")');
   });
 
   it("splits the frozen ending heading into an independent header and title", () => {
@@ -123,17 +124,17 @@ describe("HQ-11 Ending final presentation", () => {
 
   it("keeps Juno left-low and Doyun right outside the editorial title lane", () => {
     expect(vnStylesSource).toMatch(
-      /\.game-shell\[data-composition="ending"\]\.ending-editorial-screen\s+\.ending-character:not\(\.ending-black-magical-girl\)\s*\{[^}]*left:\s*clamp\([^}]*width:\s*min\(/s,
+      /\.game-shell\[data-composition="ending"\]\.ending-editorial-screen\s+\.ending-character\s*\{[^}]*left:\s*clamp\([^}]*width:\s*min\(/s,
     );
     expect(vnStylesSource).toMatch(
       /\.game-shell\[data-composition="ending"\]\.ending-editorial-screen\s+\.ending-player-visual\s*\{[^}]*right:\s*clamp\([^}]*width:\s*min\(/s,
     );
   });
 
-  it("freezes ending IDs, titles, and GOOD/HIDDEN post-credit routing", () => {
+  it("freezes ending IDs and titles while making every submission ending terminal", () => {
     const endings = Object.fromEntries(
       scenario
-        .filter((node) => node.endingId && node.endingId !== "post_credit")
+        .filter((node) => node.endingId)
         .map((node) => [node.endingId, node]),
     );
 
@@ -144,8 +145,8 @@ describe("HQ-11 Ending final presentation", () => {
     expect(endings.hidden.lines?.[0]?.text).toBe(
       "HIDDEN — 완벽한 호흡, 완벽한 사고",
     );
-    expect(endings.good.next).toBe("post_credit");
-    expect(endings.hidden.next).toBe("post_credit");
+    expect(endings.good.next).toBeUndefined();
+    expect(endings.hidden.next).toBeUndefined();
     expect(endings.normal.next).toBeUndefined();
     expect(endings.bad.next).toBeUndefined();
   });

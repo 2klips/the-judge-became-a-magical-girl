@@ -225,7 +225,7 @@ export const endingNodeSchema = z
     nodeId: idSchema,
     type: z.literal("ending"),
     scene: sceneSchema,
-    endingId: z.enum(["good", "normal", "bad", "hidden", "post_credit"]),
+    endingId: z.enum(["good", "normal", "bad", "hidden"]),
     lines: z.array(lineSchema).min(1),
     gradeVariants: gradeVariantsSchema.optional(),
     next: idSchema.optional(),

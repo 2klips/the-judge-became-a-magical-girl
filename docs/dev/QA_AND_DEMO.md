@@ -695,3 +695,12 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - freeze 범위는 fixed Result Frame 외부 geometry, header/title independent anchors, 공통 result title scale, detached CTA geometry, Juno/Doyun actor composition이다.
 - HQ-10 Battle도 기존 `PASS / FREEZE`를 유지한다. release-blocking regression 증거 없이는 두 영역의 visual presentation을 다시 수정하지 않는다.
 - HQ-12 Post-credit는 별도 `OPEN`이며 이 승인으로 자동 완료되지 않는다.
+
+## 30. 2026-08-24 HQ-12 제출판 종료 flow 재검수
+
+- 최신 사용자 범위 결정에 따라 미지의 소녀/Black Magical Girl teaser를 제출 runtime에서 제거했다. GOOD/NORMAL/BAD/HIDDEN은 승인된 Result Frame의 마지막 페이지 뒤 기존 `처음부터` 동작으로 새 게임 상태에 복귀한다.
+- GOOD/HIDDEN의 ending 조건·copy와 HIDDEN five-condition은 변경하지 않았다. HIDDEN의 `완벽한 호흡, 완벽한 사고`와 사내 인기 변신 영상 문구가 고유 presentation으로 남는다.
+- 과거 `post_credit` save는 schema version을 올리지 않고 history의 직전 `ending_good` 또는 `ending_hidden`으로 복구한다. 복구 뒤 teaser node를 다시 저장하거나 렌더하지 않는다.
+- 제출 runtime에는 `post_credit`, `ending.black_magical_girl`, `bg_corridor_day`, `bg_corridor_blacklight` reference가 없다. corridor runtime binary는 제거했지만 source/provenance 역사 기록은 유지한다. 신규/편집 binary와 대체 teaser는 0이다.
+- focused QA는 BAD/NORMAL/GOOD/HIDDEN terminal routing, HIDDEN 5조건·고유 문구, legacy save migration, teaser reference 0을 검증한다. actual Chrome production/debug OFF에서는 GOOD 전체 click flow의 마지막 페이지와 `처음부터` 이후 N0 새 게임 복귀, unknown girl/Black Magical Girl/broken image/stuck/console error/scroll 0을 확인했다. HIDDEN은 완창 음성 입력이 필요한 실제 진입 경로이므로 이번 자율 click QA에서는 재진입하지 않았으며, route/engine 회귀 PASS와 기존 고정 Ending geometry를 근거로 사용자 `HUMAN_RECHECK`를 유지한다.
+- HQ-10 Battle·HQ-11 Ending·OpenAI TITLE은 `PASS / FREEZE`. HQ-12는 사용자 실제 화면 승인 전 `HUMAN_RECHECK`다.

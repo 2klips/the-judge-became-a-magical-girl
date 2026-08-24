@@ -187,22 +187,22 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Implementation Status | `PASS / FREEZE` — GOOD/NORMAL/BAD/HIDDEN 공통 editorial system과 subtle fixed result frame을 유지했다. accent·kicker·ending code는 frame 상단의 독립 header anchor, 결과 title만 frame 중앙의 독립 title anchor를 사용해 title 줄 수가 header를 움직이지 않는다. 결과 title은 네 ending 공통 `clamp(2.875rem, 3.4vw, 4rem)` scale이다. 빈 support slot과 긴 divider는 시각 flow에서 제거했고 `계속 ›`는 frame 아래 공통 중심축의 별도 CTA다. center-left frame, left-low Juno, right Doyun과 ending copy·logic·routing은 변경하지 않았다. |
 | Human Recheck | 2026-08-24 사용자가 final HEAD `099fe59be85f72a0619103ffe9545efd8d17ef44` 화면을 승인했다. production/debug OFF에서 title은 1920 `64px`, 1600 `54.4px`, 1366 `46.44px`이며 frame·header·title center anchor·CTA geometry는 ending 간 동일하다. frame/actor·frame/BGM·CTA/actor overlap, crop·scroll·console error는 0이다. HIDDEN은 원문을 유지한 `완벽한 호흡,` / `완벽한 사고` 2줄이다. |
 | Final Status | `PASS / FREEZE` |
-| Related SSOT/TODO | Ending frame geometry, header/title independent anchors, result title scale, detached CTA geometry, actor composition을 freeze한다. release-blocking regression 증거 없이는 추가 visual polish를 하지 않는다. HQ-12 Post-credit는 별도 `OPEN`이다. |
+| Related SSOT/TODO | Ending frame geometry, header/title independent anchors, result title scale, detached CTA geometry, actor composition을 freeze한다. release-blocking regression 증거 없이는 추가 visual polish를 하지 않는다. HQ-12 제출 종료는 별도 `HUMAN_RECHECK`다. |
 
-### HQ-12 — Post-credit black magical girl
+### HQ-12 — Post-credit submission closure
 
 | 필드 | 내용 |
 |---|---|
-| Scene/Beat | canonical post-credit corridor |
-| Category | Missing asset / composition |
+| Scene/Beat | GOOD/HIDDEN ending exit |
+| Category | Submission scope / terminal flow |
 | User Evidence | 캡처 #16. 검은 마법소녀가 보이지 않고 중앙 POST-CREDIT card만 보임 |
-| Problem | 후속 훅의 주체가 character가 아니라 modal이 됨 |
-| Desired Direction | `ending.black_magical_girl` 실제 asset과 character-first composition. UI는 작게 후퇴 |
+| Problem | 과거 기획의 후속 훅은 미납품 character asset에 의존해 제출판에서 미완성 장면으로 보임 |
+| Desired Direction | 최신 사용자 결정으로 미지의 소녀 teaser를 제출 runtime에서 제거하고, 네 Ending의 승인된 Result Frame에서 기존 `처음부터` 종료 동작으로 완결한다. 대체 teaser asset은 만들지 않는다. |
 | Priority | P0 |
-| Implementation Status | `OPEN` — binary 미제작; debug missing label만 구현됨 |
-| Human Recheck | “누구지?”라는 인물 훅, corridor depth, title/CTA 비가림 확인 |
-| Final Status | `OPEN` |
-| Related SSOT/TODO | black magical girl cut·post-credit incomplete. `RECONFIRMED BY FULL PLAY HUMAN QA` |
+| Implementation Status | `HUMAN_RECHECK` — `post_credit` node·GOOD/HIDDEN 연결·teaser presentation/logical IDs를 제출 runtime에서 제거했다. 모든 Ending은 기존 `처음부터` 동작을 사용하며 legacy `post_credit` save는 직전 GOOD/HIDDEN으로 복구한다. 신규/편집 binary 0. |
+| Human Recheck | production/debug OFF에서 GOOD/HIDDEN `계속 ›` 이후 unknown girl·Black Magical Girl 0, 정상 재시작, broken image·stuck·console error·scroll 0 확인 |
+| Final Status | `HUMAN_RECHECK` |
+| Related SSOT/TODO | 과거 Black Magical Girl character-first 방향은 historical record로만 유지하며 현재 제출 runtime 요구사항이 아니다. HIDDEN five-condition과 `완벽한 호흡, 완벽한 사고`·사내 인기 변신 영상 문구는 유지한다. |
 
 ### HQ-13 — Overall UI/UX language
 
@@ -214,10 +214,10 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 장면별 독립 component처럼 보여 하나의 VN 제품 언어가 형성되지 않음 |
 | Desired Direction | 공통 navy-black base, 얇은 border, 작은 radius·padding, 제한된 speaker accent, 명확한 대사 > 서사 선택 > 입력 방식 위계 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `HUMAN_RECHECK` — core VN foundation과 HQ-10 Battle·HQ-11 Ending은 사용자 `PASS / FREEZE`. Post-credit scene-specific presentation이 남아 global 항목은 유지 |
-| Human Recheck | core dialogue·Battle·Ending은 사용자 승인. Post-credit는 HQ-12에서 별도 검수 |
+| Implementation Status | `HUMAN_RECHECK` — core VN foundation과 HQ-10 Battle·HQ-11 Ending·OpenAI TITLE은 사용자 `PASS / FREEZE`. HQ-12 teaser 제거는 제출 종료 flow로 구현되어 별도 사람 재검수 대기 |
+| Human Recheck | core dialogue·Battle·Ending·TITLE은 사용자 승인. HQ-12 종료 flow는 GOOD/HIDDEN 실제 화면에서 별도 검수 |
 | Final Status | `HUMAN_RECHECK` |
-| Related SSOT/TODO | HQ-02 core migration·HQ-10 Battle·HQ-11 Ending 완료. HQ-06·HQ-12는 scene-specific `OPEN` 유지 |
+| Related SSOT/TODO | HQ-02 core migration·HQ-10 Battle·HQ-11 Ending 완료. HQ-06은 `OPEN`, HQ-12는 `HUMAN_RECHECK` 유지 |
 
 ### HQ-14 — OpenAI submission TITLE rebrand
 
@@ -229,9 +229,9 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 기존 `bg_title.webp`에 NHN/NH-IN/HACKATHON branding이 baked되어 OpenAI 제출 첫 화면에 노출됨 |
 | Desired Direction | 제공 원본 composition·branding을 유지한 1920×1080 WebP `bg_title`; 기존 Game Start/Continue/Settings·optional mic·BGM·keyboard 계약 유지; public-visible NHN branding 0 |
 | Priority | P0 SUBMISSION |
-| Implementation Status | `HUMAN_RECHECK` — source 원본 보존, runtime replacement·hash/규격·과거 NHN hash 미참조 자동 검증 구현 |
-| Human Recheck | 1920×1080·1600×900·1366×768에서 OpenAI 핵심 배너 crop/occlusion, 메뉴·mic·BGM 가독성, focus, scroll·console 확인 |
-| Final Status | `HUMAN_RECHECK` |
+| Implementation Status | `PASS / FREEZE` — source 원본 보존, runtime replacement·hash/규격·과거 NHN hash 미참조 검증과 3개 desktop viewport actual QA 완료 |
+| Human Recheck | 2026-08-24 사용자가 OpenAI 제출 TITLE을 최종 승인했다. 배경·TITLE UX는 release-blocking regression 없이는 변경하지 않는다. |
+| Final Status | `PASS / FREEZE` |
 | Related SSOT/TODO | 과거 NHN 원본·DEC-037 이력은 source/provenance에만 유지. TITLE CSS·UX는 실제 화면 필요 시 최소 범위만 조정 |
 
 ## 3. Existing TODO 연결
@@ -244,15 +244,15 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Juno `barrier/protect` | HQ-08·HQ-10 | 기존 visual production TODO 유지 |
 | Juno `encourage/cast` | HQ-08·HQ-10 | 기존 visual production TODO 유지 |
 | Juno `point/explain` | HQ-02·HQ-08 | 기존 visual production TODO 유지 |
-| `ending.black_magical_girl` | HQ-12 | `RECONFIRMED BY FULL PLAY HUMAN QA` |
-| post-credit incomplete | HQ-12 | `RECONFIRMED BY FULL PLAY HUMAN QA` |
+| `ending.black_magical_girl` | HQ-12 | `REMOVED FROM SUBMISSION RUNTIME` — 과거 기획 기록만 유지, 제작하지 않음 |
+| post-credit incomplete | HQ-12 | `SUPERSEDED BY SUBMISSION CLOSURE` — teaser 없이 네 Ending에서 종료 |
 
 ## 4. 다음 implementation phases
 
 1. **Phase A — VN UI Design System:** core VN shell·hierarchy는 사용자 승인·freeze, HQ-02 `PASS`. HQ-13은 scene-specific Phase C 범위 때문에 `HUMAN_RECHECK` 유지.
 2. **Phase B — Doyun Emotion + Actor Direction/Composition:** 기존 asset mapping·facing·composition 구현 완료, HQ-01·04·08·09 사람 재검수와 HQ-03 asset·HQ-05 결정 대기.
-3. **Phase C — Battle / Ending / Post-credit Presentation:** Phase A contract 위에서 battle safe zone, ending editorial layout, post-credit character-first 구도를 구현한다.
-4. **Phase D — Visual Asset Production:** 승인된 slot만 제작·편집한다. 현재 핵심은 Doyun reaction, `magical_pose` EDIT, Juno 행동 variation, black magical girl cut이다.
+3. **Phase C — Battle / Ending / submission exit:** Battle·Ending은 사용자 `PASS / FREEZE`; Post-credit teaser는 제출 범위에서 제거되어 HQ-12 `HUMAN_RECHECK`다.
+4. **Phase D — Visual Asset Production:** 승인된 slot만 제작·편집한다. Black Magical Girl은 제출 runtime 대상이 아니며 새 asset을 만들지 않는다.
 5. **Phase E — Full Voice + Click Human QA:** 실제 Worker, mic, BGM, click fallback을 포함해 전체 경로를 사용자 actual QA로 닫는다.
 
 한 phase에 전 항목을 합치지 않는다. 각 항목은 구현 뒤 `IMPLEMENTED` 또는 `HUMAN_RECHECK`까지만 올리고 사용자 승인 전 `PASS`로 올리지 않는다.

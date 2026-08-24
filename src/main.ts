@@ -916,12 +916,6 @@ async function bootstrap(): Promise<void> {
           engine.startNewGame(recordingSupported ? "voice" : "click");
           renderCurrent();
         },
-        node.next
-          ? () => {
-              engine.advanceEndingNode();
-              renderCurrent();
-            }
-          : undefined,
       );
     };
 

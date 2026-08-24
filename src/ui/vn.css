@@ -1225,7 +1225,7 @@
 }
 
 .game-shell[data-composition="ending"].ending-editorial-screen
-  .ending-character:not(.ending-black-magical-girl) {
+  .ending-character {
   z-index: 3;
   right: auto;
   bottom: clamp(82px, 10vh, 116px);
@@ -1259,7 +1259,7 @@
   }
 
   .game-shell[data-composition="ending"].ending-editorial-screen
-    .ending-character:not(.ending-black-magical-girl) {
+    .ending-character {
     bottom: clamp(66px, 9vh, 86px);
     height: min(36vh, 300px);
   }

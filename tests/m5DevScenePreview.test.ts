@@ -5,7 +5,7 @@ import {
 } from "../src/dev/scenePreview";
 
 describe("M5 dev 장면 프리뷰 계약", () => {
-  it("확정 배경 16개를 적어도 한 장면에서 직접 선택할 수 있다", () => {
+  it("제출판 확정 배경 14개를 적어도 한 장면에서 직접 선택할 수 있다", () => {
     expect(new Set(M5_SCENE_PREVIEWS.map(({ backgroundId }) => backgroundId))).toEqual(
       new Set([
         "bg_title",
@@ -22,8 +22,6 @@ describe("M5 dev 장면 프리뷰 계약", () => {
         "bg_hall_void",
         "bg_mind_archive",
         "bg_battle_core",
-        "bg_corridor_day",
-        "bg_corridor_blacklight",
       ]),
     );
   });
@@ -84,7 +82,6 @@ describe("M5 dev 장면 프리뷰 계약", () => {
     for (const id of [
       "ending-good",
       "ending-hidden",
-      "post-credit",
       "ending-normal",
       "ending-bad",
     ]) {

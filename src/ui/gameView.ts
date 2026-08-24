@@ -263,12 +263,6 @@ export function resolveMissingAssetPresentation(
   };
 }
 
-export function resolveOptionalAssetFailureBehavior(
-  debugEnabled: boolean,
-): "debug-label" | "hide" {
-  return debugEnabled ? "debug-label" : "hide";
-}
-
 export function resolveSceneBrand(nodeId: string): string {
   return nodeId === "n0_review" || nodeId === "n1_first_voice"
     ? "VOICE // LINK"
@@ -302,8 +296,7 @@ export function isActBoundaryTransition(
     (previousContext === "title" && nextContext === "n0_review") ||
     (previousContext === "n5_transform_result" && nextContext === "battle_wraith") ||
     (previousContext === "battle_wraith" && nextContext === "n7_gray_answer") ||
-    (previousContext === "n8_final_spell" && nextContext.startsWith("ending_")) ||
-    (previousContext?.startsWith("ending_") === true && nextContext === "post_credit")
+    (previousContext === "n8_final_spell" && nextContext.startsWith("ending_"))
   );
 }
 
@@ -1449,7 +1442,6 @@ export class GameView {
     characterNames: ReadonlyMap<string, string>,
     state: GameState,
     onNewGame: () => void,
-    onNext?: () => void,
   ): void {
     const pages = resolveEndingPages(node, state.battleGrade);
     let pageIndex = 0;
@@ -1489,18 +1481,6 @@ export class GameView {
           ),
         );
       }
-      if (node.endingId === "post_credit") {
-        shell.append(
-          this.createAssetVisual(
-            "ending.black_magical_girl",
-            "검은 마법소녀",
-            "asset-visual ending-character ending-black-magical-girl",
-            undefined,
-            resolveOptionalAssetFailureBehavior(this.debugEnabled),
-          ),
-        );
-      }
-
       const card = element(
         "section",
         editorialEnding
@@ -1562,14 +1542,14 @@ export class GameView {
         ? "primary-button ending-advance"
         : "primary-button";
       const button = page.isLast
-        ? element("button", advanceClass, onNext ? "Post-credit" : "처음부터")
+        ? element("button", advanceClass, "처음부터")
         : this.delayedAdvanceButton(advanceClass, "계속", () => {
             pageIndex += 1;
             renderPage();
           });
       button.type = "button";
       if (page.isLast) {
-        button.addEventListener("click", onNext ?? onNewGame, { once: true });
+        button.addEventListener("click", onNewGame, { once: true });
       }
       if (editorialEnding) {
         const resultLayout = element("div", "ending-result-layout");

@@ -3238,7 +3238,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
   }
 
   .game-shell[data-composition="conversation"] .dialogue-character,
-  .game-shell[data-composition="ending"] .ending-character:not(.ending-black-magical-girl) {
+  .game-shell[data-composition="ending"] .ending-character {
     z-index: 2;
     right: auto;
     bottom: clamp(230px, 29vh, 330px);
@@ -3323,7 +3323,7 @@ html[data-qa-preview="true"] .dev-scene-nav {
     left: clamp(350px, 22vw, 420px);
   }
 
-  .game-shell[data-composition="ending"].ending-screen .ending-character:not(.ending-black-magical-girl) {
+  .game-shell[data-composition="ending"].ending-screen .ending-character {
     right: auto;
     bottom: clamp(110px, 14vh, 160px);
     left: clamp(0%, 2vw, 3%);

@@ -545,8 +545,7 @@
       { "speaker": "narration", "text": "완성도와 차별성은 보완이 필요하나 전달하려는 즐거움은 분명히 확인됨." },
       { "speaker": "narration", "text": "핵심 경험을 조금 더 확인한 뒤 최종 판단하고 싶음." },
       { "speaker": "juno", "text": "이제 좀 들리네. 네가 재미있다고 생각하는 소리.", "emotion": "happy" }
-    ],
-    "next": "post_credit"
+    ]
   },
   {
     "nodeId": "ending_normal",
@@ -585,22 +584,6 @@
       { "speaker": "narration", "text": "사내 인기 게시물: 한도윤 심사역 마법소녀 변신 영상, 실시간 조회 1위." },
       { "speaker": "juno", "text": "변신 장면은 자동으로 기록돼!", "emotion": "happy" },
       { "speaker": "juno", "text": "그런 설정은 방금 만들었어!", "emotion": "happy" }
-    ],
-    "next": "post_credit"
-  },
-  {
-    "nodeId": "post_credit",
-    "type": "ending",
-    "scene": { "bg": "bg_corridor_blacklight", "bgm": "bgm_ending" },
-    "endingId": "post_credit",
-    "lines": [
-      { "speaker": "narration", "text": "POST-CREDIT — 어두운 복도" },
-      { "speaker": "narration", "text": "긴 검은 지팡이 끝으로 주변의 회색 잔향이 빨려 들어간다." },
-      { "speaker": "voice", "text": "두근두근 용기 한 스푼. 반짝반짝 설렘 두 스푼." },
-      { "speaker": "juno", "text": "저 주문은 오래전에 버렸어.", "emotion": "surprised" },
-      { "speaker": "juno", "text": "이제 아무도 쓸 수 없어야 해.", "emotion": "surprised" },
-      { "speaker": "voice", "text": "당신의 마음에 즐거움을 로그아웃." },
-      { "speaker": "narration", "text": "《심사역은 마법소녀가 되었다》 TO BE CONTINUED" }
     ]
   }
 ]

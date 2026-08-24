@@ -276,16 +276,6 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     visuals: [doyun("normal_smile"), juno("happy")],
   },
   {
-    id: "asset-corridor-day",
-    label: "ASSET QA · 밝은 복도 (v3.1 미사용)",
-    backgroundId: "bg_corridor_day",
-    nodeId: "asset_catalog",
-    beat: "unmapped background",
-    bgmId: null,
-    layout: "ending",
-    visuals: [],
-  },
-  {
     id: "ending-hidden",
     label: "HIDDEN · 사내 인기 영상",
     backgroundId: "bg_hall_good",
@@ -294,22 +284,6 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     bgmId: "bgm_ending",
     layout: "ending",
     visuals: [doyun("normal_smile"), juno("happy")],
-  },
-  {
-    id: "post-credit",
-    label: "POST-CREDIT · 검은빛 복도",
-    backgroundId: "bg_corridor_blacklight",
-    nodeId: "post_credit",
-    beat: "canonical stinger",
-    bgmId: "bgm_ending",
-    layout: "ending",
-    visuals: [
-      {
-        logicalId: "ending.black_magical_girl",
-        label: "검은 마법소녀 선택 컷",
-        role: "ending-cut",
-      },
-    ],
   },
   {
     id: "ending-normal",
@@ -354,7 +328,7 @@ function previewComposition(id: string): Pick<
   ) {
     return { composition: "battle", renderMode: "sprite" };
   }
-  if (id.startsWith("ending-") || id === "post-credit") {
+  if (id.startsWith("ending-")) {
     return { composition: "ending", renderMode: "sprite" };
   }
   return { composition: "conversation", renderMode: "sprite" };
