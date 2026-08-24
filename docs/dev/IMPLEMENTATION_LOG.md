@@ -2121,3 +2121,10 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - 승인된 frame·header·title center anchor·CTA·actor·background·BGM과 ending copy·logic·routing은 변경하지 않았다. HIDDEN은 `완벽한 호흡,` / `완벽한 사고` 두 줄을 유지한다.
 - production/debug OFF actual Chrome에서 1920 네 ending과 1366 GOOD/HIDDEN을 캡처했다. 모든 지원 viewport에서 title crop·frame overflow·actor/BGM/CTA overlap·scroll·console error/warning은 0이다.
 - focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS이며 TypeScript check와 production/QA build도 PASS했다. screenshot은 repo 밖 `qa-evidence/hq11-ending-title-scale`에 보관한다. HQ-11은 사용자 승인 전 `HUMAN_RECHECK`, HQ-12는 `OPEN`이다.
+
+## HQ-11 Human Approval / Freeze
+
+- 작업일·승인 기준: 2026-08-24 KST · `099fe59be85f72a0619103ffe9545efd8d17ef44`.
+- 사용자가 GOOD/NORMAL/BAD/HIDDEN ending presentation을 최종 승인해 HQ-11을 `PASS / FREEZE`로 닫았다.
+- fixed Result Frame geometry, header/title independent anchors, 공통 result title scale, detached CTA geometry, Juno/Doyun actor composition은 release-blocking regression 증거 없이는 변경하지 않는다.
+- HQ-10 Battle도 `PASS / FREEZE`를 유지한다. HQ-12 Post-credit는 별도 `OPEN`이며 시작하지 않았다.

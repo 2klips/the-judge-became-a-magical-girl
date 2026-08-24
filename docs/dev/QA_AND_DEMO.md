@@ -673,3 +673,10 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - 1920 네 ending과 1366 GOOD/HIDDEN에서 title crop·frame overflow·CTA/actor overlap은 0이며 HIDDEN은 정확히 `완벽한 호흡,` / `완벽한 사고` 2줄이다. Chrome console error/warning과 production debug element도 0이다.
 - focused HQ-11/HQ-10은 21/21, full suite는 63 files·460 tests PASS다. `npm run check`, production build 158 modules, QA build 128 modules이 PASS했고 기존 Transformers 516.22kB warning만 유지한다.
 - screenshot은 repo 밖 `qa-evidence/hq11-ending-title-scale`에 저장했다. HQ-10 Battle은 `PASS / FREEZE`, HQ-12 Post-credit는 `OPEN`, HQ-11은 사용자 승인 전 `HUMAN_RECHECK`다.
+
+## 28. 2026-08-24 HQ-11 사용자 승인·freeze
+
+- 사용자가 final HEAD `099fe59be85f72a0619103ffe9545efd8d17ef44`의 GOOD/NORMAL/BAD/HIDDEN ending presentation을 최종 승인했다. HQ-11 상태는 `PASS / FREEZE`다.
+- freeze 범위는 fixed Result Frame 외부 geometry, header/title independent anchors, 공통 result title scale, detached CTA geometry, Juno/Doyun actor composition이다.
+- HQ-10 Battle도 기존 `PASS / FREEZE`를 유지한다. release-blocking regression 증거 없이는 두 영역의 visual presentation을 다시 수정하지 않는다.
+- HQ-12 Post-credit는 별도 `OPEN`이며 이 승인으로 자동 완료되지 않는다.
