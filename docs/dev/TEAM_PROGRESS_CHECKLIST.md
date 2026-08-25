@@ -17,7 +17,7 @@
 ## 현재 한눈에 보기
 
 - [x] Scenario v3.1의 제출판 16-node runtime과 GOOD/NORMAL/BAD 분기; legacy HIDDEN save→GOOD
-- [x] Realtime voice core, typed failure·network/http 분리, 누적 5회 정책, PTT live meter·QA evidence
+- [x] Realtime voice core, typed failure·network/http 분리, 누적 5회 정책, PTT live meter·QA evidence — 실제 사람 헤드셋·마이크 `PASS / FREEZE`
 - [x] 선택형 마이크·9-state FSM·Settings를 갖춘 PC TITLE
 - [x] OpenAI 제출용 TITLE 배경 교체 — 사용자 `PASS / FREEZE`
 - [x] 공통 VN dialogue/choice UI foundation — HQ-02 사용자 `PASS`
@@ -27,7 +27,7 @@
 - [x] Battle/Ending 1차 safe-zone 보정 — responsive collision closure 완료
 - [x] Battle command deck/presentation — HQ-10 사용자 `PASS / FREEZE`
 - [x] Ending result frame/editorial presentation — HQ-11 사용자 `PASS / FREEZE`
-- [ ] Post-credit teaser·HIDDEN 제거, 세 Ending 종료 flow — 구현 완료 / `HUMAN_RECHECK`
+- [x] Post-credit teaser·HIDDEN 제거, 세 Ending 종료 flow — 사용자 `PASS / FREEZE`
 - [ ] Juno 행동 포즈·final purification 등 잔여 visual production 판정
 - [ ] AR-01 사람 장면·청각 QA, AR-02 스타일 연속성 QA, AR-10 public cold-load 5회
 
@@ -406,16 +406,16 @@
 | 구분 | 인계 당시 | 현재 | 상태 |
 |---|---|---|---|
 | Story | v2, N0~N5·3-phase battle·GOOD/NORMAL/BAD | 승인된 v3.1 주제, 제출판 16 nodes, N6/N7/N8, GOOD/NORMAL/BAD terminal | runtime 완료·release 재검수 |
-| Voice | Realtime/PTT/Worker 기반, 실패 의미·복구가 분산 | typed failures·network/http 분리, QA evidence, sustained level policy, 누적 5회 | core 구현 완료·actual 재검수 |
+| Voice | Realtime/PTT/Worker 기반, 실패 의미·복구가 분산 | typed failures·network/http 분리, QA evidence, sustained level policy, 누적 5회 | 실제 사람 헤드셋·마이크 PASS / FREEZE |
 | TITLE | 중앙 mic calibration 중심, mic 성공이 진입 gate | PC 3 viewport, optional mic, 9-state FSM, Settings, BGM 20%, OpenAI 제출 배경 교체 | PASS / FREEZE |
 | VN UI | 큰 rounded panel과 card형 선택 | 공통 navy VN shell, speaker accent, vertical choice, editorial CTA | HQ-02 PASS; HQ-13 재검수 |
 | Character acting | early startled/facepalm 반복, 변신 얼굴 불연속 | suspicious·ID reaction 전용 pose, facepalm remap, post-transform 공개 얼굴 | 구현·HUMAN_RECHECK |
 | Composition | scene별 좌표, actor overlap·방향 규칙 부재 | named preset, safe zone, inward-facing audit, CUT/SPRITE exclusivity | foundation 완료 |
 | Battle | 3-phase 기능 중심, HUD/actor/UI 충돌 가능 | actor lanes, HUD/BGM 분리, responsive dialogue/dock 16px+, 정돈된 command/result deck | HQ-10 PASS / FREEZE |
-| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | GOOD/NORMAL/BAD 공통 result frame·독립 header/title·detached CTA·Juno safe-zone, teaser/HIDDEN 없는 terminal exit | HQ-11 geometry PASS / FREEZE; release HUMAN_RECHECK |
+| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | GOOD/NORMAL/BAD 공통 result frame·독립 header/title·detached CTA·Juno safe-zone, teaser/HIDDEN 없는 terminal exit | HQ-11 geometry·submission exit PASS / FREEZE |
 | Assets | 핵심 자산 다수와 SSOT 골격 | runtime 46 files/14.41MiB, early cuts·poses·face edits·OpenAI 제출 TITLE·hash 검증 | 기술 ready; 사람 approved 대기 |
 | Rights | tool/plan/reference 상태가 일부 혼재 | USER ATTESTED/internal lineage/Suno Pro를 분리 기록하고 과거 NHN TITLE은 archive, 현재 OpenAI 제출본 provenance는 별도 기록 | AR-09 PASS 후보·새 TITLE exact 모델/work ID UNKNOWN |
-| Tests | 41 files / 187 tests 기록 | 64 files / 463 tests PASS | 확대 완료 |
+| Tests | 41 files / 187 tests 기록 | 67 files / 487 tests PASS | 확대 완료 |
 | CI | 로컬과 Ubuntu Python/Git history 차이 미검증 | Python deps, historical verifier, full checkout, build/deploy 자동화 | run #33 SUCCESS |
 | Public Pages | 이전에는 TITLE baseline `2a6d9e4` 제공 | 최신 `main` `df3a94d` 배포, HTTP 200 | 최신본 공개 |
 
@@ -427,7 +427,7 @@
 - [ ] **AR-02 Style/scene consistency:** HQ-01·03·05·07·08·09의 `HUMAN_RECHECK`와 캐릭터·배경·CUT 전수 style-anchor 판정을 닫는다.
 - [x] **HQ-10 Battle:** command deck·정보 위계·safe gap 사용자 `PASS / FREEZE`.
 - [x] **HQ-11 Ending:** GOOD/NORMAL/BAD editorial Result Frame geometry 사용자 `PASS / FREEZE`; HIDDEN-specific presentation은 제출 범위에서 제거.
-- [ ] **HQ-12 제출 종료:** Black Magical Girl teaser·HIDDEN 제거와 GOOD/NORMAL/BAD terminal exit actual QA를 닫는다. 대체 teaser asset은 제작하지 않는다.
+- [x] **HQ-12 제출 종료:** Black Magical Girl teaser·HIDDEN 제거와 GOOD/NORMAL/BAD terminal exit 사용자 `PASS / FREEZE`. 대체 teaser asset은 제작하지 않는다.
 - [ ] **잔여 visual production 우선순위:** release closure 직접 관련은 ① final purification CUT이다. 이후 ② Juno barrier/protect, ③ Juno encourage/cast, ④ Juno point/explain 순으로 검토한다. Black Magical Girl post-credit asset은 제출 범위에서 제거됐다.
 - [ ] **AR-10:** 최종 asset freeze 뒤 public Pages cold cache 5/5에서 first-screen ready ≤3초를 증명한다.
 - [ ] **Final release QA:** 최신 Pages SHA에서 required asset 200, console error 0, click/voice ending matrix와 제출 smoke를 다시 확인한다.

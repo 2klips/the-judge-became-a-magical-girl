@@ -2158,4 +2158,11 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - 실제 OpenAI `gpt-5.6-luna` 응답 matrix는 16/16 PASS했다. “내가 왜 그래야 돼?”, 수당·성별·정체·선택 이유·이동 장소·망령 원인·보호 대상·대응 방법·철회·공격·방어·양쪽·모호 질문이 기대 intent와 scene-fact pattern을 통과했다. 빠른 연속 호출의 HTTP 429는 한 건씩 실행해 분리했으며 인증 실패나 사용자 응답 실패로 집계하지 않았다.
 - 실제 browser에서 production/debug-off evidence DOM·HIDDEN/teaser visible text·scroll·console error/warning은 0이었다. QA debug scene의 1920×1080·1366×768에서도 broken image·scroll·current HIDDEN option·새 탭 console error/warning은 0이다.
 - focused 17 files·183 tests, full 67 files·487 tests, TypeScript check, production 159-module build, QA 129-module build가 PASS했다.
-- 커밋: `08653c2` HIDDEN 제거, `0bd5e20` voice evidence/분류, `ea47230` 주노 grounding, `e768703` 도윤 boundary cleanup. 실제 사람 마이크 QA evidence·헤드셋 level은 `HUMAN_RECHECK`; push/deploy는 하지 않는다.
+- 커밋: `08653c2` HIDDEN 제거, `0bd5e20` voice evidence/분류, `ea47230` 주노 grounding, `e768703` 도윤 boundary cleanup, `d357226` 실제 response matrix 문서화. 이 시점의 실제 사람 마이크 QA evidence·헤드셋 level은 `HUMAN_RECHECK`였으며 2026-08-26 사용자 승인으로 superseded됐다.
+
+## 2026-08-26 Submission Human Voice Release Gate
+
+- 사용자가 실제 헤드셋·마이크의 TITLE `TEST_SUCCESS`와 dialogue·incantation·battle voice path를 최종 승인했다. Human Voice Release Gate를 `PASS / FREEZE`로 닫는다. 정확한 device label·transcript·ephemeral RMS/peak/clip 숫자는 저장하거나 문서에 복사하지 않았다.
+- canonical local APP `http://127.0.0.1:5173`, Worker `http://127.0.0.1:8787`에서 health HTTP 200, OpenAI configured, Realtime `gpt-realtime-2.1-mini`, dialogue `gpt-5.6-luna`를 확인했다. `.env.local`은 ignored 상태이며 secret/raw provider body 출력은 0이다.
+- Chrome Stable `151.0.7922.174` production에서 transcript·QA evidence DOM·HIDDEN/teaser visible text·broken image·scroll·console error/warning은 0이었다. 기존 save는 보존했고 `게임 시작`의 mode dialog에 `마이크 없이 시작`이 정상 노출되는 click safety smoke를 통과했다.
+- canonical submission은 16 nodes와 GOOD/NORMAL/BAD terminal만 사용한다. HIDDEN/post-credit/unknown girl은 제거됐고 legacy save alias 외 runtime-visible reference는 없다. 관련 frozen Story/FSM/save/BGM/click fallback을 변경하지 않았다.

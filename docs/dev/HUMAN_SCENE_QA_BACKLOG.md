@@ -199,9 +199,9 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 과거 기획의 후속 훅은 미납품 character asset에 의존해 제출판에서 미완성 장면으로 보임 |
 | Desired Direction | 미지의 소녀 teaser와 HIDDEN ending을 제출 runtime에서 제거하고, GOOD/NORMAL/BAD의 승인된 Result Frame에서 기존 `처음부터` 종료 동작으로 완결한다. 대체 teaser asset은 만들지 않는다. |
 | Priority | P0 |
-| Implementation Status | `HUMAN_RECHECK` — `post_credit`·teaser와 `ending_hidden` node/presentation을 제출 runtime에서 제거했다. 이전 HIDDEN five-condition run은 GOOD으로 수렴하고 legacy `ending_hidden`/해당 `post_credit` save도 GOOD으로 복구한다. `perfect_transform` 변신 결과·battle modifier는 유지된다. |
-| Human Recheck | GOOD/NORMAL/BAD terminal·`처음부터`→N0, unknown girl/Black Magical Girl 0, broken image·stuck·console error·scroll 0을 최종 actual regression에서 확인한다. 기존 HIDDEN actual gate는 superseded다. |
-| Final Status | `HUMAN_RECHECK` |
+| Implementation Status | `PASS / FREEZE` — `post_credit`·teaser와 `ending_hidden` node/presentation을 제출 runtime에서 제거했다. 이전 HIDDEN five-condition run은 GOOD으로 수렴하고 legacy `ending_hidden`/해당 `post_credit` save도 GOOD으로 복구한다. `perfect_transform` 변신 결과·battle modifier는 유지된다. |
+| Human Recheck | 2026-08-26 사용자가 실제 헤드셋·마이크 voice path와 현재 GOOD/NORMAL/BAD 제출 종료 범위를 승인했다. unknown girl/Black Magical Girl/HIDDEN visible 0이며 기존 HIDDEN actual gate는 superseded다. |
+| Final Status | `PASS / FREEZE` |
 | Related SSOT/TODO | 과거 Black Magical Girl·HIDDEN 설계와 QA는 historical record로만 유지한다. legacy save compatibility 외 current runtime HIDDEN reference는 0이어야 한다. |
 
 ### HQ-13 — Overall UI/UX language
@@ -214,8 +214,8 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Problem | 장면별 독립 component처럼 보여 하나의 VN 제품 언어가 형성되지 않음 |
 | Desired Direction | 공통 navy-black base, 얇은 border, 작은 radius·padding, 제한된 speaker accent, 명확한 대사 > 서사 선택 > 입력 방식 위계 |
 | Priority | P0 GLOBAL |
-| Implementation Status | `HUMAN_RECHECK` — core VN foundation과 HQ-10 Battle·GOOD/NORMAL/BAD HQ-11 geometry·OpenAI TITLE은 사용자 `PASS / FREEZE`. HIDDEN/teaser 제거와 voice/dialogue/도윤 boundary cleanup은 제출 closure actual 재검수 대기 |
-| Human Recheck | QA debug evidence에서 전사·주문 4키워드·RMS/peak/clip, network/http 구분, 주노 직접 응답을 확인하고 production에서는 evidence DOM 0을 확인한다. |
+| Implementation Status | `HUMAN_RECHECK` — core VN foundation과 HQ-10 Battle·GOOD/NORMAL/BAD HQ-11 geometry·OpenAI TITLE, HIDDEN/teaser 제거, voice/dialogue/도윤 boundary cleanup은 사용자 `PASS / FREEZE`. HQ-06 등 별도 미종결 visual 항목은 유지한다. |
+| Human Recheck | 2026-08-26 실제 헤드셋·마이크 release gate `PASS / FREEZE`. QA debug evidence 격리와 production evidence DOM 0도 확인했다. HQ-13 전체 상태는 별도 미종결 항목 때문에 유지한다. |
 | Final Status | `HUMAN_RECHECK` |
 | Related SSOT/TODO | HQ-02·HQ-10·세 ending HQ-11 geometry 완료. HQ-06은 `OPEN`, 제출 cleanup은 `HUMAN_RECHECK` 유지 |
 

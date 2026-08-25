@@ -713,4 +713,11 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - 주노 text/realtime 경계는 동일한 reply-quality validator를 사용한다. 누구·어디·왜·어떻게 질문은 현재 scene facts로 첫 문장에서 직접 답하고, meta classification·회피성 filler·known malformed Korean은 state 적용 전 safe 502로 거부한다. canonical local Worker와 기존 `OPENAI_API_KEY`를 재사용한 실제 OpenAI `gpt-5.6-luna` 16-case matrix는 16/16 PASS했다. 요청은 rate limit을 피하도록 한 건씩 실행했으며 transcript·intent·reply만 확인하고 secret/raw provider body는 출력하지 않았다.
 - `doyun.normal_suspicious`와 `doyun.employee_id_surprised`는 각각 4,124px·4,245px의 purple silhouette boundary alpha만 제거했다. target RGB·비대상 pixel 변경 0, source/runtime byte identity, cleanup 후 boundary 0을 verifier가 보장한다.
 - actual browser production/debug-off TITLE 1920×1080은 scroll·console error/warning·HIDDEN/teaser visible text가 모두 0이었다. QA debug scene 1920×1080·1366×768은 broken image·scroll·current HIDDEN option 0이고 새 탭 console error/warning 0이다. dark-office 도윤 preview에서 보라 silhouette fringe가 보이지 않았고, exact 두 PNG는 boundary verifier가 cleanup 후 target 0을 증명한다.
-- focused 17 files·183 tests, full 67 files·487 tests, TypeScript check, production 159-module build, QA 129-module build가 PASS했다. 자동 구현 상태는 `HUMAN_RECHECK`이며 실제 사람 마이크의 QA evidence·헤드셋 level 재검수 전 PASS로 승격하지 않는다.
+- focused 17 files·183 tests, full 67 files·487 tests, TypeScript check, production 159-module build, QA 129-module build가 PASS했다. 이 시점의 자동 구현 상태는 `HUMAN_RECHECK`였으며 2026-08-26 실제 사람 마이크 승인으로 superseded됐다.
+
+## 32. 2026-08-26 Submission Human Voice Release Gate
+
+- 사용자가 실제 헤드셋·마이크로 수행한 TITLE mic setup과 dialogue·incantation·battle voice path를 최종 승인했다. Human Voice Release Gate는 `PASS / FREEZE`다. transcript 원문, 정확한 device label, ephemeral RMS/peak/clip 숫자는 개인정보·비저장 계약에 따라 문서화하지 않았고 `TEST_SUCCESS` level 판정만 보존한다.
+- canonical local 환경 `http://127.0.0.1:5173` / `http://127.0.0.1:8787`에서 health HTTP 200, `openaiConfigured=true`, Realtime `gpt-realtime-2.1-mini`, dialogue `gpt-5.6-luna`를 재확인했다. secret/raw provider body 출력은 0이다.
+- Chrome Stable `151.0.7922.174` production 화면에서 transcript·QA evidence DOM·HIDDEN/teaser visible text, broken image, scroll, console error/warning은 모두 0이었다. 기존 save를 보존한 채 `게임 시작`에서 `마이크 없이 시작` 선택창이 열리는 것까지 확인하고 닫아 click fallback 진입 가능성을 검증했다.
+- canonical submission은 16 nodes, GOOD/NORMAL/BAD only, HIDDEN/post-credit/unknown girl 제거 상태다. HQ-10·HQ-11·OpenAI TITLE·제출 ending scope·voice/dialogue·도윤 boundary는 `PASS / FREEZE`다. AR-10, main integration, push/deploy는 시작하지 않는다.
