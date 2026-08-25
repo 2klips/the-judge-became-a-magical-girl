@@ -1017,6 +1017,29 @@ button {
   color: var(--vn-ink);
 }
 
+.debug-stt-result .voice-qa-levels {
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-qa-keyword-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-qa-keyword-list li {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.voice-qa-keyword-list .is-matched {
+  color: var(--vn-voice);
+}
+
 @media (max-width: 760px) {
   .debug-model-summary {
     grid-template-columns: 1fr;

@@ -57,6 +57,11 @@ import {
   type VoiceInputFailure,
 } from "./input/transcription";
 import {
+  createVoiceQaFailureEvidence,
+  createVoiceQaSuccessEvidence,
+  type VoiceQaSurface,
+} from "./input/voiceQaEvidence";
+import {
   createDebugLlmPort,
   createRetryingLlmPort,
   createWorkerLlmPort,
@@ -90,6 +95,12 @@ const workerUrl = resolveWorkerUrl({
   origin: window.location.origin,
   baseUrl: import.meta.env.BASE_URL,
 });
+
+function voiceQaSurfaceForTurnKey(turnKey: string): VoiceQaSurface {
+  if (turnKey.startsWith("incantation:")) return "incantation";
+  if (turnKey.startsWith("battle:")) return "battle";
+  return "dialogue";
+}
 if (isQaPreview) {
   installQaPreviewMarker({ commit: import.meta.env.VITE_QA_COMMIT });
 }
@@ -208,6 +219,9 @@ async function bootstrap(): Promise<void> {
       turnKey: string,
       failure: VoiceInputFailure,
     ): void => {
+      view.recordVoiceQaEvidence(
+        createVoiceQaFailureEvidence(voiceQaSurfaceForTurnKey(turnKey), failure),
+      );
       const attempt = voiceFailureAttempts.get(turnKey) ?? 0;
       const decision = recordTypedVoiceFailure(
         failure.kind,
@@ -339,9 +353,20 @@ async function bootstrap(): Promise<void> {
         notice,
         forceClickForTurn,
         ...voiceCapture(voice, incantationTurnKey),
-        onTranscript: async (transcript) => {
+        onTranscript: async (transcript, audioLevel, observation) => {
           voiceFailureAttempts.delete(incantationTurnKey);
           const result = engine.submitIncantation(transcript, incantationAttempt);
+          if (observation) {
+            view.recordVoiceQaEvidence(
+              createVoiceQaSuccessEvidence({
+                surface: "incantation",
+                observation,
+                audioLevel,
+                requiredKeywords: node.incantationGate.requiredKeywords,
+                matchedKeywords: result.matchedKeywords,
+              }),
+            );
+          }
           if (result.outcome === "retry") {
             incantationAttempt += 1;
             renderCurrent(
@@ -460,6 +485,15 @@ async function bootstrap(): Promise<void> {
         observation?: TranscriptionObservation,
       ): Promise<void> => {
         voiceFailureAttempts.delete(battleTurnKey);
+        if (observation) {
+          view.recordVoiceQaEvidence(
+            createVoiceQaSuccessEvidence({
+              surface: "battle",
+              observation,
+              audioLevel,
+            }),
+          );
+        }
         if (action === "spell") {
           if (audioLevel && microphoneCalibration) {
             const levelResult = evaluateVoiceLevel(audioLevel, microphoneCalibration);
@@ -794,9 +828,19 @@ async function bootstrap(): Promise<void> {
 
         const handleTranscript = async (
           transcript: string,
+          audioLevel?: AudioLevelMetrics,
           observation?: TranscriptionObservation,
         ): Promise<boolean> => {
           voiceFailureAttempts.delete(dialogueTurnKey);
+          if (observation) {
+            view.recordVoiceQaEvidence(
+              createVoiceQaSuccessEvidence({
+                surface: "dialogue",
+                observation,
+                audioLevel,
+              }),
+            );
+          }
           const local = engine.submitTranscript(transcript);
           if (local.kind === "matched") {
             rememberTurn(transcript, local.reply);

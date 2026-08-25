@@ -102,6 +102,24 @@ describe("M3 선택형 STT", () => {
     expect(message).not.toMatch(/Failed to fetch|<html>|503|Realtime|STT Worker/i);
   });
 
+  it("network와 HTTP 실패를 서로 다른 복구 문구와 안전한 status로 보존한다", () => {
+    const network = classifyVoiceInputError(new TypeError("Failed to fetch"));
+    const http = classifyVoiceInputError(
+      new Error("Realtime 음성 요청 실패 (503): arbitrary upstream body"),
+    );
+
+    expect(network).toEqual({ kind: "network", debugMessage: "Failed to fetch" });
+    expect(http).toEqual({
+      kind: "http",
+      httpStatus: 503,
+      debugMessage: "Realtime 음성 요청 실패 (503): arbitrary upstream body",
+    });
+    expect(formatVoiceInputError(network)).toBe(
+      "네트워크 연결 문제로 음성 서버에 닿지 못했어.",
+    );
+    expect(formatVoiceInputError(http)).toBe("음성 서버가 요청을 처리하지 못했어.");
+  });
+
   it.each([
     new DOMException("missing device", "NotFoundError"),
     new DOMException("device busy", "NotReadableError"),
@@ -153,9 +171,10 @@ describe("M3 선택형 STT", () => {
     const failure = classifyVoiceInputError(rejected);
     expect(failure).toMatchObject({
       kind: "http",
+      httpStatus: status,
       debugMessage: expect.stringContaining(String(status)),
     });
-    expect(formatVoiceInputError(failure)).toBe("음성 서버에 연결하지 못했어.");
+    expect(formatVoiceInputError(failure)).toBe("음성 서버가 요청을 처리하지 못했어.");
   });
 
   it("세 surface의 finished/start callback 모두 typed failure를 공통 adapter로 보낸다", () => {

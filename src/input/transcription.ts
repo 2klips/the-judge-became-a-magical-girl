@@ -54,6 +54,7 @@ export type VoiceFailureKind =
 export interface VoiceInputFailure {
   readonly kind: VoiceFailureKind;
   readonly debugMessage: string;
+  readonly httpStatus?: number;
 }
 
 export type RecordedVoiceResult =
@@ -360,8 +361,9 @@ export function classifyVoiceInputError(error: unknown): VoiceInputFailure {
   if (/failed to fetch|networkerror|network request failed/i.test(message)) {
     return { kind: "network", debugMessage: message };
   }
-  if (/요청 실패 \([45][0-9]{2}\)/i.test(message)) {
-    return { kind: "http", debugMessage: message };
+  const httpStatus = message.match(/요청 실패 \(([45][0-9]{2})\)/i)?.[1];
+  if (httpStatus) {
+    return { kind: "http", httpStatus: Number(httpStatus), debugMessage: message };
   }
   if (/응답이 JSON이 아닙니다|zod|invalid.*response|schema/i.test(message)) {
     return { kind: "schema", debugMessage: message };
@@ -374,8 +376,9 @@ export function formatVoiceInputError(failure: VoiceInputFailure): string {
     case "permission":
       return "마이크 권한을 사용할 수 없어.";
     case "network":
+      return "네트워크 연결 문제로 음성 서버에 닿지 못했어.";
     case "http":
-      return "음성 서버에 연결하지 못했어.";
+      return "음성 서버가 요청을 처리하지 못했어.";
     case "timeout":
       return "음성 처리가 예상보다 오래 걸렸어.";
     case "schema":

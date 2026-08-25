@@ -84,6 +84,33 @@ describe("M5 마이크 레벨 계약", () => {
     ).toBe("too-loud");
   });
 
+  it("헤드셋의 고립 peak는 허용하고 지속 RMS·실제 clipping만 too-loud로 판정한다", () => {
+    const calibration = {
+      targetRmsDbfs: -24,
+      minimumRmsDbfs: -36,
+      maximumRmsDbfs: -14,
+      maximumPeakDbfs: -0.75,
+    };
+    const isolatedPeak = signal(0.12, 2_048);
+    isolatedPeak[1_024] = 1;
+    const meaningfulClipping = signal(0.12, 2_048);
+    for (let index = 0; index < 42; index += 1) meaningfulClipping[index] = 1;
+
+    const isolatedMetrics = calculateAudioLevel(isolatedPeak);
+    expect(isolatedMetrics.peakDbfs).toBe(0);
+    expect(isolatedMetrics.clippingRatio).toBeLessThan(0.01);
+    expect(evaluateVoiceLevel(isolatedMetrics, calibration)).toBe("acceptable");
+    expect(
+      evaluateVoiceLevel(
+        calculateAudioLevel(Float32Array.from({ length: 2_048 }, () => 0.5)),
+        calibration,
+      ),
+    ).toBe("too-loud");
+    expect(evaluateVoiceLevel(calculateAudioLevel(meaningfulClipping), calibration)).toBe(
+      "too-loud",
+    );
+  });
+
   it("같은 전투 턴의 첫 음량 실패만 무료 재시도한다", () => {
     expect(resolveVoiceLevelFailure(0)).toBe("retry");
     expect(resolveVoiceLevelFailure(1)).toBe("consume-turn");

@@ -28,6 +28,8 @@ const SETUP_MINIMUM_RMS_DBFS = -48;
 const SETUP_MAXIMUM_RMS_DBFS = -7;
 const MAXIMUM_PEAK_DBFS = -0.75;
 const MAXIMUM_CLIPPING_RATIO = 0.002;
+const VOICE_LOUD_RMS_HEADROOM_DB = 3;
+const VOICE_MAXIMUM_SUSTAINED_CLIPPING_RATIO = 0.01;
 const REQUIRED_SETUP_VOICE_MS = 900;
 
 export function calculateAudioLevel(samples: Float32Array): AudioLevelMetrics {
@@ -82,11 +84,11 @@ export function evaluateVoiceLevel(
   metrics: AudioLevelMetrics,
   calibration: MicrophoneCalibration,
 ): VoiceLevelResult {
-  if (
-    metrics.rmsDbfs > calibration.maximumRmsDbfs ||
-    metrics.peakDbfs > calibration.maximumPeakDbfs ||
-    metrics.clippingRatio > MAXIMUM_CLIPPING_RATIO
-  ) {
+  const sustainedLoud =
+    metrics.rmsDbfs > calibration.maximumRmsDbfs + VOICE_LOUD_RMS_HEADROOM_DB;
+  const meaningfullyClipped =
+    metrics.clippingRatio > VOICE_MAXIMUM_SUSTAINED_CLIPPING_RATIO;
+  if (sustainedLoud || meaningfullyClipped) {
     return "too-loud";
   }
   if (metrics.rmsDbfs < calibration.minimumRmsDbfs) return "too-quiet";

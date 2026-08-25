@@ -52,6 +52,12 @@ import {
   OpenAiSttModelSchema,
 } from "../input/transcription";
 import {
+  formatVoiceQaClippingRatio,
+  formatVoiceQaDbfs,
+  summarizeVoiceQaKeywordMatches,
+  type VoiceQaEvidence,
+} from "../input/voiceQaEvidence";
+import {
   PushToTalkShortcutController,
   type PushToTalkShortcutBinding,
 } from "../input/keyboardPtt";
@@ -401,6 +407,7 @@ export interface DialogueInputOptions {
   cancel(): void;
   onTranscript(
     transcript: string,
+    audioLevel?: AudioLevelMetrics,
     observation?: TranscriptionObservation,
   ): Promise<boolean>;
   onTurnFailed(failure: VoiceInputFailure): void;
@@ -469,6 +476,7 @@ export interface IncantationInputOptions extends SharedVoiceOptions {
   attempt: number;
   onTranscript(
     transcript: string,
+    audioLevel?: AudioLevelMetrics,
     observation?: TranscriptionObservation,
   ): Promise<void>;
   onFallback(): void;
@@ -557,6 +565,7 @@ function setPttButtonState(button: HTMLButtonElement, state: PttButtonState): vo
 
 export class GameView {
   private readonly debugEnabled: boolean;
+  private readonly voiceQaEnabled: boolean;
   private readonly keyboardPtt = new PushToTalkShortcutController();
   private readonly keyboardPttBindings = new WeakMap<
     HTMLButtonElement,
@@ -573,6 +582,7 @@ export class GameView {
   } | null = null;
   private debugSttModel: OpenAiSttModel;
   private latestTranscription: TranscriptionObservation | null = null;
+  private latestVoiceQaEvidence: VoiceQaEvidence | null = null;
   private activeTitleView: TitleView | null = null;
   private activeSceneTimer: number | null = null;
 
@@ -583,6 +593,7 @@ export class GameView {
     private readonly onAdvance?: () => void,
   ) {
     this.debugEnabled = new URLSearchParams(window.location.search).has("debug");
+    this.voiceQaEnabled = import.meta.env.MODE === "qa" && this.debugEnabled;
     this.debugSttModel = debugSttOptions.model;
     window.addEventListener("keydown", (event) => {
       if (event.ctrlKey || event.altKey || event.metaKey || isEditableKeyboardTarget(event.target)) {
@@ -689,6 +700,22 @@ export class GameView {
     titleView.render();
     this.commit(shell);
     this.activeTitleView = titleView;
+  }
+
+  recordVoiceQaEvidence(evidence: VoiceQaEvidence): void {
+    if (!this.voiceQaEnabled) return;
+    this.latestVoiceQaEvidence = evidence;
+    if (evidence.kind === "success") {
+      this.latestTranscription = {
+        text: evidence.transcript,
+        model: evidence.model,
+        roundTripMs: evidence.roundTripMs,
+        upstreamMs: evidence.upstreamMs,
+        firstDeltaMs: evidence.firstDeltaMs,
+      };
+    }
+    const current = this.root.querySelector<HTMLElement>(".debug-stt-result");
+    current?.replaceWith(this.debugTranscriptionResult());
   }
 
   renderLine(options: LineViewOptions): void {
@@ -905,7 +932,11 @@ export class GameView {
       controls.append(fallback);
       inputArea.append(controls);
       this.bindHoldToTalk(ptt, options, async (transcript) => {
-        await options.onTranscript(transcript.text, transcript.observation);
+        await options.onTranscript(
+          transcript.text,
+          transcript.audioLevel,
+          transcript.observation,
+        );
       });
       const utilities = element("div", "input-utilities vn-input-utilities");
       this.appendDebugTranscript(utilities, async (transcript) => {
@@ -2170,6 +2201,7 @@ export class GameView {
         : "gpt-realtime-2.1-mini";
       this.debugSttModel = model;
       this.latestTranscription = null;
+      this.latestVoiceQaEvidence = null;
       this.debugSttOptions.onModelChange(model);
     });
     sttLabel.append(sttSelect);
@@ -2364,7 +2396,11 @@ export class GameView {
   ): Promise<void> {
     if (result.kind === "transcript") {
       this.rememberTranscription(result.observation);
-      const handled = await options.onTranscript(result.transcript, result.observation);
+      const handled = await options.onTranscript(
+        result.transcript,
+        result.audioLevel,
+        result.observation,
+      );
       if (!handled && this.root.contains(button)) {
         showClickFallback("판정을 확정하지 못했어. 클릭으로 골라 줘.");
       } else if (this.root.contains(button)) {
@@ -2479,6 +2515,15 @@ export class GameView {
   private debugTranscriptionResult(): HTMLElement {
     const result = element("section", "debug-stt-result");
     result.setAttribute("aria-live", "polite");
+    if (this.voiceQaEnabled && this.latestVoiceQaEvidence?.kind === "failure") {
+      const evidence = this.latestVoiceQaEvidence;
+      const status = evidence.httpStatus === undefined ? "" : ` · HTTP ${evidence.httpStatus}`;
+      result.append(
+        element("strong", undefined, `VOICE QA · ${evidence.surface}`),
+        element("span", undefined, `${evidence.failureKind}${status}`),
+      );
+      return result;
+    }
     if (!this.latestTranscription) {
       result.append(element("span", undefined, "인식 결과 대기 중"));
       return result;
@@ -2496,6 +2541,33 @@ export class GameView {
       element("span", undefined, timings.join(" · ")),
       element("p", undefined, observation.text),
     );
+    const evidence = this.voiceQaEnabled ? this.latestVoiceQaEvidence : null;
+    if (evidence?.kind === "success") {
+      result.append(
+        element(
+          "p",
+          "voice-qa-levels",
+          `RMS ${formatVoiceQaDbfs(evidence.rmsDbfs)} · peak ${formatVoiceQaDbfs(evidence.peakDbfs)} · clip ${formatVoiceQaClippingRatio(evidence.clippingRatio)}`,
+        ),
+      );
+      if (evidence.keywordMatches) {
+        const list = element("ul", "voice-qa-keyword-list");
+        list.setAttribute(
+          "aria-label",
+          `변신 키워드 ${summarizeVoiceQaKeywordMatches(evidence.keywordMatches)}`,
+        );
+        for (const match of evidence.keywordMatches) {
+          list.append(
+            element(
+              "li",
+              match.matched ? "is-matched" : "is-unmatched",
+              `${match.matched ? "일치" : "불일치"} · ${match.keyword}`,
+            ),
+          );
+        }
+        result.append(list);
+      }
+    }
     return result;
   }
 
