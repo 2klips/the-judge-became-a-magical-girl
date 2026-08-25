@@ -82,6 +82,7 @@ export function parseDialogueJudgementForNode(
     throw new Error(`허용되지 않은 intent입니다: ${parsed.intentId}`);
   }
   assertReplyPolicy(parsed.reply, transcript);
+  assertDialogueReplyQuality(parsed.reply, transcript);
   return parsed;
 }
 
@@ -93,6 +94,30 @@ export function assertReplyPolicy(reply: string, transcript: string): void {
     if (claim.reply.test(reply) && !claim.transcript.test(transcript)) {
       throw new Error("플레이어가 말하지 않은 감정을 단정할 수 없습니다.");
     }
+  }
+}
+
+const dialogueMetaReplyPatterns = [
+  /이건\s+.{0,30}묻는\s+거(?:네|야)/u,
+  /(?:질문|의도)(?:를|는|이)?\s*(?:분류|정리|파악|확인)(?:해|하)/u,
+] as const;
+const dialogueEvasiveReplyPattern =
+  /(?:같이\s*)?(?:얘기|이야기)해\s*보자|(?:깔끔히\s*)?정리해\s*보자/u;
+const dialogueMalformedReplyPattern = /(?:맞설|막을|지킬|함께할)\s+연다/u;
+const directQuestionPattern = /누구|어디|왜|어떻게|뭐\s*때문/u;
+
+export function assertDialogueReplyQuality(reply: string, transcript: string): void {
+  if (dialogueMetaReplyPatterns.some((pattern) => pattern.test(reply))) {
+    throw new Error("응답 품질: 질문을 재분류하는 meta 응답은 허용되지 않습니다.");
+  }
+  if (dialogueMalformedReplyPattern.test(reply)) {
+    throw new Error("응답 품질: 문법적으로 완결되지 않은 응답입니다.");
+  }
+  if (directQuestionPattern.test(transcript) && dialogueEvasiveReplyPattern.test(reply)) {
+    throw new Error("응답 품질: 직접 질문을 회피하는 응답입니다.");
+  }
+  if (/어디/u.test(transcript) && /왜\s*(?:이동|움직)|선택\s*이유/u.test(reply)) {
+    throw new Error("응답 품질: 장소 질문에 이유로 답한 문맥 불일치입니다.");
   }
 }
 

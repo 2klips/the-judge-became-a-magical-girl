@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  assertDialogueReplyQuality,
   assertReplyPolicy,
   BattleJudgementSchema,
   DialogueJudgementSchema,
@@ -1077,6 +1078,8 @@ function dialogueSystemInstruction(
     "검은 마법소녀의 존재·이름·정체를 공개하거나 암시하지 마라.",
     "허용 intent와 flag 외 값을 만들지 마라.",
     "intentId는 상태 분류용이다. reply는 intent 예시를 반복하지 말고 플레이어의 실제 말에 직접 답하라.",
+    "누구·어디·왜·어떻게 질문은 제공된 현재 문맥의 사실로 첫 문장에서 직접 답하라.",
+    "질문이나 intent를 재분류하거나 나중에 정리하겠다고 회피하지 마라. 자연스럽고 완결된 한국어 문장을 사용하라.",
     "플레이어가 불안·두려움·분노·진지한 고민을 직접 말하면 먼저 존중하고 안심시켜라. 농담, 압박, 무관한 자기소개나 질문으로 회피하지 마라.",
     "플레이어가 직접 말한 감정만 같은 표현으로 받아들여라. 분노를 놀람처럼 다른 감정으로 바꾸어 단정하지 마라.",
     "엉뚱한 농담에는 짧게 받아친 뒤 현재 대화로 돌아와라. 금지 정보 요구는 그 존재를 확인하지 말고 짧게 거절하라.",
@@ -1124,6 +1127,7 @@ function validateDialogueJudgement(
   }
   try {
     assertReplyPolicy(parsed.reply, transcript);
+    assertDialogueReplyQuality(parsed.reply, transcript);
   } catch {
     throw new WorkerError(502, "주노 응답이 안전 규칙을 위반했습니다.");
   }

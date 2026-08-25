@@ -135,6 +135,39 @@ describe("M5 gpt-realtime-2.1-mini 직접 음성 판정", () => {
     });
   });
 
+  it("Realtime dialogue Worker도 malformed Korean reply를 거부한다", async () => {
+    const socket = new FakeRealtimeVoiceSocket({
+      transcript: "정면으로 맞서자",
+      intentId: "accept",
+      affinityDelta: 1,
+      emotion: "neutral",
+      flags: [],
+      reply: "좋아, 정면으로 맞설 연다.",
+    });
+    const upgradeResponse = Response.json(null);
+    Object.defineProperties(upgradeResponse, {
+      status: { value: 101 },
+      webSocket: { value: socket },
+    });
+    const worker = createWorker(vi.fn(async () => upgradeResponse));
+    const form = new FormData();
+    form.append("audio", pcmWavFile(24_000), "speech.wav");
+    form.append("mode", "dialogue");
+    form.append("context", JSON.stringify(dialogueVoiceRequest().context));
+
+    const response = await worker.fetch(
+      new Request("http://worker.local/voice/realtime", {
+        method: "POST",
+        headers: { Origin: LOCAL_ORIGIN },
+        body: form,
+      }),
+      env(),
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({ error: "주노 응답이 안전 규칙을 위반했습니다." });
+  });
+
   it("지원하지 않는 Realtime 모델 설정은 upstream 연결 전에 차단한다", async () => {
     const upstream = vi.fn();
     const worker = createWorker(upstream);

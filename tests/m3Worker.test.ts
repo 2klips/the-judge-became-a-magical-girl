@@ -145,10 +145,45 @@ describe("M3 Worker 경계", () => {
     expect(body.systemInstruction?.parts?.[0]?.text).toContain(
       "단순 질문·감정 표현·농담에서는 빈 배열",
     );
+    expect(body.systemInstruction?.parts?.[0]?.text).toContain(
+      "누구·어디·왜·어떻게",
+    );
+    expect(body.systemInstruction?.parts?.[0]?.text).toContain(
+      "첫 문장에서 직접 답하라",
+    );
     expect(body.generationConfig?.responseJsonSchema).toBeTruthy();
     expect(body.generationConfig).toMatchObject({
       thinkingConfig: { thinkingLevel: "minimal" },
     });
+  });
+
+  it("text dialogue Worker는 meta/evasive 응답을 state 적용 전에 거부한다", async () => {
+    const worker = createWorker(async () =>
+      Response.json({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: JSON.stringify({
+                    intentId: "ask_conditions",
+                    affinityDelta: 0,
+                    emotion: "neutral",
+                    flags: [],
+                    reply: "이건 조건을 묻는 거네.",
+                  }),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    );
+
+    const response = await worker.fetch(dialogueRequest(), env());
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({ error: "주노 응답이 안전 규칙을 위반했습니다." });
   });
 
   it("공개 QA에서는 OpenAI Responses structured output을 대화 판정으로 중계한다", async () => {

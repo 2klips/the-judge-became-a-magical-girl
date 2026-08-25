@@ -16,6 +16,7 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "qa:dialogue-matrix": "node scripts/qa-dialogue-matrix.mjs",
     "build": "vite build",
     "build:qa": "vite build --mode qa",
     "preview": "vite preview"
