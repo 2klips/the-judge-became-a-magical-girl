@@ -29,7 +29,8 @@
 - [x] Ending result frame/editorial presentation — HQ-11 사용자 `PASS / FREEZE`
 - [x] Post-credit teaser·HIDDEN 제거, 세 Ending 종료 flow — 사용자 `PASS / FREEZE`
 - [ ] Juno 행동 포즈·final purification 등 잔여 visual production 판정
-- [ ] AR-01 사람 장면·청각 QA, AR-02 스타일 연속성 QA, AR-10 public cold-load 5회
+- [ ] AR-01 사람 장면·청각 QA, AR-02 스타일 연속성 QA
+- [x] AR-10 controlled final production cold-load 5/5와 submission full regression `PASS / FREEZE`
 
 ---
 
@@ -207,11 +208,11 @@
   - 이유: historical asset verifier를 유지한 채 main과 public build를 동일하게 만들기 위해서다.
   - 상태: **완료** — run #33 build/deploy `SUCCESS`, public HTTP 200, SHA `df3a94d`.
 
-- [ ] **AR-10 public cold-load gate**
+- [x] **AR-10 controlled final production cold-load gate**
   - 기존 문제: HTTP 200과 로컬 체감 속도만 있고 공식 공개망 성능 증거가 없다.
   - 변경안: cold cache 5회 모두 first-screen ready ≤3,000ms, asset/error/FOIT 0.
   - 이유: 실제 팀원·심사 환경의 최초 진입 시간을 수치로 보증하기 위해서다.
-  - 상태: **미착수** — 최종 asset/bundle freeze 뒤 측정.
+  - 상태: **PASS / FREEZE** — Chrome Stable 151, 1920×1080, clean isolated context에서 `318.0/359.8/358.4/328.4/378.5ms`로 5/5 통과했다. 평균 348.62ms, asset/font/blank/console/scroll failure 0이다. main integration·push·deploy 전 local production readiness evidence이며 public deploy smoke는 배포 승인 뒤 별도 수행한다.
 
 ---
 
@@ -429,8 +430,8 @@
 - [x] **HQ-11 Ending:** GOOD/NORMAL/BAD editorial Result Frame geometry 사용자 `PASS / FREEZE`; HIDDEN-specific presentation은 제출 범위에서 제거.
 - [x] **HQ-12 제출 종료:** Black Magical Girl teaser·HIDDEN 제거와 GOOD/NORMAL/BAD terminal exit 사용자 `PASS / FREEZE`. 대체 teaser asset은 제작하지 않는다.
 - [ ] **잔여 visual production 우선순위:** release closure 직접 관련은 ① final purification CUT이다. 이후 ② Juno barrier/protect, ③ Juno encourage/cast, ④ Juno point/explain 순으로 검토한다. Black Magical Girl post-credit asset은 제출 범위에서 제거됐다.
-- [ ] **AR-10:** 최종 asset freeze 뒤 public Pages cold cache 5/5에서 first-screen ready ≤3초를 증명한다.
-- [ ] **Final release QA:** 최신 Pages SHA에서 required asset 200, console error 0, click/voice ending matrix와 제출 smoke를 다시 확인한다.
+- [x] **AR-10:** final production build clean-context 5/5에서 TITLE ready ≤3초, asset/font/console/scroll failure 0을 증명했다.
+- [x] **Submission final release QA:** local production에서 TITLE·click 완주·GOOD/NORMAL/BAD·Battle·Voice health·save migration·branding/runtime asset gate를 통과했다. public Pages 배포와 배포 SHA smoke는 이번 범위에서 의도적으로 수행하지 않았다.
 
 ### 선택적 polish
 

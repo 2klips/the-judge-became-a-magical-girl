@@ -185,9 +185,9 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Desired Direction | editorial ending layout, actor와 UI 분리, background 위 hierarchy 중심 title·small CTA |
 | Priority | P1 |
 | Implementation Status | `PASS / FREEZE` — 사용자 승인 fixed result frame의 geometry·독립 header/title anchor·`clamp(2.875rem, 3.4vw, 4rem)` title scale·detached CTA·actor composition을 GOOD/NORMAL/BAD에 그대로 유지한다. 2026-08-25 제출 범위 결정으로 HIDDEN node·presentation hook만 제거했으며 세 ending의 copy·조건·geometry는 변경하지 않았다. |
-| Human Recheck | 2026-08-24 final HEAD `099fe59b`에서 네 ending 화면을 승인한 기록은 historical evidence로 유지한다. 현재 제출 runtime은 GOOD/NORMAL/BAD만 도달 가능하며, HIDDEN 제거 뒤 세 ending의 frozen geometry 회귀는 자동 검증하고 최종 release 화면은 `HUMAN_RECHECK`한다. |
+| Human Recheck | 2026-08-24 final HEAD `099fe59b`에서 네 ending 화면을 승인한 기록은 historical evidence로 유지한다. 2026-08-26 final production regression에서 현재 제출 GOOD/NORMAL/BAD의 frozen geometry를 1920×1080, GOOD/BAD를 1366×768로 재확인했다. |
 | Final Status | `PASS / FREEZE` |
-| Related SSOT/TODO | Ending frame geometry, header/title independent anchors, result title scale, detached CTA geometry, actor composition을 freeze한다. release-blocking regression 증거 없이는 추가 visual polish를 하지 않는다. HQ-12 제출 종료는 별도 `HUMAN_RECHECK`다. |
+| Related SSOT/TODO | Ending frame geometry, header/title independent anchors, result title scale, detached CTA geometry, actor composition을 freeze한다. HQ-12 제출 종료도 `PASS / FREEZE`이며 release-blocking regression 증거 없이는 추가 visual polish를 하지 않는다. |
 
 ### HQ-12 — Post-credit submission closure
 
@@ -217,7 +217,7 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Implementation Status | `HUMAN_RECHECK` — core VN foundation과 HQ-10 Battle·GOOD/NORMAL/BAD HQ-11 geometry·OpenAI TITLE, HIDDEN/teaser 제거, voice/dialogue/도윤 boundary cleanup은 사용자 `PASS / FREEZE`. HQ-06 등 별도 미종결 visual 항목은 유지한다. |
 | Human Recheck | 2026-08-26 실제 헤드셋·마이크 release gate `PASS / FREEZE`. QA debug evidence 격리와 production evidence DOM 0도 확인했다. HQ-13 전체 상태는 별도 미종결 항목 때문에 유지한다. |
 | Final Status | `HUMAN_RECHECK` |
-| Related SSOT/TODO | HQ-02·HQ-10·세 ending HQ-11 geometry 완료. HQ-06은 `OPEN`, 제출 cleanup은 `HUMAN_RECHECK` 유지 |
+| Related SSOT/TODO | HQ-02·HQ-10·세 ending HQ-11 geometry와 제출 cleanup 완료. HQ-06 등 별도 미종결 visual 항목 때문에 HQ-13 전체만 `HUMAN_RECHECK` 유지 |
 
 ### HQ-14 — OpenAI submission TITLE rebrand
 
@@ -233,6 +233,16 @@ Codex 구현 완료, 자동 테스트 PASS, screenshot 생성만으로 `PASS` �
 | Human Recheck | 2026-08-24 사용자가 OpenAI 제출 TITLE을 최종 승인했다. 배경·TITLE UX는 release-blocking regression 없이는 변경하지 않는다. |
 | Final Status | `PASS / FREEZE` |
 | Related SSOT/TODO | 과거 NHN 원본·DEC-037 이력은 source/provenance에만 유지. TITLE CSS·UX는 실제 화면 필요 시 최소 범위만 조정 |
+
+### Release Gate — AR-10 + submission regression
+
+| 필드 | 내용 |
+|---|---|
+| Scope | final production build cold-load, TITLE, click complete path, three endings, Battle, Voice health, save migration, runtime branding/assets |
+| Automated/Actual Evidence | AR-10 5/5 `318.0/359.8/358.4/328.4/378.5ms`; production click GOOD → `처음부터` → N0; GOOD/NORMAL/BAD and HQ-10 frozen geometry; Worker health HTTP 200 |
+| Submission Contract | 16 nodes, GOOD/NORMAL/BAD only, HIDDEN/post-credit/unknown girl 0, public-visible NHN/NH-IN/HACKATHON 0 |
+| Final Status | `PASS / FREEZE` |
+| Remaining Boundary | main integration·push·deploy는 미실행. unrelated main worktree 변경을 보존한 채 별도 승인 후 진행 |
 
 ## 3. Existing TODO 연결
 

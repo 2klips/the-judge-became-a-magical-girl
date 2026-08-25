@@ -721,3 +721,24 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - canonical local 환경 `http://127.0.0.1:5173` / `http://127.0.0.1:8787`에서 health HTTP 200, `openaiConfigured=true`, Realtime `gpt-realtime-2.1-mini`, dialogue `gpt-5.6-luna`를 재확인했다. secret/raw provider body 출력은 0이다.
 - Chrome Stable `151.0.7922.174` production 화면에서 transcript·QA evidence DOM·HIDDEN/teaser visible text, broken image, scroll, console error/warning은 모두 0이었다. 기존 save를 보존한 채 `게임 시작`에서 `마이크 없이 시작` 선택창이 열리는 것까지 확인하고 닫아 click fallback 진입 가능성을 검증했다.
 - canonical submission은 16 nodes, GOOD/NORMAL/BAD only, HIDDEN/post-credit/unknown girl 제거 상태다. HQ-10·HQ-11·OpenAI TITLE·제출 ending scope·voice/dialogue·도윤 boundary는 `PASS / FREEZE`다. AR-10, main integration, push/deploy는 시작하지 않는다.
+
+## 33. 2026-08-26 Submission Final Release Gate
+
+- starting implementation HEAD `163d4a9c58ada582b781245046a4b7d6c057eea6`의 production build를 `vite preview`로 열고 Chrome Stable 151, Windows 10 build 19045, 1920×1080, DPR 1, zoom 100%, network throttle 없음, CPU 1×에서 AR-10 controlled cold-load를 실행했다. 각 run은 독립 browser context와 clean storage를 사용했다.
+
+| run | TITLE ready | background/font | console | asset failure | scroll |
+|---:|---:|---|---|---:|---:|
+| 1 | 318.0ms | complete / loaded | 0 | 0 | 0 |
+| 2 | 359.8ms | complete / loaded | 0 | 0 | 0 |
+| 3 | 358.4ms | complete / loaded | 0 | 0 | 0 |
+| 4 | 328.4ms | complete / loaded | 0 | 0 | 0 |
+| 5 | 378.5ms | complete / loaded | 0 | 0 | 0 |
+
+- 평균은 348.62ms이며 5/5가 3,000ms 이하다. performance trace는 LCP 302ms, TTFB 5ms, CLS 0.0004였다. OpenAI background·title·게임 시작·이어하기·설정·optional mic·BGM HUD가 모두 보이고 입력 가능한 시점을 TITLE ready로 판정했다.
+- TITLE은 production/debug OFF에서 1920×1080·1600×900·1366×768을 재검수했다. OpenAI GAME BUILDERS SEOUL main banner crop/occlusion, menu/BGM/mic overlap, page scroll, console error/warning, runtime-visible NHN/NH-IN/HACKATHON은 모두 0이다. Settings open/close, Tab focus, Enter/Space와 fresh/current Continue 상태를 확인했다.
+- disposable storage의 실제 click path로 TITLE → N0 → N1/N2 → Juno emergence → Wraith omen → N3/N5 → transformation → Battle → convergence → GOOD → `처음부터` → N0를 완주했다. duplicate turn, stuck state, broken image, HIDDEN/post-credit/unknown girl visible count, scroll, console error/warning은 모두 0이다.
+- production build에서 GOOD/NORMAL/BAD를 1920×1080, GOOD/BAD를 1366×768로 확인했다. 같은 viewport의 Result Frame·header/title anchor·CTA·actor geometry는 동일하고 CTA center offset과 actor/BGM overlap은 0이다. HQ-10 Battle도 1920×1080·1600×900·1366×768에서 HUD/dialogue/command dock hard overlap, broken image, page scroll, console error/warning 0을 확인했다.
+- Human Voice actual gate는 직전 사용자 `PASS / FREEZE` evidence를 재사용했다. canonical Worker health는 Origin 허용 요청에서 HTTP 200, `openaiConfigured=true`, Realtime `gpt-realtime-2.1-mini`다. production transcript·QA evidence DOM은 0이고 click fallback은 실제 완주로 재확인했다.
+- disposable storage에서 fresh/current/corrupt save, legacy `ending_hidden` → GOOD, legacy `post_credit` → GOOD, ending restart → clean N0를 확인했다. schema version은 변경하지 않았다.
+- runtime asset SSOT는 46 files·15,114,805B, final `dist`는 61 files·41,863,765B다. focused release suite 11 files·77 tests와 initial full gate 67 files·487 tests가 PASS했다. production/QA build, TypeScript check, `git diff --check`, scenario/asset integrity, production secret scan, Markdown relative-link scan도 PASS했다. 기존 Transformers 516.22kB warning만 유지한다.
+- AR-10과 Submission Release Gate는 `PASS / FREEZE`다. main integration·push·deploy는 수행하지 않았다.

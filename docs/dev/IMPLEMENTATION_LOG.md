@@ -2166,3 +2166,12 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - canonical local APP `http://127.0.0.1:5173`, Worker `http://127.0.0.1:8787`에서 health HTTP 200, OpenAI configured, Realtime `gpt-realtime-2.1-mini`, dialogue `gpt-5.6-luna`를 확인했다. `.env.local`은 ignored 상태이며 secret/raw provider body 출력은 0이다.
 - Chrome Stable `151.0.7922.174` production에서 transcript·QA evidence DOM·HIDDEN/teaser visible text·broken image·scroll·console error/warning은 0이었다. 기존 save는 보존했고 `게임 시작`의 mode dialog에 `마이크 없이 시작`이 정상 노출되는 click safety smoke를 통과했다.
 - canonical submission은 16 nodes와 GOOD/NORMAL/BAD terminal만 사용한다. HIDDEN/post-credit/unknown girl은 제거됐고 legacy save alias 외 runtime-visible reference는 없다. 관련 frozen Story/FSM/save/BGM/click fallback을 변경하지 않았다.
+
+## 2026-08-26 Submission Final Release Gate
+
+- implementation HEAD `163d4a9c58ada582b781245046a4b7d6c057eea6`의 final production build로 AR-10 controlled cold-load를 5회 실행했다. raw TITLE-ready timing은 `318.0 / 359.8 / 358.4 / 328.4 / 378.5ms`, 평균 `348.62ms`이며 5/5가 3초 기준을 통과했다. asset/font/blank screen/console error/warning/scroll failure는 0이다.
+- production/debug OFF actual Chrome에서 TITLE 3 viewport, HQ-10 Battle 3 viewport, GOOD/NORMAL/BAD 1920과 GOOD/BAD 1366 frozen geometry를 재확인했다. disposable click profile은 TITLE부터 GOOD, `처음부터`, clean N0까지 완주했다.
+- Human Voice gate의 실제 사람 headset/mic evidence는 재실행하지 않고 canonical PASS evidence로 유지했다. Worker health는 HTTP 200, OpenAI configured, Realtime `gpt-realtime-2.1-mini`; production transcript/QA evidence DOM과 secret exposure는 0이다.
+- fresh/current/corrupt/legacy HIDDEN/legacy post-credit/restart save matrix를 확인했다. legacy removed routes는 GOOD으로 복구하고 current runtime에는 HIDDEN/post-credit/unknown girl presentation이 없다.
+- runtime asset 46 files·15,114,805B, final build 61 files·41,863,765B다. public-facing NHN/NH-IN/HACKATHON 0, required asset/network failure 0, tracked Markdown의 실제 relative-link break 0이다. 과거 branding·HIDDEN 설계 문서는 historical record로 유지했다.
+- release code·Story/FSM/save/voice/BGM/assets는 변경하지 않았다. 네 current-state SSOT만 reconciliation하며 main integration·push·deploy는 수행하지 않는다.
