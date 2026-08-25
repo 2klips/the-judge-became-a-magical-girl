@@ -1,4 +1,4 @@
-name: Deploy temporary QA Pages
+name: Deploy production Pages
 
 on:
   push:
@@ -54,18 +54,15 @@ jobs:
           test -n "$VITE_WORKER_URL"
           [[ "$VITE_WORKER_URL" == https://*.workers.dev ]]
 
-      - name: Build QA preview
-        env:
-          VITE_QA_COMMIT: ${{ github.sha }}
-        run: npm run build:qa
+      - name: Build production Pages
+        run: npm run build
 
-      - name: Verify QA artifact boundary
+      - name: Verify production artifact boundary
         shell: bash
         run: |
           test -f dist/index.html
-          test ! -e dist/stt-lab.html
-          ! find dist -type f \( -name '*.wasm' -o -name '*transformers*' \) -print -quit | grep -q .
-          grep -q 'noindex,nofollow' dist/index.html
+          test -f dist/stt-lab.html
+          ! grep -q 'noindex,nofollow' dist/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
