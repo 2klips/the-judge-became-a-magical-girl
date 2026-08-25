@@ -72,6 +72,7 @@
 | 날짜 | 작업 | 사용 AI 도구 | 입력 자료 | 생성 결과 | 사람이 한 검수 | 최종 사용 여부 | 사용 토큰 수 | 관련 파일 또는 커밋 |
 |---|---|---|---|---|---|---|---|---|
 | 2026-08-24 | OpenAI 대회 제출용 `bg_title` 교체 | 사용자 제공 이미지; Codex는 Sharp 기계 정규화만 수행 | 1672×941 PNG 1장, SHA-256 `0048CBD1...6772A8`. exact 생성 서비스·모델·작업 ID `UNKNOWN` | 원본 바이트 보존 + 1920×1080 WebP quality 88, 265,998B, SHA-256 `A08A4407...F0482A1`. 생성형 재편집 없음 | 사용자가 해당 이미지를 canonical replacement input으로 확정. 자동 hash·규격·NHN runtime 미참조 확인; 3개 PC viewport 실제 TITLE 사람 재검수 대기 | runtime `ready`; OpenAI TITLE `HUMAN_RECHECK`. 과거 NHN 원본·이력은 archive/provenance 보존 | 미측정 | `assets/source/background/openai-submission-2026-08-24/`, `assets/runtime/bg/bg_title.webp`, `tests/openaiTitleRebrand.test.ts` |
+| 2026-08-25 | 도윤 평상복 2종 purple boundary alpha cleanup | 생성형 도구 없음; Pillow/NumPy deterministic indexed-PNG cleanup | 사용자 승인 delivery/runtime `doyun.normal_suspicious`, `doyun.employee_id_surprised`; frozen baseline `7a3e963`; 사용자 original은 보존 | 투명 silhouette에 연결된 purple boundary만 unused palette의 동일 RGB/alpha 0 entry로 remap. 각각 4,124px·4,245px; 얼굴·머리 내부·표정·손·사원증·의상·포즈·RGB 재생성 없음 | 두 파일 target RGB·비대상 pixel 변경 0, boundary 잔존 0, source/runtime 동일 바이트. 최종 SHA-256 `E1CC3909...D9913F5`, `16EB7436...EF5DA` | `ready`; 실제 dark-office 합성 `HUMAN_RECHECK`, `approved` 아님 | 해당 없음 | `assets/source/early-scene-2026-08-22/tools/clean_purple_outline.py`, delivery/runtime PNG, `tests/earlySceneAssetIntegration.test.ts` |
 
 ## 기록 규칙
 

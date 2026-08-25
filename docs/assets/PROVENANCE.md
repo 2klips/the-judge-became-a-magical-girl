@@ -34,8 +34,8 @@
 
 | 대상 | 원본 SHA-256·크기 | runtime SHA-256·크기 | 변환·사용 |
 |---|---|---|---|
-| IMAGE 2 `doyun.normal_suspicious` | `08662799D6B155D977AFEAEB04D4623BAD7AE1AA39480EB42303E9510B24B23E`, 1,243,086B, 1024×1536 RGBA | `ED7D6632B6E20CC202EE57AA0213FC0406EBD86E90DCDE0444A600FF120B3078`, 263,523B, 1200×2000 transparent PNG | 분리 `?` 제거·비율 유지. N1/N2 의심·집중 |
-| IMAGE 3 `doyun.employee_id_surprised` | `4905B29148236DA0BDF0F7D6E8624CF99C557E294624D9F6CBF7AB5215A2E353`, 1,306,799B, 1024×1536 RGBA | `E92AD2F508207C20D8F17B1747E09537F5A1B0248AA05363A5EB645C76174E70`, 291,030B, 1200×2000 transparent PNG | 분리 `!` 제거·비율 유지. 2026-08-23 deterministic alpha cleanup으로 baseline `39f4370`의 반투명 magenta fringe 1,923px만 alpha 0 처리하고 RGB·그 밖 pixel은 불변. N5 사원증 첫 beat 전용·사람 합성 재검수 대기 |
+| IMAGE 2 `doyun.normal_suspicious` | `08662799D6B155D977AFEAEB04D4623BAD7AE1AA39480EB42303E9510B24B23E`, 1,243,086B, 1024×1536 RGBA | `E1CC3909698A3A8A1745E36F165E031F97685671BB83618A4DC8F5517D9913F5`, 263,531B, 1200×2000 transparent indexed PNG | 분리 `?` 제거·비율 유지. 2026-08-25 purple boundary 4,124px alpha-only cleanup, RGB·비대상 pixel 불변. N1/N2 의심·집중 |
+| IMAGE 3 `doyun.employee_id_surprised` | `4905B29148236DA0BDF0F7D6E8624CF99C557E294624D9F6CBF7AB5215A2E353`, 1,306,799B, 1024×1536 RGBA | `16EB7436C74F92AF09FDBD210072DD680936879D789DC67B92746CDA706EF5DA`, 291,092B, 1200×2000 transparent indexed PNG | 분리 `!` 제거·비율 유지. 2026-08-23 magenta cleanup 이력에 이어 2026-08-25 purple boundary 4,245px alpha-only cleanup, RGB·비대상 pixel 불변. N5 사원증 첫 beat 전용·사람 합성 재검수 대기 |
 | IMAGE 4 `cut.juno_monitor_emerge` | `F35267D8DA8CCB44CF9F8838D39C15B4A487F479665245B34A0BCE0436BE498B`, 1,828,710B, 1672×941 RGB | `922E52FA06D72DB3CF2ECF70B3FF511AE76927D494F949C85EE312B2B0C24CB3`, 141,288B, 1920×1080 WebP | 비율 crop. N1→N2 1,000ms solo CUT, live actor 0 |
 | IMAGE 5 `cut.monitor_direct_wish_prompt` | `043B5AF715E8C30658D79BE687130D10CEEF00B0C789A5C691BE815DED81CED6`, 2,707,422B, 1672×941 RGBA(opaque) | `E99CC6F3719E8063CEB873ADD0559EDC9E27063D7E36321365B17E2CDD616AF2`, 119,738B, 1920×1080 WebP | 비율 crop·baked 문구 보존. N0 final/N1 opening |
 
@@ -263,3 +263,11 @@
 - 현재 source/runtime: 1200×2000 indexed transparent PNG, 291,030B, SHA-256 `E92AD2F508207C20D8F17B1747E09537F5A1B0248AA05363A5EB645C76174E70`, 동일 바이트.
 - verifier 결과: cleanup 전 artifact 1,923px, cleanup 후 opaque/saturated magenta 0, artifact RGB 변경 0, artifact 밖 변경 0. exporter는 multi-alpha를 보존하는 255색 RGBA quantization으로 고쳐 재발 방지 테스트를 둔다.
 - 실제 N5 장면은 1920×1080·1600×900·1366×768에서 로드·no-scroll을 확인했지만 최종 사람 합성 승인 전 HQ-03은 `HUMAN_RECHECK`이고 asset은 `ready`다.
+
+## 2026-08-25 도윤 2종 purple boundary deterministic cleanup
+
+- pre-edit baseline은 commit `7a3e9630e569521d6e56a2c1376c453ba1e49692`의 delivery/runtime indexed PNG다. 사용자 제공 original과 다른 캐릭터 asset은 변경하지 않았다.
+- Pillow/NumPy 도구가 visible alpha, red/blue의 green 대비 chroma, 투명 4-neighbour를 함께 만족하는 silhouette boundary만 bounded layer로 추적했다. 생성형 모델·전체 quantization·재드로잉은 사용하지 않았다.
+- `doyun.normal_suspicious`: 4,124px alpha 0, target RGB 변경 0, 비대상 pixel 변경 0, 263,531B, SHA-256 `E1CC3909698A3A8A1745E36F165E031F97685671BB83618A4DC8F5517D9913F5`.
+- `doyun.employee_id_surprised`: 4,245px alpha 0, target RGB 변경 0, 비대상 pixel 변경 0, 291,092B, SHA-256 `16EB7436C74F92AF09FDBD210072DD680936879D789DC67B92746CDA706EF5DA`.
+- 두 파일 모두 1200×2000 mode-P·tRNS·800KB 이하이며 source/runtime 바이트가 같다. 자동 verifier의 cleanup 후 opaque purple boundary는 0이다. 실제 dark-office 합성 사람 승인 전 status는 `ready · HUMAN_RECHECK`다.

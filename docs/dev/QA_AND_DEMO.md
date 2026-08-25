@@ -139,7 +139,7 @@ DevTools Network에서 발화당 `/voice/realtime` 1회, 응답 200, 예상 모�
 | QE-03 | `affinity < 40` | BAD, 전투 승리 후 관계 결말로 표현 |
 | QE-04 | HIDDEN 포함 빌드에서 perfect + battle S | HIDDEN이 최우선으로 선택 |
 
-HIDDEN 컷 빌드에서는 QE-04를 `N/A(승인된 MVP 컷)`로 기록하고 GOOD/NORMAL/BAD를 유지한다.
+현재 제출판처럼 HIDDEN 컷이 확정된 빌드에서는 QE-04를 `N/A(승인된 제출 범위 변경)`로 기록하고 GOOD/NORMAL/BAD terminal regression으로 대체한다.
 
 ## 9. 저장·복구
 
@@ -704,3 +704,12 @@ Task 6 문서 reconciliation 뒤 최종 HEAD에서 아래 complete gate를 다�
 - 제출 runtime에는 `post_credit`, `ending.black_magical_girl`, `bg_corridor_day`, `bg_corridor_blacklight` reference가 없다. corridor runtime binary는 제거했지만 source/provenance 역사 기록은 유지한다. 신규/편집 binary와 대체 teaser는 0이다.
 - focused QA는 BAD/NORMAL/GOOD/HIDDEN terminal routing, HIDDEN 5조건·고유 문구, legacy save migration, teaser reference 0을 검증한다. actual Chrome production/debug OFF에서는 GOOD 전체 click flow의 마지막 페이지와 `처음부터` 이후 N0 새 게임 복귀, unknown girl/Black Magical Girl/broken image/stuck/console error/scroll 0을 확인했다. HIDDEN은 완창 음성 입력이 필요한 실제 진입 경로이므로 이번 자율 click QA에서는 재진입하지 않았으며, route/engine 회귀 PASS와 기존 고정 Ending geometry를 근거로 사용자 `HUMAN_RECHECK`를 유지한다.
 - HQ-10 Battle·HQ-11 Ending·OpenAI TITLE은 `PASS / FREEZE`. HQ-12는 사용자 실제 화면 승인 전 `HUMAN_RECHECK`다.
+
+## 31. 2026-08-25 제출 voice/dialogue/ending cleanup
+
+- current submission runtime은 16 nodes, GOOD/NORMAL/BAD 세 ending이다. `ending_hidden`과 HIDDEN tone/preview/copy hook은 제거했고 legacy `ending_hidden` save만 `ending_good` alias로 복구한다. 이전 five-condition run은 GOOD으로 수렴하며 `perfect_transform`·incantation result·battle momentum modifier는 유지한다.
+- QA build의 `?debug=1`에서만 마지막 voice turn의 전사 원문, 모델·timing, RMS/peak/clip, 주문 4키워드별 일치와 합계를 표시한다. evidence는 GameState/localStorage에 저장하지 않고 production 또는 debug-off DOM에는 렌더하지 않는다.
+- browser network 실패와 Worker HTTP 실패를 분리한다. normal UI는 safe Korean recovery copy만 사용하고 QA evidence는 HTTP status만 허용한다. battle completed-turn `too-loud`는 isolated peak 단독이 아니라 calibration maximum보다 3dB 높은 sustained RMS 또는 clipping ratio 1% 초과로 판정한다.
+- 주노 text/realtime 경계는 동일한 reply-quality validator를 사용한다. 누구·어디·왜·어떻게 질문은 현재 scene facts로 첫 문장에서 직접 답하고, meta classification·회피성 filler·known malformed Korean은 state 적용 전 safe 502로 거부한다. 실제 provider 16-case matrix는 canonical local Worker에서 별도 실행한다.
+- `doyun.normal_suspicious`와 `doyun.employee_id_surprised`는 각각 4,124px·4,245px의 purple silhouette boundary alpha만 제거했다. target RGB·비대상 pixel 변경 0, source/runtime byte identity, cleanup 후 boundary 0을 verifier가 보장한다.
+- 자동 구현 상태는 `HUMAN_RECHECK`다. actual Chrome에서 GOOD/NORMAL/BAD exit, QA evidence, production evidence 0, 주노 matrix, 두 dark-office sprite composite를 닫기 전 PASS로 승격하지 않는다.

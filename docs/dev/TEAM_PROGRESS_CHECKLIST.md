@@ -3,7 +3,7 @@
 
 ## 기존 / 변경안 / 수정안 / 폐기안
 
-> Draft · 2026-08-23 KST  
+> Draft · 2026-08-25 KST  
 > 인계 기준 `2a5821d` → 현재 `main`·공개 Pages `df3a94d`  
 > 공개 링크: <https://2klips.github.io/the-judge-became-a-magical-girl/>
 
@@ -16,8 +16,8 @@
 
 ## 현재 한눈에 보기
 
-- [x] Scenario v3.1의 제출판 17-node runtime과 GOOD/NORMAL/BAD/HIDDEN 분기
-- [x] Realtime voice core, 7종 typed failure, 누적 5회 정책, PTT live meter
+- [x] Scenario v3.1의 제출판 16-node runtime과 GOOD/NORMAL/BAD 분기; legacy HIDDEN save→GOOD
+- [x] Realtime voice core, typed failure·network/http 분리, 누적 5회 정책, PTT live meter·QA evidence
 - [x] 선택형 마이크·9-state FSM·Settings를 갖춘 PC TITLE
 - [x] OpenAI 제출용 TITLE 배경 교체 — 사용자 `PASS / FREEZE`
 - [x] 공통 VN dialogue/choice UI foundation — HQ-02 사용자 `PASS`
@@ -27,7 +27,7 @@
 - [x] Battle/Ending 1차 safe-zone 보정 — responsive collision closure 완료
 - [x] Battle command deck/presentation — HQ-10 사용자 `PASS / FREEZE`
 - [x] Ending result frame/editorial presentation — HQ-11 사용자 `PASS / FREEZE`
-- [ ] Post-credit teaser 제거·네 Ending 종료 flow — HQ-12 구현 완료 / `HUMAN_RECHECK`
+- [ ] Post-credit teaser·HIDDEN 제거, 세 Ending 종료 flow — 구현 완료 / `HUMAN_RECHECK`
 - [ ] Juno 행동 포즈·final purification 등 잔여 visual production 판정
 - [ ] AR-01 사람 장면·청각 QA, AR-02 스타일 연속성 QA, AR-10 public cold-load 5회
 
@@ -69,7 +69,7 @@
 
 - [x] **v2 시나리오의 핵심 골격**
   - 기존: 심사역, 야근, 이상한 게임, 음성 사건, 주노, 회색 망령, 변신, 3-phase battle, GOOD/NORMAL/BAD가 있었다.
-  - 현재: 이 골격은 유지하고 의미·분기·HIDDEN을 v3/v3.1로 확장했다. 과거 post-credit 확장은 제출판에서 제거했다.
+  - 현재: 이 골격은 유지하고 의미·N6/N7/N8 분기를 v3/v3.1로 확장했다. 과거 post-credit와 HIDDEN은 최종 제출판에서 제거했다.
   - 비고: “무에서 새로 만든 게임”이 아니라 완주 가능한 v2 프로토타입을 개선한 프로젝트다.
 
 - [x] **장면 preview와 debug 경로**
@@ -133,13 +133,13 @@
   - 기존 문제: N6의 “둘 다”가 정답처럼 보이고, 기술 실패와 BAD 의미가 섞일 수 있었다.
   - 변경안: 방어/공격 첫 선택, 조건부 두 번째 주문, BELIEVE/POSSIBILITY/CYNIC, final refusal 분리.
   - 이유: 플레이 선택·판단 책임·late recovery를 엔딩과 정확히 연결하기 위해서다.
-  - 상태: **완료** — CYNIC+success=NORMAL, technical failure≠BAD, HIDDEN 5조건을 runtime test로 보호.
+  - 상태: **완료** — CYNIC+success=NORMAL, technical failure≠BAD, 과거 HIDDEN 5조건은 GOOD으로 수렴하고 `perfect_transform` modifier는 유지.
 
-- [x] **GOOD/NORMAL/BAD/HIDDEN + 제출판 terminal flow**
+- [x] **GOOD/NORMAL/BAD + 제출판 terminal flow**
   - 기존 문제: HIDDEN runtime과 독립 post-credit가 없고 GOOD 뒤 후속 정보가 감정적 완결을 침범했다.
-  - 변경안: 먼저 4 ending과 canonical post-credit를 분리했으나, 제출 일정 최종 결정으로 미지의 소녀 teaser를 제거하고 네 ending 모두 기존 종료 동작을 사용한다.
+  - 변경안: 먼저 4 ending과 canonical post-credit를 분리했으나, 제출 일정 최종 결정으로 미지의 소녀 teaser와 HIDDEN을 제거하고 세 ending 모두 기존 종료 동작을 사용한다.
   - 이유: 미납품 teaser asset 없이도 승인된 Result Frame에서 완결감 있게 종료하기 위해서다.
-  - 상태: **구현 완료·HUMAN_RECHECK** — 4 ending·HIDDEN 5조건은 유지, post-credit runtime node/asset reference는 0.
+  - 상태: **구현 완료·HUMAN_RECHECK** — GOOD/NORMAL/BAD terminal, post-credit/HIDDEN runtime presentation reference 0, legacy save는 GOOD 복구.
 
 - [x] **Global composition preset·safe zone**
   - 기존 문제: 장면마다 actor 위치가 달라 face·staff·core가 겹쳤다.
@@ -175,7 +175,7 @@
   - 기존 문제: 초반부터 놀란 표정이 반복되고 CUT에서만 공개된 얼굴이 live에서 다시 가려졌다.
   - 변경안: tired→suspicious→surprise 단계와 Option A “변신 후 N5~N8 얼굴 공개” 적용.
   - 이유: 사건 강도와 캐릭터 감정 개방을 같은 시각 언어로 연결하기 위해서다.
-  - 상태: **부분 완료** — mapping·5종 facial edit 구현, HQ-01·03·05·07 사용자 `HUMAN_RECHECK`.
+  - 상태: **부분 완료** — mapping·5종 facial edit와 suspicious/employee-ID purple boundary alpha cleanup 구현, HQ-01·03·05·07 사용자 `HUMAN_RECHECK`.
 
 - [x] **Battle presentation 개선**
   - 기존 문제: HUD·BGM·대화·command UI가 경쟁하고 작은 viewport에서 겹쳤다.
@@ -405,14 +405,14 @@
 
 | 구분 | 인계 당시 | 현재 | 상태 |
 |---|---|---|---|
-| Story | v2, N0~N5·3-phase battle·GOOD/NORMAL/BAD | 승인된 v3.1 주제, 제출판 17 nodes, N6/N7/N8, 4 terminal endings | runtime 완료·HQ-12 재검수 |
-| Voice | Realtime/PTT/Worker 기반, 실패 의미·복구가 분산 | 7 typed failures, 누적 5회, actual dialogue/incantation/battle QA | core 완료 |
+| Story | v2, N0~N5·3-phase battle·GOOD/NORMAL/BAD | 승인된 v3.1 주제, 제출판 16 nodes, N6/N7/N8, GOOD/NORMAL/BAD terminal | runtime 완료·release 재검수 |
+| Voice | Realtime/PTT/Worker 기반, 실패 의미·복구가 분산 | typed failures·network/http 분리, QA evidence, sustained level policy, 누적 5회 | core 구현 완료·actual 재검수 |
 | TITLE | 중앙 mic calibration 중심, mic 성공이 진입 gate | PC 3 viewport, optional mic, 9-state FSM, Settings, BGM 20%, OpenAI 제출 배경 교체 | PASS / FREEZE |
 | VN UI | 큰 rounded panel과 card형 선택 | 공통 navy VN shell, speaker accent, vertical choice, editorial CTA | HQ-02 PASS; HQ-13 재검수 |
 | Character acting | early startled/facepalm 반복, 변신 얼굴 불연속 | suspicious·ID reaction 전용 pose, facepalm remap, post-transform 공개 얼굴 | 구현·HUMAN_RECHECK |
 | Composition | scene별 좌표, actor overlap·방향 규칙 부재 | named preset, safe zone, inward-facing audit, CUT/SPRITE exclusivity | foundation 완료 |
 | Battle | 3-phase 기능 중심, HUD/actor/UI 충돌 가능 | actor lanes, HUD/BGM 분리, responsive dialogue/dock 16px+, 정돈된 command/result deck | HQ-10 PASS / FREEZE |
-| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | 4 endings, 공통 result frame·독립 header/title·detached CTA·Juno safe-zone, teaser 없는 terminal exit | HQ-11 PASS / FREEZE; HQ-12 HUMAN_RECHECK |
+| Ending | GOOD/NORMAL/BAD, HIDDEN·독립 post-credit 없음 | GOOD/NORMAL/BAD 공통 result frame·독립 header/title·detached CTA·Juno safe-zone, teaser/HIDDEN 없는 terminal exit | HQ-11 geometry PASS / FREEZE; release HUMAN_RECHECK |
 | Assets | 핵심 자산 다수와 SSOT 골격 | runtime 46 files/14.41MiB, early cuts·poses·face edits·OpenAI 제출 TITLE·hash 검증 | 기술 ready; 사람 approved 대기 |
 | Rights | tool/plan/reference 상태가 일부 혼재 | USER ATTESTED/internal lineage/Suno Pro를 분리 기록하고 과거 NHN TITLE은 archive, 현재 OpenAI 제출본 provenance는 별도 기록 | AR-09 PASS 후보·새 TITLE exact 모델/work ID UNKNOWN |
 | Tests | 41 files / 187 tests 기록 | 64 files / 463 tests PASS | 확대 완료 |
@@ -426,8 +426,8 @@
 - [ ] **AR-01 Human visual/audio scene QA:** Wraith omen 청감, BGM loop/masking/duck, 전체 click/voice scene composite를 사람 기준으로 승인한다.
 - [ ] **AR-02 Style/scene consistency:** HQ-01·03·05·07·08·09의 `HUMAN_RECHECK`와 캐릭터·배경·CUT 전수 style-anchor 판정을 닫는다.
 - [x] **HQ-10 Battle:** command deck·정보 위계·safe gap 사용자 `PASS / FREEZE`.
-- [x] **HQ-11 Ending:** GOOD/NORMAL/BAD/HIDDEN editorial Result Frame 사용자 `PASS / FREEZE`.
-- [ ] **HQ-12 제출 종료:** Black Magical Girl teaser 제거와 GOOD/HIDDEN terminal exit의 actual human QA를 닫는다. 대체 teaser asset은 제작하지 않는다.
+- [x] **HQ-11 Ending:** GOOD/NORMAL/BAD editorial Result Frame geometry 사용자 `PASS / FREEZE`; HIDDEN-specific presentation은 제출 범위에서 제거.
+- [ ] **HQ-12 제출 종료:** Black Magical Girl teaser·HIDDEN 제거와 GOOD/NORMAL/BAD terminal exit actual QA를 닫는다. 대체 teaser asset은 제작하지 않는다.
 - [ ] **잔여 visual production 우선순위:** release closure 직접 관련은 ① final purification CUT이다. 이후 ② Juno barrier/protect, ③ Juno encourage/cast, ④ Juno point/explain 순으로 검토한다. Black Magical Girl post-credit asset은 제출 범위에서 제거됐다.
 - [ ] **AR-10:** 최종 asset freeze 뒤 public Pages cold cache 5/5에서 first-screen ready ≤3초를 증명한다.
 - [ ] **Final release QA:** 최신 Pages SHA에서 required asset 200, console error 0, click/voice ending matrix와 제출 smoke를 다시 확인한다.

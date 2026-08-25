@@ -2147,3 +2147,12 @@ Phase E에서 추가 CSS/no-scroll 수정은 필요하지 않았다. DECISIONS, 
 - RED는 canonical ending terminal 계약, runtime teaser reference 0, GOOD/HIDDEN legacy save 복구에서 4건이었다. 최소 구현 뒤 HQ-12와 인접 ending/asset/composition 회귀를 focused suite로 검증했다.
 - actual Chrome production/debug OFF에서는 GOOD 전체 click flow, 마지막 `처음부터`, N0 새 게임 복귀를 확인했다. unknown girl/Black Magical Girl/broken image/stuck/console error/scroll은 0이다. HIDDEN은 완창 음성 입력이 필요한 실제 진입 경로라 이번 자율 click QA에서 재진입하지 않았고, five-condition route/terminal exit는 focused engine/runtime 회귀로 검증했다.
 - HQ-10 Battle·HQ-11 Ending·OpenAI TITLE은 `PASS / FREEZE`; HQ-12는 HIDDEN actual user recheck를 포함해 `HUMAN_RECHECK`다. push/deploy·AR-10·추가 visual production은 시작하지 않는다.
+
+## 2026-08-25 Submission Voice / Dialogue / Ending Cleanup
+
+- HIDDEN submission ending을 제거했다. scenario/schema/loader/presentation은 GOOD/NORMAL/BAD만 허용하고, legacy `ending_hidden`과 해당 `post_credit` history는 save 경계에서 GOOD으로 복구한다. `perfect_transform`, 변신 결과, battle initial momentum modifier는 보존했다.
+- QA+debug 전용 ephemeral voice evidence를 추가했다. 성공은 transcript/model/timing/RMS/peak/clip과 incantation ordered keyword match를, 실패는 typed kind와 safe HTTP status만 표시한다. production/debug-off·save snapshot에는 evidence가 없다.
+- `network`/`http` user copy를 분리하고 HTTP 4xx/5xx status만 typed metadata로 보존한다. battle turn의 isolated peak는 수용하며 sustained RMS 또는 1% 초과 clipping만 `too-loud`로 처리한다. setup meter의 strict peak guidance는 변경하지 않았다.
+- 주노 prompt에 scene-fact direct answer와 완결된 한국어를 요구하고, shared validator가 meta/evasive/context-mismatched/malformed reply를 text와 realtime 양쪽에서 state 적용 전에 거부한다. `qa:dialogue-matrix`는 N2/N3/N6 16개 발화를 local Worker에 보내 intent/reply를 출력하며 secret/raw provider body를 다루지 않는다.
+- 도윤 평상복 2종의 purple silhouette boundary를 indexed-PNG palette alpha로만 정리했다. suspicious 4,124px·employee-ID 4,245px, target RGB와 비대상 pixel 변경 0, source/runtime 동일 바이트다.
+- 커밋: `08653c2` HIDDEN 제거, `0bd5e20` voice evidence/분류, `7a3e963` 주노 grounding, `e768703` 도윤 boundary cleanup. 현재 상태는 actual provider/browser 재검수 전 `HUMAN_RECHECK`; push/deploy는 하지 않는다.
