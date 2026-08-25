@@ -151,6 +151,9 @@ describe("M3 Worker 경계", () => {
     expect(body.systemInstruction?.parts?.[0]?.text).toContain(
       "첫 문장에서 직접 답하라",
     );
+    expect(body.systemInstruction?.parts?.[0]?.text).toContain(
+      "제공된 context에 없는 행동·장소·원인을 만들지 마라",
+    );
     expect(body.generationConfig?.responseJsonSchema).toBeTruthy();
     expect(body.generationConfig).toMatchObject({
       thinkingConfig: { thinkingLevel: "minimal" },

@@ -12,6 +12,8 @@ if (args.includes("--help")) {
 }
 
 const baseUrl = argValue("--base-url", "http://127.0.0.1:8787");
+const delayMs = Number(argValue("--delay-ms", "9000"));
+const startIndex = Number(argValue("--start-index", "0"));
 const scenario = JSON.parse(await readFile(new URL("../public/scenario/scenario.json", import.meta.url)));
 const characters = JSON.parse(await readFile(new URL("../public/scenario/characters.json", import.meta.url)));
 const juno = characters.find((character) => character.id === "juno");
@@ -19,22 +21,22 @@ const juno = characters.find((character) => character.id === "juno");
 if (!juno) throw new Error("characters.json에서 juno를 찾지 못했습니다.");
 
 const cases = [
-  ["n2_juno_intro", "내가 왜 그래야 돼?"],
-  ["n2_juno_intro", "이거 수당은 나와?"],
-  ["n2_juno_intro", "남자인데 마법소녀가 돼도 괜찮아?"],
-  ["n2_juno_intro", "그래서 지금 어떻게 하면 돼?"],
-  ["n2_juno_followup", "너는 누구야?"],
-  ["n2_juno_followup", "왜 하필 나를 골랐는데?"],
-  ["n2_juno_followup", "어디로 움직이는데?"],
-  ["n2_juno_followup", "설명 말고 빨리 끝내자."],
-  ["n3_wraith_choice", "얘는 왜 나타난 거야?"],
-  ["n3_wraith_choice", "누굴 먼저 지켜야 해?"],
-  ["n3_wraith_choice", "어떻게 막아?"],
-  ["n3_wraith_choice", "난 빠질래. 다른 사람 찾아."],
-  ["n6_first_choice", "정면으로 먼저 맞서자."],
-  ["n6_first_choice", "사람과 게임부터 지킬게."],
-  ["n6_first_choice", "둘 다 해야지. 사람부터 지키고 망령도 막자."],
-  ["n6_first_choice", "뭘 먼저 해야 하는데?"],
+  { nodeId: "n2_juno_intro", transcript: "내가 왜 그래야 돼?", expectedIntent: "realistic_objection" },
+  { nodeId: "n2_juno_intro", transcript: "이거 수당은 나와?", expectedIntent: "realistic_objection" },
+  { nodeId: "n2_juno_intro", transcript: "남자인데 마법소녀가 돼도 괜찮아?", expectedIntent: "realistic_objection" },
+  { nodeId: "n2_juno_intro", transcript: "그래서 지금 어떻게 하면 돼?", expectedIntent: "curious_magic", replyPattern: /사무실\s*안쪽|이동|따라/u },
+  { nodeId: "n2_juno_followup", transcript: "너는 누구야?", expectedIntent: "ask_identity" },
+  { nodeId: "n2_juno_followup", transcript: "왜 하필 나를 골랐는데?", expectedIntent: "ask_why_chosen" },
+  { nodeId: "n2_juno_followup", transcript: "어디로 움직이는데?", expectedIntent: "ask_identity", replyPattern: /사무실\s*안쪽/u },
+  { nodeId: "n2_juno_followup", transcript: "설명 말고 빨리 끝내자.", expectedIntent: "stay_cold" },
+  { nodeId: "n3_wraith_choice", transcript: "얘는 왜 나타난 거야?", expectedIntent: "seek_method", replyPattern: /기대|마음|체념|망령/u },
+  { nodeId: "n3_wraith_choice", transcript: "누굴 먼저 지켜야 해?", expectedIntent: "protect_others", replyPattern: /직원|사람|게임/u },
+  { nodeId: "n3_wraith_choice", transcript: "어떻게 막아?", expectedIntent: "seek_method", replyPattern: /변신|막|지키|맞서/u },
+  { nodeId: "n3_wraith_choice", transcript: "난 빠질래. 다른 사람 찾아.", expectedIntent: "withdraw" },
+  { nodeId: "n6_first_choice", transcript: "정면으로 먼저 맞서자.", expectedIntent: "attack_first" },
+  { nodeId: "n6_first_choice", transcript: "사람과 게임부터 지킬게.", expectedIntent: "defend_first" },
+  { nodeId: "n6_first_choice", transcript: "둘 다 해야지. 사람부터 지키고 망령도 막자.", expectedIntent: "protect_then_confront" },
+  { nodeId: "n6_first_choice", transcript: "뭘 먼저 해야 하는데?" },
 ];
 
 const metaPatterns = [
@@ -66,7 +68,8 @@ function requestFor(nodeId, transcript) {
   };
 }
 
-function assertReply(nodeId, transcript, result) {
+function assertReply(testCase, result) {
+  const { nodeId, transcript, expectedIntent, replyPattern } = testCase;
   if (!result || typeof result.reply !== "string" || !result.reply.trim()) {
     throw new Error("빈 reply");
   }
@@ -78,13 +81,22 @@ function assertReply(nodeId, transcript, result) {
   if (!node.intents.some((intent) => intent.id === result.intentId)) {
     throw new Error(`허용되지 않은 intent: ${result.intentId}`);
   }
+  if (expectedIntent && result.intentId !== expectedIntent) {
+    throw new Error(`intent mismatch: ${result.intentId}, expected ${expectedIntent}`);
+  }
+  if (replyPattern && !replyPattern.test(result.reply)) {
+    throw new Error(`scene-fact mismatch: ${result.reply}`);
+  }
   if (/어디/u.test(transcript) && /왜\s*(?:이동|움직)|선택\s*이유/u.test(result.reply)) {
     throw new Error(`장소 질문 문맥 불일치: ${result.reply}`);
   }
 }
 
 let passed = 0;
-for (const [nodeId, transcript] of cases) {
+const activeCases = cases.slice(startIndex);
+for (const [offset, testCase] of activeCases.entries()) {
+  const { nodeId, transcript } = testCase;
+  if (offset > 0 && delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
   const response = await fetch(new URL("/judge/dialogue", baseUrl), {
     method: "POST",
     headers: {
@@ -95,10 +107,10 @@ for (const [nodeId, transcript] of cases) {
   });
   const result = await response.json();
   if (!response.ok) throw new Error(`${nodeId} / ${transcript}: HTTP ${response.status} ${result.error ?? ""}`);
-  assertReply(nodeId, transcript, result);
+  assertReply(testCase, result);
   passed += 1;
   console.log(`[PASS] ${nodeId} | ${transcript}`);
   console.log(`       ${result.intentId} | ${result.reply}`);
 }
 
-console.log(`Dialogue QA matrix: ${passed}/${cases.length} PASS`);
+console.log(`Dialogue QA matrix: ${passed}/${activeCases.length} PASS (start index ${startIndex})`);

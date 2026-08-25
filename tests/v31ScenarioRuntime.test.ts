@@ -33,6 +33,18 @@ describe("Scenario v3.1 runtime data contract", () => {
     expect(reason?.offlineReply).not.toContain("포기하지 않았");
   });
 
+  it("N2 Worker context는 이동 위치와 금지 행동을 명시해 답변 환각을 막는다", () => {
+    expect(dialogue("n2_juno_intro").llmContext).toContain("사무실 안쪽");
+    expect(dialogue("n2_juno_intro").llmContext).toContain("손을 맞대거나");
+    expect(dialogue("n2_juno_followup").llmContext).toContain("이동 목적지는 사무실 안쪽");
+    expect(dialogue("n2_juno_followup").llmContext).toContain("망령의 존재나 정체는 말하지 않는다");
+    const informationQuestion = dialogue("n2_juno_followup").intents.find(
+      ({ id }) => id === "ask_identity",
+    );
+    expect(informationQuestion?.examples).toContain("어디로 가는 거야?");
+    expect(informationQuestion?.keywords).toContain("어디로");
+  });
+
   it("N3 네 방향을 별도 관계 플래그로 보존하고 N4 회복/거리 상태를 구분한다", () => {
     const n3 = dialogue("n3_wraith_choice");
     expect(n3.intents.map(({ id }) => id)).toEqual([
@@ -47,6 +59,11 @@ describe("Scenario v3.1 runtime data contract", () => {
       ["relation_awkward"],
       ["relation_awkward"],
     ]);
+    expect(n3.llmContext).toContain("직원과 게임");
+    expect(n3.llmContext).toContain("변신해서 보호하거나 망령의 말에 맞서는 것");
+    const informationQuestion = n3.intents.find(({ id }) => id === "seek_method");
+    expect(informationQuestion?.examples).toContain("저 망령은 왜 나타난 거야?");
+    expect(informationQuestion?.keywords).toContain("왜 나타");
 
     const awkward = dialogue("n4_awkward");
     expect(awkward.intents.map(({ setFlags }) => setFlags)).toEqual([
