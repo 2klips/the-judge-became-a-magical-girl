@@ -96,33 +96,43 @@ describe("2026-08-22 early-scene human-approved assets", () => {
     }
   });
 
-  it("removes only the audited employee-ID magenta artifact against the frozen baseline", () => {
-    const cleanupReport = JSON.parse(
-      execFileSync(
-        "python",
-        [
-          "assets/source/early-scene-2026-08-22/tools/clean_magenta_artifact.py",
-          "--verify",
-          "--baseline",
-          "39f4370ab731377b77f3898f48496990961b81cc",
-          "--source",
-          "assets/source/early-scene-2026-08-22/delivery/char/char_doyun_employee_id_surprised.png",
-          "--runtime",
-          "assets/runtime/char/char_doyun_employee_id_surprised.png",
-        ],
-        { encoding: "utf8" },
-      ),
-    ) as Record<string, unknown>;
+  it("removes only the audited purple boundary pixels from both Doyun poses", () => {
+    for (const filename of [
+      "char_doyun_normal_suspicious.png",
+      "char_doyun_employee_id_surprised.png",
+    ]) {
+      const cleanupReport = JSON.parse(
+        execFileSync(
+          "python",
+          [
+            "assets/source/early-scene-2026-08-22/tools/clean_purple_outline.py",
+            "--verify",
+            "--baseline",
+            "7a3e9630e569521d6e56a2c1376c453ba1e49692",
+            "--source",
+            `assets/source/early-scene-2026-08-22/delivery/char/${filename}`,
+            "--runtime",
+            `assets/runtime/char/${filename}`,
+          ],
+          { encoding: "utf8" },
+        ),
+      ) as Record<string, unknown>;
 
-    expect(cleanupReport).toMatchObject({
-      opaqueSaturatedMagenta: 0,
-      nonArtifactChangedPixels: 0,
-      width: 1200,
-      height: 2000,
-      sourceRuntimeEqual: true,
-    });
-    expect(cleanupReport.bytes).toEqual(expect.any(Number));
-    expect(cleanupReport.bytes as number).toBeLessThanOrEqual(800 * 1024);
+      expect(cleanupReport, filename).toMatchObject({
+        opaquePurpleBoundaryAfter: 0,
+        nonOutlineChangedPixels: 0,
+        outlineRgbChangedPixels: 0,
+        outlineOpaquePixelsAfter: 0,
+        width: 1200,
+        height: 2000,
+        mode: "P",
+        transparentPng: true,
+        sourceRuntimeEqual: true,
+      });
+      expect(cleanupReport.outlinePixelsBefore, filename).toEqual(expect.any(Number));
+      expect(cleanupReport.outlinePixelsBefore as number, filename).toBeGreaterThan(0);
+      expect(cleanupReport.bytes as number, filename).toBeLessThanOrEqual(800 * 1024);
+    }
   });
 
   it("fetches the historical commit required by the employee-ID verifier", () => {
