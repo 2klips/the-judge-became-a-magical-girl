@@ -51,7 +51,7 @@ function completeFirstSpell(engine: GameEngine, firstIntent: string): void {
 }
 
 describe("Scenario v3.1 engine route closure", () => {
-  it("다섯 HIDDEN 조건을 실제 엔진 플래그와 route로 판정한다", () => {
+  it("이전 HIDDEN 조건을 모두 만족해도 플래그를 보존한 채 GOOD으로 수렴한다", () => {
     const engine = createEngine();
     reachN5(engine, "team");
     const node = engine.getCurrentNode();
@@ -65,7 +65,7 @@ describe("Scenario v3.1 engine route closure", () => {
     engine.chooseIntent("believe");
     engine.chooseIntent("own_spell");
 
-    expect(engine.getState().currentNodeId).toBe("ending_hidden");
+    expect(engine.getState().currentNodeId).toBe("ending_good");
     expect(engine.getState().flags).toEqual(
       expect.objectContaining(
         new Set([

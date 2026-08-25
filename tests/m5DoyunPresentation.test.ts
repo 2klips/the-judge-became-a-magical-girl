@@ -192,7 +192,7 @@ describe("M5 도윤 화면 노출 계약", () => {
     );
   });
 
-  it("제출판 네 엔딩은 각 결과에 맞는 도윤을 유지한다", () => {
+  it("제출판 세 엔딩은 각 결과에 맞는 도윤을 유지한다", () => {
     expect(resolveDoyunVisual({ kind: "ending", endingId: "good", lineIndex: 4 })).toBe(
       "doyun.normal_smile",
     );

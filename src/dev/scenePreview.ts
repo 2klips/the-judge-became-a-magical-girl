@@ -276,16 +276,6 @@ const M5_SCENE_PREVIEW_DRAFTS = [
     visuals: [doyun("normal_smile"), juno("happy")],
   },
   {
-    id: "ending-hidden",
-    label: "HIDDEN · 사내 인기 영상",
-    backgroundId: "bg_hall_good",
-    nodeId: "ending_hidden",
-    beat: "전체",
-    bgmId: "bgm_ending",
-    layout: "ending",
-    visuals: [doyun("normal_smile"), juno("happy")],
-  },
-  {
     id: "ending-normal",
     label: "NORMAL · 부분 회복",
     backgroundId: "bg_hall_normal",

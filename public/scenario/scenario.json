@@ -523,10 +523,6 @@
     "fallbackReplies": ["기술 문제였어. 다시 말하거나 클릭 주문을 골라 줘.", "목소리가 닿지 않았어. 행동을 포기한 것으로 판단하지 않을게."],
     "exitOnMaxTurns": [
       {
-        "if": "flags.perfect_transform && flags.second_spell_opportunity && flags.defense_used && flags.attack_used && flags.n7_believe && flags.final_spell_success",
-        "next": "ending_hidden"
-      },
-      {
         "if": "flags.n7_believe && flags.final_spell_success",
         "next": "ending_good"
       },
@@ -571,19 +567,6 @@
       { "speaker": "narration", "text": "기존 작품과 유사함. 추가 검토 필요 없음." },
       { "speaker": "juno", "text": "이번에도 너무 빨리 답을 정해 버렸나 봐.", "emotion": "upset" },
       { "speaker": "juno", "text": "다음에는 네 말을 더 오래 들을게.", "emotion": "upset" }
-    ]
-  },
-  {
-    "nodeId": "ending_hidden",
-    "type": "ending",
-    "scene": { "bg": "bg_hall_good", "bgm": "bgm_ending" },
-    "endingId": "hidden",
-    "lines": [
-      { "speaker": "narration", "text": "HIDDEN — 완벽한 호흡, 완벽한 사고" },
-      { "speaker": "narration", "text": "평가표 수정까지 GOOD과 같은 아침이 이어진다." },
-      { "speaker": "narration", "text": "사내 인기 게시물: 한도윤 심사역 마법소녀 변신 영상, 실시간 조회 1위." },
-      { "speaker": "juno", "text": "변신 장면은 자동으로 기록돼!", "emotion": "happy" },
-      { "speaker": "juno", "text": "그런 설정은 방금 만들었어!", "emotion": "happy" }
     ]
   }
 ]

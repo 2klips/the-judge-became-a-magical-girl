@@ -70,9 +70,10 @@ const clamp = (value: number, minimum: number, maximum: number): number =>
 
 const legacyNodeAliases: Readonly<Record<string, string>> = {
   ch3_gray_answer: "n7_gray_answer",
+  ending_hidden: "ending_good",
 };
 
-const canonicalEndingNodeIds = new Set(["ending_good", "ending_hidden"]);
+const canonicalEndingNodeIds = new Set(["ending_good"]);
 
 const migrateLegacyNodeId = (nodeId: string): string =>
   legacyNodeAliases[nodeId] ?? nodeId;

@@ -114,10 +114,6 @@ describe("Scenario v3.1 runtime data contract", () => {
     expect(n8.intents[2]?.next).toBe("ending_bad");
     expect(n8.exitOnMaxTurns).toEqual([
       {
-        if: "flags.perfect_transform && flags.second_spell_opportunity && flags.defense_used && flags.attack_used && flags.n7_believe && flags.final_spell_success",
-        next: "ending_hidden",
-      },
-      {
         if: "flags.n7_believe && flags.final_spell_success",
         next: "ending_good",
       },
@@ -125,11 +121,11 @@ describe("Scenario v3.1 runtime data contract", () => {
     ]);
   });
 
-  it("제출판의 GOOD/HIDDEN/NORMAL/BAD는 모두 terminal ending이다", () => {
+  it("제출판의 GOOD/NORMAL/BAD는 모두 terminal ending이다", () => {
     expect(ending("ending_good").next).toBeUndefined();
-    expect(ending("ending_hidden").next).toBeUndefined();
     expect(ending("ending_normal").next).toBeUndefined();
     expect(ending("ending_bad").next).toBeUndefined();
+    expect(data.scenario.some(({ nodeId }) => nodeId === "ending_hidden")).toBe(false);
     expect(data.scenario.some(({ nodeId }) => nodeId === "post_credit")).toBe(false);
   });
 

@@ -75,7 +75,7 @@ describe("M5 장면 배경 presentation 계약", () => {
     expect(resolveBattle("p2_attack")).toBe("bg_hall_void");
   });
 
-  it("제출판 네 엔딩은 결과별 배경을 유지한다", () => {
+  it("제출판 세 엔딩은 결과별 배경을 유지한다", () => {
     const resolveEnding = (endingId: string, lineIndex: number): string =>
       resolvePresentationBackground({
         kind: "ending",
@@ -87,7 +87,6 @@ describe("M5 장면 배경 presentation 계약", () => {
     expect(resolveEnding("good", 0)).toBe("bg_hall_good");
     expect(resolveEnding("good", 4)).toBe("bg_hall_good");
     expect(resolveEnding("good", 5)).toBe("bg_hall_good");
-    expect(resolveEnding("hidden", 0)).toBe("bg_hall_good");
     expect(resolveEnding("normal", 0)).toBe("bg_hall_normal");
     expect(resolveEnding("bad", 0)).toBe("bg_hall_bad");
   });

@@ -1052,13 +1052,6 @@
   --ending-plate-border: rgba(170, 165, 186, 0.18);
 }
 
-.ending-editorial-screen.ending-tone-hidden {
-  --ending-accent: #9ee7f2;
-  --ending-accent-soft: rgba(158, 231, 242, 0.48);
-  --ending-plate-bg: rgba(8, 11, 20, 0.44);
-  --ending-plate-border: rgba(158, 231, 242, 0.24);
-}
-
 .ending-editorial-screen .ending-result-layout {
   position: absolute;
   z-index: 6;
@@ -1154,10 +1147,6 @@
   font-size: clamp(2.875rem, 3.4vw, 4rem);
   word-break: keep-all;
   overflow-wrap: anywhere;
-}
-
-.ending-editorial-screen .ending-heading-copy-hidden {
-  display: grid;
 }
 
 .ending-editorial-screen .ending-heading-line {

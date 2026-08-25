@@ -23,7 +23,7 @@ export function resolveDoyunVisual(cue: DoyunPresentationCue): string | null {
     return "doyun.magical_finish";
   }
   if (cue.kind === "ending") {
-    if (cue.endingId === "good" || cue.endingId === "hidden") {
+    if (cue.endingId === "good") {
       return "doyun.normal_smile";
     }
     if (cue.endingId === "normal") return "doyun.normal_smile";

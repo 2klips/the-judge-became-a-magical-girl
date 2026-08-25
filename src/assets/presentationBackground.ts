@@ -27,7 +27,7 @@ export function resolvePresentationBackground(
     return cue.baseBackground;
   }
   if (cue.kind === "ending") {
-    if (cue.endingId === "good" || cue.endingId === "hidden") return "bg_hall_good";
+    if (cue.endingId === "good") return "bg_hall_good";
     if (cue.endingId === "normal") return "bg_hall_normal";
     if (cue.endingId === "bad") return "bg_hall_bad";
     return cue.baseBackground;

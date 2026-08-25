@@ -336,7 +336,7 @@ export function resolveEndingPages(
   }));
 }
 
-const EDITORIAL_ENDING_IDS = ["good", "normal", "bad", "hidden"] as const;
+const EDITORIAL_ENDING_IDS = ["good", "normal", "bad"] as const;
 type EditorialEndingId = (typeof EDITORIAL_ENDING_IDS)[number];
 
 export function isEditorialEndingId(endingId: string): endingId is EditorialEndingId {
@@ -356,16 +356,6 @@ export function resolveEditorialEndingHeading(text: string): EditorialEndingHead
     label: text.slice(0, separatorIndex),
     copy: text.slice(separatorIndex + separator.length),
   };
-}
-
-export function resolveEditorialEndingCopyLines(
-  endingId: string,
-  copy: string,
-): readonly string[] {
-  if (endingId === "hidden" && copy === "완벽한 호흡, 완벽한 사고") {
-    return ["완벽한 호흡,", "완벽한 사고"];
-  }
-  return [copy];
 }
 
 export interface EndingVisual {
@@ -388,7 +378,7 @@ export function resolveEndingVisual(
   endingId: string,
   _lineIndex: number,
 ): EndingVisual | null {
-  if (endingId === "good" || endingId === "hidden") {
+  if (endingId === "good") {
     return { characterId: "juno", emotion: "happy" };
   }
   if (endingId === "normal") {
@@ -1502,16 +1492,8 @@ export class GameView {
         }
         const title = element("h2", "ending-title");
         title.setAttribute("aria-label", endingTitle);
-        const copyLines = resolveEditorialEndingCopyLines(node.endingId, heading.copy);
-        const headingCopy = element(
-          "span",
-          node.endingId === "hidden"
-            ? "ending-heading-copy ending-heading-copy-hidden"
-            : "ending-heading-copy",
-        );
-        for (const copyLine of copyLines) {
-          headingCopy.append(element("span", "ending-heading-line", copyLine));
-        }
+        const headingCopy = element("span", "ending-heading-copy");
+        headingCopy.append(element("span", "ending-heading-line", heading.copy));
         title.append(headingCopy);
         card.append(resultHeader, title);
       } else {

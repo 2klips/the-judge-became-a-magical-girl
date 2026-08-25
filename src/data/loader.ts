@@ -253,7 +253,7 @@ function validateReferences(data: GameData): string[] {
       }
     }
 
-    for (const endingId of ["good", "normal", "bad", "hidden"] as const) {
+    for (const endingId of ["good", "normal", "bad"] as const) {
       const ending = data.scenario.find(
         (node) => node.type === "ending" && node.endingId === endingId,
       );

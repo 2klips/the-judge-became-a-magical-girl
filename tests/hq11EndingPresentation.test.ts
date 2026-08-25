@@ -20,7 +20,7 @@ const renderEnding = gameViewSource.slice(
 );
 
 describe("HQ-11 Ending final presentation", () => {
-  it("keeps the four canonical endings on the frozen editorial surface", () => {
+  it("keeps the three submission endings on the frozen editorial surface", () => {
     expect(gameViewSource).toContain("isEditorialEndingId");
     expect(renderEnding).toContain("ending-editorial-screen");
     expect(renderEnding).toContain("ending-editorial");
@@ -97,8 +97,8 @@ describe("HQ-11 Ending final presentation", () => {
     );
   });
 
-  it("uses restrained plate tones for all four canonical endings", () => {
-    for (const endingId of ["good", "normal", "bad", "hidden"]) {
+  it("uses restrained plate tones for all three submission endings", () => {
+    for (const endingId of ["good", "normal", "bad"]) {
       expect(vnStylesSource).toMatch(
         new RegExp(
           `\\.ending-editorial-screen\\.ending-tone-${endingId}\\s*\\{[^}]*--ending-plate-bg:\\s*rgba\\(`,
@@ -108,15 +108,14 @@ describe("HQ-11 Ending final presentation", () => {
     }
   });
 
-  it("balances the HIDDEN heading into two visual lines without changing its copy", () => {
-    expect(gameViewSource).toContain("resolveEditorialEndingCopyLines");
-    expect(gameViewSource).toContain('"완벽한 호흡,"');
-    expect(gameViewSource).toContain('"완벽한 사고"');
-    expect(renderEnding).toContain("ending-heading-copy-hidden");
+  it("removes HIDDEN-only presentation hooks without changing common ending geometry", () => {
+    expect(gameViewSource).not.toContain("resolveEditorialEndingCopyLines");
+    expect(gameViewSource).not.toContain('"완벽한 호흡,"');
+    expect(gameViewSource).not.toContain('"완벽한 사고"');
+    expect(renderEnding).not.toContain("ending-heading-copy-hidden");
     expect(renderEnding).toContain("ending-heading-line");
-    expect(vnStylesSource).toMatch(
-      /\.ending-editorial-screen \.ending-heading-copy-hidden\s*\{[^}]*display:\s*grid;/s,
-    );
+    expect(vnStylesSource).not.toContain("ending-tone-hidden");
+    expect(vnStylesSource).not.toContain("ending-heading-copy-hidden");
     expect(vnStylesSource).toMatch(
       /\.ending-editorial-screen \.ending-heading-line\s*\{[^}]*display:\s*block;/s,
     );
@@ -138,15 +137,11 @@ describe("HQ-11 Ending final presentation", () => {
         .map((node) => [node.endingId, node]),
     );
 
-    expect(Object.keys(endings).sort()).toEqual(["bad", "good", "hidden", "normal"]);
+    expect(Object.keys(endings).sort()).toEqual(["bad", "good", "normal"]);
     expect(endings.good.lines?.[0]?.text).toBe("GOOD — 끝까지 보고 판단하기");
     expect(endings.normal.lines?.[0]?.text).toBe("NORMAL — 한 번만 더");
     expect(endings.bad.lines?.[0]?.text).toBe("BAD — 회색 업무일지");
-    expect(endings.hidden.lines?.[0]?.text).toBe(
-      "HIDDEN — 완벽한 호흡, 완벽한 사고",
-    );
     expect(endings.good.next).toBeUndefined();
-    expect(endings.hidden.next).toBeUndefined();
     expect(endings.normal.next).toBeUndefined();
     expect(endings.bad.next).toBeUndefined();
   });

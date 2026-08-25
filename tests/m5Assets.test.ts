@@ -423,7 +423,6 @@ describe("M5 에셋 계약", () => {
       "ending_good",
       "ending_normal",
       "ending_bad",
-      "ending_hidden",
     ]) {
       expect(bgmByNode.get(nodeId), nodeId).toBe("bgm_ending");
     }

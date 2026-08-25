@@ -18,39 +18,32 @@ const scenePreviewSource = readFileSync(
 );
 
 describe("HQ-12 submission ending closure", () => {
-  it("keeps four canonical endings terminal and removes the post-credit node", () => {
+  it("keeps three canonical endings terminal and removes HIDDEN/post-credit nodes", () => {
     const data = loadFixtureData();
     const endings = data.scenario.filter((node) => node.type === "ending");
 
-    expect(endings.map(({ endingId }) => endingId).sort()).toEqual([
-      "bad",
-      "good",
-      "hidden",
-      "normal",
-    ]);
+    expect(endings.map(({ endingId }) => endingId).sort()).toEqual(["bad", "good", "normal"]);
     for (const ending of endings) {
       expect(ending.next).toBeUndefined();
     }
+    expect(data.scenario.some(({ nodeId }) => nodeId === "ending_hidden")).toBe(false);
     expect(data.scenario.some(({ nodeId }) => nodeId === "post_credit")).toBe(false);
   });
 
-  it("preserves the HIDDEN reward copy and compound route condition", () => {
+  it("routes former HIDDEN conditions through the existing GOOD branch", () => {
     const data = loadFixtureData();
-    const hidden = data.scenario.find(({ nodeId }) => nodeId === "ending_hidden");
     const finalSpell = data.scenario.find(({ nodeId }) => nodeId === "n8_final_spell");
-
-    expect(hidden?.type).toBe("ending");
-    if (hidden?.type !== "ending") throw new Error("HIDDEN ending이 없습니다.");
-    expect(hidden.lines.map(({ text }) => text)).toContain(
-      "사내 인기 게시물: 한도윤 심사역 마법소녀 변신 영상, 실시간 조회 1위.",
-    );
 
     expect(finalSpell?.type).toBe("dialogue");
     if (finalSpell?.type !== "dialogue") throw new Error("N8 dialogue가 없습니다.");
-    expect(finalSpell.exitOnMaxTurns?.[0]).toEqual({
-      if: "flags.perfect_transform && flags.second_spell_opportunity && flags.defense_used && flags.attack_used && flags.n7_believe && flags.final_spell_success",
-      next: "ending_hidden",
-    });
+    expect(finalSpell.exitOnMaxTurns).toEqual([
+      {
+        if: "flags.n7_believe && flags.final_spell_success",
+        next: "ending_good",
+      },
+      { default: "ending_normal" },
+    ]);
+    expect(data.config.allowedFlags).toContain("perfect_transform");
   });
 
   it("removes teaser presentation, preview, and runtime asset references", () => {
@@ -73,9 +66,10 @@ describe("HQ-12 submission ending closure", () => {
   });
 
   it.each([
-    ["ending_good", []],
+    ["ending_good", "ending_good", []],
     [
       "ending_hidden",
+      "ending_good",
       [
         "perfect_transform",
         "second_spell_opportunity",
@@ -85,7 +79,7 @@ describe("HQ-12 submission ending closure", () => {
         "final_spell_success",
       ],
     ],
-  ] as const)("migrates a legacy post-credit save back to %s", (endingId, flags) => {
+  ] as const)("migrates a legacy post-credit save from %s to %s", (endingId, expected, flags) => {
     const data = loadFixtureData();
     const state = createInitialGameState(data.config);
     const snapshot = serializeState({
@@ -100,7 +94,28 @@ describe("HQ-12 submission ending closure", () => {
       new Set(data.scenario.map(({ nodeId }) => nodeId)),
     );
 
-    expect(restored?.currentNodeId).toBe(endingId);
-    expect(restored?.history).toEqual([state.currentNodeId, endingId]);
+    expect(restored?.currentNodeId).toBe(expected);
+    expect(restored?.history).toEqual([state.currentNodeId, expected]);
+    expect(restored?.flags).toEqual(new Set(flags));
+  });
+
+  it("migrates a legacy HIDDEN current node directly to GOOD", () => {
+    const data = loadFixtureData();
+    const state = createInitialGameState(data.config);
+    const snapshot = serializeState({
+      ...state,
+      currentNodeId: "ending_hidden",
+      history: [state.currentNodeId, "ending_hidden"],
+      flags: new Set(["perfect_transform", "final_spell_success"]),
+    });
+    const restored = parseStateSnapshot(
+      snapshot,
+      new Set(data.config.allowedFlags),
+      new Set(data.scenario.map(({ nodeId }) => nodeId)),
+    );
+
+    expect(restored?.currentNodeId).toBe("ending_good");
+    expect(restored?.history).toEqual([state.currentNodeId, "ending_good"]);
+    expect(restored?.flags).toEqual(new Set(["perfect_transform", "final_spell_success"]));
   });
 });

@@ -81,7 +81,6 @@ describe("M5 dev 장면 프리뷰 계약", () => {
     }
     for (const id of [
       "ending-good",
-      "ending-hidden",
       "ending-normal",
       "ending-bad",
     ]) {
