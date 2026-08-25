@@ -7,7 +7,9 @@ const argValue = (name, fallback) => {
 };
 
 if (args.includes("--help")) {
-  console.log("Usage: npm run qa:dialogue-matrix -- --base-url http://127.0.0.1:8787");
+  console.log(
+    "Usage: npm run qa:dialogue-matrix -- --base-url http://127.0.0.1:8787 [--start-index 0] [--end-index 16] [--delay-ms 9000]",
+  );
   process.exit(0);
 }
 
@@ -92,8 +94,9 @@ function assertReply(testCase, result) {
   }
 }
 
+const endIndex = Number(argValue("--end-index", String(cases.length)));
 let passed = 0;
-const activeCases = cases.slice(startIndex);
+const activeCases = cases.slice(startIndex, endIndex);
 for (const [offset, testCase] of activeCases.entries()) {
   const { nodeId, transcript } = testCase;
   if (offset > 0 && delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -113,4 +116,6 @@ for (const [offset, testCase] of activeCases.entries()) {
   console.log(`       ${result.intentId} | ${result.reply}`);
 }
 
-console.log(`Dialogue QA matrix: ${passed}/${activeCases.length} PASS (start index ${startIndex})`);
+console.log(
+  `Dialogue QA matrix: ${passed}/${activeCases.length} PASS (indexes ${startIndex}-${endIndex - 1})`,
+);
