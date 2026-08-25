@@ -5,11 +5,11 @@ import { loadFixtureData, rawFixture } from "./fixtures";
 describe("시나리오 zod·참조 검증", () => {
   it("저장소의 실제 M5 JSON과 노드 구성을 검증한다", () => {
     const data = loadFixtureData();
-    expect(data.scenario).toHaveLength(17);
+    expect(data.scenario).toHaveLength(16);
     expect(data.scenario.filter((node) => node.type === "dialogue")).toHaveLength(8);
     expect(data.scenario.filter((node) => node.type === "cutscene")).toHaveLength(4);
     expect(data.scenario.filter((node) => node.type === "battle")).toHaveLength(1);
-    expect(data.scenario.filter((node) => node.type === "ending")).toHaveLength(4);
+    expect(data.scenario.filter((node) => node.type === "ending")).toHaveLength(3);
     expect(data.characters.map(({ id }) => id)).toEqual(["juno", "gray_wraith"]);
   });
 

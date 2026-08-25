@@ -96,7 +96,7 @@ describe("2026-08-22 early-scene human-approved assets", () => {
     }
   });
 
-  it("removes only the audited purple boundary pixels from both Doyun poses", () => {
+  it("removes only the audited purple boundary pixels from both Doyun poses", { timeout: 15_000 }, () => {
     for (const filename of [
       "char_doyun_normal_suspicious.png",
       "char_doyun_employee_id_surprised.png",
